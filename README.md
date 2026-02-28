@@ -4,6 +4,7 @@ Hammerspoon用のウィンドウユーティリティ集です。
 
 - **Focus Border** — フォーカスが移動したウィンドウの枠を一瞬だけハイライト表示
 - **Window Hints** — アプリアイコン＋キーヒントによるウィンドウ切り替え
+- **Focus Back** — ホットキーで直前にアクティブだったウィンドウに戻る
 
 ## セットアップ
 
@@ -19,6 +20,7 @@ local jinrai = dofile("/path/to/jinrai/init.lua")
 jinrai.setup({
   focus_border = {},
   window_hints = {},
+  focus_back = {},
 })
 ```
 
@@ -55,6 +57,10 @@ jinrai.setup({
       hs.alert.show("Window Hints error: " .. tostring(err), 3)
     end,
   },
+  focus_back = {
+    hotkeyModifiers = { "option" },
+    hotkeyKey = "w",
+  },
 })
 ```
 
@@ -85,6 +91,16 @@ jinrai.setup({
 | `onError`          | `nil`          | エラー時のコールバック           |
 
 その他多数のカスタマイズ項目があります。詳しくは `window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
+
+## Focus Back オプション
+
+| オプション         | デフォルト       | 説明                                          |
+| ------------------ | ---------------- | --------------------------------------------- |
+| `hotkeyModifiers`  | `{ "option" }`   | ホットキー修飾キー                            |
+| `hotkeyKey`        | `"w"`            | ホットキー（`nil` で無効化）                  |
+| `urlEvent`         | `nil`            | URL scheme名（`hammerspoon://<名前>` で発火） |
+
+連続で押すと2つのウィンドウ間をトグルで行き来できます。
 
 ## ライセンス
 
