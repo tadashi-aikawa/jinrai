@@ -1,0 +1,87 @@
+# jinrai
+
+Hammerspoon用のウィンドウユーティリティ集です。
+
+- **Focus Border** — フォーカスが移動したウィンドウの枠を一瞬だけハイライト表示
+- **Window Hints** — アプリアイコン＋キーヒントによるウィンドウ切り替え
+
+## セットアップ
+
+```bash
+git clone https://github.com/tadashi-aikawa/jinrai /path/to/jinrai
+```
+
+`~/.hammerspoon/init.lua` に以下を追加:
+
+```lua
+local jinrai = dofile("/path/to/jinrai/init.lua")
+
+jinrai.setup({
+  focus_border = {},
+  window_hints = {},
+})
+```
+
+`focus_border` や `window_hints` のキーを省略するとそのモジュールは無効になります。
+
+## 設定例
+
+```lua
+local jinrai = dofile("/path/to/jinrai/init.lua")
+
+jinrai.setup({
+  focus_border = {
+    borderWidth = 10,
+    borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
+    duration = 0.5,
+    fadeSteps = 18,
+    cornerRadius = 10,
+    minWindowSize = 480,
+  },
+  window_hints = {
+    hintChars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" },
+    hotkeyModifiers = { "alt" },
+    hotkeyKey = "f20",
+    iconSize = 72,
+    titleMaxSize = 72,
+    onSelect = function(win)
+      if not win then return end
+      local frame = win:frame()
+      hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
+    end,
+    onError = function(err)
+      hs.alert.show("Window Hints error: " .. tostring(err), 3)
+    end,
+  },
+})
+```
+
+## Focus Border オプション
+
+| オプション      | デフォルト                                                | 説明                       |
+| --------------- | --------------------------------------------------------- | -------------------------- |
+| `borderWidth`   | `10`                                                      | ボーダーの太さ (px)        |
+| `borderColor`   | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }`| ボーダーの色               |
+| `duration`      | `0.5`                                                     | フェードアウト時間 (秒)    |
+| `fadeSteps`     | `18`                                                      | フェードアウトのステップ数 |
+| `cornerRadius`  | `10`                                                      | 角丸半径 (px)              |
+| `minWindowSize` | `480`                                                     | 表示する最小ウィンドウサイズ (px) |
+
+## Window Hints オプション
+
+| オプション         | デフォルト     | 説明                             |
+| ------------------ | -------------- | -------------------------------- |
+| `hotkeyModifiers`  | `{ "alt" }`   | ヒント表示のホットキー修飾キー   |
+| `hotkeyKey`        | `"f20"`        | ヒント表示のホットキー           |
+| `hintChars`        | `A-Z (QWERTY)`| ヒント文字の配列                 |
+| `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
+| `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
+| `showTitles`       | `true`         | タイトル行の表示有無             |
+| `onSelect`         | `nil`          | ウィンドウ選択時のコールバック   |
+| `onError`          | `nil`          | エラー時のコールバック           |
+
+その他多数のカスタマイズ項目があります。詳しくは `window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
+
+## ライセンス
+
+MIT
