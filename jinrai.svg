@@ -1,9 +1,7 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
 
-  <!-- Background -->
-  <rect width="1024" height="1024" fill="#000000"></rect>
-
   <!-- Outer crest circle -->
+  <circle cx="512" cy="512" r="468" fill="#000000"></circle>
   <circle cx="512" cy="512" r="440" fill="none" stroke="#FFD400" stroke-width="40"></circle>
 
   <!-- Inner circle -->
