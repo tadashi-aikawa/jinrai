@@ -33,6 +33,8 @@ jinrai.setup({
   focus_border = {
     borderWidth = 10,
     borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
+    outlineWidth = 2,
+    outlineColor = { red = 0, green = 0, blue = 0, alpha = 0.70 },
     duration = 0.5,
     fadeSteps = 18,
     cornerRadius = 10,
@@ -58,14 +60,16 @@ jinrai.setup({
 
 ## Focus Border オプション
 
-| オプション      | デフォルト                                                | 説明                       |
-| --------------- | --------------------------------------------------------- | -------------------------- |
-| `borderWidth`   | `10`                                                      | ボーダーの太さ (px)        |
-| `borderColor`   | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }`| ボーダーの色               |
-| `duration`      | `0.5`                                                     | フェードアウト時間 (秒)    |
-| `fadeSteps`     | `18`                                                      | フェードアウトのステップ数 |
-| `cornerRadius`  | `10`                                                      | 角丸半径 (px)              |
-| `minWindowSize` | `480`                                                     | 表示する最小ウィンドウサイズ (px) |
+| オプション      | デフォルト                                                | 説明                                         |
+| --------------- | --------------------------------------------------------- | -------------------------------------------- |
+| `borderWidth`   | `10`                                                      | メインボーダーの太さ (px)                    |
+| `borderColor`   | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }`| メインボーダーの色                            |
+| `outlineWidth`  | `2`                                                       | 外側アウトラインの太さ (px)                  |
+| `outlineColor`  | `{ red = 0, green = 0, blue = 0, alpha = 0.70 }`         | 外側アウトラインの色                          |
+| `duration`      | `0.5`                                                     | フェードアウト時間 (秒)                      |
+| `fadeSteps`     | `18`                                                      | フェードアウトのステップ数                   |
+| `cornerRadius`  | `10`                                                      | 角丸半径 (px)                                |
+| `minWindowSize` | `480`                                                     | 表示する最小ウィンドウサイズ (px)            |
 
 ## Window Hints オプション
 

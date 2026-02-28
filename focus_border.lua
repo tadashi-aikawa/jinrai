@@ -3,6 +3,8 @@ local M = {}
 local DEFAULT_CONFIG = {
 	borderWidth = 10,
 	borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
+	outlineWidth = 2,
+	outlineColor = { red = 0, green = 0, blue = 0, alpha = 0.70 },
 	duration = 0.5,
 	fadeSteps = 18,
 	cornerRadius = 10,
@@ -68,10 +70,27 @@ function M.new(options)
 		})
 		canvas:level(hs.canvas.windowLevels.overlay)
 		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
+		local ow = config.outlineWidth
+		local totalWidth = bw + ow * 2
+		-- 外側アウトライン
 		canvas:appendElements({
 			type = "rectangle",
 			action = "stroke",
-			frame = { x = bw / 2, y = bw / 2, w = frame.w - bw, h = frame.h - bw },
+			frame = { x = totalWidth / 2, y = totalWidth / 2, w = frame.w - totalWidth, h = frame.h - totalWidth },
+			strokeColor = {
+				red = config.outlineColor.red,
+				green = config.outlineColor.green,
+				blue = config.outlineColor.blue,
+				alpha = config.outlineColor.alpha,
+			},
+			strokeWidth = totalWidth,
+			roundedRectRadii = { xRadius = config.cornerRadius + ow, yRadius = config.cornerRadius + ow },
+		})
+		-- 内側メインボーダー（上に重ねて描画）
+		canvas:appendElements({
+			type = "rectangle",
+			action = "stroke",
+			frame = { x = ow + bw / 2, y = ow + bw / 2, w = frame.w - ow * 2 - bw, h = frame.h - ow * 2 - bw },
 			strokeColor = {
 				red = config.borderColor.red,
 				green = config.borderColor.green,
