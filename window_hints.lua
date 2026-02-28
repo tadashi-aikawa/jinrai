@@ -122,6 +122,8 @@ local DEFAULT_CONFIG = {
 	onSelect = nil,
 	-- ウィンドウ選択後にマウスカーソルをウィンドウ中央に移動するか
 	centerCursor = false,
+	-- ヒント起動時にアクティブウィンドウの中心にマウスカーソルを移動するか
+	centerCursorOnStart = false,
 }
 
 local function mergeTable(defaults, overrides)
@@ -884,6 +886,14 @@ function M.new(options)
 
 		closeHints(false)
 		showActiveOverlay()
+
+		if config.centerCursorOnStart then
+			local focusedWin = hs.window.focusedWindow()
+			if focusedWin then
+				local frame = focusedWin:frame()
+				hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
+			end
+		end
 
 		if #hintEntries == 0 then
 			-- No hints to show; auto-dismiss overlay after a short delay

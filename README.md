@@ -102,6 +102,7 @@ jinrai.setup({
 | `onSelect`         | `nil`          | ウィンドウ選択時のコールバック   |
 | `onError`          | `nil`          | エラー時のコールバック           |
 | `centerCursor`     | `false`        | 選択後にカーソルをウィンドウ中央に移動 |
+| `centerCursorOnStart` | `false`     | 起動時にアクティブウィンドウの中心にカーソルを移動 |
 
 その他多数のカスタマイズ項目があります。詳しくは `window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
 
