@@ -1,10 +1,25 @@
-# jinrai
+<div align="center">
+    <h1>JINRAI</h1>
+    <img src="./jinrai.svg" width="256" />
+    <p>
+    <h3>迅雷</h3>
+    <div>思考の速度で素早くウィンドウの切り替えや認識を行うためのhammerspoonスクリプト</div>
+    </p>
+    <img src="https://img.shields.io/github/license/mashape/apistatus.svg" />
+</div>
 
-Hammerspoon用のウィンドウユーティリティ集です。
+---
 
-- **Focus Border** — フォーカスが移動したウィンドウの枠を一瞬だけハイライト表示
-- **Window Hints** — アプリアイコン＋キーヒントによるウィンドウ切り替え
-- **Focus Back** — ホットキーで直前にアクティブだったウィンドウに戻る
+- 🔠 **Window Hints**
+    - アプリアイコン＋キーヒントによるウィンドウ切り替え
+        - アプリ名の頭文字をキーヒントのプレフィックスに自動割り当て
+        - 同一プレフィックスのウィンドウが複数ある場合は複数キー入力で絞り込み
+    - 他のウィンドウに完全に隠れたウィンドウは画面下部にドック形式＋プレビュー付きで表示
+    - アクティブウィンドウをオーバーレイでハイライト表示
+- 🔳 **Focus Border**
+    - フォーカスが移動したウィンドウの枠を一瞬だけハイライト表示
+- ↩️ **Focus Back**
+    - ホットキーで直前にアクティブだったウィンドウに戻る
 
 ## セットアップ
 
@@ -24,7 +39,7 @@ jinrai.setup({
 })
 ```
 
-`focus_border` や `window_hints` のキーを省略するとそのモジュールは無効になります。
+`focus_border` や `window_hints`、`focus_back` のキーを省略するとそのモジュールは無効になります。
 
 ## 設定例
 
