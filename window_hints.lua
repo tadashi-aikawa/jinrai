@@ -120,6 +120,8 @@ local DEFAULT_CONFIG = {
 	dockItemGap = 10,
 	-- ウィンドウ選択時のコールバック関数
 	onSelect = nil,
+	-- ウィンドウ選択後にマウスカーソルをウィンドウ中央に移動するか
+	centerCursor = false,
 }
 
 local function mergeTable(defaults, overrides)
@@ -404,6 +406,10 @@ function M.new(options)
 			return
 		end
 		win:focus()
+		if config.centerCursor then
+			local frame = win:frame()
+			hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
+		end
 		if config.onSelect then
 			config.onSelect(win)
 		end

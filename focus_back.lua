@@ -3,6 +3,7 @@ local M = {}
 local DEFAULT_CONFIG = {
 	hotkeyModifiers = { "option" },
 	hotkeyKey = "w",
+	centerCursor = false,
 }
 
 local function mergeTable(defaults, overrides)
@@ -50,6 +51,10 @@ function M.new(options)
 			end
 			switching = true
 			previousWindow:focus()
+			if config.centerCursor then
+				local frame = previousWindow:frame()
+				hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
+			end
 			switching = false
 			previousWindow, currentWindow = currentWindow, previousWindow
 		end)

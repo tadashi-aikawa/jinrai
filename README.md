@@ -48,11 +48,7 @@ jinrai.setup({
     hotkeyKey = "f20",
     iconSize = 72,
     titleMaxSize = 72,
-    onSelect = function(win)
-      if not win then return end
-      local frame = win:frame()
-      hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
-    end,
+    centerCursor = true,
     onError = function(err)
       hs.alert.show("Window Hints error: " .. tostring(err), 3)
     end,
@@ -60,6 +56,7 @@ jinrai.setup({
   focus_back = {
     hotkeyModifiers = { "option" },
     hotkeyKey = "w",
+    centerCursor = true,
   },
 })
 ```
@@ -89,6 +86,7 @@ jinrai.setup({
 | `showTitles`       | `true`         | タイトル行の表示有無             |
 | `onSelect`         | `nil`          | ウィンドウ選択時のコールバック   |
 | `onError`          | `nil`          | エラー時のコールバック           |
+| `centerCursor`     | `false`        | 選択後にカーソルをウィンドウ中央に移動 |
 
 その他多数のカスタマイズ項目があります。詳しくは `window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
 
@@ -99,6 +97,7 @@ jinrai.setup({
 | `hotkeyModifiers`  | `{ "option" }`   | ホットキー修飾キー                            |
 | `hotkeyKey`        | `"w"`            | ホットキー（`nil` で無効化）                  |
 | `urlEvent`         | `nil`            | URL scheme名（`hammerspoon://<名前>` で発火） |
+| `centerCursor`     | `false`          | 切り替え後にカーソルをウィンドウ中央に移動    |
 
 連続で押すと2つのウィンドウ間をトグルで行き来できます。
 
