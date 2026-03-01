@@ -60,8 +60,18 @@ jinrai.setup({
   window_hints = {
     hintChars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" },
     appPrefixOverrides = {
-      ["com.apple.Terminal"] = "T",
-      ["Google Chrome"] = "C",
+      {
+        match = { bundleID = "md.obsidian", titleGlob = "*- minerva - Obsidian*" },
+        prefix = "M",
+      },
+      {
+        match = { bundleID = "md.obsidian" },
+        prefix = "O",
+      },
+      {
+        match = { bundleID = "com.google.Chrome" },
+        prefix = "GC",
+      },
     },
     hotkeyModifiers = { "alt" },
     hotkeyKey = "f20",
@@ -100,7 +110,7 @@ jinrai.setup({
 | `hotkeyModifiers`  | `{ "alt" }`   | ヒント表示のホットキー修飾キー   |
 | `hotkeyKey`        | `"f20"`        | ヒント表示のホットキー           |
 | `hintChars`        | `A-Z (QWERTY)`| ヒント文字の配列                 |
-| `appPrefixOverrides` | `nil`        | アプリ別の先頭プレフィックス上書き (`bundle ID` または `app:title()`) |
+| `appPrefixOverrides` | `nil`        | ルール配列による先頭プレフィックス上書き（`window:title()` の `glob` 対応、1-2文字prefix対応） |
 | `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
 | `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
 | `showTitles`       | `true`         | タイトル行の表示有無             |
@@ -120,8 +130,33 @@ jinrai.setup({
 `occlusionSamplingEnabled=true` の場合、`occlusionSamplingBaseWidth/Height` を基準に
 `occlusionSamplingMin*` から `occlusionSamplingMax*` の範囲でサンプリンググリッドを動的に調整します。
 
-`appPrefixOverrides` は `bundle ID` 指定を優先し、該当がなければ `app:title()` 指定を使います。
-どちらもない場合は従来どおり「アプリ名の先頭文字」を使用し、`hintChars` にない文字は `hintChars[1]` にフォールバックします。
+### appPrefixOverrides
+
+`appPrefixOverrides` は、ウィンドウごとのヒントキー先頭文字（prefix）を上書きするための設定です。
+ルールは上から順に評価され、最初に一致したルールが適用されます。
+
+#### appPrefixOverrides の定義
+
+```lua
+appPrefixOverrides = {
+  {
+    match = {
+      bundleID = "md.obsidian",   -- 任意
+      titleGlob = "Minerva*",     -- 任意 (`window:title()` 対象、`*` と `?` をサポート)
+    },
+    prefix = "M",                 -- 1文字または2文字。各文字は hintChars に含まれている必要あり
+  },
+}
+```
+
+#### appPrefixOverrides の動作
+
+- `match.bundleID` と `match.titleGlob` はどちらか必須
+- `titleGlob` は大文字小文字を区別
+- 旧形式の辞書指定（`["bundleID"] = "T"`）は非対応
+- 表示キー集合は prefix-free になるよう自動調整（例: `G` と `GC` が競合した場合は `GA` と `GC`）
+- どのルールにも一致しない場合は「アプリ名の先頭文字」を使用し、`hintChars` にない文字は `hintChars[1]` にフォールバック
+- `prefix` が不正（`hintChars` 外の文字、3文字以上など）の場合はエラー
 
 その他多数のカスタマイズ項目があります。詳しくは `window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
 

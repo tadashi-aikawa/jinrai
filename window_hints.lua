@@ -132,7 +132,7 @@ local DEFAULT_CONFIG = {
 	dockBottomMargin = 24,
 	-- 遮蔽ヒントドック内のアイテム間隔 (px)
 	dockItemGap = 10,
-	-- アプリ別の先頭プレフィックス上書き (bundle ID または app:title())
+	-- アプリ別の先頭プレフィックス上書き (ルール配列形式)
 	appPrefixOverrides = nil,
 	-- ウィンドウ選択時のコールバック関数
 	onSelect = nil,
@@ -203,16 +203,137 @@ local function normalizePrefixChar(value, allowedPrefixes)
 	return c
 end
 
-local function appPrefixChar(appTitle, bundleID, fallback, allowedPrefixes, appPrefixOverrides)
-	if type(appPrefixOverrides) == "table" then
-		local byBundleID = normalizePrefixChar(appPrefixOverrides[bundleID], allowedPrefixes)
-		if byBundleID then
-			return byBundleID
+local function isArrayTable(tbl)
+	if type(tbl) ~= "table" then
+		return false
+	end
+	local maxIndex = 0
+	for k, _ in pairs(tbl) do
+		if type(k) ~= "number" or k < 1 or k ~= math.floor(k) then
+			return false
+		end
+		if k > maxIndex then
+			maxIndex = k
+		end
+	end
+	for i = 1, maxIndex do
+		if tbl[i] == nil then
+			return false
+		end
+	end
+	return true
+end
+
+local LUA_PATTERN_MAGIC_CHARS = {
+	["^"] = true,
+	["$"] = true,
+	["("] = true,
+	[")"] = true,
+	["%"] = true,
+	["."] = true,
+	["["] = true,
+	["]"] = true,
+	["*"] = true,
+	["+"] = true,
+	["-"] = true,
+	["?"] = true,
+}
+
+local function globToLuaPattern(glob)
+	local parts = { "^" }
+	for i = 1, #glob do
+		local ch = string.sub(glob, i, i)
+		if ch == "*" then
+			table.insert(parts, ".*")
+		elseif ch == "?" then
+			table.insert(parts, ".")
+		elseif LUA_PATTERN_MAGIC_CHARS[ch] then
+			table.insert(parts, "%" .. ch)
+		else
+			table.insert(parts, ch)
+		end
+	end
+	table.insert(parts, "$")
+	return table.concat(parts)
+end
+
+local function normalizeOverridePrefix(prefix, allowedPrefixes)
+	if type(prefix) ~= "string" then
+		return nil
+	end
+	local upper = string.upper(prefix)
+	if #upper < 1 or #upper > 2 then
+		return nil
+	end
+	for i = 1, #upper do
+		local ch = string.sub(upper, i, i)
+		if not allowedPrefixes[ch] then
+			return nil
+		end
+	end
+	return upper
+end
+
+local function compileAppPrefixOverrides(appPrefixOverrides, allowedPrefixes)
+	if appPrefixOverrides == nil then
+		return nil
+	end
+	if type(appPrefixOverrides) ~= "table" then
+		error("[jinrai.window_hints] appPrefixOverrides must be an array of rule objects")
+	end
+	if not isArrayTable(appPrefixOverrides) then
+		error("[jinrai.window_hints] appPrefixOverrides map format is no longer supported; use array rules")
+	end
+
+	local compiled = {}
+	for i, rule in ipairs(appPrefixOverrides) do
+		if type(rule) ~= "table" then
+			error(string.format("[jinrai.window_hints] appPrefixOverrides[%d] must be a table", i))
+		end
+		if type(rule.match) ~= "table" then
+			error(string.format("[jinrai.window_hints] appPrefixOverrides[%d].match must be a table", i))
+		end
+		local match = rule.match
+		local bundleID = match.bundleID
+		local titleGlob = match.titleGlob
+		if bundleID == nil and titleGlob == nil then
+			error(string.format("[jinrai.window_hints] appPrefixOverrides[%d].match requires bundleID or titleGlob", i))
+		end
+		if bundleID ~= nil and type(bundleID) ~= "string" then
+			error(string.format("[jinrai.window_hints] appPrefixOverrides[%d].match.bundleID must be a string", i))
+		end
+		if titleGlob ~= nil and type(titleGlob) ~= "string" then
+			error(string.format("[jinrai.window_hints] appPrefixOverrides[%d].match.titleGlob must be a string", i))
 		end
 
-		local byAppTitle = normalizePrefixChar(appPrefixOverrides[appTitle], allowedPrefixes)
-		if byAppTitle then
-			return byAppTitle
+		local prefix = normalizeOverridePrefix(rule.prefix, allowedPrefixes)
+		if not prefix then
+			error(string.format(
+				"[jinrai.window_hints] appPrefixOverrides[%d].prefix must be 1 or 2 chars from hintChars",
+				i
+			))
+		end
+
+		table.insert(compiled, {
+			bundleID = bundleID,
+			titlePattern = titleGlob and globToLuaPattern(titleGlob) or nil,
+			prefix = prefix,
+		})
+	end
+
+	return compiled
+end
+
+local function resolveAppPrefix(appTitle, bundleID, windowTitle, fallback, allowedPrefixes, compiledOverrides)
+	if type(compiledOverrides) == "table" then
+		for _, rule in ipairs(compiledOverrides) do
+			local bundleMatched = (rule.bundleID == nil) or (rule.bundleID == bundleID)
+			if bundleMatched then
+				local titleMatched = (rule.titlePattern == nil) or (string.match(windowTitle or "", rule.titlePattern) ~= nil)
+				if titleMatched then
+					return rule.prefix
+				end
+			end
 		end
 	end
 
@@ -221,6 +342,107 @@ local function appPrefixChar(appTitle, bundleID, fallback, allowedPrefixes, appP
 		return titlePrefix
 	end
 	return fallback
+end
+
+local function comparePrefixes(a, b, hintCharOrder)
+	if a == b then
+		return false
+	end
+	local maxLen = math.max(#a, #b)
+	for i = 1, maxLen do
+		local ac = string.sub(a, i, i)
+		local bc = string.sub(b, i, i)
+		if ac ~= bc then
+			if ac == "" then
+				return true
+			end
+			if bc == "" then
+				return false
+			end
+			local ai = hintCharOrder[ac]
+			local bi = hintCharOrder[bc]
+			if ai and bi and ai ~= bi then
+				return ai < bi
+			end
+			return ac < bc
+		end
+	end
+	return #a < #b
+end
+
+local function hintKeyForGroup(prefix, groupSize, index, hintChars)
+	if groupSize == 1 then
+		return prefix
+	end
+	return prefix .. keySuffixFor(index - 1, hintChars)
+end
+
+local keyToDisplayText
+
+local function isStrictPrefix(a, b)
+	return #a < #b and startsWith(b, a)
+end
+
+local function keysConflict(a, b)
+	return a == b or isStrictPrefix(a, b) or isStrictPrefix(b, a)
+end
+
+local function findExpandedKey(baseKey, otherKeys, hintChars)
+	local index = 0
+	while true do
+		local candidate = baseKey .. keySuffixFor(index, hintChars)
+		local conflicted = false
+		for _, key in ipairs(otherKeys) do
+			if keysConflict(candidate, key) then
+				conflicted = true
+				break
+			end
+		end
+		if not conflicted then
+			return candidate
+		end
+		index = index + 1
+	end
+end
+
+local function makeKeysPrefixFree(hints, hintChars, hintCharOrder)
+	local maxIterations = math.max(1, #hints * 32)
+	for _ = 1, maxIterations do
+		local changed = false
+		for i = 1, #hints do
+			local key = hints[i].key
+			local hasConflict = false
+			for j = 1, #hints do
+				if i ~= j and isStrictPrefix(key, hints[j].key) then
+					hasConflict = true
+					break
+				end
+			end
+			if hasConflict then
+				local otherKeys = {}
+				for j = 1, #hints do
+					if i ~= j then
+						table.insert(otherKeys, hints[j].key)
+					end
+				end
+				local expanded = findExpandedKey(key, otherKeys, hintChars)
+				hints[i].key = expanded
+				hints[i].keyText = expanded
+				hints[i].displayKeyText = keyToDisplayText(expanded)
+				changed = true
+			end
+		end
+		if not changed then
+			table.sort(hints, function(a, b)
+				if a.key ~= b.key then
+					return comparePrefixes(a.key, b.key, hintCharOrder)
+				end
+				return false
+			end)
+			return
+		end
+	end
+	error("[jinrai.window_hints] failed to resolve key prefix conflicts")
 end
 
 local function clamp(value, min, max)
@@ -341,7 +563,7 @@ local function rawPrefixLenToDisplayLen(prefixLen)
 	return prefixLen * 2 - 1
 end
 
-local function keyToDisplayText(key)
+keyToDisplayText = function(key)
 	if #key <= 1 then
 		return key
 	end
@@ -356,7 +578,6 @@ function M.new(options)
 	options = options or {}
 	local config = mergeTable(DEFAULT_CONFIG, options)
 	local hintChars = options.hintChars or DEFAULT_HINT_CHARS
-	local appPrefixOverrides = config.appPrefixOverrides
 
 	local hotkey = nil
 	local modal = nil
@@ -366,9 +587,12 @@ function M.new(options)
 	local isShowing = false
 	local activeOverlayCanvas = nil
 	local allowedPrefixes = {}
-	for _, char in ipairs(hintChars) do
+	local hintCharOrder = {}
+	for i, char in ipairs(hintChars) do
 		allowedPrefixes[char] = true
+		hintCharOrder[char] = i
 	end
+	local appPrefixOverrides = compileAppPrefixOverrides(config.appPrefixOverrides, allowedPrefixes)
 
 	local function clearHints()
 		for _, hint in ipairs(openHints) do
@@ -555,6 +779,7 @@ function M.new(options)
 			local screen = win:screen()
 			if app and bundleID and screen and win:isStandard() and win:id() ~= focusedId then
 				local appTitle = app:title() or ""
+				local windowTitle = win:title() or ""
 				local occluded = false
 				local coveringFrames = {}
 				local wf = win:frame()
@@ -573,8 +798,15 @@ function M.new(options)
 					win = win,
 					app = app,
 					appTitle = appTitle,
-					title = win:title() or "",
-					prefix = appPrefixChar(appTitle, bundleID, hintChars[1], allowedPrefixes, appPrefixOverrides),
+					title = windowTitle,
+					prefix = resolveAppPrefix(
+						appTitle,
+						bundleID,
+						windowTitle,
+						hintChars[1],
+						allowedPrefixes,
+						appPrefixOverrides
+					),
 					isOccluded = occluded,
 					coveringFrames = coveringFrames,
 				})
@@ -583,7 +815,7 @@ function M.new(options)
 
 		table.sort(entries, function(a, b)
 			if a.prefix ~= b.prefix then
-				return a.prefix < b.prefix
+				return comparePrefixes(a.prefix, b.prefix, hintCharOrder)
 			end
 			if a.appTitle ~= b.appTitle then
 				return a.appTitle < b.appTitle
@@ -610,11 +842,19 @@ function M.new(options)
 		end
 
 		local hints = {}
-		for _, char in ipairs(hintChars) do
-			local group = grouped[char]
+		local prefixes = {}
+		for prefix, _ in pairs(grouped) do
+			table.insert(prefixes, prefix)
+		end
+		table.sort(prefixes, function(a, b)
+			return comparePrefixes(a, b, hintCharOrder)
+		end)
+
+		for _, prefix in ipairs(prefixes) do
+			local group = grouped[prefix]
 			if group then
 				for i, entry in ipairs(group) do
-					local key = #group == 1 and char or (char .. keySuffixFor(i - 1, hintChars))
+					local key = hintKeyForGroup(prefix, #group, i, hintChars)
 					local title = entry.title ~= "" and entry.title or entry.appTitle
 					title = config.showTitles and utf8Truncate(title, config.titleMaxSize) or ""
 					table.insert(hints, {
@@ -631,6 +871,7 @@ function M.new(options)
 			end
 		end
 
+		makeKeysPrefixFree(hints, hintChars, hintCharOrder)
 		return hints
 	end
 
@@ -1118,5 +1359,15 @@ function M.new(options)
 		teardown = teardown,
 	}
 end
+
+M._test = {
+	globToLuaPattern = globToLuaPattern,
+	compileAppPrefixOverrides = compileAppPrefixOverrides,
+	resolveAppPrefix = resolveAppPrefix,
+	comparePrefixes = comparePrefixes,
+	hintKeyForGroup = hintKeyForGroup,
+	findExpandedKey = findExpandedKey,
+	makeKeysPrefixFree = makeKeysPrefixFree,
+}
 
 return M
