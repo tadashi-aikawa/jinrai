@@ -82,6 +82,20 @@ local DEFAULT_CONFIG = {
 	bumpMove = 90,
 	-- 遮蔽ウィンドウのプレビュー画像を表示するか
 	showPreviewForOccluded = true,
+	-- 遮蔽判定サンプリングを動的化するか
+	occlusionSamplingEnabled = true,
+	-- 遮蔽判定サンプリングの基準ウィンドウ幅 (px)
+	occlusionSamplingBaseWidth = 1920,
+	-- 遮蔽判定サンプリングの基準ウィンドウ高さ (px)
+	occlusionSamplingBaseHeight = 1080,
+	-- 遮蔽判定サンプリング列数の最小値
+	occlusionSamplingMinCols = 4,
+	-- 遮蔽判定サンプリング行数の最小値
+	occlusionSamplingMinRows = 4,
+	-- 遮蔽判定サンプリング列数の最大値
+	occlusionSamplingMaxCols = 8,
+	-- 遮蔽判定サンプリング行数の最大値
+	occlusionSamplingMaxRows = 8,
 	-- 遮蔽ウィンドウのプレビュー画像の幅 (px)
 	previewWidth = 140,
 	-- プレビュー画像の上余白 (px)
@@ -219,12 +233,30 @@ local function isPointInRect(px, py, rect)
 	return px >= rect.x and px <= rect.x + rect.w and py >= rect.y and py <= rect.y + rect.h
 end
 
-local function isWindowOccluded(targetFrame, coveringFrames)
-	local cols, rows = 4, 4
-	for row = 0, rows - 1 do
-		for col = 0, cols - 1 do
-			local px = targetFrame.x + targetFrame.w * (col + 0.5) / cols
-			local py = targetFrame.y + targetFrame.h * (row + 0.5) / rows
+local function computeOcclusionSamplingGrid(windowFrame, config)
+	if not config.occlusionSamplingEnabled then
+		return 4, 4
+	end
+
+	local baseWidth = math.max(1, config.occlusionSamplingBaseWidth or 1920)
+	local baseHeight = math.max(1, config.occlusionSamplingBaseHeight or 1080)
+	local minCols = math.max(1, config.occlusionSamplingMinCols or 4)
+	local minRows = math.max(1, config.occlusionSamplingMinRows or 4)
+	local maxCols = math.max(minCols, config.occlusionSamplingMaxCols or 8)
+	local maxRows = math.max(minRows, config.occlusionSamplingMaxRows or 8)
+
+	local cols = clamp(math.floor((minCols * windowFrame.w / baseWidth) + 0.5), minCols, maxCols)
+	local rows = clamp(math.floor((minRows * windowFrame.h / baseHeight) + 0.5), minRows, maxRows)
+	return cols, rows
+end
+
+local function isWindowOccluded(targetFrame, coveringFrames, cols, rows)
+	local sampleCols = math.max(1, cols or 4)
+	local sampleRows = math.max(1, rows or 4)
+	for row = 0, sampleRows - 1 do
+		for col = 0, sampleCols - 1 do
+			local px = targetFrame.x + targetFrame.w * (col + 0.5) / sampleCols
+			local py = targetFrame.y + targetFrame.h * (row + 0.5) / sampleRows
 			local covered = false
 			for _, f in ipairs(coveringFrames) do
 				if isPointInRect(px, py, f) then
@@ -510,7 +542,8 @@ function M.new(options)
 					table.insert(coveringFrames, of.frame)
 				end
 				if config.showPreviewForOccluded and #coveringFrames > 0 and wf.w > 0 and wf.h > 0 then
-					occluded = isWindowOccluded(wf, coveringFrames)
+					local sampleCols, sampleRows = computeOcclusionSamplingGrid(wf, config)
+					occluded = isWindowOccluded(wf, coveringFrames, sampleCols, sampleRows)
 				end
 				table.insert(entries, {
 					win = win,
