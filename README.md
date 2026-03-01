@@ -26,6 +26,10 @@
 - ↩️ **Focus Back**
     - ホットキーで直前にアクティブだったウィンドウに戻る
 
+## デモ動画
+
+[![JINRAI Demo](https://img.youtube.com/vi/clwLqNw0kXw/hqdefault.jpg)](https://youtu.be/clwLqNw0kXw?si=gdetaK7lY0Eovjpp)
+
 ## セットアップ
 
 ```bash
