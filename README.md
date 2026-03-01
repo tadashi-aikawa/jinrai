@@ -125,8 +125,51 @@ jinrai.setup({
 | `hotkeyKey`        | `"w"`            | ホットキー（`nil` で無効化）                  |
 | `urlEvent`         | `nil`            | URL scheme名（`hammerspoon://<名前>` で発火） |
 | `centerCursor`     | `false`          | 切り替え後にカーソルをウィンドウ中央に移動    |
+| `stateSync`        | `nil`            | イベント漏れを補完する状態同期設定（下記参照） |
 
 連続で押すと2つのウィンドウ間をトグルで行き来できます。
+
+### stateSync
+
+`stateSync` は、`focus_back` の「直前に使っていたウィンドウ」の記録がずれるのを防ぐための設定です。
+
+通常は macOS のフォーカス通知だけで十分ですが、アプリによってはタブ切り替え時の通知がうまく届かず、`focus_back` が期待と違う場所へ戻ることがあります。
+そのようなときに `stateSync` を有効にすると、一定間隔で状態を確認して記録を補正できます。
+
+#### 必要になる例
+
+- タブを切り替えた直後に `focus_back` すると、1つ前に見ていたはずのタブに戻らない
+- アプリを行き来したとき、`focus_back` の戻り先が安定しない
+
+#### `stateSync` の定義
+
+| オプション         | デフォルト       | 説明                                          |
+| ------------------ | ---------------- | --------------------------------------------- |
+| `interval`         | `0.2`            | 同期間隔（秒）                                |
+| `targetApps`       | `nil`            | 同期対象アプリ名またはbundle IDの配列（`nil`で全アプリ） |
+| `historyScope`     | `"window"`       | 履歴更新単位（`"window"` or `"application"`） |
+
+##### `historyScope` の動作:
+
+- `"window"`: ウィンドウ（タブ）単位で履歴を更新
+- `"application"`: 同じアプリ内のタブ移動では履歴を更新しない
+
+#### Ghosttyでの設定例
+
+Ghosttyはタブごとに異なるウィンドウIDを持ち、タブを切り替えてもJINRAI(hammerspoon)で通知を受け取れないため設定が必要です。
+
+```lua
+focus_back = {
+  stateSync = {
+    interval = 0.15,
+    targetApps = { "com.mitchellh.ghostty" },
+    historyScope = "application",
+  },
+}
+```
+
+> [!NOTE]
+> 別のスマートな解決方法があるなら知りたい。
 
 ## ライセンス
 
