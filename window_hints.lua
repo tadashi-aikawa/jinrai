@@ -308,10 +308,12 @@ local function compileAppPrefixOverrides(appPrefixOverrides, allowedPrefixes)
 
 		local prefix = normalizeOverridePrefix(rule.prefix, allowedPrefixes)
 		if not prefix then
-			error(string.format(
-				"[jinrai.window_hints] appPrefixOverrides[%d].prefix must be 1 or 2 chars from hintChars",
-				i
-			))
+			error(
+				string.format(
+					"[jinrai.window_hints] appPrefixOverrides[%d].prefix must be 1 or 2 chars from hintChars",
+					i
+				)
+			)
 		end
 
 		table.insert(compiled, {
@@ -329,7 +331,8 @@ local function resolveAppPrefix(appTitle, bundleID, windowTitle, fallback, allow
 		for _, rule in ipairs(compiledOverrides) do
 			local bundleMatched = (rule.bundleID == nil) or (rule.bundleID == bundleID)
 			if bundleMatched then
-				local titleMatched = (rule.titlePattern == nil) or (string.match(windowTitle or "", rule.titlePattern) ~= nil)
+				local titleMatched = (rule.titlePattern == nil)
+					or (string.match(windowTitle or "", rule.titlePattern) ~= nil)
 				if titleMatched then
 					return rule.prefix
 				end
@@ -467,7 +470,7 @@ local function estimatedKeyTextWidth(text, fontSize)
 		if ch == " " then
 			width = width + (fontSize * 0.30)
 		else
-			width = width + (fontSize * 0.62)
+			width = width + (fontSize * 0.68)
 		end
 	end
 	return math.floor(width)
@@ -1224,13 +1227,7 @@ function M.new(options)
 			if screen then
 				local width, height, keyBoxWidth = computeHintSize(hint)
 				local baseCx, baseCy = findUncoveredCenter(windowFrame, hint.coveringFrames)
-				local center = nextCenter(
-					{ x = baseCx, y = baseCy },
-					screen:frame(),
-					width,
-					height,
-					takenRects
-				)
+				local center = nextCenter({ x = baseCx, y = baseCy }, screen:frame(), width, height, takenRects)
 				local canvasFrame = {
 					x = center.x - (width / 2),
 					y = center.y - (height / 2),
