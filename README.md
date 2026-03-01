@@ -179,6 +179,21 @@ focus_back = {
 > [!NOTE]
 > 別のスマートな解決方法があるなら知りたい。
 
+## テスト
+
+ユニットテストは `busted` で実行します。
+
+```bash
+busted
+```
+
+特定のテストだけ実行したい場合:
+
+```bash
+busted spec/focus_back_spec.lua
+busted spec/init_spec.lua
+```
+
 ## ライセンス
 
 MIT
