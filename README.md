@@ -1,9 +1,11 @@
+- [日本語はこちら](./README.ja.md)
+
 <div align="center">
     <h1>JINRAI</h1>
     <img src="./jinrai.svg" width="256" />
     <p>
-    <h3>迅雷</h3>
-    <div>思考の速度で素早くウィンドウの切り替えや認識を行うためのhammerspoonスクリプト</div>
+    <h3>Thunderbolt</h3>
+    <div>A Hammerspoon script for switching and recognizing windows at the speed of thought.</div>
     </p>
     <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml">
       <img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" />
@@ -16,27 +18,27 @@
 ---
 
 - 🔠 **Window Hints**
-    - アプリアイコン＋キーヒントによるウィンドウ切り替え
-        - アプリ名の頭文字をキーヒントのプレフィックスに自動割り当て
-        - 同一プレフィックスのウィンドウが複数ある場合は複数キー入力で絞り込み
-    - 他のウィンドウに完全に隠れた(サンプリング近似)ウィンドウは画面下部にドック形式＋プレビュー付きで表示
-    - アクティブウィンドウをオーバーレイでハイライト表示
+    - Switch windows with app icons + key hints
+        - Automatically assigns the first letter of each app name as the hint prefix
+        - If multiple windows share the same prefix, narrow them down with additional key input
+    - Windows completely hidden by others (sampling-based approximation) are shown at the bottom in a dock-style layout with previews
+    - Highlights the active window with an overlay
 - 🔳 **Focus Border**
-    - フォーカスが移動したウィンドウの枠を一瞬だけハイライト表示
+    - Briefly highlights the border of the newly focused window
 - ↩️ **Focus Back**
-    - ホットキーで直前にアクティブだったウィンドウに戻る
+    - Hotkey to jump back to the previously active window
 
-## デモ動画
+## Demo Video
 
 [![JINRAI Demo](https://img.youtube.com/vi/clwLqNw0kXw/hqdefault.jpg)](https://youtu.be/clwLqNw0kXw?si=gdetaK7lY0Eovjpp)
 
-## セットアップ
+## Setup
 
 ```bash
 git clone https://github.com/tadashi-aikawa/jinrai /path/to/jinrai
 ```
 
-`~/.hammerspoon/init.lua` に以下を追加:
+Add this to `~/.hammerspoon/init.lua`:
 
 ```lua
 local jinrai = dofile("/path/to/jinrai/init.lua")
@@ -48,9 +50,9 @@ jinrai.setup({
 })
 ```
 
-`focus_border` や `window_hints`、`focus_back` のキーを省略するとそのモジュールは無効になります。
+If you omit `focus_border`, `window_hints`, or `focus_back`, that module is disabled.
 
-## 設定例
+## Configuration Example
 
 ```lua
 local jinrai = dofile("/path/to/jinrai/init.lua")
@@ -99,116 +101,115 @@ jinrai.setup({
 })
 ```
 
-## Focus Border オプション
+## Focus Border Options
 
-| オプション      | デフォルト                                                | 説明                                         |
-| --------------- | --------------------------------------------------------- | -------------------------------------------- |
-| `borderWidth`   | `10`                                                      | メインボーダーの太さ (px)                    |
-| `borderColor`   | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }`| メインボーダーの色                            |
-| `outlineWidth`  | `2`                                                       | 外側アウトラインの太さ (px)                  |
-| `outlineColor`  | `{ red = 0, green = 0, blue = 0, alpha = 0.70 }`         | 外側アウトラインの色                          |
-| `duration`      | `0.5`                                                     | フェードアウト時間 (秒)                      |
-| `fadeSteps`     | `18`                                                      | フェードアウトのステップ数                   |
-| `cornerRadius`  | `10`                                                      | 角丸半径 (px)                                |
-| `minWindowSize` | `480`                                                     | 表示する最小ウィンドウサイズ (px)            |
+| Option          | Default                                                   | Description                                |
+| --------------- | --------------------------------------------------------- | ------------------------------------------ |
+| `borderWidth`   | `10`                                                      | Main border width (px)                     |
+| `borderColor`   | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }`| Main border color                          |
+| `outlineWidth`  | `2`                                                       | Outer outline width (px)                   |
+| `outlineColor`  | `{ red = 0, green = 0, blue = 0, alpha = 0.70 }`         | Outer outline color                        |
+| `duration`      | `0.5`                                                     | Fade-out duration (seconds)                |
+| `fadeSteps`     | `18`                                                      | Number of fade-out steps                   |
+| `cornerRadius`  | `10`                                                      | Corner radius (px)                         |
+| `minWindowSize` | `480`                                                     | Minimum window size to display (px)        |
 
-## Window Hints オプション
+## Window Hints Options
 
-| オプション         | デフォルト     | 説明                             |
-| ------------------ | -------------- | -------------------------------- |
-| `hotkeyModifiers`  | `{ "alt" }`   | ヒント表示のホットキー修飾キー   |
-| `hotkeyKey`        | `"f20"`        | ヒント表示のホットキー           |
-| `hintChars`        | `A-Z (QWERTY)`| ヒント文字の配列                 |
-| `appPrefixOverrides` | `nil`        | ルール配列による先頭プレフィックス上書き（`window:title()` の `glob` 対応、1-2文字prefix対応） |
-| `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
-| `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
-| `showTitles`       | `true`         | タイトル行の表示有無             |
-| `occlusionSamplingEnabled` | `true`  | 遮蔽判定サンプリングを動的化するか |
-| `occlusionSamplingBaseWidth` | `1920` | 遮蔽判定サンプリングの基準ウィンドウ幅 (px) |
-| `occlusionSamplingBaseHeight` | `1080` | 遮蔽判定サンプリングの基準ウィンドウ高さ (px) |
-| `occlusionSamplingMinCols` | `4`      | 遮蔽判定サンプリング列数の最小値 |
-| `occlusionSamplingMinRows` | `4`      | 遮蔽判定サンプリング行数の最小値 |
-| `occlusionSamplingMaxCols` | `8`      | 遮蔽判定サンプリング列数の最大値 |
-| `occlusionSamplingMaxRows` | `8`      | 遮蔽判定サンプリング行数の最大値 |
-| `onSelect`         | `nil`          | ウィンドウ選択時のコールバック   |
-| `onError`          | `nil`          | エラー時のコールバック           |
-| `centerCursor`     | `false`        | 選択後にカーソルをウィンドウ中央に移動 |
-| `centerCursorOnStart` | `false`     | 起動時にアクティブウィンドウの中心にカーソルを移動 |
+| Option         | Default       | Description |
+| -------------- | ------------- | ----------- |
+| `hotkeyModifiers`  | `{ "alt" }`    | Hotkey modifiers for showing hints |
+| `hotkeyKey`        | `"f20"`         | Hotkey for showing hints |
+| `hintChars`        | `A-Z (QWERTY)` | Array of hint characters |
+| `appPrefixOverrides` | `nil`         | Override leading prefixes via rule array (`window:title()` `glob` support, 1-2 char prefixes) |
+| `iconSize`         | `72`            | App icon size (px) |
+| `titleMaxSize`     | `72`            | Max title length shown |
+| `showTitles`       | `true`          | Whether to show title rows |
+| `occlusionSamplingEnabled` | `true`   | Whether occlusion sampling is dynamically adjusted |
+| `occlusionSamplingBaseWidth` | `1920`  | Base window width for occlusion sampling (px) |
+| `occlusionSamplingBaseHeight` | `1080` | Base window height for occlusion sampling (px) |
+| `occlusionSamplingMinCols` | `4`       | Minimum sampling columns for occlusion check |
+| `occlusionSamplingMinRows` | `4`       | Minimum sampling rows for occlusion check |
+| `occlusionSamplingMaxCols` | `8`       | Maximum sampling columns for occlusion check |
+| `occlusionSamplingMaxRows` | `8`       | Maximum sampling rows for occlusion check |
+| `onSelect`         | `nil`           | Callback on window selection |
+| `onError`          | `nil`           | Callback on error |
+| `centerCursor`     | `false`         | Move cursor to window center after selection |
+| `centerCursorOnStart` | `false`      | Move cursor to active window center at startup |
 
-遮蔽判定は対象ウィンドウ内のサンプル点で行う近似判定です。
-`occlusionSamplingEnabled=true` の場合、`occlusionSamplingBaseWidth/Height` を基準に
-`occlusionSamplingMin*` から `occlusionSamplingMax*` の範囲でサンプリンググリッドを動的に調整します。
+Occlusion is determined by approximation using sample points inside each target window.
+When `occlusionSamplingEnabled=true`, the sampling grid is dynamically adjusted within the range from `occlusionSamplingMin*` to `occlusionSamplingMax*`, based on `occlusionSamplingBaseWidth/Height`.
 
 ### appPrefixOverrides
 
-`appPrefixOverrides` は、ウィンドウごとのヒントキー先頭文字（prefix）を上書きするための設定です。
-ルールは上から順に評価され、最初に一致したルールが適用されます。
+`appPrefixOverrides` lets you override the leading hint prefix per window.
+Rules are evaluated from top to bottom, and the first matching rule is applied.
 
-#### appPrefixOverrides の定義
+#### appPrefixOverrides Definition
 
 ```lua
 appPrefixOverrides = {
   {
     match = {
-      bundleID = "md.obsidian",   -- 任意
-      titleGlob = "Minerva*",     -- 任意 (`window:title()` 対象、`*` と `?` をサポート)
+      bundleID = "md.obsidian",   -- optional
+      titleGlob = "Minerva*",     -- optional (`window:title()` target, supports `*` and `?`)
     },
-    prefix = "M",                 -- 1文字または2文字。各文字は hintChars に含まれている必要あり
+    prefix = "M",                 -- 1 or 2 chars. Each char must be included in hintChars
   },
 }
 ```
 
-#### appPrefixOverrides の動作
+#### appPrefixOverrides Behavior
 
-- `match.bundleID` と `match.titleGlob` はどちらか必須
-- `titleGlob` は大文字小文字を区別
-- 旧形式の辞書指定（`["bundleID"] = "T"`）は非対応
-- 表示キー集合は prefix-free になるよう自動調整（例: `G` と `GC` が競合した場合は `GA` と `GC`）
-- どのルールにも一致しない場合は「アプリ名の先頭文字」を使用し、`hintChars` にない文字は `hintChars[1]` にフォールバック
-- `prefix` が不正（`hintChars` 外の文字、3文字以上など）の場合はエラー
+- Either `match.bundleID` or `match.titleGlob` is required
+- `titleGlob` is case-sensitive
+- The legacy dictionary format (`["bundleID"] = "T"`) is no longer supported
+- Display key sets are automatically adjusted to stay prefix-free (for example, if `G` and `GC` conflict, they become `GA` and `GC`)
+- If no rule matches, the first letter of the app name is used; if that letter is not in `hintChars`, it falls back to `hintChars[1]`
+- Invalid `prefix` values (characters not in `hintChars`, 3+ chars, etc.) raise errors
 
-その他多数のカスタマイズ項目があります。詳しくは `window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
+There are many more customization options. See `DEFAULT_CONFIG` in `window_hints.lua` for details.
 
-## Focus Back オプション
+## Focus Back Options
 
-| オプション         | デフォルト       | 説明                                          |
-| ------------------ | ---------------- | --------------------------------------------- |
-| `hotkeyModifiers`  | `{ "option" }`   | ホットキー修飾キー                            |
-| `hotkeyKey`        | `"w"`            | ホットキー（`nil` で無効化）                  |
-| `urlEvent`         | `nil`            | URL scheme名（`hammerspoon://<名前>` で発火） |
-| `centerCursor`     | `false`          | 切り替え後にカーソルをウィンドウ中央に移動    |
-| `stateSync`        | `nil`            | イベント漏れを補完する状態同期設定（下記参照） |
+| Option         | Default          | Description |
+| -------------- | ---------------- | ----------- |
+| `hotkeyModifiers`  | `{ "option" }`    | Hotkey modifiers |
+| `hotkeyKey`        | `"w"`             | Hotkey (`nil` to disable) |
+| `urlEvent`         | `nil`             | URL scheme name (trigger via `hammerspoon://<name>`) |
+| `centerCursor`     | `false`           | Move cursor to window center after switching |
+| `stateSync`        | `nil`             | State sync settings to compensate for missed events (see below) |
 
-連続で押すと2つのウィンドウ間をトグルで行き来できます。
+Pressing repeatedly lets you toggle between two windows.
 
 ### stateSync
 
-`stateSync` は、`focus_back` の「直前に使っていたウィンドウ」の記録がずれるのを防ぐための設定です。
+`stateSync` helps prevent drift in `focus_back` history tracking.
 
-通常は macOS のフォーカス通知だけで十分ですが、アプリによってはタブ切り替え時の通知がうまく届かず、`focus_back` が期待と違う場所へ戻ることがあります。
-そのようなときに `stateSync` を有効にすると、一定間隔で状態を確認して記録を補正できます。
+In most cases, macOS focus notifications are sufficient. However, some apps do not emit reliable notifications when switching tabs, which can cause `focus_back` to jump to unexpected locations.
+If you enable `stateSync`, JINRAI periodically checks window state and corrects history.
 
-#### 必要になる例
+#### Examples where it helps
 
-- タブを切り替えた直後に `focus_back` すると、1つ前に見ていたはずのタブに戻らない
-- アプリを行き来したとき、`focus_back` の戻り先が安定しない
+- Right after switching tabs, `focus_back` does not return to the tab you expected
+- When moving between apps, `focus_back` targets are unstable
 
-#### `stateSync` の定義
+#### `stateSync` Definition
 
-| オプション         | デフォルト       | 説明                                          |
-| ------------------ | ---------------- | --------------------------------------------- |
-| `interval`         | `0.2`            | 同期間隔（秒）                                |
-| `targetApps`       | `nil`            | 同期対象アプリ名またはbundle IDの配列（`nil`で全アプリ） |
-| `historyScope`     | `"window"`       | 履歴更新単位（`"window"` or `"application"`） |
+| Option         | Default          | Description |
+| -------------- | ---------------- | ----------- |
+| `interval`         | `0.2`            | Sync interval (seconds) |
+| `targetApps`       | `nil`            | Array of target app names or bundle IDs (`nil` for all apps) |
+| `historyScope`     | `"window"`      | History update scope (`"window"` or `"application"`) |
 
-##### `historyScope` の動作:
+##### `historyScope` Behavior:
 
-- `"window"`: ウィンドウ（タブ）単位で履歴を更新
-- `"application"`: 同じアプリ内のタブ移動では履歴を更新しない
+- `"window"`: Updates history at the window (tab) level
+- `"application"`: Does not update history when moving tabs within the same app
 
-#### Ghosttyでの設定例
+#### Ghostty Example
 
-Ghosttyはタブごとに異なるウィンドウIDを持ち、タブを切り替えてもJINRAI(hammerspoon)で通知を受け取れないため設定が必要です。
+Ghostty needs this because each tab has a different window ID, and tab switches are not delivered to JINRAI (hammerspoon) as focus notifications.
 
 ```lua
 focus_back = {
@@ -221,23 +222,23 @@ focus_back = {
 ```
 
 > [!NOTE]
-> 別のスマートな解決方法があるなら知りたい。
+> If you know a smarter solution, I'd love to hear it.
 
-## テスト
+## Test
 
-ユニットテストは `busted` で実行します。
+Run unit tests with `busted`.
 
 ```bash
 busted
 ```
 
-特定のテストだけ実行したい場合:
+If you want to run specific tests:
 
 ```bash
 busted spec/focus_back_spec.lua
 busted spec/init_spec.lua
 ```
 
-## ライセンス
+## License
 
 MIT
