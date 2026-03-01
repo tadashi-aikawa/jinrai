@@ -1,5 +1,3 @@
-- [日本語はこちら](./README.ja.md)
-
 <div align="center">
     <h1>JINRAI</h1>
     <img src="./jinrai.svg" width="256" />
@@ -12,6 +10,13 @@
     </a>
     <a href="https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE">
       <img src="https://img.shields.io/github/license/tadashi-aikawa/jinrai" alt="License" />
+    </a>
+    <br />
+    <a href="./README.md">
+      <img src="https://img.shields.io/badge/Language-English-2ea44f?style=for-the-badge" alt="Language: English" />
+    </a>
+    <a href="./README.ja.md">
+      <img src="https://img.shields.io/badge/Language-%E6%97%A5%E6%9C%AC%E8%AA%9E-9ca3af?style=for-the-badge" alt="Language: Japanese" />
     </a>
 </div>
 
