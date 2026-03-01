@@ -5,7 +5,12 @@
     <h3>迅雷</h3>
     <div>思考の速度で素早くウィンドウの切り替えや認識を行うためのhammerspoonスクリプト</div>
     </p>
-    <img src="https://img.shields.io/github/license/mashape/apistatus.svg" />
+    <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml">
+      <img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" />
+    </a>
+    <a href="https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/tadashi-aikawa/jinrai" alt="License" />
+    </a>
 </div>
 
 ---
