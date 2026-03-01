@@ -132,6 +132,8 @@ local DEFAULT_CONFIG = {
 	dockBottomMargin = 24,
 	-- 遮蔽ヒントドック内のアイテム間隔 (px)
 	dockItemGap = 10,
+	-- アプリ別の先頭プレフィックス上書き (bundle ID または app:title())
+	appPrefixOverrides = nil,
 	-- ウィンドウ選択時のコールバック関数
 	onSelect = nil,
 	-- ウィンドウ選択後にマウスカーソルをウィンドウ中央に移動するか
@@ -193,12 +195,32 @@ local function keySuffixFor(index, hintChars)
 	return code
 end
 
-local function appPrefixChar(appTitle, fallback, allowedPrefixes)
-	local c = string.upper(string.sub(appTitle or "", 1, 1))
+local function normalizePrefixChar(value, allowedPrefixes)
+	local c = string.upper(string.sub(tostring(value or ""), 1, 1))
 	if c == "" or not allowedPrefixes[c] then
-		return fallback
+		return nil
 	end
 	return c
+end
+
+local function appPrefixChar(appTitle, bundleID, fallback, allowedPrefixes, appPrefixOverrides)
+	if type(appPrefixOverrides) == "table" then
+		local byBundleID = normalizePrefixChar(appPrefixOverrides[bundleID], allowedPrefixes)
+		if byBundleID then
+			return byBundleID
+		end
+
+		local byAppTitle = normalizePrefixChar(appPrefixOverrides[appTitle], allowedPrefixes)
+		if byAppTitle then
+			return byAppTitle
+		end
+	end
+
+	local titlePrefix = normalizePrefixChar(appTitle, allowedPrefixes)
+	if titlePrefix then
+		return titlePrefix
+	end
+	return fallback
 end
 
 local function clamp(value, min, max)
@@ -334,6 +356,7 @@ function M.new(options)
 	options = options or {}
 	local config = mergeTable(DEFAULT_CONFIG, options)
 	local hintChars = options.hintChars or DEFAULT_HINT_CHARS
+	local appPrefixOverrides = config.appPrefixOverrides
 
 	local hotkey = nil
 	local modal = nil
@@ -528,8 +551,9 @@ function M.new(options)
 
 		for _, win in ipairs(hs.window.visibleWindows()) do
 			local app = win:application()
+			local bundleID = app and app:bundleID() or nil
 			local screen = win:screen()
-			if app and app:bundleID() and screen and win:isStandard() and win:id() ~= focusedId then
+			if app and bundleID and screen and win:isStandard() and win:id() ~= focusedId then
 				local appTitle = app:title() or ""
 				local occluded = false
 				local coveringFrames = {}
@@ -550,7 +574,7 @@ function M.new(options)
 					app = app,
 					appTitle = appTitle,
 					title = win:title() or "",
-					prefix = appPrefixChar(appTitle, hintChars[1], allowedPrefixes),
+					prefix = appPrefixChar(appTitle, bundleID, hintChars[1], allowedPrefixes, appPrefixOverrides),
 					isOccluded = occluded,
 					coveringFrames = coveringFrames,
 				})

@@ -59,6 +59,10 @@ jinrai.setup({
   },
   window_hints = {
     hintChars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" },
+    appPrefixOverrides = {
+      ["com.apple.Terminal"] = "T",
+      ["Google Chrome"] = "C",
+    },
     hotkeyModifiers = { "alt" },
     hotkeyKey = "f20",
     iconSize = 72,
@@ -96,6 +100,7 @@ jinrai.setup({
 | `hotkeyModifiers`  | `{ "alt" }`   | ヒント表示のホットキー修飾キー   |
 | `hotkeyKey`        | `"f20"`        | ヒント表示のホットキー           |
 | `hintChars`        | `A-Z (QWERTY)`| ヒント文字の配列                 |
+| `appPrefixOverrides` | `nil`        | アプリ別の先頭プレフィックス上書き (`bundle ID` または `app:title()`) |
 | `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
 | `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
 | `showTitles`       | `true`         | タイトル行の表示有無             |
@@ -114,6 +119,9 @@ jinrai.setup({
 遮蔽判定は対象ウィンドウ内のサンプル点で行う近似判定です。
 `occlusionSamplingEnabled=true` の場合、`occlusionSamplingBaseWidth/Height` を基準に
 `occlusionSamplingMin*` から `occlusionSamplingMax*` の範囲でサンプリンググリッドを動的に調整します。
+
+`appPrefixOverrides` は `bundle ID` 指定を優先し、該当がなければ `app:title()` 指定を使います。
+どちらもない場合は従来どおり「アプリ名の先頭文字」を使用し、`hintChars` にない文字は `hintChars[1]` にフォールバックします。
 
 その他多数のカスタマイズ項目があります。詳しくは `window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
 
