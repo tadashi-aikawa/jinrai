@@ -2,7 +2,7 @@
     <h1>JINRAI</h1>
     <img src="./jinrai.svg" width="256" />
     <p>
-    <h3>Thunderbolt</h3>
+    <h3>迅雷</h3>
     <div>A Hammerspoon script for switching and recognizing windows at the speed of thought.</div>
     </p>
     <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml">
