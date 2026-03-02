@@ -255,6 +255,34 @@ describe("window_hints appPrefixOverrides", function()
 		assert.is_false(helper.shouldSwapWindowFrameOnSelect(nil, { "cmd", "shift" }))
 	end)
 
+	it("候補内ヒントの overlay border 色は通常色", function()
+		local normal = { red = 0.4, green = 0.6, blue = 0.9, alpha = 0.85 }
+		local dimmed = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.55 }
+		local color = helper.resolveHintOverlayBorderColor(true, {
+			hintOverlayBorderColor = normal,
+			dimmedHintOverlayBorderColor = dimmed,
+		})
+		assert.are.same(normal, color)
+	end)
+
+	it("候補外ヒントの overlay border 色は dimmed 色", function()
+		local normal = { red = 0.4, green = 0.6, blue = 0.9, alpha = 0.85 }
+		local dimmed = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.55 }
+		local color = helper.resolveHintOverlayBorderColor(false, {
+			hintOverlayBorderColor = normal,
+			dimmedHintOverlayBorderColor = dimmed,
+		})
+		assert.are.same(dimmed, color)
+	end)
+
+	it("dimmed overlay border 色が無ければ通常色へフォールバック", function()
+		local normal = { red = 0.4, green = 0.6, blue = 0.9, alpha = 0.85 }
+		local color = helper.resolveHintOverlayBorderColor(false, {
+			hintOverlayBorderColor = normal,
+		})
+		assert.are.same(normal, color)
+	end)
+
 	it("文字キーの入力修飾キー集合を生成できる", function()
 		local bindings = helper.collectModalInputModifiers("w", helper.normalizeSelectModifiers({ "cmd" }))
 		assert.are.same({ {}, { "cmd" }, { "shift" } }, bindings)

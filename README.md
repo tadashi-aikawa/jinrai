@@ -144,6 +144,7 @@ jinrai.setup({
 | `focusBackKey`     | `nil`          | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
 | `directionKeys`    | `nil`          | 8-direction navigation keys while Window Hints is visible  |
 | `swapWindowFrameSelectModifiers` | `nil` | Modifier keys for swapping frames between focused and target windows when selecting hints or using `focusBackKey` / `directionKeys` (exact match required; e.g. `{ "shift" }`) |
+| `dimmedHintOverlayBorderColor` | `{ red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 }` | Overlay border color for hints excluded by current key input |
 | `iconSize`         | `72`            | App icon size (px) |
 | `titleMaxSize`     | `72`            | Max title length shown |
 | `showTitles`       | `true`          | Whether to show title rows |

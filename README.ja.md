@@ -144,6 +144,7 @@ jinrai.setup({
 | `focusBackKey`     | `nil`         | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
 | `directionKeys`    | `nil`         | Window Hints表示中に8方向移動を実行するキー |
 | `swapWindowFrameSelectModifiers` | `nil` | ヒント確定時または `focusBackKey` / `directionKeys` 実行時に現在ウィンドウと対象ウィンドウの位置・サイズを入れ替える修飾キー（完全一致時のみ。例: `{ "shift" }`） |
+| `dimmedHintOverlayBorderColor` | `{ red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 }` | 現在入力キーで候補外になったヒントのオーバーレイBorder色 |
 | `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
 | `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
 | `showTitles`       | `true`         | タイトル行の表示有無             |

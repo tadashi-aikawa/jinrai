@@ -124,6 +124,8 @@ local DEFAULT_CONFIG = {
 	hintOverlayColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.38 },
 	-- 前面ヒントバッジのオーバーレイボーダー色
 	hintOverlayBorderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 },
+	-- 候補外になった前面ヒントバッジのオーバーレイボーダー色
+	dimmedHintOverlayBorderColor = { red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 },
 	-- 前面ヒントバッジのオーバーレイボーダー幅 (px)
 	hintOverlayBorderWidth = 4,
 	-- 前面ヒントバッジのオーバーレイ角丸半径 (px)
@@ -170,6 +172,13 @@ local function cloneColor(color)
 		blue = color.blue,
 		alpha = color.alpha,
 	}
+end
+
+local function resolveHintOverlayBorderColor(active, config)
+	if not active and config.dimmedHintOverlayBorderColor then
+		return config.dimmedHintOverlayBorderColor
+	end
+	return config.hintOverlayBorderColor
 end
 
 local function startsWith(s, prefix)
@@ -1293,6 +1302,9 @@ function M.new(options)
 		hint.canvas[hint.keyPrefixIdx].textColor = active and config.keyHighlightColor or config.dimmedTextColor
 		hint.canvas[hint.keyRestIdx].textColor = active and config.textColor or config.dimmedTextColor
 		hint.canvas[hint.titleIdx].textColor = active and config.titleTextColor or config.dimmedTitleTextColor
+		if hint.overlayBorderIdx then
+			hint.canvas[hint.overlayBorderIdx].strokeColor = cloneColor(resolveHintOverlayBorderColor(active, config))
+		end
 	end
 
 	local function keyBoxWidthForText(displayKeyText)
@@ -1741,6 +1753,7 @@ function M.new(options)
 		end
 		local curIconAlpha = isOccluded and config.occludedIconAlpha or config.iconAlpha
 
+		local overlayBorderIdx = nil
 		local nextIdx = 1
 		canvas[nextIdx] = {
 			type = "rectangle",
@@ -1775,6 +1788,7 @@ function M.new(options)
 				},
 				frame = { x = obw / 2, y = obw / 2, w = frame.w - obw, h = frame.h - obw },
 			}
+			overlayBorderIdx = nextIdx
 			nextIdx = nextIdx + 1
 		end
 
@@ -1847,7 +1861,7 @@ function M.new(options)
 		end
 
 		canvas:show()
-		return canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize
+		return canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayBorderIdx
 	end
 
 	local function computeHintSize(hint, scale)
@@ -1876,7 +1890,7 @@ function M.new(options)
 	local function placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale)
 		local bundleID = hint.app and hint.app:bundleID() or nil
 		local icon = bundleID and hs.image.imageFromAppBundle(bundleID) or nil
-		local canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize = newHintCanvas(
+		local canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayBorderIdx = newHintCanvas(
 			canvasFrame,
 			icon,
 			hint.keyText,
@@ -1895,6 +1909,7 @@ function M.new(options)
 		hint.keyRestIdx = keyRestIdx
 		hint.titleIdx = titleIdx
 		hint.effectiveFontSize = fSize
+		hint.overlayBorderIdx = overlayBorderIdx
 		table.insert(openHints, hint)
 		hintByKey[hint.key] = hint
 	end
@@ -1928,7 +1943,7 @@ function M.new(options)
 			type = "rectangle",
 			action = "stroke",
 			frame = { x = bw / 2, y = bw / 2, w = frame.w - bw, h = frame.h - bw },
-			strokeColor = config.activeOverlayBorderColor,
+			strokeColor = cloneColor(config.activeOverlayBorderColor),
 			strokeWidth = bw,
 			roundedRectRadii = {
 				xRadius = config.activeOverlayCornerRadius,
@@ -2131,6 +2146,7 @@ M._test = {
 	collectModalInputModifiers = collectModalInputModifiers,
 	swapWindowFrames = swapWindowFrames,
 	resolveFocusBackTargetWindow = resolveFocusBackTargetWindow,
+	resolveHintOverlayBorderColor = resolveHintOverlayBorderColor,
 	comparePrefixes = comparePrefixes,
 	hintKeyForGroup = hintKeyForGroup,
 	findExpandedKey = findExpandedKey,
