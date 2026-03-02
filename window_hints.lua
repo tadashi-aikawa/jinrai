@@ -140,6 +140,12 @@ local DEFAULT_CONFIG = {
 	centerCursor = false,
 	-- ヒント起動時にアクティブウィンドウの中心にマウスカーソルを移動するか
 	centerCursorOnStart = false,
+	-- Window Hints 表示中に Focus Back 相当を実行するキー (focus_back 有効時のみ)
+	focusBackKey = nil,
+	-- Window Hints 表示中に方向移動を実行するキー
+	directionKeys = nil,
+	-- 共有 Focus 履歴 (内部注入用)
+	focusHistory = nil,
 }
 
 local function mergeTable(defaults, overrides)
@@ -201,6 +207,84 @@ local function normalizePrefixChar(value, allowedPrefixes)
 		return nil
 	end
 	return c
+end
+
+local function normalizeActionKey(value, optionName)
+	if value == nil then
+		return nil
+	end
+	if type(value) ~= "string" then
+		error(string.format("[jinrai.window_hints] %s must be a string", optionName))
+	end
+	if value == "" then
+		error(string.format("[jinrai.window_hints] %s must not be empty", optionName))
+	end
+	return string.lower(value)
+end
+
+local function normalizeDirectionKeys(directionKeys)
+	if directionKeys == nil then
+		return nil
+	end
+	if type(directionKeys) ~= "table" then
+		error("[jinrai.window_hints] directionKeys must be a table")
+	end
+	return {
+		left = normalizeActionKey(directionKeys.left, "directionKeys.left"),
+		down = normalizeActionKey(directionKeys.down, "directionKeys.down"),
+		up = normalizeActionKey(directionKeys.up, "directionKeys.up"),
+		right = normalizeActionKey(directionKeys.right, "directionKeys.right"),
+	}
+end
+
+local function buildDirectionKeyLookup(directionKeys)
+	if not directionKeys then
+		return {}
+	end
+	local lookup = {}
+	for _, direction in ipairs({ "left", "down", "up", "right" }) do
+		local key = directionKeys[direction]
+		if key then
+			local existing = lookup[key]
+			if existing and existing ~= direction then
+				error("[jinrai.window_hints] directionKeys must not contain duplicate keys")
+			end
+			lookup[key] = direction
+		end
+	end
+	return lookup
+end
+
+local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey)
+	local reserved = {}
+	local function addKey(key)
+		if key and #key == 1 then
+			reserved[string.upper(key)] = true
+		end
+	end
+	for key, _ in pairs(directionKeyLookup or {}) do
+		addKey(key)
+	end
+	addKey(focusBackKey)
+	return reserved
+end
+
+local function normalizeHintChars(rawHintChars)
+	local normalized = {}
+	for _, char in ipairs(rawHintChars) do
+		table.insert(normalized, string.upper(tostring(char)))
+	end
+	return normalized
+end
+
+local function filterHintChars(hintChars, reservedHintCharLookup)
+	local filtered = {}
+	for _, char in ipairs(hintChars) do
+		if not reservedHintCharLookup[char] then
+			table.insert(filtered, char)
+		end
+	end
+	return filtered
 end
 
 local function isArrayTable(tbl)
@@ -326,7 +410,7 @@ local function compileAppPrefixOverrides(appPrefixOverrides, allowedPrefixes)
 	return compiled
 end
 
-local function resolveAppPrefix(appTitle, bundleID, windowTitle, fallback, allowedPrefixes, compiledOverrides)
+local function resolveAppPrefixFromOverride(bundleID, windowTitle, compiledOverrides)
 	if type(compiledOverrides) == "table" then
 		for _, rule in ipairs(compiledOverrides) do
 			local bundleMatched = (rule.bundleID == nil) or (rule.bundleID == bundleID)
@@ -334,17 +418,67 @@ local function resolveAppPrefix(appTitle, bundleID, windowTitle, fallback, allow
 				local titleMatched = (rule.titlePattern == nil)
 					or (string.match(windowTitle or "", rule.titlePattern) ~= nil)
 				if titleMatched then
-					return rule.prefix
+					return rule.prefix, true
 				end
 			end
 		end
 	end
+	return nil, false
+end
 
+local function resolveAppPrefix(appTitle, bundleID, windowTitle, fallback, allowedPrefixes, compiledOverrides)
+	local overridePrefix, overridden = resolveAppPrefixFromOverride(bundleID, windowTitle, compiledOverrides)
+	if overridePrefix then
+		return overridePrefix, overridden
+	end
 	local titlePrefix = normalizePrefixChar(appTitle, allowedPrefixes)
 	if titlePrefix then
-		return titlePrefix
+		return titlePrefix, false
 	end
-	return fallback
+	return fallback, false
+end
+
+local function collectAppPrefixCandidates(appTitle, basePrefix, allowedPrefixes)
+	local candidates = {}
+	local seen = {}
+	local function add(prefix)
+		if prefix and not seen[prefix] then
+			seen[prefix] = true
+			table.insert(candidates, prefix)
+		end
+	end
+
+	add(basePrefix)
+	for i = 1, #appTitle do
+		add(normalizePrefixChar(string.sub(appTitle, i, i), allowedPrefixes))
+	end
+	return candidates
+end
+
+local function assignUniquePrefixes(entries, fallbackPrefix, allowedPrefixes)
+	local used = {}
+	local appPrefixMap = {}
+	for _, entry in ipairs(entries) do
+		local appKey = entry.appKey
+		local existing = appPrefixMap[appKey]
+		if existing then
+			entry.prefix = existing
+		else
+			local chosen = entry.basePrefix or fallbackPrefix
+			if not entry.isOverridePrefix then
+				local candidates = collectAppPrefixCandidates(entry.appTitle or "", chosen, allowedPrefixes)
+				for _, candidate in ipairs(candidates) do
+					if not used[candidate] then
+						chosen = candidate
+						break
+					end
+				end
+			end
+			appPrefixMap[appKey] = chosen
+			used[chosen] = true
+			entry.prefix = chosen
+		end
+	end
 end
 
 local function comparePrefixes(a, b, hintCharOrder)
@@ -559,6 +693,129 @@ local function findUncoveredCenter(windowFrame, coveringFrames)
 	return bestX, bestY
 end
 
+local function windowFrameOf(win)
+	if not win or not win.frame then
+		return nil
+	end
+	local ok, frame = pcall(function()
+		return win:frame()
+	end)
+	if not ok or not frame or frame.w <= 0 or frame.h <= 0 then
+		return nil
+	end
+	return frame
+end
+
+local function windowIdOf(win)
+	if not win or not win.id then
+		return nil
+	end
+	local ok, id = pcall(function()
+		return win:id()
+	end)
+	if not ok then
+		return nil
+	end
+	return id
+end
+
+local function centerOfFrame(frame)
+	return {
+		x = frame.x + frame.w / 2,
+		y = frame.y + frame.h / 2,
+	}
+end
+
+local function isDirectionalCandidate(direction, fromCenter, toCenter)
+	if direction == "left" then
+		return toCenter.x < fromCenter.x
+	end
+	if direction == "right" then
+		return toCenter.x > fromCenter.x
+	end
+	if direction == "up" then
+		return toCenter.y < fromCenter.y
+	end
+	if direction == "down" then
+		return toCenter.y > fromCenter.y
+	end
+	return false
+end
+
+local function secondaryAxisDelta(direction, fromCenter, toCenter)
+	if direction == "left" or direction == "right" then
+		return math.abs(toCenter.y - fromCenter.y)
+	end
+	return math.abs(toCenter.x - fromCenter.x)
+end
+
+local function compareWindowIds(a, b)
+	if a == b then
+		return false
+	end
+	if type(a) == "number" and type(b) == "number" then
+		return a < b
+	end
+	return tostring(a) < tostring(b)
+end
+
+local function findDirectionalWindowTarget(currentWin, candidateWins, direction, previousWin)
+	local currentFrame = windowFrameOf(currentWin)
+	if not currentFrame then
+		return nil
+	end
+	local currentId = windowIdOf(currentWin)
+	local previousId = windowIdOf(previousWin)
+	local currentCenter = centerOfFrame(currentFrame)
+	local best = nil
+	local DIST_EPSILON = 0.0001
+
+	for _, win in ipairs(candidateWins) do
+		local winId = windowIdOf(win)
+		if winId ~= nil and winId ~= currentId then
+			local frame = windowFrameOf(win)
+			if frame then
+				local center = centerOfFrame(frame)
+				if isDirectionalCandidate(direction, currentCenter, center) then
+					local dx = center.x - currentCenter.x
+					local dy = center.y - currentCenter.y
+					local distance2 = dx * dx + dy * dy
+					local secondary = secondaryAxisDelta(direction, currentCenter, center)
+					local isPrevious = previousId ~= nil and winId == previousId
+					local candidate = {
+						win = win,
+						id = winId,
+						distance2 = distance2,
+						secondary = secondary,
+						isPrevious = isPrevious,
+					}
+					if not best then
+						best = candidate
+					else
+						local better = false
+						if candidate.distance2 < (best.distance2 - DIST_EPSILON) then
+							better = true
+						elseif math.abs(candidate.distance2 - best.distance2) <= DIST_EPSILON then
+							if candidate.isPrevious ~= best.isPrevious then
+								better = candidate.isPrevious
+							elseif candidate.secondary ~= best.secondary then
+								better = candidate.secondary < best.secondary
+							else
+								better = compareWindowIds(candidate.id, best.id)
+							end
+						end
+						if better then
+							best = candidate
+						end
+					end
+				end
+			end
+		end
+	end
+
+	return best and best.win or nil
+end
+
 local function rawPrefixLenToDisplayLen(prefixLen)
 	if prefixLen <= 0 then
 		return 0
@@ -580,12 +837,25 @@ end
 function M.new(options)
 	options = options or {}
 	local config = mergeTable(DEFAULT_CONFIG, options)
-	local hintChars = options.hintChars or DEFAULT_HINT_CHARS
+	local focusHistory = config.focusHistory
+	local directionKeys = normalizeDirectionKeys(config.directionKeys)
+	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
+	local focusBackKey = normalizeActionKey(config.focusBackKey, "focusBackKey")
+	if not focusHistory then
+		focusBackKey = nil
+	end
+	local hintChars = normalizeHintChars(options.hintChars or DEFAULT_HINT_CHARS)
+	local reservedHintCharLookup = buildReservedHintCharLookup(directionKeyLookup, focusBackKey)
+	hintChars = filterHintChars(hintChars, reservedHintCharLookup)
+	if #hintChars == 0 then
+		error("[jinrai.window_hints] no available hintChars after excluding reserved navigation keys")
+	end
 
 	local hotkey = nil
 	local modal = nil
 	local openHints = {}
 	local hintByKey = {}
+	local hintCharByInputKey = {}
 	local currentInput = ""
 	local isShowing = false
 	local activeOverlayCanvas = nil
@@ -594,6 +864,7 @@ function M.new(options)
 	for i, char in ipairs(hintChars) do
 		allowedPrefixes[char] = true
 		hintCharOrder[char] = i
+		hintCharByInputKey[string.lower(char)] = char
 	end
 	local appPrefixOverrides = compileAppPrefixOverrides(config.appPrefixOverrides, allowedPrefixes)
 
@@ -700,6 +971,56 @@ function M.new(options)
 		closeHints(true)
 	end
 
+	local function runFocusBackAction()
+		if not focusHistory or not focusHistory.focusBack then
+			return false
+		end
+		local win = focusHistory:focusBack()
+		if not win then
+			return false
+		end
+		if config.centerCursor then
+			local frame = win:frame()
+			hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
+		end
+		if config.onSelect then
+			config.onSelect(win)
+		end
+		closeHints(true)
+		return true
+	end
+
+	local function resolvePreviousWindowForDirection()
+		if focusHistory and focusHistory.getPreviousWindow then
+			return focusHistory:getPreviousWindow()
+		end
+		local ordered = hs.window.orderedWindows()
+		if type(ordered) == "table" and #ordered >= 2 then
+			return ordered[2]
+		end
+		return nil
+	end
+
+	local function runDirectionalAction(direction)
+		local focusedWin = hs.window.focusedWindow()
+		if not focusedWin then
+			return false
+		end
+		local candidates = {}
+		for _, win in ipairs(hs.window.visibleWindows()) do
+			if win and win.isStandard and win:isStandard() then
+				table.insert(candidates, win)
+			end
+		end
+		local previousWin = resolvePreviousWindowForDirection()
+		local target = findDirectionalWindowTarget(focusedWin, candidates, direction, previousWin)
+		if not target then
+			return false
+		end
+		selectWindow(target)
+		return true
+	end
+
 	local function handleChar(char)
 		if not isShowing then
 			return
@@ -738,6 +1059,40 @@ function M.new(options)
 		refreshHighlights()
 	end
 
+	local function handleInputKey(key)
+		if not isShowing then
+			return
+		end
+		if focusBackKey and key == focusBackKey then
+			if runFocusBackAction() then
+				return
+			end
+		end
+		local direction = directionKeyLookup[key]
+		if direction then
+			runDirectionalAction(direction)
+			return
+		end
+		local hintChar = hintCharByInputKey[key]
+		if hintChar then
+			handleChar(hintChar)
+		end
+	end
+
+	local function bindModalKey(key)
+		if not key then
+			return
+		end
+		modal:bind({}, key, function()
+			handleInputKey(key)
+		end)
+		if #key == 1 then
+			modal:bind({ "shift" }, key, function()
+				handleInputKey(key)
+			end)
+		end
+	end
+
 	local function ensureModal()
 		if modal then
 			return
@@ -752,14 +1107,21 @@ function M.new(options)
 		modal:bind({}, "forwarddelete", function()
 			handleBackspace()
 		end)
+		local boundKeys = {}
+		local function bindIfNeeded(key)
+			if key and not boundKeys[key] then
+				boundKeys[key] = true
+				bindModalKey(key)
+			end
+		end
 		for _, char in ipairs(hintChars) do
-			local lower = string.lower(char)
-			modal:bind({}, lower, function()
-				handleChar(char)
-			end)
-			modal:bind({ "shift" }, lower, function()
-				handleChar(char)
-			end)
+			bindIfNeeded(string.lower(char))
+		end
+		if focusBackKey then
+			bindIfNeeded(focusBackKey)
+		end
+		for key, _ in pairs(directionKeyLookup) do
+			bindIfNeeded(key)
 		end
 	end
 
@@ -797,25 +1159,43 @@ function M.new(options)
 					local sampleCols, sampleRows = computeOcclusionSamplingGrid(wf, config)
 					occluded = isWindowOccluded(wf, coveringFrames, sampleCols, sampleRows)
 				end
+				local basePrefix, isOverridePrefix = resolveAppPrefix(
+					appTitle,
+					bundleID,
+					windowTitle,
+					hintChars[1],
+					allowedPrefixes,
+					appPrefixOverrides
+				)
 				table.insert(entries, {
 					win = win,
 					app = app,
+					appKey = bundleID or appTitle,
 					appTitle = appTitle,
 					title = windowTitle,
-					prefix = resolveAppPrefix(
-						appTitle,
-						bundleID,
-						windowTitle,
-						hintChars[1],
-						allowedPrefixes,
-						appPrefixOverrides
-					),
+					basePrefix = basePrefix,
+					isOverridePrefix = isOverridePrefix,
 					isOccluded = occluded,
 					coveringFrames = coveringFrames,
 				})
 			end
 		end
 
+		table.sort(entries, function(a, b)
+			if a.appTitle ~= b.appTitle then
+				return a.appTitle < b.appTitle
+			end
+			if a.title ~= b.title then
+				return a.title < b.title
+			end
+			local af = a.win:frame()
+			local bf = b.win:frame()
+			if af.x ~= bf.x then
+				return af.x < bf.x
+			end
+			return af.y < bf.y
+		end)
+		assignUniquePrefixes(entries, hintChars[1], allowedPrefixes)
 		table.sort(entries, function(a, b)
 			if a.prefix ~= b.prefix then
 				return comparePrefixes(a.prefix, b.prefix, hintCharOrder)
@@ -1361,6 +1741,12 @@ M._test = {
 	globToLuaPattern = globToLuaPattern,
 	compileAppPrefixOverrides = compileAppPrefixOverrides,
 	resolveAppPrefix = resolveAppPrefix,
+	normalizeHintChars = normalizeHintChars,
+	filterHintChars = filterHintChars,
+	buildReservedHintCharLookup = buildReservedHintCharLookup,
+	collectAppPrefixCandidates = collectAppPrefixCandidates,
+	assignUniquePrefixes = assignUniquePrefixes,
+	findDirectionalWindowTarget = findDirectionalWindowTarget,
 	comparePrefixes = comparePrefixes,
 	hintKeyForGroup = hintKeyForGroup,
 	findExpandedKey = findExpandedKey,

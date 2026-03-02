@@ -71,6 +71,18 @@ describe("init", function()
 					end,
 				}
 			end
+			if path:match("focus_history.lua$") then
+				return {
+					new = function(options)
+						calls.new.focus_history = options
+						return {
+							teardown = function()
+								calls.teardown.focus_history = true
+							end,
+						}
+					end,
+				}
+			end
 			return originalDofile(path)
 		end
 
@@ -80,17 +92,21 @@ describe("init", function()
 		})
 
 		assert.are.same({ borderWidth = 99 }, calls.new.focus_border)
-		assert.are.same({ hotkeyKey = "q" }, calls.new.focus_back)
+		assert.are.same({ stateSync = nil }, calls.new.focus_history)
+		assert.are.equal("q", calls.new.focus_back.hotkeyKey)
+		assert.is_truthy(calls.new.focus_back.focusHistory)
 		assert.are.equal(nil, calls.new.window_hints)
 
 		local joined = table.concat(calls.loadPaths, "\n")
 		assert.is_truthy(joined:match("focus_border.lua"))
 		assert.is_truthy(joined:match("window_hints.lua"))
 		assert.is_truthy(joined:match("focus_back.lua"))
+		assert.is_truthy(joined:match("focus_history.lua"))
 
 		init.teardown()
 		assert.is_true(calls.teardown.focus_border)
 		assert.is_true(calls.teardown.focus_back)
+		assert.is_true(calls.teardown.focus_history)
 		assert.are.equal(nil, calls.teardown.window_hints)
 	end)
 
@@ -133,6 +149,17 @@ describe("init", function()
 					end,
 				}
 			end
+			if path:match("focus_history.lua$") then
+				return {
+					new = function()
+						return {
+							teardown = function()
+								table.insert(order, "focus_history")
+							end,
+						}
+					end,
+				}
+			end
 			return originalDofile(path)
 		end
 
@@ -143,6 +170,6 @@ describe("init", function()
 		})
 		init.teardown()
 
-		assert.are.same({ "focus_back", "window_hints", "focus_border" }, order)
+		assert.are.same({ "focus_back", "window_hints", "focus_history", "focus_border" }, order)
 	end)
 end)

@@ -93,6 +93,8 @@ jinrai.setup({
     },
     hotkeyModifiers = { "alt" },
     hotkeyKey = "f20",
+    focusBackKey = "u",
+    directionKeys = { left = "h", down = "j", up = "k", right = "l" },
     iconSize = 72,
     titleMaxSize = 72,
     centerCursor = true,
@@ -129,6 +131,8 @@ jinrai.setup({
 | `hotkeyKey`        | `"f20"`        | ヒント表示のホットキー           |
 | `hintChars`        | `A-Z (QWERTY)`| ヒント文字の配列                 |
 | `appPrefixOverrides` | `nil`        | ルール配列による先頭プレフィックス上書き（`window:title()` の `glob` 対応、1-2文字prefix対応） |
+| `focusBackKey`     | `nil`         | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
+| `directionKeys`    | `nil`         | Window Hints表示中に上下左右移動を実行するキー（例: `{ left=\"h\", down=\"j\", up=\"k\", right=\"l\" }`） |
 | `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
 | `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
 | `showTitles`       | `true`         | タイトル行の表示有無             |
@@ -173,10 +177,17 @@ appPrefixOverrides = {
 - `titleGlob` は大文字小文字を区別
 - 旧形式の辞書指定（`["bundleID"] = "T"`）は非対応
 - 表示キー集合は prefix-free になるよう自動調整（例: `G` と `GC` が競合した場合は `GA` と `GC`）
-- どのルールにも一致しない場合は「アプリ名の先頭文字」を使用し、`hintChars` にない文字は `hintChars[1]` にフォールバック
+- どのルールにも一致しない場合は、アプリ名の文字を先頭から見て `hintChars` に含まれる文字を選ぶ（同じ文字が使用済みなら次候補へ）。候補がなければ `hintChars[1]` にフォールバック
 - `prefix` が不正（`hintChars` 外の文字、3文字以上など）の場合はエラー
 
 その他多数のカスタマイズ項目があります。詳しくは `window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
+
+### Window Hints 内ナビゲーション
+
+- `focusBackKey` と `directionKeys` はヒント表示中のみ有効です
+- `focusBackKey` は `focus_back` 設定が有効なときだけ動作します
+- これらのキーと `hintChars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
+- 方向移動先は「指定方向にあるウィンドウの最近傍」を選びます。同距離候補が複数ある場合は直前アクティブウィンドウを優先します
 
 ## Focus Back オプション
 

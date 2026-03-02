@@ -93,6 +93,8 @@ jinrai.setup({
     },
     hotkeyModifiers = { "alt" },
     hotkeyKey = "f20",
+    focusBackKey = "u",
+    directionKeys = { left = "h", down = "j", up = "k", right = "l" },
     iconSize = 72,
     titleMaxSize = 72,
     centerCursor = true,
@@ -129,6 +131,8 @@ jinrai.setup({
 | `hotkeyKey`        | `"f20"`         | Hotkey for showing hints |
 | `hintChars`        | `A-Z (QWERTY)` | Array of hint characters |
 | `appPrefixOverrides` | `nil`         | Override leading prefixes via rule array (`window:title()` `glob` support, 1-2 char prefixes) |
+| `focusBackKey`     | `nil`          | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
+| `directionKeys`    | `nil`          | Directional navigation keys while Window Hints is visible (e.g. `{ left=\"h\", down=\"j\", up=\"k\", right=\"l\" }`) |
 | `iconSize`         | `72`            | App icon size (px) |
 | `titleMaxSize`     | `72`            | Max title length shown |
 | `showTitles`       | `true`          | Whether to show title rows |
@@ -172,10 +176,17 @@ appPrefixOverrides = {
 - `titleGlob` is case-sensitive
 - The legacy dictionary format (`["bundleID"] = "T"`) is no longer supported
 - Display key sets are automatically adjusted to stay prefix-free (for example, if `G` and `GC` conflict, they become `GA` and `GC`)
-- If no rule matches, the first letter of the app name is used; if that letter is not in `hintChars`, it falls back to `hintChars[1]`
+- If no rule matches, characters in the app name are checked from left to right and the first available one in `hintChars` is used (if already used, the next candidate is tried); if none match, it falls back to `hintChars[1]`
 - Invalid `prefix` values (characters not in `hintChars`, 3+ chars, etc.) raise errors
 
 There are many more customization options. See `DEFAULT_CONFIG` in `window_hints.lua` for details.
+
+### Navigation During Window Hints
+
+- `focusBackKey` and `directionKeys` are active only while hints are shown
+- `focusBackKey` works only when `focus_back` is enabled
+- If these keys conflict with `hintChars`, the conflicting hint chars are removed and navigation keys take priority
+- Directional navigation picks the nearest window in that direction; if multiple candidates are tied, the previously active window is preferred
 
 ## Focus Back Options
 
