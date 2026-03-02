@@ -5,19 +5,17 @@
     <h3>迅雷</h3>
     <div>思考の速度で素早くウィンドウの切り替えや認識を行うためのhammerspoonスクリプト</div>
     </p>
-    <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml">
-      <img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" />
-    </a>
-    <a href="https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/tadashi-aikawa/jinrai" alt="License" />
-    </a>
-    <br />
-    <a href="./README.md">
-      <img src="https://img.shields.io/badge/Language-English-9ca3af?style=for-the-badge" alt="Language: English" />
-    </a>
-    <a href="./README.ja.md">
-      <img src="https://img.shields.io/badge/Language-%E6%97%A5%E6%9C%AC%E8%AA%9E-2ea44f?style=for-the-badge" alt="Language: Japanese" />
-    </a>
+    <p>
+        <a href="./README.md">English</a> | 日本語
+    </p>
+    <p>
+        <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml">
+          <img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" />
+        </a>
+        <a href="https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE">
+          <img src="https://img.shields.io/github/license/tadashi-aikawa/jinrai" alt="License" />
+        </a>
+    </p>
 </div>
 
 ---
