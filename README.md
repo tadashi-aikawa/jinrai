@@ -104,6 +104,7 @@ jinrai.setup({
       downLeft = "b",
       downRight = "n",
     },
+    swapWindowFrameSelectModifiers = { "shift" },
     iconSize = 72,
     titleMaxSize = 72,
     centerCursor = true,
@@ -142,6 +143,7 @@ jinrai.setup({
 | `appPrefixOverrides` | `nil`         | Override leading prefixes via rule array (`window:title()` `glob` support, 1-2 char prefixes) |
 | `focusBackKey`     | `nil`          | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
 | `directionKeys`    | `nil`          | 8-direction navigation keys while Window Hints is visible  |
+| `swapWindowFrameSelectModifiers` | `nil` | Modifier keys for swapping frames between focused and target windows when selecting hints or using `focusBackKey` / `directionKeys` (exact match required; e.g. `{ "shift" }`) |
 | `iconSize`         | `72`            | App icon size (px) |
 | `titleMaxSize`     | `72`            | Max title length shown |
 | `showTitles`       | `true`          | Whether to show title rows |

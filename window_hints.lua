@@ -144,6 +144,8 @@ local DEFAULT_CONFIG = {
 	focusBackKey = nil,
 	-- Window Hints 表示中に方向移動を実行するキー
 	directionKeys = nil,
+	-- ヒント確定時に位置・サイズ入れ替えを実行する修飾キー
+	swapWindowFrameSelectModifiers = nil,
 	-- 共有 Focus 履歴 (内部注入用)
 	focusHistory = nil,
 }
@@ -259,6 +261,22 @@ local CARDINAL_DIRECTIONS = {
 	right = true,
 }
 
+local SELECT_MODIFIER_ORDER = {
+	"cmd",
+	"alt",
+	"ctrl",
+	"shift",
+	"fn",
+}
+
+local SELECT_MODIFIER_LOOKUP = {
+	cmd = true,
+	alt = true,
+	ctrl = true,
+	shift = true,
+	fn = true,
+}
+
 local function buildDirectionKeyLookup(directionKeys)
 	if not directionKeys then
 		return {}
@@ -328,6 +346,179 @@ local function isArrayTable(tbl)
 		end
 	end
 	return true
+end
+
+local function normalizeSelectModifiers(modifiers)
+	if modifiers == nil then
+		return nil
+	end
+	if type(modifiers) ~= "table" or not isArrayTable(modifiers) then
+		error("[jinrai.window_hints] swapWindowFrameSelectModifiers must be an array")
+	end
+	if #modifiers == 0 then
+		error("[jinrai.window_hints] swapWindowFrameSelectModifiers must not be empty")
+	end
+
+	local lookup = {}
+	for i, modifier in ipairs(modifiers) do
+		if type(modifier) ~= "string" then
+			error(string.format("[jinrai.window_hints] swapWindowFrameSelectModifiers[%d] must be a string", i))
+		end
+		local normalized = string.lower(modifier)
+		if normalized == "" then
+			error(string.format("[jinrai.window_hints] swapWindowFrameSelectModifiers[%d] must not be empty", i))
+		end
+		if not SELECT_MODIFIER_LOOKUP[normalized] then
+			error(
+				string.format(
+					"[jinrai.window_hints] swapWindowFrameSelectModifiers[%d] must be one of cmd/alt/ctrl/shift/fn",
+					i
+				)
+			)
+		end
+		if lookup[normalized] then
+			error("[jinrai.window_hints] swapWindowFrameSelectModifiers must not contain duplicate modifiers")
+		end
+		lookup[normalized] = true
+	end
+
+	local normalized = {}
+	for _, modifier in ipairs(SELECT_MODIFIER_ORDER) do
+		if lookup[modifier] then
+			table.insert(normalized, modifier)
+		end
+	end
+	return normalized
+end
+
+local function modifierListKey(modifiers)
+	if not modifiers then
+		return ""
+	end
+	return table.concat(modifiers, "+")
+end
+
+local function shouldSwapWindowFrameOnSelect(swapModifiers, inputModifiers)
+	if not swapModifiers or not inputModifiers then
+		return false
+	end
+	return modifierListKey(swapModifiers) == modifierListKey(inputModifiers)
+end
+
+local function collectModalInputModifiers(key, swapModifiers)
+	local modifierBindings = {}
+	local function addModifierBinding(modifiers)
+		modifierBindings[modifierListKey(modifiers)] = modifiers
+	end
+	addModifierBinding({})
+	if #key == 1 then
+		addModifierBinding({ "shift" })
+	end
+	if swapModifiers then
+		addModifierBinding(swapModifiers)
+	end
+	local bindings = {}
+	for _, modifiers in pairs(modifierBindings) do
+		table.insert(bindings, modifiers)
+	end
+	table.sort(bindings, function(a, b)
+		return modifierListKey(a) < modifierListKey(b)
+	end)
+	return bindings
+end
+
+local function cloneFrameRect(frame)
+	if not frame then
+		return nil
+	end
+	if frame.x == nil or frame.y == nil or frame.w == nil or frame.h == nil then
+		return nil
+	end
+	return {
+		x = frame.x,
+		y = frame.y,
+		w = frame.w,
+		h = frame.h,
+	}
+end
+
+local function hasFrameSetter(win)
+	return win and (win.setFrameWithWorkarounds or win.setFrame)
+end
+
+local function applyWindowFrame(win, nextFrame)
+	if win.setFrameWithWorkarounds then
+		local ok = pcall(function()
+			win:setFrameWithWorkarounds(nextFrame, 0)
+		end)
+		if ok then
+			return true
+		end
+	end
+	if win.setFrame then
+		local ok = pcall(function()
+			win:setFrame(nextFrame, 0)
+		end)
+		if ok then
+			return true
+		end
+	end
+	return false
+end
+
+local function swapWindowFrames(currentWin, targetWin)
+	if not currentWin or not targetWin then
+		return false
+	end
+	if currentWin == targetWin then
+		return false
+	end
+	if not currentWin.frame or not targetWin.frame or not hasFrameSetter(currentWin) or not hasFrameSetter(targetWin) then
+		return false
+	end
+
+	local currentID = currentWin.id and currentWin:id() or nil
+	local targetID = targetWin.id and targetWin:id() or nil
+	if currentID ~= nil and targetID ~= nil and currentID == targetID then
+		return false
+	end
+
+	local currentFrame = currentWin:frame()
+	local targetFrame = targetWin:frame()
+	local nextCurrentFrame = cloneFrameRect(targetFrame)
+	local nextTargetFrame = cloneFrameRect(currentFrame)
+	if not nextCurrentFrame or not nextTargetFrame then
+		return false
+	end
+
+	if not applyWindowFrame(currentWin, nextCurrentFrame) then
+		return false
+	end
+	if not applyWindowFrame(targetWin, nextTargetFrame) then
+		-- best effort rollback
+		applyWindowFrame(currentWin, nextTargetFrame)
+		return false
+	end
+	return true
+end
+
+local function resolveFocusBackTargetWindow(focusHistory, swapWithFocused)
+	if not focusHistory then
+		return nil, false
+	end
+	if swapWithFocused and focusHistory.getPreviousWindow then
+		local previousWin = focusHistory:getPreviousWindow()
+		if previousWin then
+			return previousWin, true
+		end
+	end
+	if focusHistory.focusBack then
+		local win = focusHistory:focusBack()
+		if win then
+			return win, false
+		end
+	end
+	return nil, false
 end
 
 local LUA_PATTERN_MAGIC_CHARS = {
@@ -1018,6 +1209,7 @@ function M.new(options)
 	local directionKeys = normalizeDirectionKeys(config.directionKeys)
 	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
 	local focusBackKey = normalizeActionKey(config.focusBackKey, "focusBackKey")
+	local swapWindowFrameSelectModifiers = normalizeSelectModifiers(config.swapWindowFrameSelectModifiers)
 	if not focusHistory then
 		focusBackKey = nil
 	end
@@ -1133,9 +1325,13 @@ function M.new(options)
 		clearHints()
 	end
 
-	local function selectWindow(win)
+	local function selectWindow(win, opts)
 		if not win then
 			return
+		end
+		opts = opts or {}
+		if opts.swapWithFocused then
+			swapWindowFrames(hs.window.focusedWindow(), win)
 		end
 		win:focus()
 		if config.centerCursor then
@@ -1148,12 +1344,16 @@ function M.new(options)
 		closeHints(true)
 	end
 
-	local function runFocusBackAction()
-		if not focusHistory or not focusHistory.focusBack then
+	local function runFocusBackAction(swapWithFocused)
+		local win, shouldSwapWithFocused = resolveFocusBackTargetWindow(focusHistory, swapWithFocused)
+		if not win then
 			return false
 		end
-		local win = focusHistory:focusBack()
-		if not win then
+		if shouldSwapWithFocused then
+			selectWindow(win, { swapWithFocused = true })
+			return true
+		end
+		if not focusHistory or not focusHistory.focusBack then
 			return false
 		end
 		if config.centerCursor then
@@ -1178,7 +1378,7 @@ function M.new(options)
 		return nil
 	end
 
-	local function runDirectionalAction(direction)
+	local function runDirectionalAction(direction, swapWithFocused)
 		local focusedWin = hs.window.focusedWindow()
 		if not focusedWin then
 			return false
@@ -1196,11 +1396,11 @@ function M.new(options)
 		if not target then
 			return false
 		end
-		selectWindow(target)
+		selectWindow(target, { swapWithFocused = swapWithFocused })
 		return true
 	end
 
-	local function handleChar(char)
+	local function handleChar(char, swapWithFocused)
 		if not isShowing then
 			return
 		end
@@ -1208,7 +1408,7 @@ function M.new(options)
 		currentInput = currentInput .. char
 		local exact = hintByKey[currentInput]
 		if exact then
-			selectWindow(exact.win)
+			selectWindow(exact.win, { swapWithFocused = swapWithFocused })
 			return
 		end
 
@@ -1238,23 +1438,24 @@ function M.new(options)
 		refreshHighlights()
 	end
 
-	local function handleInputKey(key)
+	local function handleInputKey(key, inputModifiers)
 		if not isShowing then
 			return
 		end
+		local swapWithFocused = shouldSwapWindowFrameOnSelect(swapWindowFrameSelectModifiers, inputModifiers)
 		if focusBackKey and key == focusBackKey then
-			if runFocusBackAction() then
+			if runFocusBackAction(swapWithFocused) then
 				return
 			end
 		end
 		local direction = directionKeyLookup[key]
 		if direction then
-			runDirectionalAction(direction)
+			runDirectionalAction(direction, swapWithFocused)
 			return
 		end
 		local hintChar = hintCharByInputKey[key]
 		if hintChar then
-			handleChar(hintChar)
+			handleChar(hintChar, swapWithFocused)
 		end
 	end
 
@@ -1262,12 +1463,10 @@ function M.new(options)
 		if not key then
 			return
 		end
-		modal:bind({}, key, function()
-			handleInputKey(key)
-		end)
-		if #key == 1 then
-			modal:bind({ "shift" }, key, function()
-				handleInputKey(key)
+		local modifierBindings = collectModalInputModifiers(key, swapWindowFrameSelectModifiers)
+		for _, modifiers in ipairs(modifierBindings) do
+			modal:bind(modifiers, key, function()
+				handleInputKey(key, modifiers)
 			end)
 		end
 	end
@@ -1927,6 +2126,11 @@ M._test = {
 	assignUniquePrefixes = assignUniquePrefixes,
 	findDirectionalWindowTarget = findDirectionalWindowTarget,
 	filterDirectionalCandidatesByOcclusion = filterDirectionalCandidatesByOcclusion,
+	normalizeSelectModifiers = normalizeSelectModifiers,
+	shouldSwapWindowFrameOnSelect = shouldSwapWindowFrameOnSelect,
+	collectModalInputModifiers = collectModalInputModifiers,
+	swapWindowFrames = swapWindowFrames,
+	resolveFocusBackTargetWindow = resolveFocusBackTargetWindow,
 	comparePrefixes = comparePrefixes,
 	hintKeyForGroup = hintKeyForGroup,
 	findExpandedKey = findExpandedKey,

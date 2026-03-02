@@ -104,6 +104,7 @@ jinrai.setup({
       downLeft = "b",
       downRight = "n",
     },
+    swapWindowFrameSelectModifiers = { "shift" },
     iconSize = 72,
     titleMaxSize = 72,
     centerCursor = true,
@@ -142,6 +143,7 @@ jinrai.setup({
 | `appPrefixOverrides` | `nil`        | ルール配列による先頭プレフィックス上書き（`window:title()` の `glob` 対応、1-2文字prefix対応） |
 | `focusBackKey`     | `nil`         | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
 | `directionKeys`    | `nil`         | Window Hints表示中に8方向移動を実行するキー |
+| `swapWindowFrameSelectModifiers` | `nil` | ヒント確定時または `focusBackKey` / `directionKeys` 実行時に現在ウィンドウと対象ウィンドウの位置・サイズを入れ替える修飾キー（完全一致時のみ。例: `{ "shift" }`） |
 | `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
 | `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
 | `showTitles`       | `true`         | タイトル行の表示有無             |

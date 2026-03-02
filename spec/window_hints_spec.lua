@@ -218,6 +218,115 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.same({ "A", "L" }, filtered)
 	end)
 
+	it("swapWindowFrameSelectModifiers を正規化できる", function()
+		local normalized = helper.normalizeSelectModifiers({ "Shift", "CMD" })
+		assert.are.same({ "cmd", "shift" }, normalized)
+	end)
+
+	it("swapWindowFrameSelectModifiers が空配列ならエラー", function()
+		local ok, err = pcall(function()
+			helper.normalizeSelectModifiers({})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("must not be empty"))
+	end)
+
+	it("swapWindowFrameSelectModifiers に重複があればエラー", function()
+		local ok, err = pcall(function()
+			helper.normalizeSelectModifiers({ "shift", "SHIFT" })
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("duplicate"))
+	end)
+
+	it("swapWindowFrameSelectModifiers に不正な修飾キーがあればエラー", function()
+		local ok, err = pcall(function()
+			helper.normalizeSelectModifiers({ "hyper" })
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("cmd/alt/ctrl/shift/fn"))
+	end)
+
+	it("swap判定は修飾キー完全一致のときだけ true", function()
+		local swapModifiers = helper.normalizeSelectModifiers({ "shift", "cmd" })
+		assert.is_true(helper.shouldSwapWindowFrameOnSelect(swapModifiers, { "cmd", "shift" }))
+		assert.is_false(helper.shouldSwapWindowFrameOnSelect(swapModifiers, { "shift" }))
+		assert.is_false(helper.shouldSwapWindowFrameOnSelect(swapModifiers, { "cmd", "alt", "shift" }))
+		assert.is_false(helper.shouldSwapWindowFrameOnSelect(nil, { "cmd", "shift" }))
+	end)
+
+	it("文字キーの入力修飾キー集合を生成できる", function()
+		local bindings = helper.collectModalInputModifiers("w", helper.normalizeSelectModifiers({ "cmd" }))
+		assert.are.same({ {}, { "cmd" }, { "shift" } }, bindings)
+	end)
+
+	it("非文字キーでも swap 修飾キーを追加できる", function()
+		local bindings = helper.collectModalInputModifiers("f18", helper.normalizeSelectModifiers({ "shift" }))
+		assert.are.same({ {}, { "shift" } }, bindings)
+	end)
+
+	it("swap修飾キーが shift のとき文字キーで重複を除去できる", function()
+		local bindings = helper.collectModalInputModifiers("w", helper.normalizeSelectModifiers({ "shift" }))
+		assert.are.same({ {}, { "shift" } }, bindings)
+	end)
+
+	it("swap付き focusBack では previousWindow を優先する", function()
+		local previousWin = { label = "previous" }
+		local focusBackCalls = 0
+		local focusHistory = {
+			getPreviousWindow = function()
+				return previousWin
+			end,
+			focusBack = function()
+				focusBackCalls = focusBackCalls + 1
+				return nil
+			end,
+		}
+
+		local win, shouldSwap = helper.resolveFocusBackTargetWindow(focusHistory, true)
+		assert.are.equal(previousWin, win)
+		assert.is_true(shouldSwap)
+		assert.are.equal(0, focusBackCalls)
+	end)
+
+	it("swap付き focusBack で previousWindow が無ければ focusBack へフォールバックする", function()
+		local focusedWin = { label = "focused" }
+		local focusBackCalls = 0
+		local focusHistory = {
+			getPreviousWindow = function()
+				return nil
+			end,
+			focusBack = function()
+				focusBackCalls = focusBackCalls + 1
+				return focusedWin
+			end,
+		}
+
+		local win, shouldSwap = helper.resolveFocusBackTargetWindow(focusHistory, true)
+		assert.are.equal(focusedWin, win)
+		assert.is_false(shouldSwap)
+		assert.are.equal(1, focusBackCalls)
+	end)
+
+	it("通常 focusBack では focusBack を使う", function()
+		local focusedWin = { label = "focused" }
+		local focusBackCalls = 0
+		local focusHistory = {
+			getPreviousWindow = function()
+				return { label = "previous" }
+			end,
+			focusBack = function()
+				focusBackCalls = focusBackCalls + 1
+				return focusedWin
+			end,
+		}
+
+		local win, shouldSwap = helper.resolveFocusBackTargetWindow(focusHistory, false)
+		assert.are.equal(focusedWin, win)
+		assert.is_false(shouldSwap)
+		assert.are.equal(1, focusBackCalls)
+	end)
+
 	it("同一先頭文字が競合したらアプリ名の次候補文字を使う", function()
 		local entries = {
 			{
@@ -288,6 +397,121 @@ describe("window_hints appPrefixOverrides", function()
 			end,
 		}
 	end
+
+	local function stubSwappableWindow(id, frame)
+		local currentFrame = frame
+		local setFrameCalls = {}
+		local setFrameWithWorkaroundsCalls = {}
+		local focusCalls = 0
+		return {
+			id = function()
+				return id
+			end,
+			frame = function()
+				return currentFrame
+			end,
+			setFrame = function(_, nextFrame, duration)
+				table.insert(setFrameCalls, { frame = nextFrame, duration = duration })
+				currentFrame = nextFrame
+			end,
+			setFrameWithWorkarounds = function(_, nextFrame, duration)
+				table.insert(setFrameWithWorkaroundsCalls, { frame = nextFrame, duration = duration })
+				currentFrame = nextFrame
+			end,
+			focus = function()
+				focusCalls = focusCalls + 1
+			end,
+			_getSetFrameCalls = function()
+				return setFrameCalls
+			end,
+			_getSetFrameWithWorkaroundsCalls = function()
+				return setFrameWithWorkaroundsCalls
+			end,
+			_getFocusCalls = function()
+				return focusCalls
+			end,
+		}
+	end
+
+	local function stubSetFrameOnlyWindow(id, frame)
+		local currentFrame = frame
+		local setFrameCalls = {}
+		return {
+			id = function()
+				return id
+			end,
+			frame = function()
+				return currentFrame
+			end,
+			setFrame = function(_, nextFrame, duration)
+				table.insert(setFrameCalls, { frame = nextFrame, duration = duration })
+				currentFrame = nextFrame
+			end,
+			_getSetFrameCalls = function()
+				return setFrameCalls
+			end,
+		}
+	end
+
+	it("swapWindowFrames は2ウィンドウの frame を入れ替える", function()
+		local current = stubSwappableWindow(1, { x = 0, y = 0, w = 100, h = 100 })
+		local target = stubSwappableWindow(2, { x = 200, y = 100, w = 300, h = 200 })
+		local ok = helper.swapWindowFrames(current, target)
+
+		assert.is_true(ok)
+		assert.are.same({ x = 200, y = 100, w = 300, h = 200 }, current:frame())
+		assert.are.same({ x = 0, y = 0, w = 100, h = 100 }, target:frame())
+		assert.are.equal(0, #current:_getSetFrameCalls())
+		assert.are.equal(0, #target:_getSetFrameCalls())
+		assert.are.equal(1, #current:_getSetFrameWithWorkaroundsCalls())
+		assert.are.equal(1, #target:_getSetFrameWithWorkaroundsCalls())
+		assert.are.equal(0, current:_getSetFrameWithWorkaroundsCalls()[1].duration)
+		assert.are.equal(0, target:_getSetFrameWithWorkaroundsCalls()[1].duration)
+	end)
+
+	it("swapWindowFrames は workaround 非対応なら setFrame(..., 0) にフォールバックする", function()
+		local current = stubSetFrameOnlyWindow(1, { x = 0, y = 0, w = 100, h = 100 })
+		local target = stubSetFrameOnlyWindow(2, { x = 200, y = 100, w = 300, h = 200 })
+		local ok = helper.swapWindowFrames(current, target)
+
+		assert.is_true(ok)
+		assert.are.same({ x = 200, y = 100, w = 300, h = 200 }, current:frame())
+		assert.are.same({ x = 0, y = 0, w = 100, h = 100 }, target:frame())
+		assert.are.equal(0, current:_getSetFrameCalls()[1].duration)
+		assert.are.equal(0, target:_getSetFrameCalls()[1].duration)
+	end)
+
+	it("swapWindowFrames は同一IDなら入れ替えない", function()
+		local current = stubSwappableWindow(1, { x = 0, y = 0, w = 100, h = 100 })
+		local target = stubSwappableWindow(1, { x = 200, y = 100, w = 300, h = 200 })
+		local ok = helper.swapWindowFrames(current, target)
+
+		assert.is_false(ok)
+		assert.are.equal(0, #current:_getSetFrameCalls())
+		assert.are.equal(0, #target:_getSetFrameCalls())
+		assert.are.equal(0, #current:_getSetFrameWithWorkaroundsCalls())
+		assert.are.equal(0, #target:_getSetFrameWithWorkaroundsCalls())
+	end)
+
+	it("swapWindowFrames は frame setter 非対応ウィンドウがあれば入れ替えない", function()
+		local current = stubWindow(1, { x = 0, y = 0, w = 100, h = 100 })
+		local target = stubSwappableWindow(2, { x = 200, y = 100, w = 300, h = 200 })
+		local ok = helper.swapWindowFrames(current, target)
+		assert.is_false(ok)
+		assert.are.equal(0, #target:_getSetFrameCalls())
+		assert.are.equal(0, #target:_getSetFrameWithWorkaroundsCalls())
+	end)
+
+	it("swapWindowFrames は frame が x/y/w/h を持たなければ入れ替えない", function()
+		local current = stubSwappableWindow(1, { x = 0, y = 0, w = 100, h = 100 })
+		local target = stubSwappableWindow(2, { x = 200, y = 100, h = 200 })
+		local ok = helper.swapWindowFrames(current, target)
+		assert.is_false(ok)
+		assert.are.equal(0, #current:_getSetFrameCalls())
+		assert.are.equal(0, #target:_getSetFrameCalls())
+		assert.are.equal(0, #current:_getSetFrameWithWorkaroundsCalls())
+		assert.are.equal(0, #target:_getSetFrameWithWorkaroundsCalls())
+	end)
 
 	it("方向移動は指定方向の最近傍ウィンドウを返す", function()
 		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 10 })
