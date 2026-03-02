@@ -234,15 +234,37 @@ local function normalizeDirectionKeys(directionKeys)
 		down = normalizeActionKey(directionKeys.down, "directionKeys.down"),
 		up = normalizeActionKey(directionKeys.up, "directionKeys.up"),
 		right = normalizeActionKey(directionKeys.right, "directionKeys.right"),
+		upLeft = normalizeActionKey(directionKeys.upLeft, "directionKeys.upLeft"),
+		upRight = normalizeActionKey(directionKeys.upRight, "directionKeys.upRight"),
+		downLeft = normalizeActionKey(directionKeys.downLeft, "directionKeys.downLeft"),
+		downRight = normalizeActionKey(directionKeys.downRight, "directionKeys.downRight"),
 	}
 end
+
+local ALL_DIRECTIONS = {
+	"left",
+	"down",
+	"up",
+	"right",
+	"upLeft",
+	"upRight",
+	"downLeft",
+	"downRight",
+}
+
+local CARDINAL_DIRECTIONS = {
+	left = true,
+	down = true,
+	up = true,
+	right = true,
+}
 
 local function buildDirectionKeyLookup(directionKeys)
 	if not directionKeys then
 		return {}
 	end
 	local lookup = {}
-	for _, direction in ipairs({ "left", "down", "up", "right" }) do
+	for _, direction in ipairs(ALL_DIRECTIONS) do
 		local key = directionKeys[direction]
 		if key then
 			local existing = lookup[key]
@@ -739,6 +761,18 @@ local function isDirectionalCandidate(direction, fromCenter, toCenter)
 	if direction == "down" then
 		return toCenter.y > fromCenter.y
 	end
+	if direction == "upLeft" then
+		return toCenter.x < fromCenter.x and toCenter.y < fromCenter.y
+	end
+	if direction == "upRight" then
+		return toCenter.x > fromCenter.x and toCenter.y < fromCenter.y
+	end
+	if direction == "downLeft" then
+		return toCenter.x < fromCenter.x and toCenter.y > fromCenter.y
+	end
+	if direction == "downRight" then
+		return toCenter.x > fromCenter.x and toCenter.y > fromCenter.y
+	end
 	return false
 end
 
@@ -756,6 +790,30 @@ local function directionalPrimaryGap(direction, fromFrame, toFrame)
 		return math.max(0, toFrame.y - (fromFrame.y + fromFrame.h))
 	end
 	return math.huge
+end
+
+local function diagonalAxisGaps(direction, fromFrame, toFrame)
+	if direction == "upLeft" then
+		local xGap = math.max(0, fromFrame.x - (toFrame.x + toFrame.w))
+		local yGap = math.max(0, fromFrame.y - (toFrame.y + toFrame.h))
+		return xGap, yGap
+	end
+	if direction == "upRight" then
+		local xGap = math.max(0, toFrame.x - (fromFrame.x + fromFrame.w))
+		local yGap = math.max(0, fromFrame.y - (toFrame.y + toFrame.h))
+		return xGap, yGap
+	end
+	if direction == "downLeft" then
+		local xGap = math.max(0, fromFrame.x - (toFrame.x + toFrame.w))
+		local yGap = math.max(0, toFrame.y - (fromFrame.y + fromFrame.h))
+		return xGap, yGap
+	end
+	if direction == "downRight" then
+		local xGap = math.max(0, toFrame.x - (fromFrame.x + fromFrame.w))
+		local yGap = math.max(0, toFrame.y - (fromFrame.y + fromFrame.h))
+		return xGap, yGap
+	end
+	return math.huge, math.huge
 end
 
 local function rangeOverlap(aStart, aEnd, bStart, bEnd)
@@ -865,37 +923,64 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 				local center = centerOfFrame(frame)
 				if isDirectionalCandidate(direction, currentCenter, center) then
 					local primaryGap = directionalPrimaryGap(direction, currentFrame, frame)
-					local overlap = orthogonalOverlap(direction, currentFrame, frame)
 					local secondary = secondaryAxisDelta(direction, currentCenter, center)
 					local isPrevious = previousId ~= nil and winId == previousId
 					local candidate = {
 						win = win,
 						id = winId,
-						primaryGap = primaryGap,
-						orthogonalOverlap = overlap,
 						zOrder = zOrderLookup[winId] or math.huge,
-						secondary = secondary,
 						isPrevious = isPrevious,
 					}
+					if CARDINAL_DIRECTIONS[direction] then
+						candidate.primaryGap = primaryGap
+						candidate.orthogonalOverlap = orthogonalOverlap(direction, currentFrame, frame)
+						candidate.secondary = secondary
+					else
+						local xGap, yGap = diagonalAxisGaps(direction, currentFrame, frame)
+						local dx = center.x - currentCenter.x
+						local dy = center.y - currentCenter.y
+						candidate.diagonalGap = xGap + yGap
+						candidate.distance2 = dx * dx + dy * dy
+					end
+
 					if not best then
 						best = candidate
 					else
 						local better = false
-						if candidate.orthogonalOverlap ~= best.orthogonalOverlap then
-							better = candidate.orthogonalOverlap > best.orthogonalOverlap
-						elseif candidate.primaryGap < (best.primaryGap - SCORE_EPSILON) then
-							better = true
-						elseif math.abs(candidate.primaryGap - best.primaryGap) <= SCORE_EPSILON then
-							if candidate.zOrder ~= best.zOrder then
-								better = candidate.zOrder < best.zOrder
-							elseif candidate.secondary ~= best.secondary then
-								better = candidate.secondary < best.secondary
-							elseif candidate.isPrevious ~= best.isPrevious then
-								better = candidate.isPrevious
-							else
-								better = compareWindowIds(candidate.id, best.id)
+						if CARDINAL_DIRECTIONS[direction] then
+							if candidate.orthogonalOverlap ~= best.orthogonalOverlap then
+								better = candidate.orthogonalOverlap > best.orthogonalOverlap
+							elseif candidate.primaryGap < (best.primaryGap - SCORE_EPSILON) then
+								better = true
+							elseif math.abs(candidate.primaryGap - best.primaryGap) <= SCORE_EPSILON then
+								if candidate.zOrder ~= best.zOrder then
+									better = candidate.zOrder < best.zOrder
+								elseif candidate.secondary ~= best.secondary then
+									better = candidate.secondary < best.secondary
+								elseif candidate.isPrevious ~= best.isPrevious then
+									better = candidate.isPrevious
+								else
+									better = compareWindowIds(candidate.id, best.id)
+								end
+							end
+						else
+							if candidate.diagonalGap < (best.diagonalGap - SCORE_EPSILON) then
+								better = true
+							elseif math.abs(candidate.diagonalGap - best.diagonalGap) <= SCORE_EPSILON then
+								if candidate.zOrder ~= best.zOrder then
+									better = candidate.zOrder < best.zOrder
+								elseif candidate.distance2 < (best.distance2 - SCORE_EPSILON) then
+									better = true
+								elseif math.abs(candidate.distance2 - best.distance2) <= SCORE_EPSILON then
+									if candidate.isPrevious ~= best.isPrevious then
+										better = candidate.isPrevious
+									else
+										better = compareWindowIds(candidate.id, best.id)
+									end
+								end
 							end
 						end
+
 						if better then
 							best = candidate
 						end

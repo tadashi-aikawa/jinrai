@@ -93,8 +93,17 @@ jinrai.setup({
     },
     hotkeyModifiers = { "alt" },
     hotkeyKey = "f20",
-    focusBackKey = "u",
-    directionKeys = { left = "h", down = "j", up = "k", right = "l" },
+    focusBackKey = "i",
+    directionKeys = {
+      left = "h",
+      down = "j",
+      up = "k",
+      right = "l",
+      upLeft = "y",
+      upRight = "u",
+      downLeft = "b",
+      downRight = "n",
+    },
     iconSize = 72,
     titleMaxSize = 72,
     centerCursor = true,
@@ -132,7 +141,7 @@ jinrai.setup({
 | `hintChars`        | `A-Z (QWERTY)`| ヒント文字の配列                 |
 | `appPrefixOverrides` | `nil`        | ルール配列による先頭プレフィックス上書き（`window:title()` の `glob` 対応、1-2文字prefix対応） |
 | `focusBackKey`     | `nil`         | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
-| `directionKeys`    | `nil`         | Window Hints表示中に上下左右移動を実行するキー（例: `{ left=\"h\", down=\"j\", up=\"k\", right=\"l\" }`） |
+| `directionKeys`    | `nil`         | Window Hints表示中に8方向移動を実行するキー（例: `{ left=\"h\", down=\"j\", up=\"k\", right=\"l\", upLeft=\"y\", upRight=\"u\", downLeft=\"b\", downRight=\"n\" }`） |
 | `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
 | `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
 | `showTitles`       | `true`         | タイトル行の表示有無             |
@@ -188,7 +197,8 @@ appPrefixOverrides = {
 - `focusBackKey` は `focus_back` 設定が有効なときだけ動作します
 - これらのキーと `hintChars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
 - 完全に背面に遮蔽されているウィンドウは方向移動の候補から除外されます
-- 方向移動先は「副軸の重なり量が大きい」候補を優先し、次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
+- 上下左右は「副軸の重なり量が大きい」候補を優先し、次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
+- 斜め方向は2軸のエッジ距離合計が小さい候補を優先し、同率時は前面順、中心距離、直前アクティブウィンドウの順で決定します
 
 ## Focus Back オプション
 

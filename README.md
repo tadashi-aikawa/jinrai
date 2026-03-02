@@ -93,8 +93,17 @@ jinrai.setup({
     },
     hotkeyModifiers = { "alt" },
     hotkeyKey = "f20",
-    focusBackKey = "u",
-    directionKeys = { left = "h", down = "j", up = "k", right = "l" },
+    focusBackKey = "i",
+    directionKeys = {
+      left = "h",
+      down = "j",
+      up = "k",
+      right = "l",
+      upLeft = "y",
+      upRight = "u",
+      downLeft = "b",
+      downRight = "n",
+    },
     iconSize = 72,
     titleMaxSize = 72,
     centerCursor = true,
@@ -132,7 +141,7 @@ jinrai.setup({
 | `hintChars`        | `A-Z (QWERTY)` | Array of hint characters |
 | `appPrefixOverrides` | `nil`         | Override leading prefixes via rule array (`window:title()` `glob` support, 1-2 char prefixes) |
 | `focusBackKey`     | `nil`          | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
-| `directionKeys`    | `nil`          | Directional navigation keys while Window Hints is visible (e.g. `{ left=\"h\", down=\"j\", up=\"k\", right=\"l\" }`) |
+| `directionKeys`    | `nil`          | 8-direction navigation keys while Window Hints is visible (e.g. `{ left=\"h\", down=\"j\", up=\"k\", right=\"l\", upLeft=\"y\", upRight=\"u\", downLeft=\"b\", downRight=\"n\" }`) |
 | `iconSize`         | `72`            | App icon size (px) |
 | `titleMaxSize`     | `72`            | Max title length shown |
 | `showTitles`       | `true`          | Whether to show title rows |
@@ -187,7 +196,8 @@ There are many more customization options. See `DEFAULT_CONFIG` in `window_hints
 - `focusBackKey` works only when `focus_back` is enabled
 - If these keys conflict with `hintChars`, the conflicting hint chars are removed and navigation keys take priority
 - Fully occluded windows are excluded from directional navigation candidates
-- Directional navigation prefers larger orthogonal overlap first, then smallest edge gap on the primary axis, frontmost order, orthogonal offset, and finally the previously active window
+- Cardinal directions prefer larger orthogonal overlap first, then smallest edge gap on the primary axis, frontmost order, orthogonal offset, and finally the previously active window
+- Diagonal directions prefer the smallest sum of two axis edge gaps, then frontmost order, center distance, and finally the previously active window
 
 ## Focus Back Options
 
