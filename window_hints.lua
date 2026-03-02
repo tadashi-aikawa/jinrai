@@ -742,6 +742,33 @@ local function isDirectionalCandidate(direction, fromCenter, toCenter)
 	return false
 end
 
+local function directionalPrimaryGap(direction, fromFrame, toFrame)
+	if direction == "left" then
+		return math.max(0, fromFrame.x - (toFrame.x + toFrame.w))
+	end
+	if direction == "right" then
+		return math.max(0, toFrame.x - (fromFrame.x + fromFrame.w))
+	end
+	if direction == "up" then
+		return math.max(0, fromFrame.y - (toFrame.y + toFrame.h))
+	end
+	if direction == "down" then
+		return math.max(0, toFrame.y - (fromFrame.y + fromFrame.h))
+	end
+	return math.huge
+end
+
+local function rangeOverlap(aStart, aEnd, bStart, bEnd)
+	return math.max(0, math.min(aEnd, bEnd) - math.max(aStart, bStart))
+end
+
+local function orthogonalOverlap(direction, fromFrame, toFrame)
+	if direction == "left" or direction == "right" then
+		return rangeOverlap(fromFrame.y, fromFrame.y + fromFrame.h, toFrame.y, toFrame.y + toFrame.h)
+	end
+	return rangeOverlap(fromFrame.x, fromFrame.x + fromFrame.w, toFrame.x, toFrame.x + toFrame.w)
+end
+
 local function secondaryAxisDelta(direction, fromCenter, toCenter)
 	if direction == "left" or direction == "right" then
 		return math.abs(toCenter.y - fromCenter.y)
@@ -759,7 +786,66 @@ local function compareWindowIds(a, b)
 	return tostring(a) < tostring(b)
 end
 
-local function findDirectionalWindowTarget(currentWin, candidateWins, direction, previousWin)
+local function buildWindowZOrderIndex(orderedWins)
+	local lookup = {}
+	if type(orderedWins) ~= "table" then
+		return lookup
+	end
+	for i, win in ipairs(orderedWins) do
+		local id = windowIdOf(win)
+		if id ~= nil and lookup[id] == nil then
+			lookup[id] = i
+		end
+	end
+	return lookup
+end
+
+local function collectCoveringFramesBeforeWindow(orderedWins, targetWindowId)
+	local frames = {}
+	if type(orderedWins) ~= "table" then
+		return frames
+	end
+	for _, win in ipairs(orderedWins) do
+		local winId = windowIdOf(win)
+		if winId == targetWindowId then
+			break
+		end
+		local frame = windowFrameOf(win)
+		if frame then
+			table.insert(frames, frame)
+		end
+	end
+	return frames
+end
+
+local function isFullyOccludedWindow(win, orderedWins, config)
+	local winId = windowIdOf(win)
+	if winId == nil then
+		return false
+	end
+	local frame = windowFrameOf(win)
+	if not frame then
+		return false
+	end
+	local coveringFrames = collectCoveringFramesBeforeWindow(orderedWins, winId)
+	if #coveringFrames == 0 then
+		return false
+	end
+	local sampleCols, sampleRows = computeOcclusionSamplingGrid(frame, config or {})
+	return isWindowOccluded(frame, coveringFrames, sampleCols, sampleRows)
+end
+
+local function filterDirectionalCandidatesByOcclusion(candidateWins, orderedWins, config)
+	local filtered = {}
+	for _, win in ipairs(candidateWins) do
+		if not isFullyOccludedWindow(win, orderedWins, config) then
+			table.insert(filtered, win)
+		end
+	end
+	return filtered
+end
+
+local function findDirectionalWindowTarget(currentWin, candidateWins, direction, previousWin, orderedWins)
 	local currentFrame = windowFrameOf(currentWin)
 	if not currentFrame then
 		return nil
@@ -767,8 +853,9 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 	local currentId = windowIdOf(currentWin)
 	local previousId = windowIdOf(previousWin)
 	local currentCenter = centerOfFrame(currentFrame)
+	local zOrderLookup = buildWindowZOrderIndex(orderedWins)
 	local best = nil
-	local DIST_EPSILON = 0.0001
+	local SCORE_EPSILON = 0.0001
 
 	for _, win in ipairs(candidateWins) do
 		local winId = windowIdOf(win)
@@ -777,15 +864,16 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 			if frame then
 				local center = centerOfFrame(frame)
 				if isDirectionalCandidate(direction, currentCenter, center) then
-					local dx = center.x - currentCenter.x
-					local dy = center.y - currentCenter.y
-					local distance2 = dx * dx + dy * dy
+					local primaryGap = directionalPrimaryGap(direction, currentFrame, frame)
+					local overlap = orthogonalOverlap(direction, currentFrame, frame)
 					local secondary = secondaryAxisDelta(direction, currentCenter, center)
 					local isPrevious = previousId ~= nil and winId == previousId
 					local candidate = {
 						win = win,
 						id = winId,
-						distance2 = distance2,
+						primaryGap = primaryGap,
+						orthogonalOverlap = overlap,
+						zOrder = zOrderLookup[winId] or math.huge,
 						secondary = secondary,
 						isPrevious = isPrevious,
 					}
@@ -793,13 +881,17 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 						best = candidate
 					else
 						local better = false
-						if candidate.distance2 < (best.distance2 - DIST_EPSILON) then
+						if candidate.orthogonalOverlap ~= best.orthogonalOverlap then
+							better = candidate.orthogonalOverlap > best.orthogonalOverlap
+						elseif candidate.primaryGap < (best.primaryGap - SCORE_EPSILON) then
 							better = true
-						elseif math.abs(candidate.distance2 - best.distance2) <= DIST_EPSILON then
-							if candidate.isPrevious ~= best.isPrevious then
-								better = candidate.isPrevious
+						elseif math.abs(candidate.primaryGap - best.primaryGap) <= SCORE_EPSILON then
+							if candidate.zOrder ~= best.zOrder then
+								better = candidate.zOrder < best.zOrder
 							elseif candidate.secondary ~= best.secondary then
 								better = candidate.secondary < best.secondary
+							elseif candidate.isPrevious ~= best.isPrevious then
+								better = candidate.isPrevious
 							else
 								better = compareWindowIds(candidate.id, best.id)
 							end
@@ -1006,14 +1098,16 @@ function M.new(options)
 		if not focusedWin then
 			return false
 		end
+		local orderedWins = hs.window.orderedWindows()
 		local candidates = {}
 		for _, win in ipairs(hs.window.visibleWindows()) do
 			if win and win.isStandard and win:isStandard() then
 				table.insert(candidates, win)
 			end
 		end
+		candidates = filterDirectionalCandidatesByOcclusion(candidates, orderedWins, config)
 		local previousWin = resolvePreviousWindowForDirection()
-		local target = findDirectionalWindowTarget(focusedWin, candidates, direction, previousWin)
+		local target = findDirectionalWindowTarget(focusedWin, candidates, direction, previousWin, orderedWins)
 		if not target then
 			return false
 		end
@@ -1747,6 +1841,7 @@ M._test = {
 	collectAppPrefixCandidates = collectAppPrefixCandidates,
 	assignUniquePrefixes = assignUniquePrefixes,
 	findDirectionalWindowTarget = findDirectionalWindowTarget,
+	filterDirectionalCandidatesByOcclusion = filterDirectionalCandidatesByOcclusion,
 	comparePrefixes = comparePrefixes,
 	hintKeyForGroup = hintKeyForGroup,
 	findExpandedKey = findExpandedKey,

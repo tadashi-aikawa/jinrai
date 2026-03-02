@@ -311,4 +311,165 @@ describe("window_hints appPrefixOverrides", function()
 		local target = helper.findDirectionalWindowTarget(current, { left }, "right", nil)
 		assert.are.equal(nil, target)
 	end)
+
+	it("左図: 1->下 は 3", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 200, h = 120 })
+		local win2 = stubWindow(2, { x = 300, y = 100, w = 200, h = 120 })
+		local win3 = stubWindow(3, { x = 190, y = 230, w = 220, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win1, { win2, win3 }, "down", nil)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("左図: 1->右 は 2", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 200, h = 120 })
+		local win2 = stubWindow(2, { x = 300, y = 100, w = 200, h = 120 })
+		local win3 = stubWindow(3, { x = 190, y = 230, w = 220, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win1, { win2, win3 }, "right", nil)
+		assert.are.equal(2, target:id())
+	end)
+
+	it("左図: 2->左 は 1", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 200, h = 120 })
+		local win2 = stubWindow(2, { x = 300, y = 100, w = 200, h = 120 })
+		local win3 = stubWindow(3, { x = 190, y = 230, w = 220, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win2, { win1, win3 }, "left", nil)
+		assert.are.equal(1, target:id())
+	end)
+
+	it("左図: 2->下 は 3", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 200, h = 120 })
+		local win2 = stubWindow(2, { x = 300, y = 100, w = 200, h = 120 })
+		local win3 = stubWindow(3, { x = 190, y = 230, w = 220, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win2, { win1, win3 }, "down", nil)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("左図: 3->上 は前面順で変わる", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 200, h = 120 })
+		local win2 = stubWindow(2, { x = 300, y = 100, w = 200, h = 120 })
+		local win3 = stubWindow(3, { x = 190, y = 230, w = 220, h = 120 })
+
+		local target1 = helper.findDirectionalWindowTarget(win3, { win1, win2 }, "up", nil, { win1, win2, win3 })
+		assert.are.equal(1, target1:id())
+
+		local target2 = helper.findDirectionalWindowTarget(win3, { win1, win2 }, "up", nil, { win2, win1, win3 })
+		assert.are.equal(2, target2:id())
+	end)
+
+	it("右図: 1->下 は 4", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 140, h = 120 })
+		local win2 = stubWindow(2, { x = 250, y = 100, w = 80, h = 120 })
+		local win3 = stubWindow(3, { x = 340, y = 100, w = 140, h = 120 })
+		local win4 = stubWindow(4, { x = 180, y = 230, w = 130, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win1, { win2, win3, win4 }, "down", nil)
+		assert.are.equal(4, target:id())
+	end)
+
+	it("右図: 1->右 は 2", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 140, h = 120 })
+		local win2 = stubWindow(2, { x = 250, y = 100, w = 80, h = 120 })
+		local win3 = stubWindow(3, { x = 340, y = 100, w = 140, h = 120 })
+		local win4 = stubWindow(4, { x = 180, y = 230, w = 130, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win1, { win2, win3, win4 }, "right", nil)
+		assert.are.equal(2, target:id())
+	end)
+
+	it("右図: 2->左 は 1", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 140, h = 120 })
+		local win2 = stubWindow(2, { x = 250, y = 100, w = 80, h = 120 })
+		local win3 = stubWindow(3, { x = 340, y = 100, w = 140, h = 120 })
+		local win4 = stubWindow(4, { x = 180, y = 230, w = 130, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win2, { win1, win3, win4 }, "left", nil)
+		assert.are.equal(1, target:id())
+	end)
+
+	it("右図: 2->右 は 3", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 140, h = 120 })
+		local win2 = stubWindow(2, { x = 250, y = 100, w = 80, h = 120 })
+		local win3 = stubWindow(3, { x = 340, y = 100, w = 140, h = 120 })
+		local win4 = stubWindow(4, { x = 180, y = 230, w = 130, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win2, { win1, win3, win4 }, "right", nil)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("右図: 2->下 は 4", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 140, h = 120 })
+		local win2 = stubWindow(2, { x = 250, y = 100, w = 80, h = 120 })
+		local win3 = stubWindow(3, { x = 340, y = 100, w = 140, h = 120 })
+		local win4 = stubWindow(4, { x = 180, y = 230, w = 130, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win2, { win1, win3, win4 }, "down", nil)
+		assert.are.equal(4, target:id())
+	end)
+
+	it("右図: 3->下 は 4", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 140, h = 120 })
+		local win2 = stubWindow(2, { x = 250, y = 100, w = 80, h = 120 })
+		local win3 = stubWindow(3, { x = 340, y = 100, w = 140, h = 120 })
+		local win4 = stubWindow(4, { x = 180, y = 230, w = 130, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win3, { win1, win2, win4 }, "down", nil)
+		assert.are.equal(4, target:id())
+	end)
+
+	it("右図: 3->左 は 2", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 140, h = 120 })
+		local win2 = stubWindow(2, { x = 250, y = 100, w = 80, h = 120 })
+		local win3 = stubWindow(3, { x = 340, y = 100, w = 140, h = 120 })
+		local win4 = stubWindow(4, { x = 180, y = 230, w = 130, h = 120 })
+		local target = helper.findDirectionalWindowTarget(win3, { win1, win2, win4 }, "left", nil)
+		assert.are.equal(2, target:id())
+	end)
+
+	it("右図: 4->上 は前面順で変わる", function()
+		local win1 = stubWindow(1, { x = 100, y = 100, w = 140, h = 120 })
+		local win2 = stubWindow(2, { x = 250, y = 100, w = 80, h = 120 })
+		local win3 = stubWindow(3, { x = 340, y = 100, w = 140, h = 120 })
+		local win4 = stubWindow(4, { x = 180, y = 230, w = 130, h = 120 })
+
+		local target1 = helper.findDirectionalWindowTarget(win4, { win1, win2, win3 }, "up", nil, { win1, win2, win3, win4 })
+		assert.are.equal(1, target1:id())
+
+		local target2 = helper.findDirectionalWindowTarget(win4, { win1, win2, win3 }, "up", nil, { win2, win1, win3, win4 })
+		assert.are.equal(2, target2:id())
+	end)
+
+	it("完全遮蔽ウィンドウは方向候補から除外される", function()
+		local blocker = stubWindow(9, { x = 120, y = 100, w = 100, h = 100 })
+		local occluded = stubWindow(2, { x = 120, y = 100, w = 100, h = 100 })
+		local visible = stubWindow(3, { x = 250, y = 100, w = 100, h = 100 })
+		local filtered = helper.filterDirectionalCandidatesByOcclusion(
+			{ occluded, visible },
+			{ blocker, occluded, visible },
+			{ occlusionSamplingEnabled = false }
+		)
+
+		assert.are.equal(1, #filtered)
+		assert.are.equal(3, filtered[1]:id())
+	end)
+
+	it("部分遮蔽ウィンドウは方向候補に残る", function()
+		local blocker = stubWindow(9, { x = 120, y = 100, w = 50, h = 100 })
+		local partial = stubWindow(2, { x = 120, y = 100, w = 100, h = 100 })
+		local filtered = helper.filterDirectionalCandidatesByOcclusion(
+			{ partial },
+			{ blocker, partial },
+			{ occlusionSamplingEnabled = false }
+		)
+
+		assert.are.equal(1, #filtered)
+		assert.are.equal(2, filtered[1]:id())
+	end)
+
+	it("候補がすべて完全遮蔽なら空配列になる", function()
+		local blockerA = stubWindow(9, { x = 120, y = 100, w = 100, h = 100 })
+		local blockerB = stubWindow(8, { x = 260, y = 100, w = 100, h = 100 })
+		local occludedA = stubWindow(2, { x = 120, y = 100, w = 100, h = 100 })
+		local occludedB = stubWindow(3, { x = 260, y = 100, w = 100, h = 100 })
+		local filtered = helper.filterDirectionalCandidatesByOcclusion(
+			{ occludedA, occludedB },
+			{ blockerA, occludedA, blockerB, occludedB },
+			{ occlusionSamplingEnabled = false }
+		)
+
+		assert.are.equal(0, #filtered)
+	end)
 end)

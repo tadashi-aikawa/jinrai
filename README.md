@@ -186,7 +186,8 @@ There are many more customization options. See `DEFAULT_CONFIG` in `window_hints
 - `focusBackKey` and `directionKeys` are active only while hints are shown
 - `focusBackKey` works only when `focus_back` is enabled
 - If these keys conflict with `hintChars`, the conflicting hint chars are removed and navigation keys take priority
-- Directional navigation picks the nearest window in that direction; if multiple candidates are tied, the previously active window is preferred
+- Fully occluded windows are excluded from directional navigation candidates
+- Directional navigation prefers larger orthogonal overlap first, then smallest edge gap on the primary axis, frontmost order, orthogonal offset, and finally the previously active window
 
 ## Focus Back Options
 
