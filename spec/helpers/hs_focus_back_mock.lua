@@ -68,6 +68,11 @@ function M.new()
 				state.urlBindings[name] = fn
 			end,
 		},
+		spoons = {
+			resourcePath = function(path)
+				return "./Jinrai.spoon/" .. path
+			end,
+		},
 	}
 
 	local function setFocusedWindow(win)

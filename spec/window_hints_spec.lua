@@ -32,7 +32,7 @@ describe("window_hints appPrefixOverrides", function()
 	local hintCharOrder
 
 	before_each(function()
-		local mod = dofile("./window_hints.lua")
+		local mod = dofile("./Jinrai.spoon/window_hints.lua")
 		helper = mod._test
 		allowedPrefixes = {
 			A = true,

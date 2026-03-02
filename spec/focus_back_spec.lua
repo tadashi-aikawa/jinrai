@@ -15,7 +15,7 @@ describe("focus_back", function()
 		local mock = hsMock.new()
 		mock.setFocusedWindow(currentWindow)
 		_G.hs = mock.hs
-		local module = dofile("./focus_back.lua")
+		local module = dofile("./Jinrai.spoon/focus_back.lua")
 		return mock, module.new(options or {})
 	end
 

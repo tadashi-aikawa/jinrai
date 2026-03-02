@@ -8,12 +8,18 @@ local DEFAULT_CONFIG = {
 	focusHistory = nil,
 }
 
-local scriptSource = debug.getinfo(1, "S").source
-local scriptDir = scriptSource:sub(1, 1) == "@" and scriptSource:match("^@(.+)/[^/]+$") or nil
-if not scriptDir then
-	error("[jinrai.focus_back] failed to resolve script directory")
+local function resourcePath(fileName)
+	if not hs or not hs.spoons or not hs.spoons.resourcePath then
+		error("[jinrai.focus_back] hs.spoons.resourcePath is not available")
+	end
+
+	local path = hs.spoons.resourcePath(fileName)
+	if not path then
+		error("[jinrai.focus_back] failed to resolve Spoon resource: " .. tostring(fileName))
+	end
+	return path
 end
-local focusHistoryModule = dofile(scriptDir .. "/focus_history.lua")
+local focusHistoryModule = dofile(resourcePath("focus_history.lua"))
 
 local function mergeTable(defaults, overrides)
 	local merged = {}

@@ -41,16 +41,19 @@
 
 ## セットアップ
 
+Git + symlink でインストールします:
+
 ```bash
 git clone https://github.com/tadashi-aikawa/jinrai /path/to/jinrai
+ln -sfn /path/to/jinrai/Jinrai.spoon ~/.hammerspoon/Spoons/Jinrai.spoon
 ```
 
 `~/.hammerspoon/init.lua` に以下を追加:
 
 ```lua
-local jinrai = dofile("/path/to/jinrai/init.lua")
+hs.loadSpoon("Jinrai")
 
-jinrai.setup({
+spoon.Jinrai:setup({
   focus_border = {},
   window_hints = {},
   focus_back = {},
@@ -59,12 +62,18 @@ jinrai.setup({
 
 `focus_border` や `window_hints`、`focus_back` のキーを省略するとそのモジュールは無効になります。
 
+更新する場合:
+
+```bash
+git -C /path/to/jinrai pull
+```
+
 ## 設定例
 
 ```lua
-local jinrai = dofile("/path/to/jinrai/init.lua")
+hs.loadSpoon("Jinrai")
 
-jinrai.setup({
+spoon.Jinrai:setup({
   focus_border = {
     borderWidth = 10,
     borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
@@ -256,6 +265,10 @@ focus_back = {
 
 > [!NOTE]
 > 別のスマートな解決方法があるなら知りたい。
+
+## 開発
+
+上記手順で導入しておくと、`Jinrai.spoon/` 配下の変更を Hammerspoon の `Reload Config` ですぐ確認できます。
 
 ## テスト
 

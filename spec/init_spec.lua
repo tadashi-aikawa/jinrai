@@ -1,15 +1,26 @@
 describe("init", function()
 	local originalDofile
 	local originalJinraiState
+	local originalHs
 
 	before_each(function()
 		originalDofile = _G.dofile
 		originalJinraiState = _G.__jinrai
+		originalHs = _G.hs
+
+		_G.hs = {
+			spoons = {
+				resourcePath = function(path)
+					return "./Jinrai.spoon/" .. path
+				end,
+			},
+		}
 	end)
 
 	after_each(function()
 		_G.dofile = originalDofile
 		_G.__jinrai = originalJinraiState
+		_G.hs = originalHs
 	end)
 
 	it("読み込み時に既存 __jinrai.teardown を実行する", function()
@@ -20,13 +31,13 @@ describe("init", function()
 			end,
 		}
 
-		dofile("./init.lua")
+		dofile("./Jinrai.spoon/init.lua")
 		assert.are.equal(1, called)
 	end)
 
 	it("setup で指定したモジュールだけ new される", function()
 		_G.__jinrai = nil
-		local init = dofile("./init.lua")
+		local init = dofile("./Jinrai.spoon/init.lua")
 		local calls = {
 			new = {},
 			teardown = {},
@@ -86,7 +97,7 @@ describe("init", function()
 			return originalDofile(path)
 		end
 
-		init.setup({
+		init:setup({
 			focus_border = { borderWidth = 99 },
 			focus_back = { hotkeyKey = "q" },
 		})
@@ -103,7 +114,7 @@ describe("init", function()
 		assert.is_truthy(joined:match("focus_back.lua"))
 		assert.is_truthy(joined:match("focus_history.lua"))
 
-		init.teardown()
+		init:teardown()
 		assert.is_true(calls.teardown.focus_border)
 		assert.is_true(calls.teardown.focus_back)
 		assert.is_true(calls.teardown.focus_history)
@@ -112,7 +123,7 @@ describe("init", function()
 
 	it("teardown は focus_back -> window_hints -> focus_border の順に実行される", function()
 		_G.__jinrai = nil
-		local init = dofile("./init.lua")
+		local init = dofile("./Jinrai.spoon/init.lua")
 		local order = {}
 
 		_G.dofile = function(path)
@@ -163,12 +174,12 @@ describe("init", function()
 			return originalDofile(path)
 		end
 
-		init.setup({
+		init:setup({
 			focus_border = {},
 			window_hints = {},
 			focus_back = {},
 		})
-		init.teardown()
+		init:teardown()
 
 		assert.are.same({ "focus_back", "window_hints", "focus_history", "focus_border" }, order)
 	end)

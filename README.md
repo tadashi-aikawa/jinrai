@@ -41,16 +41,19 @@
 
 ## Setup
 
+Install with Git + symlink:
+
 ```bash
 git clone https://github.com/tadashi-aikawa/jinrai /path/to/jinrai
+ln -sfn /path/to/jinrai/Jinrai.spoon ~/.hammerspoon/Spoons/Jinrai.spoon
 ```
 
 Add this to `~/.hammerspoon/init.lua`:
 
 ```lua
-local jinrai = dofile("/path/to/jinrai/init.lua")
+hs.loadSpoon("Jinrai")
 
-jinrai.setup({
+spoon.Jinrai:setup({
   focus_border = {},
   window_hints = {},
   focus_back = {},
@@ -59,12 +62,18 @@ jinrai.setup({
 
 If you omit `focus_border`, `window_hints`, or `focus_back`, that module is disabled.
 
+To update:
+
+```bash
+git -C /path/to/jinrai pull
+```
+
 ## Configuration Example
 
 ```lua
-local jinrai = dofile("/path/to/jinrai/init.lua")
+hs.loadSpoon("Jinrai")
 
-jinrai.setup({
+spoon.Jinrai:setup({
   focus_border = {
     borderWidth = 10,
     borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
@@ -255,6 +264,10 @@ focus_back = {
 
 > [!NOTE]
 > If you know a smarter solution, I'd love to hear it.
+
+## Development
+
+With the setup above, editing files under `Jinrai.spoon/` and running `Reload Config` in Hammerspoon reflects changes immediately.
 
 ## Test
 

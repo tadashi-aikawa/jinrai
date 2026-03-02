@@ -1,10 +1,10 @@
-local M = {}
-
-local scriptSource = debug.getinfo(1, "S").source
-local scriptDir = scriptSource:sub(1, 1) == "@" and scriptSource:match("^@(.+)/[^/]+$") or nil
-if not scriptDir then
-	error("[jinrai] failed to resolve script directory")
-end
+local obj = {
+	name = "Jinrai",
+	version = "0.1.0",
+	author = "tadashi-aikawa",
+	license = "MIT - https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE",
+	homepage = "https://github.com/tadashi-aikawa/jinrai",
+}
 
 local previousState = _G.__jinrai
 if previousState and previousState.teardown then
@@ -20,6 +20,18 @@ local windowHints = nil
 local focusBack = nil
 local focusHistory = nil
 
+local function resourcePath(fileName)
+	if not hs or not hs.spoons or not hs.spoons.resourcePath then
+		error("[jinrai] hs.spoons.resourcePath is not available")
+	end
+
+	local path = hs.spoons.resourcePath(fileName)
+	if not path then
+		error("[jinrai] failed to resolve Spoon resource: " .. tostring(fileName))
+	end
+	return path
+end
+
 local function mergeTable(defaults, overrides)
 	local merged = {}
 	for k, v in pairs(defaults) do
@@ -33,20 +45,32 @@ local function mergeTable(defaults, overrides)
 	return merged
 end
 
-function M.setup(config)
-	config = config or {}
+local function normalizeConfig(selfOrConfig, maybeConfig)
+	if maybeConfig ~= nil then
+		return maybeConfig
+	end
+	if selfOrConfig == nil or selfOrConfig == obj then
+		return {}
+	end
+	return selfOrConfig
+end
+
+function obj:setup(config)
+	config = normalizeConfig(self, config)
+
+	obj:teardown()
 
 	if focusBorderModule == nil then
-		focusBorderModule = dofile(scriptDir .. "/focus_border.lua")
+		focusBorderModule = dofile(resourcePath("focus_border.lua"))
 	end
 	if windowHintsModule == nil then
-		windowHintsModule = dofile(scriptDir .. "/window_hints.lua")
+		windowHintsModule = dofile(resourcePath("window_hints.lua"))
 	end
 	if focusBackModule == nil then
-		focusBackModule = dofile(scriptDir .. "/focus_back.lua")
+		focusBackModule = dofile(resourcePath("focus_back.lua"))
 	end
 	if focusHistoryModule == nil then
-		focusHistoryModule = dofile(scriptDir .. "/focus_history.lua")
+		focusHistoryModule = dofile(resourcePath("focus_history.lua"))
 	end
 
 	if config.focus_border then
@@ -71,9 +95,11 @@ function M.setup(config)
 		local focusBackConfig = mergeTable(config.focus_back, { focusHistory = focusHistory })
 		focusBack = focusBackModule.new(focusBackConfig)
 	end
+
+	return obj
 end
 
-local function teardown()
+function obj:teardown()
 	if focusBack and focusBack.teardown then
 		focusBack.teardown()
 	end
@@ -90,12 +116,14 @@ local function teardown()
 	windowHints = nil
 	focusHistory = nil
 	focusBorder = nil
+
+	return obj
 end
 
 _G.__jinrai = {
-	teardown = teardown,
+	teardown = function()
+		obj:teardown()
+	end,
 }
 
-M.teardown = teardown
-
-return M
+return obj
