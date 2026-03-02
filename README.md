@@ -141,7 +141,7 @@ jinrai.setup({
 | `hintChars`        | `A-Z (QWERTY)` | Array of hint characters |
 | `appPrefixOverrides` | `nil`         | Override leading prefixes via rule array (`window:title()` `glob` support, 1-2 char prefixes) |
 | `focusBackKey`     | `nil`          | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
-| `directionKeys`    | `nil`          | 8-direction navigation keys while Window Hints is visible (e.g. `{ left=\"h\", down=\"j\", up=\"k\", right=\"l\", upLeft=\"y\", upRight=\"u\", downLeft=\"b\", downRight=\"n\" }`) |
+| `directionKeys`    | `nil`          | 8-direction navigation keys while Window Hints is visible  |
 | `iconSize`         | `72`            | App icon size (px) |
 | `titleMaxSize`     | `72`            | Max title length shown |
 | `showTitles`       | `true`          | Whether to show title rows |
