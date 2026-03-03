@@ -59,23 +59,23 @@ local DEFAULT_CONFIG = {
 	-- タイトル行を表示するか
 	showTitles = true,
 	-- ヒントバッジの背景色
-	bgColor = { red = 0, green = 0, blue = 0, alpha = 0.72 },
+	bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 },
 	-- 非アクティブ(入力不一致)時の背景アルファ値
-	dimmedBgAlpha = 0.22,
+	dimmedBgAlpha = 0.14,
 	-- キー文字の色
 	textColor = { red = 1, green = 1, blue = 1, alpha = 1 },
 	-- 非アクティブ時のキー文字の色
-	dimmedTextColor = { red = 1, green = 1, blue = 1, alpha = 0.35 },
+	dimmedTextColor = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 },
 	-- タイトル文字の色
-	titleTextColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 1 },
+	titleTextColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 },
 	-- 非アクティブ時のタイトル文字の色
-	dimmedTitleTextColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 },
+	dimmedTitleTextColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 },
 	-- 入力済みキープレフィックスのハイライト色
 	keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 },
 	-- アプリアイコンの不透明度
 	iconAlpha = 0.95,
 	-- 非アクティブ時のアプリアイコンの不透明度
-	dimmedIconAlpha = 0.48,
+	dimmedIconAlpha = 0.30,
 	-- ヒント重なり時のずらし量 (px)
 	bumpMove = 90,
 	-- 遮蔽ウィンドウのプレビュー画像を表示するか
@@ -101,33 +101,33 @@ local DEFAULT_CONFIG = {
 	-- 遮蔽ヒントの縮小率 (1.0で等倍)
 	occludedScale = 0.65,
 	-- 遮蔽ヒントの背景アルファ値
-	occludedBgAlpha = 0.50,
+	occludedBgAlpha = 0.32,
 	-- 遮蔽ヒントのアイコン不透明度
-	occludedIconAlpha = 0.65,
+	occludedIconAlpha = 0.46,
 	-- 遮蔽ヒントのプレビュー画像の不透明度
-	occludedPreviewAlpha = 0.65,
+	occludedPreviewAlpha = 0.46,
 	-- アクティブウィンドウのオーバーレイ塗り色
 	activeOverlayColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 },
 	-- アクティブウィンドウのオーバーレイボーダー色
-	activeOverlayBorderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
+	activeOverlayBorderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 },
 	-- アクティブウィンドウのオーバーレイボーダー幅 (px)
-	activeOverlayBorderWidth = 10,
+	activeOverlayBorderWidth = 13,
 	-- アクティブウィンドウのオーバーレイ角丸半径 (px)
 	activeOverlayCornerRadius = 10,
 	-- 前面ヒントバッジのオーバーレイ塗り色
-	hintOverlayColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.38 },
+	hintOverlayColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 },
 	-- 前面ヒントバッジのオーバーレイボーダー色
 	hintOverlayBorderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 },
 	-- 候補外になった前面ヒントバッジのオーバーレイボーダー色
-	dimmedHintOverlayBorderColor = { red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 },
+	dimmedHintOverlayBorderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 },
 	-- 前面ヒントバッジのオーバーレイボーダー幅 (px)
-	hintOverlayBorderWidth = 4,
+	hintOverlayBorderWidth = 6,
 	-- 前面ヒントバッジのオーバーレイ角丸半径 (px)
 	hintOverlayCornerRadius = 12,
 	-- 遮蔽ヒントドックの画面下端からのマージン (px)
 	dockBottomMargin = 24,
 	-- 遮蔽ヒントドック内のアイテム間隔 (px)
-	dockItemGap = 10,
+	dockItemGap = 12,
 	-- 遮蔽ヒントドックのX座標を対象ウィンドウへ寄せる割合 (0.0-1.0)
 	dockWindowXBlend = 0.0,
 	-- 遮蔽ヒントドックのY座標を対象ウィンドウへ寄せる割合 (0.0-1.0)
@@ -2275,15 +2275,14 @@ function M.new(options)
 						config.dockWindowXBlend
 					)
 					local centeredY = dockY + (maxHeight - item.height)
-					local itemY =
-						resolveOccludedDockItemY(
-							screenFrame,
-							item.height,
-							centeredY,
-							item.windowCenterY,
-							config.dockWindowYBlend,
-							config.dockBottomMargin
-						)
+					local itemY = resolveOccludedDockItemY(
+						screenFrame,
+						item.height,
+						centeredY,
+						item.windowCenterY,
+						config.dockWindowYBlend,
+						config.dockBottomMargin
+					)
 					local canvasFrame = {
 						x = itemX,
 						y = itemY,
