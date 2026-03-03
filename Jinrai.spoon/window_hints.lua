@@ -76,8 +76,6 @@ local DEFAULT_CONFIG = {
 	iconAlpha = 0.95,
 	-- 非アクティブ時のアプリアイコンの不透明度
 	dimmedIconAlpha = 0.48,
-	-- ヒント同士の重なり検出しきい値 (px)
-	bumpThreshold = 120,
 	-- ヒント重なり時のずらし量 (px)
 	bumpMove = 90,
 	-- 遮蔽ウィンドウのプレビュー画像を表示するか
@@ -108,10 +106,6 @@ local DEFAULT_CONFIG = {
 	occludedIconAlpha = 0.65,
 	-- 遮蔽ヒントのプレビュー画像の不透明度
 	occludedPreviewAlpha = 0.65,
-	-- 前面ヒントバッジのボーダー色 (未使用: hintOverlay系に置換済み)
-	visibleBorderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.80 },
-	-- 前面ヒントバッジのボーダー幅 (未使用: hintOverlay系に置換済み)
-	visibleBorderWidth = 10,
 	-- アクティブウィンドウのオーバーレイ塗り色
 	activeOverlayColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 },
 	-- アクティブウィンドウのオーバーレイボーダー色
