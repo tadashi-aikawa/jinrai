@@ -199,7 +199,7 @@ spoon.Jinrai:setup({
 | `dockItemGap`      | `10`            | Item gap inside occluded-hint dock (px) |
 | `focusBackKey`     | `nil`           | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
 | `directionKeys`    | `nil`           | 8-direction navigation keys while Window Hints is visible  |
-| `cardinalOverlapTieThresholdPx` | `960` | Tie threshold (px) for orthogonal-overlap differences in cardinal directional navigation |
+| `cardinalOverlapTieThresholdPx` | `720` | Tie threshold (px) for orthogonal-overlap differences in cardinal directional navigation |
 | `debugDirectionalNavigation` | `false` | Emit directional candidate scoring logs for `directionKeys` debugging |
 | `swapWindowFrameSelectModifiers` | `nil` | Modifier keys for swapping frames between focused and target windows when selecting hints or using `focusBackKey` / `directionKeys` |
 | `onSelect`         | `nil`           | Callback on window selection |

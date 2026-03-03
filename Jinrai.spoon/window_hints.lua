@@ -141,7 +141,7 @@ local DEFAULT_CONFIG = {
 	-- Window Hints 表示中に方向移動を実行するキー
 	directionKeys = nil,
 	-- 上下左右判定で重なり量差を同点扱いにするしきい値 (px)
-	cardinalOverlapTieThresholdPx = 960,
+	cardinalOverlapTieThresholdPx = 720,
 	-- directionKeys 実行時の候補選定ログを出力するか
 	debugDirectionalNavigation = false,
 	-- ヒント確定時に位置・サイズ入れ替えを実行する修飾キー

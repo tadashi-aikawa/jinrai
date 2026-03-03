@@ -199,7 +199,7 @@ spoon.Jinrai:setup({
 | `dockItemGap`      | `10`           | 遮蔽ヒントドック内のアイテム間隔 (px) |
 | `focusBackKey`     | `nil`          | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
 | `directionKeys`    | `nil`          | Window Hints表示中に8方向移動を実行するキー |
-| `cardinalOverlapTieThresholdPx` | `960` | 上下左右の方向移動で副軸重なり量差を同点扱いするしきい値 (px) |
+| `cardinalOverlapTieThresholdPx` | `720` | 上下左右の方向移動で副軸重なり量差を同点扱いするしきい値 (px) |
 | `debugDirectionalNavigation` | `false` | `directionKeys` の候補スコアリングをデバッグログ出力する |
 | `swapWindowFrameSelectModifiers` | `nil` | ヒント確定時または `focusBackKey` / `directionKeys` 実行時に現在ウィンドウと対象ウィンドウの位置・サイズを入れ替える修飾キー |
 | `onSelect`         | `nil`          | ウィンドウ選択時のコールバック   |
