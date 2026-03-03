@@ -128,6 +128,10 @@ local DEFAULT_CONFIG = {
 	dockBottomMargin = 24,
 	-- 遮蔽ヒントドック内のアイテム間隔 (px)
 	dockItemGap = 10,
+	-- 遮蔽ヒントドックのX座標を対象ウィンドウへ寄せる割合 (0.0-1.0)
+	dockWindowXBlend = 0.0,
+	-- 遮蔽ヒントドックのY座標を対象ウィンドウへ寄せる割合 (0.0-1.0)
+	dockWindowYBlend = 0.0,
 	-- アプリ別の先頭プレフィックス上書き (ルール配列形式)
 	appPrefixOverrides = nil,
 	-- ウィンドウ選択時のコールバック関数
@@ -256,6 +260,16 @@ local function normalizeNonNegativeNumber(value, optionName)
 	end
 	if value < 0 then
 		error(string.format("[jinrai.window_hints] %s must be >= 0", optionName))
+	end
+	return value
+end
+
+local function normalizeUnitIntervalNumber(value, optionName)
+	if type(value) ~= "number" or value ~= value then
+		error(string.format("[jinrai.window_hints] %s must be a number", optionName))
+	end
+	if value < 0 or value > 1 then
+		error(string.format("[jinrai.window_hints] %s must be between 0 and 1", optionName))
 	end
 	return value
 end
@@ -827,6 +841,37 @@ local function clamp(value, min, max)
 	return value
 end
 
+local function resolveOccludedDockItemX(screenFrame, itemWidth, centeredX, windowCenterX, minimumX, windowXBlend)
+	windowXBlend = windowXBlend or 0
+	local desiredX = centeredX
+	if windowXBlend > 0 and type(windowCenterX) == "number" and windowCenterX == windowCenterX then
+		local targetX = windowCenterX - (itemWidth / 2)
+		desiredX = centeredX + (targetX - centeredX) * windowXBlend
+	end
+	local maxX = screenFrame.x + screenFrame.w - itemWidth
+	return clamp(math.max(minimumX, desiredX), screenFrame.x, maxX)
+end
+
+local function resolveOccludedDockItemY(screenFrame, itemHeight, centeredY, windowCenterY, windowYBlend, dockMargin)
+	windowYBlend = windowYBlend or 0
+	dockMargin = dockMargin or 0
+	local desiredY = centeredY
+	if windowYBlend > 0 and type(windowCenterY) == "number" and windowCenterY == windowCenterY then
+		local screenCenterY = screenFrame.y + (screenFrame.h / 2)
+		local targetY = centeredY
+		if windowCenterY < screenCenterY then
+			targetY = screenFrame.y + dockMargin
+		end
+		desiredY = centeredY + (targetY - centeredY) * windowYBlend
+	end
+	local maxY = screenFrame.y + screenFrame.h - itemHeight
+	return clamp(desiredY, screenFrame.y, maxY)
+end
+
+local function resolveOccludedDockStartX(screenFrame, totalWidth)
+	return screenFrame.x + (screenFrame.w - totalWidth) / 2
+end
+
 local function estimatedTextWidth(text, fontSize, minimum)
 	local len = utf8.len(text) or string.len(text)
 	return math.max(minimum or 40, math.floor((len + 1) * fontSize * 0.55))
@@ -1320,6 +1365,8 @@ function M.new(options)
 	local config = mergeTable(DEFAULT_CONFIG, options)
 	config.cardinalOverlapTieThresholdPx =
 		normalizeNonNegativeNumber(config.cardinalOverlapTieThresholdPx, "cardinalOverlapTieThresholdPx")
+	config.dockWindowXBlend = normalizeUnitIntervalNumber(config.dockWindowXBlend, "dockWindowXBlend")
+	config.dockWindowYBlend = normalizeUnitIntervalNumber(config.dockWindowYBlend, "dockWindowYBlend")
 	local focusHistory = config.focusHistory
 	local directionKeys = normalizeDirectionKeys(config.directionKeys)
 	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
@@ -2167,6 +2214,9 @@ function M.new(options)
 							end
 						end
 					end
+					local winFrame = hint.win:frame()
+					local windowCenterX = winFrame.x + (winFrame.w / 2)
+					local windowCenterY = winFrame.y + (winFrame.h / 2)
 					table.insert(screenGroups[screenKey].items, {
 						hint = hint,
 						width = width,
@@ -2174,12 +2224,25 @@ function M.new(options)
 						keyBoxWidth = keyBoxWidth,
 						previewImage = previewImage,
 						previewHeight = previewHeight,
+						windowCenterX = windowCenterX,
+						windowCenterY = windowCenterY,
 					})
 				end
 			end
 
 			-- Layout dock per screen
 			for _, group in pairs(screenGroups) do
+				if config.dockWindowXBlend > 0 then
+					table.sort(group.items, function(a, b)
+						if a.windowCenterX ~= b.windowCenterX then
+							return a.windowCenterX < b.windowCenterX
+						end
+						if a.hint.key ~= b.hint.key then
+							return a.hint.key < b.hint.key
+						end
+						return false
+					end)
+				end
 				local screenFrame = group.screen:frame()
 				local maxHeight = 0
 				local totalWidth = 0
@@ -2193,19 +2256,42 @@ function M.new(options)
 					end
 				end
 
-				local startX = screenFrame.x + (screenFrame.w - totalWidth) / 2
+				local startX = resolveOccludedDockStartX(screenFrame, totalWidth)
 				local dockY = screenFrame.y + screenFrame.h - maxHeight - config.dockBottomMargin
-				local curX = startX
+				local centeredX = startX
+				for _, item in ipairs(group.items) do
+					item.centeredX = centeredX
+					centeredX = centeredX + item.width + config.dockItemGap
+				end
+				local curX = config.dockWindowXBlend > 0 and screenFrame.x or startX
 
 				for _, item in ipairs(group.items) do
+					local itemX = resolveOccludedDockItemX(
+						screenFrame,
+						item.width,
+						item.centeredX,
+						item.windowCenterX,
+						curX,
+						config.dockWindowXBlend
+					)
+					local centeredY = dockY + (maxHeight - item.height)
+					local itemY =
+						resolveOccludedDockItemY(
+							screenFrame,
+							item.height,
+							centeredY,
+							item.windowCenterY,
+							config.dockWindowYBlend,
+							config.dockBottomMargin
+						)
 					local canvasFrame = {
-						x = curX,
-						y = dockY + (maxHeight - item.height),
+						x = itemX,
+						y = itemY,
 						w = item.width,
 						h = item.height,
 					}
 					placeHint(item.hint, canvasFrame, item.previewImage, item.previewHeight, item.keyBoxWidth, scale)
-					curX = curX + item.width + config.dockItemGap
+					curX = itemX + item.width + config.dockItemGap
 				end
 			end
 		end
@@ -2271,6 +2357,9 @@ M._test = {
 	swapWindowFrames = swapWindowFrames,
 	resolveFocusBackTargetWindow = resolveFocusBackTargetWindow,
 	resolveHintOverlayBorderColor = resolveHintOverlayBorderColor,
+	resolveOccludedDockItemX = resolveOccludedDockItemX,
+	resolveOccludedDockItemY = resolveOccludedDockItemY,
+	resolveOccludedDockStartX = resolveOccludedDockStartX,
 	comparePrefixes = comparePrefixes,
 	hintKeyForGroup = hintKeyForGroup,
 	findExpandedKey = findExpandedKey,

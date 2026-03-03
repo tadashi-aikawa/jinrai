@@ -283,6 +283,143 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.same(normal, color)
 	end)
 
+	it("dockWindowXBlend=0 では中央寄せレイアウトXを使う", function()
+		local x = helper.resolveOccludedDockItemX(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			180,
+			320,
+			700,
+			320,
+			0
+		)
+		assert.are.equal(320, x)
+	end)
+
+	it("開始Xは中央寄せ", function()
+		local startX = helper.resolveOccludedDockStartX({ x = 100, y = 0, w = 1200, h = 800 }, 400)
+		assert.are.equal(500, startX)
+	end)
+
+	it("dockWindowXBlend=1 では対象ウィンドウ中心にヒント中心を合わせる", function()
+		local x = helper.resolveOccludedDockItemX(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			180,
+			320,
+			700,
+			320,
+			1
+		)
+		assert.are.equal(610, x)
+	end)
+
+	it("dockWindowXBlend=0.5 では中央と対象中心基準xの中間へ寄る", function()
+		local x = helper.resolveOccludedDockItemX(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			180,
+			320,
+			700,
+			320,
+			0.5
+		)
+		assert.are.equal(465, x)
+	end)
+
+	it("dockWindowXBlend=1 でも重なり回避の最小Xを下回らない", function()
+		local x = helper.resolveOccludedDockItemX(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			180,
+			320,
+			200,
+			320,
+			1
+		)
+		assert.are.equal(320, x)
+	end)
+
+	it("dockWindowXBlend=1 では画面右端に収まるようにクランプされる", function()
+		local x = helper.resolveOccludedDockItemX(
+			{ x = 0, y = 0, w = 800, h = 600 },
+			180,
+			320,
+			900,
+			320,
+			1
+		)
+		assert.are.equal(620, x)
+	end)
+
+	it("dockWindowYBlend=0 では下ドック配置Yを使う", function()
+		local y = helper.resolveOccludedDockItemY(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			120,
+			500,
+			220,
+			0,
+			180
+		)
+		assert.are.equal(500, y)
+	end)
+
+	it("dockWindowYBlend=1 では上半分ウィンドウを上端マージンへ寄せる", function()
+		local y = helper.resolveOccludedDockItemY(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			120,
+			500,
+			220,
+			1,
+			180
+		)
+		assert.are.equal(180, y)
+	end)
+
+	it("dockWindowYBlend=0.5 では下ドックと上端マージンの中間へ寄る", function()
+		local y = helper.resolveOccludedDockItemY(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			120,
+			500,
+			220,
+			0.5,
+			180
+		)
+		assert.are.equal(340, y)
+	end)
+
+	it("dockWindowYBlend=1 でも下半分ウィンドウは下ドック配置を維持する", function()
+		local y = helper.resolveOccludedDockItemY(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			120,
+			500,
+			700,
+			1,
+			180
+		)
+		assert.are.equal(500, y)
+	end)
+
+	it("dockWindowYBlend=1 では上端マージンが大きすぎても画面下端に収まる", function()
+		local y = helper.resolveOccludedDockItemY(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			120,
+			500,
+			220,
+			1,
+			760
+		)
+		assert.are.equal(680, y)
+	end)
+
+	it("dockWindowYBlend=1 では画面下端に収まるようにクランプされる", function()
+		local y = helper.resolveOccludedDockItemY(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			120,
+			900,
+			900,
+			1,
+			180
+		)
+		assert.are.equal(680, y)
+	end)
+
 	it("文字キーの入力修飾キー集合を生成できる", function()
 		local bindings = helper.collectModalInputModifiers("w", helper.normalizeSelectModifiers({ "cmd" }))
 		assert.are.same({ {}, { "cmd" }, { "shift" } }, bindings)

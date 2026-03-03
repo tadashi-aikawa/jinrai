@@ -197,6 +197,8 @@ spoon.Jinrai:setup({
 | `hintOverlayCornerRadius` | `12`     | 前面ヒントバッジのオーバーレイ角丸半径 (px) |
 | `dockBottomMargin` | `24`           | 遮蔽ヒントドックの画面下端マージン (px) |
 | `dockItemGap`      | `10`           | 遮蔽ヒントドック内のアイテム間隔 (px) |
+| `dockWindowXBlend` | `0.0`          | 遮蔽ヒントドック項目の x を中央配置から対象ウィンドウ x へ寄せる割合（`0.0-1.0`） |
+| `dockWindowYBlend` | `0.0`          | 遮蔽ヒントドック項目の y を下ドック配置から、対象ウィンドウが画面の上下どちらにあるかに応じた対称マージン位置へ寄せる割合（`0.0-1.0`） |
 | `focusBackKey`     | `nil`          | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
 | `directionKeys`    | `nil`          | Window Hints表示中に8方向移動を実行するキー |
 | `cardinalOverlapTieThresholdPx` | `720` | 上下左右の方向移動で副軸重なり量差を同点扱いするしきい値 (px) |

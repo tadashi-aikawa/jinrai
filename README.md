@@ -197,6 +197,8 @@ spoon.Jinrai:setup({
 | `hintOverlayCornerRadius` | `12`      | Corner radius for front hint badge overlays (px) |
 | `dockBottomMargin` | `24`            | Bottom margin from screen edge for occluded-hint dock (px) |
 | `dockItemGap`      | `10`            | Item gap inside occluded-hint dock (px) |
+| `dockWindowXBlend` | `0.0`           | Blend ratio for shifting occluded-hint dock item x from centered layout toward each target window's x (`0.0-1.0`) |
+| `dockWindowYBlend` | `0.0`           | Blend ratio for shifting occluded-hint dock item y from bottom-dock layout toward mirrored top/bottom dock positions based on each target window's vertical half (`0.0-1.0`) |
 | `focusBackKey`     | `nil`           | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
 | `directionKeys`    | `nil`           | 8-direction navigation keys while Window Hints is visible  |
 | `cardinalOverlapTieThresholdPx` | `720` | Tie threshold (px) for orthogonal-overlap differences in cardinal directional navigation |
