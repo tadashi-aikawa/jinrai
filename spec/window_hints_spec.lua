@@ -223,6 +223,84 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.same({ "cmd", "shift" }, normalized)
 	end)
 
+	it("swapWindowFrameSelectModifiers で option は alt として扱う", function()
+		local normalized = helper.normalizeSelectModifiers({ "option", "cmd" })
+		assert.are.same({ "cmd", "alt" }, normalized)
+	end)
+
+	it("directDirectionHotkeys を正規化できる", function()
+		local normalized = helper.normalizeDirectDirectionHotkeys({
+			modifiers = { "Shift", "CMD" },
+			keys = {
+				left = "h",
+				right = "l",
+			},
+		})
+		assert.are.same({ "cmd", "shift" }, normalized.modifiers)
+		assert.are.equal("h", normalized.keys.left)
+		assert.are.equal("l", normalized.keys.right)
+		assert.are.equal("left", normalized.keyLookup.h)
+		assert.are.equal("right", normalized.keyLookup.l)
+	end)
+
+	it("directDirectionHotkeys.modifiers で option は alt として扱う", function()
+		local normalized = helper.normalizeDirectDirectionHotkeys({
+			modifiers = { "option", "cmd" },
+			keys = {
+				left = "h",
+			},
+		})
+		assert.are.same({ "cmd", "alt" }, normalized.modifiers)
+	end)
+
+	it("directDirectionHotkeys は keys 未指定なら無効化される", function()
+		local normalized = helper.normalizeDirectDirectionHotkeys({
+			modifiers = { "cmd" },
+		})
+		assert.are.equal(nil, normalized)
+	end)
+
+	it("directDirectionHotkeys は空テーブルなら無効化される", function()
+		local normalized = helper.normalizeDirectDirectionHotkeys({})
+		assert.are.equal(nil, normalized)
+	end)
+
+	it("directDirectionHotkeys.modifiers が空配列ならエラー", function()
+		local ok, err = pcall(function()
+			helper.normalizeDirectDirectionHotkeys({
+				modifiers = {},
+				keys = { left = "h" },
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("modifiers must not be empty"))
+	end)
+
+	it("directDirectionHotkeys.modifiers に重複があればエラー", function()
+		local ok, err = pcall(function()
+			helper.normalizeDirectDirectionHotkeys({
+				modifiers = { "shift", "SHIFT" },
+				keys = { left = "h" },
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("duplicate"))
+	end)
+
+	it("directDirectionHotkeys.keys で重複キーがあればエラー", function()
+		local ok, err = pcall(function()
+			helper.normalizeDirectDirectionHotkeys({
+				modifiers = { "cmd" },
+				keys = {
+					left = "h",
+					right = "h",
+				},
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("directionKeys must not contain duplicate keys"))
+	end)
+
 	it("swapWindowFrameSelectModifiers が空配列ならエラー", function()
 		local ok, err = pcall(function()
 			helper.normalizeSelectModifiers({})

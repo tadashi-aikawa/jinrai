@@ -144,6 +144,8 @@ local DEFAULT_CONFIG = {
 	focusBackKey = nil,
 	-- Window Hints 表示中に方向移動を実行するキー
 	directionKeys = nil,
+	-- ヒントを表示せずに方向移動を実行するホットキー
+	directDirectionHotkeys = nil,
 	-- 上下左右判定で重なり量差を同点扱いにするしきい値 (px)
 	cardinalOverlapTieThresholdPx = 720,
 	-- directionKeys 実行時の候補選定ログを出力するか
@@ -308,6 +310,15 @@ local SELECT_MODIFIER_LOOKUP = {
 	fn = true,
 }
 
+local MODIFIER_ALIAS_LOOKUP = {
+	option = "alt",
+}
+
+local function normalizeModifierName(modifier)
+	local normalized = string.lower(modifier)
+	return MODIFIER_ALIAS_LOOKUP[normalized] or normalized
+end
+
 local function buildDirectionKeyLookup(directionKeys)
 	if not directionKeys then
 		return {}
@@ -324,6 +335,83 @@ local function buildDirectionKeyLookup(directionKeys)
 		end
 	end
 	return lookup
+end
+
+local function normalizeDirectDirectionHotkeys(directDirectionHotkeys)
+	if directDirectionHotkeys == nil then
+		return nil
+	end
+	if type(directDirectionHotkeys) ~= "table" then
+		error("[jinrai.window_hints] directDirectionHotkeys must be a table")
+	end
+
+	local keys = directDirectionHotkeys.keys
+	if keys ~= nil and type(keys) ~= "table" then
+		error("[jinrai.window_hints] directDirectionHotkeys.keys must be a table")
+	end
+	local directionKeys = normalizeDirectionKeys(keys)
+	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
+	if next(directionKeyLookup) == nil then
+		return nil
+	end
+
+	local modifiers = directDirectionHotkeys.modifiers
+	if type(modifiers) ~= "table" then
+		error("[jinrai.window_hints] directDirectionHotkeys.modifiers must be an array")
+	end
+	local maxIndex = 0
+	for k, _ in pairs(modifiers) do
+		if type(k) ~= "number" or k < 1 or k ~= math.floor(k) then
+			error("[jinrai.window_hints] directDirectionHotkeys.modifiers must be an array")
+		end
+		if k > maxIndex then
+			maxIndex = k
+		end
+	end
+	for i = 1, maxIndex do
+		if modifiers[i] == nil then
+			error("[jinrai.window_hints] directDirectionHotkeys.modifiers must be an array")
+		end
+	end
+	if #modifiers == 0 then
+		error("[jinrai.window_hints] directDirectionHotkeys.modifiers must not be empty")
+	end
+
+	local modifierLookup = {}
+	for i, modifier in ipairs(modifiers) do
+		if type(modifier) ~= "string" then
+			error(string.format("[jinrai.window_hints] directDirectionHotkeys.modifiers[%d] must be a string", i))
+		end
+		local normalized = normalizeModifierName(modifier)
+		if normalized == "" then
+			error(string.format("[jinrai.window_hints] directDirectionHotkeys.modifiers[%d] must not be empty", i))
+		end
+		if not SELECT_MODIFIER_LOOKUP[normalized] then
+			error(
+				string.format(
+					"[jinrai.window_hints] directDirectionHotkeys.modifiers[%d] must be one of cmd/alt/ctrl/shift/fn",
+					i
+				)
+			)
+		end
+		if modifierLookup[normalized] then
+			error("[jinrai.window_hints] directDirectionHotkeys.modifiers must not contain duplicate modifiers")
+		end
+		modifierLookup[normalized] = true
+	end
+
+	local normalizedModifiers = {}
+	for _, modifier in ipairs(SELECT_MODIFIER_ORDER) do
+		if modifierLookup[modifier] then
+			table.insert(normalizedModifiers, modifier)
+		end
+	end
+
+	return {
+		modifiers = normalizedModifiers,
+		keys = directionKeys,
+		keyLookup = directionKeyLookup,
+	}
 end
 
 local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey)
@@ -395,7 +483,7 @@ local function normalizeSelectModifiers(modifiers)
 		if type(modifier) ~= "string" then
 			error(string.format("[jinrai.window_hints] swapWindowFrameSelectModifiers[%d] must be a string", i))
 		end
-		local normalized = string.lower(modifier)
+		local normalized = normalizeModifierName(modifier)
 		if normalized == "" then
 			error(string.format("[jinrai.window_hints] swapWindowFrameSelectModifiers[%d] must not be empty", i))
 		end
@@ -1370,6 +1458,7 @@ function M.new(options)
 	local focusHistory = config.focusHistory
 	local directionKeys = normalizeDirectionKeys(config.directionKeys)
 	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
+	local directDirectionHotkeys = normalizeDirectDirectionHotkeys(config.directDirectionHotkeys)
 	local focusBackKey = normalizeActionKey(config.focusBackKey, "focusBackKey")
 	local swapWindowFrameSelectModifiers = normalizeSelectModifiers(config.swapWindowFrameSelectModifiers)
 	if not focusHistory then
@@ -1383,6 +1472,7 @@ function M.new(options)
 	end
 
 	local hotkey = nil
+	local directDirectionBindings = {}
 	local modal = nil
 	local openHints = {}
 	local hintByKey = {}
@@ -2322,6 +2412,10 @@ function M.new(options)
 			hotkey:delete()
 			hotkey = nil
 		end
+		for _, binding in ipairs(directDirectionBindings) do
+			binding:delete()
+		end
+		directDirectionBindings = {}
 		closeHints(true)
 		if modal then
 			modal:delete()
@@ -2332,6 +2426,17 @@ function M.new(options)
 	hotkey = hs.hotkey.bind(config.hotkeyModifiers, config.hotkeyKey, function()
 		invokeShowHints()
 	end)
+	if directDirectionHotkeys then
+		for _, direction in ipairs(ALL_DIRECTIONS) do
+			local key = directDirectionHotkeys.keys and directDirectionHotkeys.keys[direction]
+			if key then
+				local binding = hs.hotkey.bind(directDirectionHotkeys.modifiers, key, function()
+					runDirectionalAction(direction, false)
+				end)
+				table.insert(directDirectionBindings, binding)
+			end
+		end
+	end
 
 	return {
 		show = invokeShowHints,
@@ -2346,6 +2451,7 @@ M._test = {
 	normalizeHintChars = normalizeHintChars,
 	filterHintChars = filterHintChars,
 	buildReservedHintCharLookup = buildReservedHintCharLookup,
+	normalizeDirectDirectionHotkeys = normalizeDirectDirectionHotkeys,
 	collectAppPrefixCandidates = collectAppPrefixCandidates,
 	assignUniquePrefixes = assignUniquePrefixes,
 	findDirectionalWindowTarget = findDirectionalWindowTarget,

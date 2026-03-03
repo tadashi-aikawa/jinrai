@@ -113,6 +113,19 @@ spoon.Jinrai:setup({
       downLeft = "b",
       downRight = "n",
     },
+    directDirectionHotkeys = {
+      modifiers = { "ctrl", "alt" },
+      keys = {
+        left = "h",
+        down = "j",
+        up = "k",
+        right = "l",
+        upLeft = "y",
+        upRight = "u",
+        downLeft = "b",
+        downRight = "n",
+      },
+    },
     swapWindowFrameSelectModifiers = { "shift" },
     iconSize = 72,
     titleMaxSize = 72,
@@ -201,6 +214,7 @@ spoon.Jinrai:setup({
 | `dockWindowYBlend` | `0.0`           | Blend ratio for shifting occluded-hint dock item y from bottom-dock layout toward mirrored top/bottom dock positions based on each target window's vertical half (`0.0-1.0`) |
 | `focusBackKey`     | `nil`           | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
 | `directionKeys`    | `nil`           | 8-direction navigation keys while Window Hints is visible  |
+| `directDirectionHotkeys` | `nil`     | Direct directional hotkeys (move immediately without opening Window Hints) |
 | `cardinalOverlapTieThresholdPx` | `720` | Tie threshold (px) for orthogonal-overlap differences in cardinal directional navigation |
 | `debugDirectionalNavigation` | `false` | Emit directional candidate scoring logs for `directionKeys` debugging |
 | `swapWindowFrameSelectModifiers` | `nil` | Modifier keys for swapping frames between focused and target windows when selecting hints or using `focusBackKey` / `directionKeys` |
@@ -252,6 +266,31 @@ For implementation defaults and internal options, see `DEFAULT_CONFIG` in `windo
 - Fully occluded windows are excluded from directional navigation candidates
 - Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
 - Diagonal directions prefer the smallest sum of two axis edge gaps, then frontmost order, center distance, and finally the previously active window
+
+### Direct Direction Hotkeys
+
+`directDirectionHotkeys` lets you bind directional movement without showing hints.
+
+```lua
+directDirectionHotkeys = {
+  modifiers = { "ctrl", "alt" }, -- required
+  keys = {                       -- optional; only specified directions are enabled
+    left = "h",
+    down = "j",
+    up = "k",
+    right = "l",
+    upLeft = "y",
+    upRight = "u",
+    downLeft = "b",
+    downRight = "n",
+  },
+}
+```
+
+- Uses the same target selection rules as `directionKeys` (occlusion filtering and tie-break logic included)
+- Moves focus immediately; Window Hints UI is not shown
+- If `keys` is omitted or empty, direct-direction hotkeys are disabled
+- In `modifiers`, `option` is accepted as an alias for `alt`
 
 ## Focus Back Options
 

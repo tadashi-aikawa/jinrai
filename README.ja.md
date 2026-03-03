@@ -113,6 +113,19 @@ spoon.Jinrai:setup({
       downLeft = "b",
       downRight = "n",
     },
+    directDirectionHotkeys = {
+      modifiers = { "ctrl", "alt" },
+      keys = {
+        left = "h",
+        down = "j",
+        up = "k",
+        right = "l",
+        upLeft = "y",
+        upRight = "u",
+        downLeft = "b",
+        downRight = "n",
+      },
+    },
     swapWindowFrameSelectModifiers = { "shift" },
     iconSize = 72,
     titleMaxSize = 72,
@@ -201,6 +214,7 @@ spoon.Jinrai:setup({
 | `dockWindowYBlend` | `0.0`          | 遮蔽ヒントドック項目の y を下ドック配置から、対象ウィンドウが画面の上下どちらにあるかに応じた対称マージン位置へ寄せる割合（`0.0-1.0`） |
 | `focusBackKey`     | `nil`          | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
 | `directionKeys`    | `nil`          | Window Hints表示中に8方向移動を実行するキー |
+| `directDirectionHotkeys` | `nil`    | Window Hints を表示せず即時に方向移動するホットキー |
 | `cardinalOverlapTieThresholdPx` | `720` | 上下左右の方向移動で副軸重なり量差を同点扱いするしきい値 (px) |
 | `debugDirectionalNavigation` | `false` | `directionKeys` の候補スコアリングをデバッグログ出力する |
 | `swapWindowFrameSelectModifiers` | `nil` | ヒント確定時または `focusBackKey` / `directionKeys` 実行時に現在ウィンドウと対象ウィンドウの位置・サイズを入れ替える修飾キー |
@@ -253,6 +267,31 @@ appPrefixOverrides = {
 - 完全に背面に遮蔽されているウィンドウは方向移動の候補から除外されます
 - 上下左右は基本的に「副軸の重なり量が大きい」候補を優先し、重なり差が `cardinalOverlapTieThresholdPx` 以内なら同点扱いとして次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
 - 斜め方向は2軸のエッジ距離合計が小さい候補を優先し、同率時は前面順、中心距離、直前アクティブウィンドウの順で決定します
+
+### 直接方向移動ホットキー
+
+`directDirectionHotkeys` は、Window Hints を出さずに方向移動を直接実行する設定です。
+
+```lua
+directDirectionHotkeys = {
+  modifiers = { "ctrl", "alt" }, -- 必須
+  keys = {                       -- 任意。指定した方向だけ有効
+    left = "h",
+    down = "j",
+    up = "k",
+    right = "l",
+    upLeft = "y",
+    upRight = "u",
+    downLeft = "b",
+    downRight = "n",
+  },
+}
+```
+
+- 移動先の判定は `directionKeys` と同じ（遮蔽除外・同点時の優先順位を含む）
+- キー押下で即フォーカス移動し、Window Hints UI は表示しない
+- `keys` を省略した場合は直接方向移動ホットキーを無効化
+- `modifiers` では `alt` の別名として `option` も指定可能
 
 ## Focus Back オプション
 
