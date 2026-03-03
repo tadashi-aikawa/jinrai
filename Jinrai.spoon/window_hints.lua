@@ -1,172 +1,23 @@
 local M = {}
 
-local DEFAULT_HINT_CHARS = {
-	"A",
-	"S",
-	"D",
-	"F",
-	"G",
-	"H",
-	"J",
-	"K",
-	"L",
-	"Q",
-	"W",
-	"E",
-	"R",
-	"T",
-	"Y",
-	"U",
-	"I",
-	"O",
-	"P",
-	"Z",
-	"X",
-	"C",
-	"V",
-	"B",
-	"N",
-	"M",
-}
-
-local DEFAULT_CONFIG = {
-	-- ヒント表示のホットキー修飾キー
-	hotkeyModifiers = { "alt" },
-	-- ヒント表示のホットキー
-	hotkeyKey = "f20",
-	-- アプリアイコンのサイズ (px)
-	iconSize = 72,
-	-- キー表示ボックスの高さ (px)
-	keyBoxSize = 72,
-	-- キー表示ボックスの最小幅 (px)
-	keyBoxMinWidth = 72,
-	-- キー表示ボックスの左右パディング (px)
-	keyBoxHorizontalPadding = 10,
-	-- アイコンとキー表示ボックスの間隔 (px)
-	keyGap = 0,
-	-- ヒントバッジ全体の内側余白 (px)
-	padding = 12,
-	-- キー・タイトルのフォント名 (nilでシステムデフォルト)
-	fontName = nil,
-	-- キー文字のフォントサイズ
-	fontSize = 48,
-	-- タイトル文字のフォントサイズ
-	titleFontSize = 16,
-	-- アイコン行とタイトル行の間隔 (px)
-	rowGap = 8,
-	-- タイトルの最大表示文字数 (超過は省略)
-	titleMaxSize = 72,
-	-- タイトル行を表示するか
-	showTitles = true,
-	-- ヒントバッジの背景色
-	bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 },
-	-- 非アクティブ(入力不一致)時の背景アルファ値
-	dimmedBgAlpha = 0.14,
-	-- キー文字の色
-	textColor = { red = 1, green = 1, blue = 1, alpha = 1 },
-	-- 非アクティブ時のキー文字の色
-	dimmedTextColor = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 },
-	-- タイトル文字の色
-	titleTextColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 },
-	-- 非アクティブ時のタイトル文字の色
-	dimmedTitleTextColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 },
-	-- 入力済みキープレフィックスのハイライト色
-	keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 },
-	-- アプリアイコンの不透明度
-	iconAlpha = 0.95,
-	-- 非アクティブ時のアプリアイコンの不透明度
-	dimmedIconAlpha = 0.30,
-	-- ヒント重なり時のずらし量 (px)
-	bumpMove = 90,
-	-- 遮蔽ウィンドウのプレビュー画像を表示するか
-	showPreviewForOccluded = true,
-	-- 遮蔽判定サンプリングを動的化するか
-	occlusionSamplingEnabled = true,
-	-- 遮蔽判定サンプリングの基準ウィンドウ幅 (px)
-	occlusionSamplingBaseWidth = 1920,
-	-- 遮蔽判定サンプリングの基準ウィンドウ高さ (px)
-	occlusionSamplingBaseHeight = 1080,
-	-- 遮蔽判定サンプリング列数の最小値
-	occlusionSamplingMinCols = 4,
-	-- 遮蔽判定サンプリング行数の最小値
-	occlusionSamplingMinRows = 4,
-	-- 遮蔽判定サンプリング列数の最大値
-	occlusionSamplingMaxCols = 8,
-	-- 遮蔽判定サンプリング行数の最大値
-	occlusionSamplingMaxRows = 8,
-	-- 遮蔽ウィンドウのプレビュー画像の幅 (px)
-	previewWidth = 140,
-	-- プレビュー画像の上余白 (px)
-	previewPadding = 6,
-	-- 遮蔽ヒントの縮小率 (1.0で等倍)
-	occludedScale = 0.65,
-	-- 遮蔽ヒントの背景アルファ値
-	occludedBgAlpha = 0.32,
-	-- 遮蔽ヒントのアイコン不透明度
-	occludedIconAlpha = 0.46,
-	-- 遮蔽ヒントのプレビュー画像の不透明度
-	occludedPreviewAlpha = 0.46,
-	-- アクティブウィンドウのオーバーレイ塗り色
-	activeOverlayColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 },
-	-- アクティブウィンドウのオーバーレイボーダー色
-	activeOverlayBorderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 },
-	-- アクティブウィンドウのオーバーレイボーダー幅 (px)
-	activeOverlayBorderWidth = 13,
-	-- アクティブウィンドウのオーバーレイ角丸半径 (px)
-	activeOverlayCornerRadius = 10,
-	-- 前面ヒントバッジのオーバーレイ塗り色
-	hintOverlayColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 },
-	-- 前面ヒントバッジのオーバーレイボーダー色
-	hintOverlayBorderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 },
-	-- 候補外になった前面ヒントバッジのオーバーレイボーダー色
-	dimmedHintOverlayBorderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 },
-	-- 前面ヒントバッジのオーバーレイボーダー幅 (px)
-	hintOverlayBorderWidth = 6,
-	-- 前面ヒントバッジのオーバーレイ角丸半径 (px)
-	hintOverlayCornerRadius = 12,
-	-- 遮蔽ヒントドックの画面下端からのマージン (px)
-	dockBottomMargin = 24,
-	-- 遮蔽ヒントドック内のアイテム間隔 (px)
-	dockItemGap = 12,
-	-- 遮蔽ヒントドックのX座標を対象ウィンドウへ寄せる割合 (0.0-1.0)
-	dockWindowXBlend = 0.0,
-	-- 遮蔽ヒントドックのY座標を対象ウィンドウへ寄せる割合 (0.0-1.0)
-	dockWindowYBlend = 0.0,
-	-- アプリ別の先頭プレフィックス上書き (ルール配列形式)
-	appPrefixOverrides = nil,
-	-- ウィンドウ選択時のコールバック関数
-	onSelect = nil,
-	-- ウィンドウ選択後にマウスカーソルをウィンドウ中央に移動するか
-	centerCursor = false,
-	-- ヒント起動時にアクティブウィンドウの中心にマウスカーソルを移動するか
-	centerCursorOnStart = false,
-	-- Window Hints 表示中に Focus Back 相当を実行するキー (focus_back 有効時のみ)
-	focusBackKey = nil,
-	-- Window Hints 表示中に方向移動を実行するキー
-	directionKeys = nil,
-	-- ヒントを表示せずに方向移動を実行するホットキー
-	directDirectionHotkeys = nil,
-	-- 上下左右判定で重なり量差を同点扱いにするしきい値 (px)
-	cardinalOverlapTieThresholdPx = 720,
-	-- directionKeys 実行時の候補選定ログを出力するか
-	debugDirectionalNavigation = false,
-	-- ヒント確定時に位置・サイズ入れ替えを実行する修飾キー
-	swapWindowFrameSelectModifiers = nil,
-	-- 共有 Focus 履歴 (内部注入用)
-	focusHistory = nil,
-}
-
-local function mergeTable(defaults, overrides)
-	local merged = {}
-	for k, v in pairs(defaults) do
-		merged[k] = v
+local function resourcePath(fileName)
+	if not hs or not hs.spoons or not hs.spoons.resourcePath then
+		error("[jinrai.window_hints] hs.spoons.resourcePath is not available")
 	end
-	if overrides then
-		for k, v in pairs(overrides) do
-			merged[k] = v
-		end
+
+	local path = hs.spoons.resourcePath(fileName)
+	if not path then
+		error("[jinrai.window_hints] failed to resolve Spoon resource: " .. tostring(fileName))
 	end
-	return merged
+	return path
+end
+
+local windowHintsConfig = nil
+local function loadWindowHintsConfig()
+	if windowHintsConfig == nil then
+		windowHintsConfig = dofile(resourcePath("window_hints_config.lua"))
+	end
+	return windowHintsConfig
 end
 
 local function cloneColor(color)
@@ -1449,27 +1300,14 @@ keyToDisplayText = function(key)
 end
 
 function M.new(options)
-	options = options or {}
-	local config = mergeTable(DEFAULT_CONFIG, options)
-	config.cardinalOverlapTieThresholdPx =
-		normalizeNonNegativeNumber(config.cardinalOverlapTieThresholdPx, "cardinalOverlapTieThresholdPx")
-	config.dockWindowXBlend = normalizeUnitIntervalNumber(config.dockWindowXBlend, "dockWindowXBlend")
-	config.dockWindowYBlend = normalizeUnitIntervalNumber(config.dockWindowYBlend, "dockWindowYBlend")
+	local config = loadWindowHintsConfig().build(options)
 	local focusHistory = config.focusHistory
-	local directionKeys = normalizeDirectionKeys(config.directionKeys)
-	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
-	local directDirectionHotkeys = normalizeDirectDirectionHotkeys(config.directDirectionHotkeys)
-	local focusBackKey = normalizeActionKey(config.focusBackKey, "focusBackKey")
-	local swapWindowFrameSelectModifiers = normalizeSelectModifiers(config.swapWindowFrameSelectModifiers)
-	if not focusHistory then
-		focusBackKey = nil
-	end
-	local hintChars = normalizeHintChars(options.hintChars or DEFAULT_HINT_CHARS)
-	local reservedHintCharLookup = buildReservedHintCharLookup(directionKeyLookup, focusBackKey)
-	hintChars = filterHintChars(hintChars, reservedHintCharLookup)
-	if #hintChars == 0 then
-		error("[jinrai.window_hints] no available hintChars after excluding reserved navigation keys")
-	end
+	local directionKeys = config.directionKeys
+	local directionKeyLookup = config.directionKeyLookup or buildDirectionKeyLookup(directionKeys)
+	local directDirectionHotkeys = config.directDirectionHotkeys
+	local focusBackKey = config.focusBackKey
+	local swapWindowFrameSelectModifiers = config.swapWindowFrameSelectModifiers
+	local hintChars = config.hintChars
 
 	local hotkey = nil
 	local directDirectionBindings = {}

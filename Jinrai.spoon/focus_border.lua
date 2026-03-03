@@ -1,32 +1,27 @@
 local M = {}
 
-local DEFAULT_CONFIG = {
-	borderWidth = 10,
-	borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
-	outlineWidth = 2,
-	outlineColor = { red = 0, green = 0, blue = 0, alpha = 0.70 },
-	duration = 0.5,
-	fadeSteps = 18,
-	cornerRadius = 10,
-	minWindowSize = 480,
-}
+local function resourcePath(fileName)
+	if not hs or not hs.spoons or not hs.spoons.resourcePath then
+		error("[jinrai.focus_border] hs.spoons.resourcePath is not available")
+	end
 
-local function mergeTable(defaults, overrides)
-	local merged = {}
-	for k, v in pairs(defaults) do
-		merged[k] = v
+	local path = hs.spoons.resourcePath(fileName)
+	if not path then
+		error("[jinrai.focus_border] failed to resolve Spoon resource: " .. tostring(fileName))
 	end
-	if overrides then
-		for k, v in pairs(overrides) do
-			merged[k] = v
-		end
+	return path
+end
+
+local focusBorderConfig = nil
+local function loadFocusBorderConfig()
+	if focusBorderConfig == nil then
+		focusBorderConfig = dofile(resourcePath("focus_border_config.lua"))
 	end
-	return merged
+	return focusBorderConfig
 end
 
 function M.new(options)
-	options = options or {}
-	local config = mergeTable(DEFAULT_CONFIG, options)
+	local config = loadFocusBorderConfig().build(options)
 
 	local currentCanvas = nil
 	local fadeTimer = nil

@@ -43,7 +43,11 @@ describe("focus_back", function()
 			frame = { x = 100, y = 40, w = 300, h = 200 },
 		})
 		local win2 = hsMock.newWindow(2, { bundleID = "com.example.b", appName = "B" })
-		local mock, instance = newFocusBackWithMock({ centerCursor = true }, win1)
+		local mock, instance = newFocusBackWithMock({
+			behavior = {
+				centerCursor = true,
+			},
+		}, win1)
 
 		mock.emitWindowFocused(win2)
 		mock.state.hotkeys[1].callback()
@@ -100,7 +104,7 @@ describe("focus_back", function()
 	it("teardown で hotkey/timer/subscription/urlEvent を解放する", function()
 		local win1 = hsMock.newWindow(1, { bundleID = "com.example.a", appName = "A" })
 		local mock, instance = newFocusBackWithMock({
-			urlEvent = "focus_back",
+			urlEvent = { name = "focus_back" },
 			stateSync = {},
 		}, win1)
 

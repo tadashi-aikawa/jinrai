@@ -75,47 +75,50 @@ hs.loadSpoon("Jinrai")
 
 spoon.Jinrai:setup({
   focus_border = {
-    borderWidth = 10,
-    borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
-    outlineWidth = 2,
-    outlineColor = { red = 0, green = 0, blue = 0, alpha = 0.70 },
-    duration = 0.5,
-    fadeSteps = 18,
-    cornerRadius = 10,
-    minWindowSize = 480,
+    visual = {
+      border = {
+        width = 10,
+        color = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
+      },
+      outline = {
+        width = 2,
+        color = { red = 0, green = 0, blue = 0, alpha = 0.70 },
+      },
+      cornerRadius = 10,
+    },
+    animation = {
+      duration = 0.5,
+      fadeSteps = 18,
+    },
+    window = {
+      minSize = 480,
+    },
   },
   window_hints = {
-    hintChars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" },
-    appPrefixOverrides = {
-      {
-        match = { bundleID = "md.obsidian", titleGlob = "*- minerva - Obsidian*" },
-        prefix = "M",
-      },
-      {
-        match = { bundleID = "md.obsidian" },
-        prefix = "O",
-      },
-      {
-        match = { bundleID = "com.google.Chrome" },
-        prefix = "GC",
+    hotkey = {
+      modifiers = { "alt" },
+      key = "f20",
+    },
+    hint = {
+      chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" },
+      prefixOverrides = {
+        {
+          match = { bundleID = "md.obsidian", titleGlob = "*- minerva - Obsidian*" },
+          prefix = "M",
+        },
+        {
+          match = { bundleID = "md.obsidian" },
+          prefix = "O",
+        },
+        {
+          match = { bundleID = "com.google.Chrome" },
+          prefix = "GC",
+        },
       },
     },
-    hotkeyModifiers = { "alt" },
-    hotkeyKey = "f20",
-    focusBackKey = "i",
-    directionKeys = {
-      left = "h",
-      down = "j",
-      up = "k",
-      right = "l",
-      upLeft = "y",
-      upRight = "u",
-      downLeft = "b",
-      downRight = "n",
-    },
-    directDirectionHotkeys = {
-      modifiers = { "ctrl", "alt" },
-      keys = {
+    navigation = {
+      focusBackKey = "i",
+      directionKeys = {
         left = "h",
         down = "j",
         up = "k",
@@ -125,183 +128,275 @@ spoon.Jinrai:setup({
         downLeft = "b",
         downRight = "n",
       },
+      directHotkeys = {
+        modifiers = { "ctrl", "alt" },
+        keys = {
+          left = "h",
+          down = "j",
+          up = "k",
+          right = "l",
+          upLeft = "y",
+          upRight = "u",
+          downLeft = "b",
+          downRight = "n",
+        },
+      },
+      swapSelectModifiers = { "shift" },
     },
-    swapWindowFrameSelectModifiers = { "shift" },
-    iconSize = 72,
-    titleMaxSize = 72,
-    centerCursor = true,
-    onError = function(err)
-      hs.alert.show("Window Hints error: " .. tostring(err), 3)
-    end,
+    ui = {
+      icon = { size = 72 },
+      text = { titleMaxSize = 72 },
+    },
+    behavior = {
+      centerCursor = true,
+      onError = function(err)
+        hs.alert.show("Window Hints error: " .. tostring(err), 3)
+      end,
+    },
   },
   focus_back = {
-    hotkeyModifiers = { "option" },
-    hotkeyKey = "w",
-    centerCursor = true,
+    hotkey = {
+      modifiers = { "option" },
+      key = "w",
+    },
+    behavior = {
+      centerCursor = true,
+    },
   },
 })
 ```
 
 ## Focus Border オプション
 
-| オプション      | デフォルト                                                | 説明                                         |
-| --------------- | --------------------------------------------------------- | -------------------------------------------- |
-| `borderWidth`   | `10`                                                      | メインボーダーの太さ (px)                    |
-| `borderColor`   | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }`| メインボーダーの色                            |
-| `outlineWidth`  | `2`                                                       | 外側アウトラインの太さ (px)                  |
-| `outlineColor`  | `{ red = 0, green = 0, blue = 0, alpha = 0.70 }`         | 外側アウトラインの色                          |
-| `duration`      | `0.5`                                                     | フェードアウト時間 (秒)                      |
-| `fadeSteps`     | `18`                                                      | フェードアウトのステップ数                   |
-| `cornerRadius`  | `10`                                                      | 角丸半径 (px)                                |
-| `minWindowSize` | `480`                                                     | 表示する最小ウィンドウサイズ (px)            |
-
-## Window Hints オプション
-
-| オプション         | デフォルト     | 説明                             |
-| ------------------ | -------------- | -------------------------------- |
-| `hotkeyModifiers`  | `{ "alt" }`   | ヒント表示のホットキー修飾キー   |
-| `hotkeyKey`        | `"f20"`        | ヒント表示のホットキー           |
-| `hintChars`        | `A-Z (QWERTY)`| ヒント文字の配列                 |
-| `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
-| `keyBoxSize`       | `72`           | キー表示ボックスの高さ (px)      |
-| `keyBoxMinWidth`   | `72`           | キー表示ボックスの最小幅 (px)    |
-| `keyBoxHorizontalPadding` | `10`    | キー表示ボックスの左右パディング (px) |
-| `keyGap`           | `0`            | アイコンとキー表示ボックスの間隔 (px) |
-| `padding`          | `12`           | ヒントバッジ全体の内側余白 (px)  |
-| `fontName`         | `nil`          | キー・タイトルのフォント名（`nil` でシステムデフォルト） |
-| `fontSize`         | `48`           | キー文字のフォントサイズ         |
-| `titleFontSize`    | `16`           | タイトル文字のフォントサイズ     |
-| `rowGap`           | `8`            | アイコン行とタイトル行の間隔 (px) |
-| `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
-| `showTitles`       | `true`         | タイトル行の表示有無             |
-| `bgColor`          | `{ red = 0, green = 0, blue = 0, alpha = 0.72 }` | ヒントバッジの背景色 |
-| `dimmedBgAlpha`    | `0.22`         | 非アクティブ（入力不一致）時の背景アルファ値 |
-| `textColor`        | `{ red = 1, green = 1, blue = 1, alpha = 1 }` | キー文字の色 |
-| `dimmedTextColor`  | `{ red = 1, green = 1, blue = 1, alpha = 0.35 }` | 非アクティブ時のキー文字の色 |
-| `titleTextColor`   | `{ red = 0.84, green = 0.84, blue = 0.86, alpha = 1 }` | タイトル文字の色 |
-| `dimmedTitleTextColor` | `{ red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }` | 非アクティブ時のタイトル文字の色 |
-| `keyHighlightColor` | `{ red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }` | 入力済みキープレフィックスのハイライト色 |
-| `iconAlpha`        | `0.95`         | アプリアイコンの不透明度         |
-| `dimmedIconAlpha`  | `0.48`         | 非アクティブ時のアプリアイコン不透明度 |
-| `bumpMove`         | `90`           | ヒント重なり時のずらし量 (px)    |
-| `showPreviewForOccluded` | `true`   | 遮蔽ウィンドウのプレビュー画像を表示するか |
-| `appPrefixOverrides` | `nil`        | ルール配列による先頭プレフィックス上書き（`window:title()` の `glob` 対応、1-2文字prefix対応） |
-| `occlusionSamplingEnabled` | `true`  | 遮蔽判定サンプリングを動的化するか |
-| `occlusionSamplingBaseWidth` | `1920` | 遮蔽判定サンプリングの基準ウィンドウ幅 (px) |
-| `occlusionSamplingBaseHeight` | `1080` | 遮蔽判定サンプリングの基準ウィンドウ高さ (px) |
-| `occlusionSamplingMinCols` | `4`      | 遮蔽判定サンプリング列数の最小値 |
-| `occlusionSamplingMinRows` | `4`      | 遮蔽判定サンプリング行数の最小値 |
-| `occlusionSamplingMaxCols` | `8`      | 遮蔽判定サンプリング列数の最大値 |
-| `occlusionSamplingMaxRows` | `8`      | 遮蔽判定サンプリング行数の最大値 |
-| `previewWidth`     | `140`          | 遮蔽ウィンドウのプレビュー画像幅 (px) |
-| `previewPadding`   | `6`            | プレビュー画像の上余白 (px)      |
-| `occludedScale`    | `0.65`         | 遮蔽ヒントの縮小率（`1.0` で等倍） |
-| `occludedBgAlpha`  | `0.50`         | 遮蔽ヒントの背景アルファ値       |
-| `occludedIconAlpha` | `0.65`        | 遮蔽ヒントのアイコン不透明度     |
-| `occludedPreviewAlpha` | `0.65`     | 遮蔽ヒントのプレビュー画像不透明度 |
-| `activeOverlayColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }` | アクティブウィンドウのオーバーレイ塗り色 |
-| `activeOverlayBorderColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }` | アクティブウィンドウのオーバーレイボーダー色 |
-| `activeOverlayBorderWidth` | `10`    | アクティブウィンドウのオーバーレイボーダー幅 (px) |
-| `activeOverlayCornerRadius` | `10`   | アクティブウィンドウのオーバーレイ角丸半径 (px) |
-| `hintOverlayColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.38 }` | 前面ヒントバッジのオーバーレイ塗り色 |
-| `hintOverlayBorderColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }` | 前面ヒントバッジのオーバーレイボーダー色 |
-| `dimmedHintOverlayBorderColor` | `{ red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 }` | 候補外になった前面ヒントのオーバーレイボーダー色 |
-| `hintOverlayBorderWidth` | `4`       | 前面ヒントバッジのオーバーレイボーダー幅 (px) |
-| `hintOverlayCornerRadius` | `12`     | 前面ヒントバッジのオーバーレイ角丸半径 (px) |
-| `dockBottomMargin` | `24`           | 遮蔽ヒントドックの画面下端マージン (px) |
-| `dockItemGap`      | `10`           | 遮蔽ヒントドック内のアイテム間隔 (px) |
-| `dockWindowXBlend` | `0.0`          | 遮蔽ヒントドック項目の x を中央配置から対象ウィンドウ x へ寄せる割合（`0.0-1.0`） |
-| `dockWindowYBlend` | `0.0`          | 遮蔽ヒントドック項目の y を下ドック配置から、対象ウィンドウが画面の上下どちらにあるかに応じた対称マージン位置へ寄せる割合（`0.0-1.0`） |
-| `focusBackKey`     | `nil`          | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
-| `directionKeys`    | `nil`          | Window Hints表示中に8方向移動を実行するキー |
-| `directDirectionHotkeys` | `nil`    | Window Hints を表示せず即時に方向移動するホットキー |
-| `cardinalOverlapTieThresholdPx` | `720` | 上下左右の方向移動で副軸重なり量差を同点扱いするしきい値 (px) |
-| `debugDirectionalNavigation` | `false` | `directionKeys` の候補スコアリングをデバッグログ出力する |
-| `swapWindowFrameSelectModifiers` | `nil` | ヒント確定時または `focusBackKey` / `directionKeys` 実行時に現在ウィンドウと対象ウィンドウの位置・サイズを入れ替える修飾キー |
-| `onSelect`         | `nil`          | ウィンドウ選択時のコールバック   |
-| `onError`          | `nil`          | エラー時のコールバック           |
-| `centerCursor`     | `false`        | 選択後にカーソルをウィンドウ中央に移動 |
-| `centerCursorOnStart` | `false`     | 起動時にアクティブウィンドウの中心にカーソルを移動 |
-
-`focusHistory` は内部注入用の設定で、通常のユーザー設定対象ではありません。
-
-遮蔽判定は対象ウィンドウ内のサンプル点で行う近似判定です。
-`occlusionSamplingEnabled=true` の場合、`occlusionSamplingBaseWidth/Height` を基準に
-`occlusionSamplingMin*` から `occlusionSamplingMax*` の範囲でサンプリンググリッドを動的に調整します。
-
-### appPrefixOverrides
-
-`appPrefixOverrides` は、ウィンドウごとのヒントキー先頭文字（prefix）を上書きするための設定です。
-ルールは上から順に評価され、最初に一致したルールが適用されます。
-
-#### appPrefixOverrides の定義
+全設定を含むサンプル（デフォルト値）:
 
 ```lua
-appPrefixOverrides = {
-  {
-    match = {
-      bundleID = "md.obsidian",   -- 任意
-      titleGlob = "Minerva*",     -- 任意 (`window:title()` 対象、`*` と `?` をサポート)
+focus_border = {
+  visual = {
+    border = {
+      width = 10, -- メインボーダーの太さ (px)
+      color = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }, -- メインボーダーの色
     },
-    prefix = "M",                 -- 1文字または2文字。各文字は hintChars に含まれている必要あり
+    outline = {
+      width = 2, -- 外側アウトラインの太さ (px)
+      color = { red = 0, green = 0, blue = 0, alpha = 0.70 }, -- 外側アウトラインの色
+    },
+    cornerRadius = 10, -- 角丸半径 (px)
+  },
+  animation = {
+    duration = 0.5, -- フェードアウト時間 (秒)
+    fadeSteps = 18, -- フェードアウトのステップ数
+  },
+  window = {
+    minSize = 480, -- 表示する最小ウィンドウサイズ (px)
   },
 }
 ```
 
-#### appPrefixOverrides の動作
+## Window Hints オプション
+
+全設定を含むサンプル（デフォルト値）:
+
+```lua
+window_hints = {
+  hotkey = {
+    modifiers = { "alt" }, -- ヒント表示ホットキー修飾キー
+    key = "f20",            -- ヒント表示ホットキー
+  },
+  hint = {
+    chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" }, -- ヒント文字配列
+    prefixOverrides = nil, -- prefix 上書きルール配列
+  },
+  ui = {
+    icon = {
+      size = 72,         -- アイコンサイズ (px)
+      alpha = 0.95,      -- アイコン不透明度
+      dimmedAlpha = 0.30, -- 非アクティブ時アイコン不透明度
+    },
+    keyBox = {
+      size = 72,             -- キー表示ボックス高さ (px)
+      minWidth = 72,         -- キー表示ボックス最小幅 (px)
+      horizontalPadding = 10, -- キー表示ボックス左右パディング (px)
+      gap = 0,               -- アイコンとキー表示ボックスの間隔 (px)
+    },
+    text = {
+      fontName = nil,      -- フォント名（nil でシステムデフォルト）
+      keyFontSize = 48,    -- キー文字フォントサイズ
+      titleFontSize = 16,  -- タイトル文字フォントサイズ
+      rowGap = 8,          -- アイコン行とタイトル行の間隔 (px)
+      titleMaxSize = 72,   -- タイトル最大表示文字数
+      showTitles = true,   -- タイトル行表示
+      keyColor = { red = 1, green = 1, blue = 1, alpha = 1 }, -- キー文字色
+      keyDimmedColor = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 }, -- 非アクティブキー文字色
+      titleColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 }, -- タイトル文字色
+      titleDimmedColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 }, -- 非アクティブタイトル文字色
+      keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }, -- 入力済みプレフィックス色
+    },
+    badge = {
+      padding = 12, -- バッジ内側余白 (px)
+      bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 }, -- バッジ背景色
+      dimmedBgAlpha = 0.14, -- 非アクティブ時背景アルファ
+      bumpMove = 90, -- ヒント重なり時のずらし量 (px)
+    },
+  },
+  overlay = {
+    active = {
+      fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }, -- アクティブウィンドウの塗り色
+      borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- アクティブウィンドウのボーダー色
+      borderWidth = 13, -- アクティブウィンドウのボーダー幅 (px)
+      cornerRadius = 10, -- アクティブウィンドウの角丸半径 (px)
+    },
+    hint = {
+      fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 }, -- 前面ヒントの塗り色
+      borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }, -- 前面ヒントのボーダー色
+      dimmedBorderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 }, -- 候補外前面ヒントのボーダー色
+      borderWidth = 6, -- 前面ヒントのボーダー幅 (px)
+      cornerRadius = 12, -- 前面ヒントの角丸半径 (px)
+    },
+  },
+  occlusion = {
+    sampling = {
+      enabled = true,   -- 遮蔽サンプリングを動的化するか
+      baseWidth = 1920, -- サンプリング基準ウィンドウ幅 (px)
+      baseHeight = 1080, -- サンプリング基準ウィンドウ高さ (px)
+      minCols = 4,      -- サンプリング列数の最小値
+      minRows = 4,      -- サンプリング行数の最小値
+      maxCols = 8,      -- サンプリング列数の最大値
+      maxRows = 8,      -- サンプリング行数の最大値
+    },
+    preview = {
+      enabled = true, -- 遮蔽ウィンドウのプレビューを表示するか
+      width = 140,    -- プレビュー幅 (px)
+      padding = 6,    -- プレビュー上余白 (px)
+      alpha = 0.46,   -- プレビュー不透明度
+    },
+    hint = {
+      scale = 0.65,  -- 遮蔽ヒント縮小率
+      bgAlpha = 0.32, -- 遮蔽ヒント背景アルファ
+      iconAlpha = 0.46, -- 遮蔽ヒントアイコン不透明度
+    },
+  },
+  dock = {
+    bottomMargin = 24, -- 遮蔽ヒントドックの下端マージン (px)
+    itemGap = 12,      -- ドック内アイテム間隔 (px)
+    windowBlend = {
+      x = 0.0, -- ドックXを対象ウィンドウへ寄せる割合
+      y = 0.0, -- ドックYを対象ウィンドウへ寄せる割合
+    },
+  },
+  navigation = {
+    focusBackKey = nil, -- Hints表示中に Focus Back 相当を実行するキー
+    directionKeys = nil, -- Hints表示中の方向移動キー
+    directHotkeys = nil, -- Hintsを表示せず方向移動するホットキー
+    cardinalOverlapTieThresholdPx = 720, -- 上下左右方向移動で同点扱いにする閾値 (px)
+    debugDirectionalNavigation = false, -- 方向移動の候補スコアログを出すか
+    swapSelectModifiers = nil, -- 確定時にウィンドウフレーム入れ替えする修飾キー
+  },
+  behavior = {
+    onSelect = nil, -- ウィンドウ選択時コールバック
+    onError = nil,  -- エラー時コールバック
+    centerCursor = false, -- 選択後にカーソルをウィンドウ中央へ移動
+    centerCursorOnStart = false, -- 起動時にアクティブウィンドウ中央へカーソル移動
+  },
+  internal = {
+    focusHistory = nil, -- 内部注入専用（通常は設定しない）
+  },
+}
+```
+
+遮蔽判定は対象ウィンドウ内のサンプル点で行う近似判定です。
+`occlusion.sampling.enabled=true` の場合、`occlusion.sampling.baseWidth/baseHeight` を基準に
+`occlusion.sampling.min*` から `occlusion.sampling.max*` の範囲でサンプリンググリッドを動的に調整します。
+
+### hint.prefixOverrides
+
+`hint.prefixOverrides` は、ウィンドウごとのヒントキー先頭文字（prefix）を上書きするための設定です。
+ルールは上から順に評価され、最初に一致したルールが適用されます。
+
+#### hint.prefixOverrides の定義
+
+```lua
+hint = {
+  prefixOverrides = {
+    {
+      match = {
+        bundleID = "md.obsidian",   -- 任意
+        titleGlob = "Minerva*",     -- 任意 (`window:title()` 対象、`*` と `?` をサポート)
+      },
+      prefix = "M",                 -- 1文字または2文字。各文字は hint.chars に含まれている必要あり
+    },
+  },
+}
+```
+
+#### hint.prefixOverrides の動作
 
 - `match.bundleID` と `match.titleGlob` はどちらか必須
 - `titleGlob` は大文字小文字を区別
-- 旧形式の辞書指定（`["bundleID"] = "T"`）は非対応
 - 表示キー集合は prefix-free になるよう自動調整（例: `G` と `GC` が競合した場合は `GA` と `GC`）
-- どのルールにも一致しない場合は、アプリ名の文字を先頭から見て `hintChars` に含まれる文字を選ぶ（同じ文字が使用済みなら次候補へ）。候補がなければ `hintChars[1]` にフォールバック
-- `prefix` が不正（`hintChars` 外の文字、3文字以上など）の場合はエラー
+- どのルールにも一致しない場合は、アプリ名の文字を先頭から見て `hint.chars` に含まれる文字を選ぶ（同じ文字が使用済みなら次候補へ）。候補がなければ `hint.chars[1]` にフォールバック
+- `prefix` が不正（`hint.chars` 外の文字、3文字以上など）の場合はエラー
 
-実装上のデフォルト値や内部向け設定は、`window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
+実装上のデフォルト値や内部向け設定は、`window_hints_config.lua` 内の `DEFAULT_CONFIG` を参照してください。
 
 ### Window Hints 内ナビゲーション
 
-- `focusBackKey` と `directionKeys` はヒント表示中のみ有効です
-- `focusBackKey` は `focus_back` 設定が有効なときだけ動作します
-- これらのキーと `hintChars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
+- `navigation.focusBackKey` と `navigation.directionKeys` はヒント表示中のみ有効です
+- `navigation.focusBackKey` は `focus_back` 設定が有効なときだけ動作します
+- これらのキーと `hint.chars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
 - 完全に背面に遮蔽されているウィンドウは方向移動の候補から除外されます
-- 上下左右は基本的に「副軸の重なり量が大きい」候補を優先し、重なり差が `cardinalOverlapTieThresholdPx` 以内なら同点扱いとして次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
+- 上下左右は基本的に「副軸の重なり量が大きい」候補を優先し、重なり差が `navigation.cardinalOverlapTieThresholdPx` 以内なら同点扱いとして次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
 - 斜め方向は2軸のエッジ距離合計が小さい候補を優先し、同率時は前面順、中心距離、直前アクティブウィンドウの順で決定します
 
 ### 直接方向移動ホットキー
 
-`directDirectionHotkeys` は、Window Hints を出さずに方向移動を直接実行する設定です。
+`navigation.directHotkeys` は、Window Hints を出さずに方向移動を直接実行する設定です。
 
 ```lua
-directDirectionHotkeys = {
-  modifiers = { "ctrl", "alt" }, -- 必須
-  keys = {                       -- 任意。指定した方向だけ有効
-    left = "h",
-    down = "j",
-    up = "k",
-    right = "l",
-    upLeft = "y",
-    upRight = "u",
-    downLeft = "b",
-    downRight = "n",
+navigation = {
+  directHotkeys = {
+    modifiers = { "ctrl", "alt" }, -- 必須
+    keys = {                       -- 任意。指定した方向だけ有効
+      left = "h",
+      down = "j",
+      up = "k",
+      right = "l",
+      upLeft = "y",
+      upRight = "u",
+      downLeft = "b",
+      downRight = "n",
+    },
   },
 }
 ```
 
-- 移動先の判定は `directionKeys` と同じ（遮蔽除外・同点時の優先順位を含む）
+- 移動先の判定は `navigation.directionKeys` と同じ（遮蔽除外・同点時の優先順位を含む）
 - キー押下で即フォーカス移動し、Window Hints UI は表示しない
 - `keys` を省略した場合は直接方向移動ホットキーを無効化
 - `modifiers` では `alt` の別名として `option` も指定可能
 
 ## Focus Back オプション
 
-| オプション         | デフォルト       | 説明                                          |
-| ------------------ | ---------------- | --------------------------------------------- |
-| `hotkeyModifiers`  | `{ "option" }`   | ホットキー修飾キー                            |
-| `hotkeyKey`        | `"w"`            | ホットキー（`nil` で無効化）                  |
-| `urlEvent`         | `nil`            | URL scheme名（`hammerspoon://<名前>` で発火） |
-| `centerCursor`     | `false`          | 切り替え後にカーソルをウィンドウ中央に移動    |
-| `stateSync`        | `nil`            | イベント漏れを補完する状態同期設定（下記参照） |
+全設定を含むサンプル（デフォルト値）:
+
+```lua
+focus_back = {
+  hotkey = {
+    modifiers = { "option" }, -- ホットキー修飾キー
+    key = "w",                -- ホットキー（nil で無効化）
+  },
+  urlEvent = {
+    name = nil, -- URL scheme名（hammerspoon://<名前> で発火）
+  },
+  behavior = {
+    centerCursor = false, -- 切り替え後にカーソルをウィンドウ中央に移動
+  },
+  stateSync = nil, -- イベント漏れを補完する状態同期設定（下記参照）
+  internal = {
+    focusHistory = nil, -- 内部注入専用（通常は設定しない）
+  },
+}
+```
 
 連続で押すと2つのウィンドウ間をトグルで行き来できます。
 
@@ -319,11 +414,13 @@ directDirectionHotkeys = {
 
 #### `stateSync` の定義
 
-| オプション         | デフォルト       | 説明                                          |
-| ------------------ | ---------------- | --------------------------------------------- |
-| `interval`         | `0.2`            | 同期間隔（秒）                                |
-| `targetApps`       | `nil`            | 同期対象アプリ名またはbundle IDの配列（`nil`で全アプリ） |
-| `historyScope`     | `"window"`       | 履歴更新単位（`"window"` or `"application"`） |
+```lua
+stateSync = {
+  interval = 0.2,      -- 同期間隔（秒）
+  targetApps = nil,    -- 同期対象アプリ名またはbundle IDの配列（nilで全アプリ）
+  historyScope = "window", -- 履歴更新単位（"window" or "application"）
+}
+```
 
 ##### `historyScope` の動作:
 

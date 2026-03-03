@@ -98,14 +98,24 @@ describe("init", function()
 		end
 
 		init:setup({
-			focus_border = { borderWidth = 99 },
-			focus_back = { hotkeyKey = "q" },
+			focus_border = {
+				visual = {
+					border = {
+						width = 99,
+					},
+				},
+			},
+			focus_back = {
+				hotkey = {
+					key = "q",
+				},
+			},
 		})
 
-		assert.are.same({ borderWidth = 99 }, calls.new.focus_border)
+		assert.are.equal(99, calls.new.focus_border.visual.border.width)
 		assert.are.same({ stateSync = nil }, calls.new.focus_history)
-		assert.are.equal("q", calls.new.focus_back.hotkeyKey)
-		assert.is_truthy(calls.new.focus_back.focusHistory)
+		assert.are.equal("q", calls.new.focus_back.hotkey.key)
+		assert.is_truthy(calls.new.focus_back.internal.focusHistory)
 		assert.are.equal(nil, calls.new.window_hints)
 
 		local joined = table.concat(calls.loadPaths, "\n")
@@ -119,6 +129,59 @@ describe("init", function()
 		assert.is_true(calls.teardown.focus_back)
 		assert.is_true(calls.teardown.focus_history)
 		assert.are.equal(nil, calls.teardown.window_hints)
+	end)
+
+	it("focus_history は window_hints.internal.focusHistory に注入される", function()
+		_G.__jinrai = nil
+		local init = dofile("./Jinrai.spoon/init.lua")
+		local calls = {
+			new = {},
+		}
+
+		_G.dofile = function(path)
+			if path:match("window_hints.lua$") then
+				return {
+					new = function(options)
+						calls.new.window_hints = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_back.lua$") then
+				return {
+					new = function(options)
+						calls.new.focus_back = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_history.lua$") then
+				return {
+					new = function(options)
+						calls.new.focus_history = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_border.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
+			return originalDofile(path)
+		end
+
+		init:setup({
+			window_hints = {},
+			focus_back = {},
+		})
+
+		assert.is_truthy(calls.new.focus_history)
+		assert.is_truthy(calls.new.window_hints.internal)
+		assert.is_truthy(calls.new.window_hints.internal.focusHistory)
+		assert.are.equal(nil, calls.new.window_hints.focusHistory)
 	end)
 
 	it("teardown は focus_back -> window_hints -> focus_border の順に実行される", function()

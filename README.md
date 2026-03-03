@@ -75,47 +75,50 @@ hs.loadSpoon("Jinrai")
 
 spoon.Jinrai:setup({
   focus_border = {
-    borderWidth = 10,
-    borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
-    outlineWidth = 2,
-    outlineColor = { red = 0, green = 0, blue = 0, alpha = 0.70 },
-    duration = 0.5,
-    fadeSteps = 18,
-    cornerRadius = 10,
-    minWindowSize = 480,
+    visual = {
+      border = {
+        width = 10,
+        color = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
+      },
+      outline = {
+        width = 2,
+        color = { red = 0, green = 0, blue = 0, alpha = 0.70 },
+      },
+      cornerRadius = 10,
+    },
+    animation = {
+      duration = 0.5,
+      fadeSteps = 18,
+    },
+    window = {
+      minSize = 480,
+    },
   },
   window_hints = {
-    hintChars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" },
-    appPrefixOverrides = {
-      {
-        match = { bundleID = "md.obsidian", titleGlob = "*- minerva - Obsidian*" },
-        prefix = "M",
-      },
-      {
-        match = { bundleID = "md.obsidian" },
-        prefix = "O",
-      },
-      {
-        match = { bundleID = "com.google.Chrome" },
-        prefix = "GC",
+    hotkey = {
+      modifiers = { "alt" },
+      key = "f20",
+    },
+    hint = {
+      chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" },
+      prefixOverrides = {
+        {
+          match = { bundleID = "md.obsidian", titleGlob = "*- minerva - Obsidian*" },
+          prefix = "M",
+        },
+        {
+          match = { bundleID = "md.obsidian" },
+          prefix = "O",
+        },
+        {
+          match = { bundleID = "com.google.Chrome" },
+          prefix = "GC",
+        },
       },
     },
-    hotkeyModifiers = { "alt" },
-    hotkeyKey = "f20",
-    focusBackKey = "i",
-    directionKeys = {
-      left = "h",
-      down = "j",
-      up = "k",
-      right = "l",
-      upLeft = "y",
-      upRight = "u",
-      downLeft = "b",
-      downRight = "n",
-    },
-    directDirectionHotkeys = {
-      modifiers = { "ctrl", "alt" },
-      keys = {
+    navigation = {
+      focusBackKey = "i",
+      directionKeys = {
         left = "h",
         down = "j",
         up = "k",
@@ -125,182 +128,274 @@ spoon.Jinrai:setup({
         downLeft = "b",
         downRight = "n",
       },
+      directHotkeys = {
+        modifiers = { "ctrl", "alt" },
+        keys = {
+          left = "h",
+          down = "j",
+          up = "k",
+          right = "l",
+          upLeft = "y",
+          upRight = "u",
+          downLeft = "b",
+          downRight = "n",
+        },
+      },
+      swapSelectModifiers = { "shift" },
     },
-    swapWindowFrameSelectModifiers = { "shift" },
-    iconSize = 72,
-    titleMaxSize = 72,
-    centerCursor = true,
-    onError = function(err)
-      hs.alert.show("Window Hints error: " .. tostring(err), 3)
-    end,
+    ui = {
+      icon = { size = 72 },
+      text = { titleMaxSize = 72 },
+    },
+    behavior = {
+      centerCursor = true,
+      onError = function(err)
+        hs.alert.show("Window Hints error: " .. tostring(err), 3)
+      end,
+    },
   },
   focus_back = {
-    hotkeyModifiers = { "option" },
-    hotkeyKey = "w",
-    centerCursor = true,
+    hotkey = {
+      modifiers = { "option" },
+      key = "w",
+    },
+    behavior = {
+      centerCursor = true,
+    },
   },
 })
 ```
 
 ## Focus Border Options
 
-| Option          | Default                                                   | Description                                |
-| --------------- | --------------------------------------------------------- | ------------------------------------------ |
-| `borderWidth`   | `10`                                                      | Main border width (px)                     |
-| `borderColor`   | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }`| Main border color                          |
-| `outlineWidth`  | `2`                                                       | Outer outline width (px)                   |
-| `outlineColor`  | `{ red = 0, green = 0, blue = 0, alpha = 0.70 }`         | Outer outline color                        |
-| `duration`      | `0.5`                                                     | Fade-out duration (seconds)                |
-| `fadeSteps`     | `18`                                                      | Number of fade-out steps                   |
-| `cornerRadius`  | `10`                                                      | Corner radius (px)                         |
-| `minWindowSize` | `480`                                                     | Minimum window size to display (px)        |
-
-## Window Hints Options
-
-| Option         | Default       | Description |
-| -------------- | ------------- | ----------- |
-| `hotkeyModifiers`  | `{ "alt" }`    | Hotkey modifiers for showing hints |
-| `hotkeyKey`        | `"f20"`         | Hotkey for showing hints |
-| `hintChars`        | `A-Z (QWERTY)` | Array of hint characters |
-| `iconSize`         | `72`            | App icon size (px) |
-| `keyBoxSize`       | `72`            | Key box height (px) |
-| `keyBoxMinWidth`   | `72`            | Minimum key box width (px) |
-| `keyBoxHorizontalPadding` | `10`     | Left/right padding inside key box (px) |
-| `keyGap`           | `0`             | Gap between app icon and key box (px) |
-| `padding`          | `12`            | Inner padding of the whole hint badge (px) |
-| `fontName`         | `nil`           | Font name for key and title text (`nil` uses system default) |
-| `fontSize`         | `48`            | Font size for key text |
-| `titleFontSize`    | `16`            | Font size for title text |
-| `rowGap`           | `8`             | Gap between icon row and title row (px) |
-| `titleMaxSize`     | `72`            | Max title length shown |
-| `showTitles`       | `true`          | Whether to show title rows |
-| `bgColor`          | `{ red = 0, green = 0, blue = 0, alpha = 0.72 }` | Hint badge background color |
-| `dimmedBgAlpha`    | `0.22`          | Background alpha for dimmed (input-mismatched) hints |
-| `textColor`        | `{ red = 1, green = 1, blue = 1, alpha = 1 }` | Key text color |
-| `dimmedTextColor`  | `{ red = 1, green = 1, blue = 1, alpha = 0.35 }` | Key text color for dimmed hints |
-| `titleTextColor`   | `{ red = 0.84, green = 0.84, blue = 0.86, alpha = 1 }` | Title text color |
-| `dimmedTitleTextColor` | `{ red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }` | Title text color for dimmed hints |
-| `keyHighlightColor` | `{ red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }` | Highlight color for already-typed key prefix |
-| `iconAlpha`        | `0.95`          | App icon opacity |
-| `dimmedIconAlpha`  | `0.48`          | App icon opacity for dimmed hints |
-| `bumpMove`         | `90`            | Offset distance when hint badges overlap (px) |
-| `showPreviewForOccluded` | `true`     | Whether to show preview images for fully occluded windows |
-| `appPrefixOverrides` | `nil`         | Override leading prefixes via rule array (`window:title()` `glob` support, 1-2 char prefixes) |
-| `occlusionSamplingEnabled` | `true`   | Whether occlusion sampling is dynamically adjusted |
-| `occlusionSamplingBaseWidth` | `1920`  | Base window width for occlusion sampling (px) |
-| `occlusionSamplingBaseHeight` | `1080` | Base window height for occlusion sampling (px) |
-| `occlusionSamplingMinCols` | `4`       | Minimum sampling columns for occlusion check |
-| `occlusionSamplingMinRows` | `4`       | Minimum sampling rows for occlusion check |
-| `occlusionSamplingMaxCols` | `8`       | Maximum sampling columns for occlusion check |
-| `occlusionSamplingMaxRows` | `8`       | Maximum sampling rows for occlusion check |
-| `previewWidth`     | `140`           | Preview image width for occluded windows (px) |
-| `previewPadding`   | `6`             | Top padding above preview image (px) |
-| `occludedScale`    | `0.65`          | Scale factor for occluded hint badges |
-| `occludedBgAlpha`  | `0.50`          | Background alpha for occluded hint badges |
-| `occludedIconAlpha` | `0.65`         | App icon opacity for occluded hint badges |
-| `occludedPreviewAlpha` | `0.65`      | Preview image opacity for occluded hint badges |
-| `activeOverlayColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }` | Fill color for active window overlay |
-| `activeOverlayBorderColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }` | Border color for active window overlay |
-| `activeOverlayBorderWidth` | `10`     | Border width for active window overlay (px) |
-| `activeOverlayCornerRadius` | `10`    | Corner radius for active window overlay (px) |
-| `hintOverlayColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.38 }` | Fill color for front hint badge overlays |
-| `hintOverlayBorderColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }` | Border color for front hint badge overlays |
-| `dimmedHintOverlayBorderColor` | `{ red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 }` | Overlay border color for hints excluded by current key input |
-| `hintOverlayBorderWidth` | `4`        | Border width for front hint badge overlays (px) |
-| `hintOverlayCornerRadius` | `12`      | Corner radius for front hint badge overlays (px) |
-| `dockBottomMargin` | `24`            | Bottom margin from screen edge for occluded-hint dock (px) |
-| `dockItemGap`      | `10`            | Item gap inside occluded-hint dock (px) |
-| `dockWindowXBlend` | `0.0`           | Blend ratio for shifting occluded-hint dock item x from centered layout toward each target window's x (`0.0-1.0`) |
-| `dockWindowYBlend` | `0.0`           | Blend ratio for shifting occluded-hint dock item y from bottom-dock layout toward mirrored top/bottom dock positions based on each target window's vertical half (`0.0-1.0`) |
-| `focusBackKey`     | `nil`           | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
-| `directionKeys`    | `nil`           | 8-direction navigation keys while Window Hints is visible  |
-| `directDirectionHotkeys` | `nil`     | Direct directional hotkeys (move immediately without opening Window Hints) |
-| `cardinalOverlapTieThresholdPx` | `720` | Tie threshold (px) for orthogonal-overlap differences in cardinal directional navigation |
-| `debugDirectionalNavigation` | `false` | Emit directional candidate scoring logs for `directionKeys` debugging |
-| `swapWindowFrameSelectModifiers` | `nil` | Modifier keys for swapping frames between focused and target windows when selecting hints or using `focusBackKey` / `directionKeys` |
-| `onSelect`         | `nil`           | Callback on window selection |
-| `onError`          | `nil`           | Callback on error |
-| `centerCursor`     | `false`         | Move cursor to window center after selection |
-| `centerCursorOnStart` | `false`      | Move cursor to active window center at startup |
-
-`focusHistory` is an internal injected option and is not intended for direct user configuration.
-
-Occlusion is determined by approximation using sample points inside each target window.
-When `occlusionSamplingEnabled=true`, the sampling grid is dynamically adjusted within the range from `occlusionSamplingMin*` to `occlusionSamplingMax*`, based on `occlusionSamplingBaseWidth/Height`.
-
-### appPrefixOverrides
-
-`appPrefixOverrides` lets you override the leading hint prefix per window.
-Rules are evaluated from top to bottom, and the first matching rule is applied.
-
-#### appPrefixOverrides Definition
+Complete sample including all options (default values):
 
 ```lua
-appPrefixOverrides = {
-  {
-    match = {
-      bundleID = "md.obsidian",   -- optional
-      titleGlob = "Minerva*",     -- optional (`window:title()` target, supports `*` and `?`)
+focus_border = {
+  visual = {
+    border = {
+      width = 10, -- Main border width (px)
+      color = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }, -- Main border color
     },
-    prefix = "M",                 -- 1 or 2 chars. Each char must be included in hintChars
+    outline = {
+      width = 2, -- Outer outline width (px)
+      color = { red = 0, green = 0, blue = 0, alpha = 0.70 }, -- Outer outline color
+    },
+    cornerRadius = 10, -- Corner radius (px)
+  },
+  animation = {
+    duration = 0.5, -- Fade-out duration (seconds)
+    fadeSteps = 18, -- Number of fade-out steps
+  },
+  window = {
+    minSize = 480, -- Minimum window size to display (px)
   },
 }
 ```
 
-#### appPrefixOverrides Behavior
+## Window Hints Options
+
+Complete sample including all options (default values):
+
+```lua
+window_hints = {
+  hotkey = {
+    modifiers = { "alt" }, -- Hotkey modifiers to show hints
+    key = "f20",            -- Hotkey key to show hints
+  },
+  hint = {
+    chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" }, -- Hint character set
+    prefixOverrides = nil, -- Prefix override rule array
+  },
+  ui = {
+    icon = {
+      size = 72,          -- Icon size (px)
+      alpha = 0.95,       -- Icon opacity
+      dimmedAlpha = 0.30, -- Icon opacity for dimmed hints
+    },
+    keyBox = {
+      size = 72,              -- Key box height (px)
+      minWidth = 72,          -- Key box minimum width (px)
+      horizontalPadding = 10, -- Key box left/right padding (px)
+      gap = 0,                -- Gap between icon and key box (px)
+    },
+    text = {
+      fontName = nil,      -- Font name (nil for system default)
+      keyFontSize = 48,    -- Key font size
+      titleFontSize = 16,  -- Title font size
+      rowGap = 8,          -- Gap between icon row and title row (px)
+      titleMaxSize = 72,   -- Max title length
+      showTitles = true,   -- Whether title row is shown
+      keyColor = { red = 1, green = 1, blue = 1, alpha = 1 }, -- Key text color
+      keyDimmedColor = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 }, -- Key color for dimmed hints
+      titleColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 }, -- Title text color
+      titleDimmedColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 }, -- Title color for dimmed hints
+      keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }, -- Highlight color for typed prefix
+    },
+    badge = {
+      padding = 12, -- Inner badge padding (px)
+      bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 }, -- Badge background color
+      dimmedBgAlpha = 0.14, -- Badge background alpha for dimmed hints
+      bumpMove = 90, -- Offset distance for overlapping hints (px)
+    },
+  },
+  overlay = {
+    active = {
+      fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }, -- Active window overlay fill
+      borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- Active window overlay border
+      borderWidth = 13, -- Active window overlay border width (px)
+      cornerRadius = 10, -- Active window overlay corner radius (px)
+    },
+    hint = {
+      fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 }, -- Front hint overlay fill
+      borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }, -- Front hint overlay border
+      dimmedBorderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 }, -- Front hint overlay border for dimmed hints
+      borderWidth = 6, -- Front hint overlay border width (px)
+      cornerRadius = 12, -- Front hint overlay corner radius (px)
+    },
+  },
+  occlusion = {
+    sampling = {
+      enabled = true,    -- Whether occlusion sampling is dynamic
+      baseWidth = 1920,  -- Base width for sampling scale (px)
+      baseHeight = 1080, -- Base height for sampling scale (px)
+      minCols = 4,       -- Minimum sampling columns
+      minRows = 4,       -- Minimum sampling rows
+      maxCols = 8,       -- Maximum sampling columns
+      maxRows = 8,       -- Maximum sampling rows
+    },
+    preview = {
+      enabled = true, -- Whether previews are shown for occluded windows
+      width = 140,    -- Preview width (px)
+      padding = 6,    -- Preview top padding (px)
+      alpha = 0.46,   -- Preview opacity
+    },
+    hint = {
+      scale = 0.65,   -- Scale factor for occluded hints
+      bgAlpha = 0.32, -- Background alpha for occluded hints
+      iconAlpha = 0.46, -- Icon opacity for occluded hints
+    },
+  },
+  dock = {
+    bottomMargin = 24, -- Bottom margin for occluded-hint dock (px)
+    itemGap = 12,      -- Item gap in occluded-hint dock (px)
+    windowBlend = {
+      x = 0.0, -- Blend ratio to shift dock x toward each target window
+      y = 0.0, -- Blend ratio to shift dock y toward each target window
+    },
+  },
+  navigation = {
+    focusBackKey = nil, -- Focus Back-equivalent key while hints are shown
+    directionKeys = nil, -- Directional navigation keys while hints are shown
+    directHotkeys = nil, -- Directional hotkeys without opening hints
+    cardinalOverlapTieThresholdPx = 720, -- Tie threshold for cardinal direction scoring (px)
+    debugDirectionalNavigation = false, -- Emit directional scoring debug logs
+    swapSelectModifiers = nil, -- Modifiers to swap window frames when selecting
+  },
+  behavior = {
+    onSelect = nil, -- Callback on window selection
+    onError = nil,  -- Callback on errors
+    centerCursor = false, -- Move cursor to selected window center
+    centerCursorOnStart = false, -- Move cursor to active window center when hints start
+  },
+  internal = {
+    focusHistory = nil, -- Internal injection only (normally do not set)
+  },
+}
+```
+
+Occlusion is determined by approximation using sample points inside each target window.
+When `occlusion.sampling.enabled=true`, the sampling grid is dynamically adjusted within the range from `occlusion.sampling.min*` to `occlusion.sampling.max*`, based on `occlusion.sampling.baseWidth/baseHeight`.
+
+### hint.prefixOverrides
+
+`hint.prefixOverrides` lets you override the leading hint prefix per window.
+Rules are evaluated from top to bottom, and the first matching rule is applied.
+
+#### hint.prefixOverrides Definition
+
+```lua
+hint = {
+  prefixOverrides = {
+    {
+      match = {
+        bundleID = "md.obsidian",   -- optional
+        titleGlob = "Minerva*",     -- optional (`window:title()` target, supports `*` and `?`)
+      },
+      prefix = "M",                 -- 1 or 2 chars. Each char must be included in hint.chars
+    },
+  },
+}
+```
+
+#### hint.prefixOverrides Behavior
 
 - Either `match.bundleID` or `match.titleGlob` is required
 - `titleGlob` is case-sensitive
-- The legacy dictionary format (`["bundleID"] = "T"`) is no longer supported
 - Display key sets are automatically adjusted to stay prefix-free (for example, if `G` and `GC` conflict, they become `GA` and `GC`)
-- If no rule matches, characters in the app name are checked from left to right and the first available one in `hintChars` is used (if already used, the next candidate is tried); if none match, it falls back to `hintChars[1]`
-- Invalid `prefix` values (characters not in `hintChars`, 3+ chars, etc.) raise errors
+- If no rule matches, characters in the app name are checked from left to right and the first available one in `hint.chars` is used (if already used, the next candidate is tried); if none match, it falls back to `hint.chars[1]`
+- Invalid `prefix` values (characters not in `hint.chars`, 3+ chars, etc.) raise errors
 
-For implementation defaults and internal options, see `DEFAULT_CONFIG` in `window_hints.lua`.
+For implementation defaults and internal options, see `DEFAULT_CONFIG` in `window_hints_config.lua`.
 
 ### Navigation During Window Hints
 
-- `focusBackKey` and `directionKeys` are active only while hints are shown
-- `focusBackKey` works only when `focus_back` is enabled
-- If these keys conflict with `hintChars`, the conflicting hint chars are removed and navigation keys take priority
+- `navigation.focusBackKey` and `navigation.directionKeys` are active only while hints are shown
+- `navigation.focusBackKey` works only when `focus_back` is enabled
+- If these keys conflict with `hint.chars`, the conflicting hint chars are removed and navigation keys take priority
 - Fully occluded windows are excluded from directional navigation candidates
-- Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
+- Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `navigation.cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
 - Diagonal directions prefer the smallest sum of two axis edge gaps, then frontmost order, center distance, and finally the previously active window
 
 ### Direct Direction Hotkeys
 
-`directDirectionHotkeys` lets you bind directional movement without showing hints.
+`navigation.directHotkeys` lets you bind directional movement without showing hints.
 
 ```lua
-directDirectionHotkeys = {
-  modifiers = { "ctrl", "alt" }, -- required
-  keys = {                       -- optional; only specified directions are enabled
-    left = "h",
-    down = "j",
-    up = "k",
-    right = "l",
-    upLeft = "y",
-    upRight = "u",
-    downLeft = "b",
-    downRight = "n",
+navigation = {
+  directHotkeys = {
+    modifiers = { "ctrl", "alt" }, -- required
+    keys = {                       -- optional; only specified directions are enabled
+      left = "h",
+      down = "j",
+      up = "k",
+      right = "l",
+      upLeft = "y",
+      upRight = "u",
+      downLeft = "b",
+      downRight = "n",
+    },
   },
 }
 ```
 
-- Uses the same target selection rules as `directionKeys` (occlusion filtering and tie-break logic included)
+- Uses the same target selection rules as `navigation.directionKeys` (occlusion filtering and tie-break logic included)
 - Moves focus immediately; Window Hints UI is not shown
 - If `keys` is omitted or empty, direct-direction hotkeys are disabled
 - In `modifiers`, `option` is accepted as an alias for `alt`
 
 ## Focus Back Options
 
-| Option         | Default          | Description |
-| -------------- | ---------------- | ----------- |
-| `hotkeyModifiers`  | `{ "option" }`    | Hotkey modifiers |
-| `hotkeyKey`        | `"w"`             | Hotkey (`nil` to disable) |
-| `urlEvent`         | `nil`             | URL scheme name (trigger via `hammerspoon://<name>`) |
-| `centerCursor`     | `false`           | Move cursor to window center after switching |
-| `stateSync`        | `nil`             | State sync settings to compensate for missed events (see below) |
+Complete sample including all options (default values):
+
+```lua
+focus_back = {
+  hotkey = {
+    modifiers = { "option" }, -- Hotkey modifiers
+    key = "w",                -- Hotkey (nil to disable)
+  },
+  urlEvent = {
+    name = nil, -- URL scheme name (trigger via hammerspoon://<name>)
+  },
+  behavior = {
+    centerCursor = false, -- Move cursor to window center after switching
+  },
+  stateSync = nil, -- State sync settings to compensate for missed events (see below)
+  internal = {
+    focusHistory = nil, -- Internal injection only (normally do not set)
+  },
+}
+```
 
 Pressing repeatedly lets you toggle between two windows.
 
@@ -318,11 +413,13 @@ If you enable `stateSync`, JINRAI periodically checks window state and corrects 
 
 #### `stateSync` Definition
 
-| Option         | Default          | Description |
-| -------------- | ---------------- | ----------- |
-| `interval`         | `0.2`            | Sync interval (seconds) |
-| `targetApps`       | `nil`            | Array of target app names or bundle IDs (`nil` for all apps) |
-| `historyScope`     | `"window"`      | History update scope (`"window"` or `"application"`) |
+```lua
+stateSync = {
+  interval = 0.2,      -- Sync interval (seconds)
+  targetApps = nil,    -- Array of target app names or bundle IDs (nil for all apps)
+  historyScope = "window", -- History update scope ("window" or "application")
+}
+```
 
 ##### `historyScope` Behavior:
 

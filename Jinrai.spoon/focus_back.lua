@@ -1,13 +1,5 @@
 local M = {}
 
-local DEFAULT_CONFIG = {
-	hotkeyModifiers = { "option" },
-	hotkeyKey = "w",
-	centerCursor = false,
-	stateSync = nil,
-	focusHistory = nil,
-}
-
 local function resourcePath(fileName)
 	if not hs or not hs.spoons or not hs.spoons.resourcePath then
 		error("[jinrai.focus_back] hs.spoons.resourcePath is not available")
@@ -21,22 +13,16 @@ local function resourcePath(fileName)
 end
 local focusHistoryModule = dofile(resourcePath("focus_history.lua"))
 
-local function mergeTable(defaults, overrides)
-	local merged = {}
-	for k, v in pairs(defaults) do
-		merged[k] = v
+local focusBackConfig = nil
+local function loadFocusBackConfig()
+	if focusBackConfig == nil then
+		focusBackConfig = dofile(resourcePath("focus_back_config.lua"))
 	end
-	if overrides then
-		for k, v in pairs(overrides) do
-			merged[k] = v
-		end
-	end
-	return merged
+	return focusBackConfig
 end
 
 function M.new(options)
-	options = options or {}
-	local config = mergeTable(DEFAULT_CONFIG, options)
+	local config = loadFocusBackConfig().build(options)
 
 	local hotkey = nil
 	local ownsFocusHistory = false

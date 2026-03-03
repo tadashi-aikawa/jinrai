@@ -86,13 +86,16 @@ function obj:setup(config)
 	if config.window_hints then
 		local windowHintsConfig = config.window_hints
 		if focusHistory then
-			windowHintsConfig = mergeTable(windowHintsConfig, { focusHistory = focusHistory })
+			local internalConfig = mergeTable(windowHintsConfig.internal or {}, { focusHistory = focusHistory })
+			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })
 		end
 		windowHints = windowHintsModule.new(windowHintsConfig)
 	end
 
 	if config.focus_back then
-		local focusBackConfig = mergeTable(config.focus_back, { focusHistory = focusHistory })
+		local focusBackConfig = config.focus_back
+		local internalConfig = mergeTable(focusBackConfig.internal or {}, { focusHistory = focusHistory })
+		focusBackConfig = mergeTable(focusBackConfig, { internal = internalConfig })
 		focusBack = focusBackModule.new(focusBackConfig)
 	end
 
