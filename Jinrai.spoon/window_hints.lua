@@ -1680,7 +1680,7 @@ function M.new(options)
 					end
 					table.insert(coveringFrames, of.frame)
 				end
-				if config.showPreviewForOccluded and #coveringFrames > 0 and wf.w > 0 and wf.h > 0 then
+				if #coveringFrames > 0 and wf.w > 0 and wf.h > 0 then
 					local sampleCols, sampleRows = computeOcclusionSamplingGrid(wf, config)
 					occluded = isWindowOccluded(wf, coveringFrames, sampleCols, sampleRows)
 				end
