@@ -152,6 +152,8 @@ spoon.Jinrai:setup({
 | `appPrefixOverrides` | `nil`        | ルール配列による先頭プレフィックス上書き（`window:title()` の `glob` 対応、1-2文字prefix対応） |
 | `focusBackKey`     | `nil`         | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
 | `directionKeys`    | `nil`         | Window Hints表示中に8方向移動を実行するキー |
+| `cardinalOverlapTieThresholdPx` | `960` | 上下左右の方向移動で副軸重なり量差を同点扱いするしきい値 (px) |
+| `debugDirectionalNavigation` | `false` | `directionKeys` の候補スコアリングをデバッグログ出力する |
 | `swapWindowFrameSelectModifiers` | `nil` | ヒント確定時または `focusBackKey` / `directionKeys` 実行時に現在ウィンドウと対象ウィンドウの位置・サイズを入れ替える修飾キー（完全一致時のみ。例: `{ "shift" }`） |
 | `dimmedHintOverlayBorderColor` | `{ red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 }` | 現在入力キーで候補外になったヒントのオーバーレイBorder色 |
 | `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
@@ -209,7 +211,7 @@ appPrefixOverrides = {
 - `focusBackKey` は `focus_back` 設定が有効なときだけ動作します
 - これらのキーと `hintChars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
 - 完全に背面に遮蔽されているウィンドウは方向移動の候補から除外されます
-- 上下左右は「副軸の重なり量が大きい」候補を優先し、次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
+- 上下左右は基本的に「副軸の重なり量が大きい」候補を優先し、重なり差が `cardinalOverlapTieThresholdPx` 以内なら同点扱いとして次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
 - 斜め方向は2軸のエッジ距離合計が小さい候補を優先し、同率時は前面順、中心距離、直前アクティブウィンドウの順で決定します
 
 ## Focus Back オプション

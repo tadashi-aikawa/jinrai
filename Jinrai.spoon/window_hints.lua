@@ -146,6 +146,10 @@ local DEFAULT_CONFIG = {
 	focusBackKey = nil,
 	-- Window Hints 表示中に方向移動を実行するキー
 	directionKeys = nil,
+	-- 上下左右判定で重なり量差を同点扱いにするしきい値 (px)
+	cardinalOverlapTieThresholdPx = 960,
+	-- directionKeys 実行時の候補選定ログを出力するか
+	debugDirectionalNavigation = false,
 	-- ヒント確定時に位置・サイズ入れ替えを実行する修飾キー
 	swapWindowFrameSelectModifiers = nil,
 	-- 共有 Focus 履歴 (内部注入用)
@@ -250,6 +254,16 @@ local function normalizeDirectionKeys(directionKeys)
 		downLeft = normalizeActionKey(directionKeys.downLeft, "directionKeys.downLeft"),
 		downRight = normalizeActionKey(directionKeys.downRight, "directionKeys.downRight"),
 	}
+end
+
+local function normalizeNonNegativeNumber(value, optionName)
+	if type(value) ~= "number" or value ~= value then
+		error(string.format("[jinrai.window_hints] %s must be a number", optionName))
+	end
+	if value < 0 then
+		error(string.format("[jinrai.window_hints] %s must be >= 0", optionName))
+	end
+	return value
 end
 
 local ALL_DIRECTIONS = {
@@ -482,7 +496,12 @@ local function swapWindowFrames(currentWin, targetWin)
 	if currentWin == targetWin then
 		return false
 	end
-	if not currentWin.frame or not targetWin.frame or not hasFrameSetter(currentWin) or not hasFrameSetter(targetWin) then
+	if
+		not currentWin.frame
+		or not targetWin.frame
+		or not hasFrameSetter(currentWin)
+		or not hasFrameSetter(targetWin)
+	then
 		return false
 	end
 
@@ -941,6 +960,37 @@ local function windowIdOf(win)
 	return id
 end
 
+local function debugLogDirectional(config, message)
+	if not config or not config.debugDirectionalNavigation then
+		return
+	end
+	local line = "[jinrai.window_hints][direction] " .. message
+	if hs and hs.printf then
+		hs.printf("%s", line)
+		return
+	end
+	print(line)
+end
+
+local function frameToDebugString(frame)
+	if not frame then
+		return "nil"
+	end
+	return string.format("{x=%.1f,y=%.1f,w=%.1f,h=%.1f}", frame.x, frame.y, frame.w, frame.h)
+end
+
+local function windowIdsToDebugString(wins)
+	if type(wins) ~= "table" then
+		return "[]"
+	end
+	local ids = {}
+	for _, win in ipairs(wins) do
+		local id = windowIdOf(win)
+		table.insert(ids, tostring(id))
+	end
+	return "[" .. table.concat(ids, ",") .. "]"
+end
+
 local function centerOfFrame(frame)
 	return {
 		x = frame.x + frame.w / 2,
@@ -1103,9 +1153,10 @@ local function filterDirectionalCandidatesByOcclusion(candidateWins, orderedWins
 	return filtered
 end
 
-local function findDirectionalWindowTarget(currentWin, candidateWins, direction, previousWin, orderedWins)
+local function findDirectionalWindowTarget(currentWin, candidateWins, direction, previousWin, orderedWins, config)
 	local currentFrame = windowFrameOf(currentWin)
 	if not currentFrame then
+		debugLogDirectional(config, "focused window has no valid frame")
 		return nil
 	end
 	local currentId = windowIdOf(currentWin)
@@ -1114,6 +1165,23 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 	local zOrderLookup = buildWindowZOrderIndex(orderedWins)
 	local best = nil
 	local SCORE_EPSILON = 0.0001
+	local overlapTieThresholdPx = 0
+	if config and type(config.cardinalOverlapTieThresholdPx) == "number" then
+		overlapTieThresholdPx = config.cardinalOverlapTieThresholdPx
+	end
+	debugLogDirectional(
+		config,
+		string.format(
+			"start direction=%s current=%s currentFrame=%s previous=%s candidates=%s ordered=%s overlapTieThresholdPx=%.3f",
+			tostring(direction),
+			tostring(currentId),
+			frameToDebugString(currentFrame),
+			tostring(previousId),
+			windowIdsToDebugString(candidateWins),
+			windowIdsToDebugString(orderedWins),
+			overlapTieThresholdPx
+		)
+	)
 
 	for _, win in ipairs(candidateWins) do
 		local winId = windowIdOf(win)
@@ -1135,21 +1203,49 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 						candidate.primaryGap = primaryGap
 						candidate.orthogonalOverlap = orthogonalOverlap(direction, currentFrame, frame)
 						candidate.secondary = secondary
+						debugLogDirectional(
+							config,
+							string.format(
+								"candidate id=%s frame=%s overlap=%.3f primaryGap=%.3f secondary=%.3f zOrder=%s isPrevious=%s",
+								tostring(winId),
+								frameToDebugString(frame),
+								candidate.orthogonalOverlap,
+								candidate.primaryGap,
+								candidate.secondary,
+								tostring(candidate.zOrder),
+								tostring(candidate.isPrevious)
+							)
+						)
 					else
 						local xGap, yGap = diagonalAxisGaps(direction, currentFrame, frame)
 						local dx = center.x - currentCenter.x
 						local dy = center.y - currentCenter.y
 						candidate.diagonalGap = xGap + yGap
 						candidate.distance2 = dx * dx + dy * dy
+						debugLogDirectional(
+							config,
+							string.format(
+								"candidate id=%s frame=%s diagonalGap=%.3f distance2=%.3f zOrder=%s isPrevious=%s",
+								tostring(winId),
+								frameToDebugString(frame),
+								candidate.diagonalGap,
+								candidate.distance2,
+								tostring(candidate.zOrder),
+								tostring(candidate.isPrevious)
+							)
+						)
 					end
 
 					if not best then
 						best = candidate
+						debugLogDirectional(config, string.format("best <- %s (first)", tostring(candidate.id)))
 					else
 						local better = false
 						if CARDINAL_DIRECTIONS[direction] then
-							if candidate.orthogonalOverlap ~= best.orthogonalOverlap then
-								better = candidate.orthogonalOverlap > best.orthogonalOverlap
+							local overlapDiff = candidate.orthogonalOverlap - best.orthogonalOverlap
+							local overlapTie = math.abs(overlapDiff) <= (overlapTieThresholdPx + SCORE_EPSILON)
+							if not overlapTie and math.abs(overlapDiff) > SCORE_EPSILON then
+								better = overlapDiff > 0
 							elseif candidate.primaryGap < (best.primaryGap - SCORE_EPSILON) then
 								better = true
 							elseif math.abs(candidate.primaryGap - best.primaryGap) <= SCORE_EPSILON then
@@ -1183,13 +1279,27 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 
 						if better then
 							best = candidate
+							debugLogDirectional(config, string.format("best <- %s (better)", tostring(candidate.id)))
 						end
 					end
+				else
+					debugLogDirectional(
+						config,
+						string.format(
+							"candidate id=%s frame=%s skipped (outside %s)",
+							tostring(winId),
+							frameToDebugString(frame),
+							tostring(direction)
+						)
+					)
 				end
+			else
+				debugLogDirectional(config, string.format("candidate id=%s skipped (no valid frame)", tostring(winId)))
 			end
 		end
 	end
 
+	debugLogDirectional(config, string.format("result target=%s", tostring(best and best.id or nil)))
 	return best and best.win or nil
 end
 
@@ -1214,6 +1324,8 @@ end
 function M.new(options)
 	options = options or {}
 	local config = mergeTable(DEFAULT_CONFIG, options)
+	config.cardinalOverlapTieThresholdPx =
+		normalizeNonNegativeNumber(config.cardinalOverlapTieThresholdPx, "cardinalOverlapTieThresholdPx")
 	local focusHistory = config.focusHistory
 	local directionKeys = normalizeDirectionKeys(config.directionKeys)
 	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
@@ -1393,6 +1505,7 @@ function M.new(options)
 	local function runDirectionalAction(direction, swapWithFocused)
 		local focusedWin = hs.window.focusedWindow()
 		if not focusedWin then
+			debugLogDirectional(config, string.format("direction=%s skipped (no focused window)", tostring(direction)))
 			return false
 		end
 		local orderedWins = hs.window.orderedWindows()
@@ -1402,12 +1515,34 @@ function M.new(options)
 				table.insert(candidates, win)
 			end
 		end
+		debugLogDirectional(
+			config,
+			string.format(
+				"direction=%s focused=%s visibleCandidates=%s",
+				tostring(direction),
+				tostring(windowIdOf(focusedWin)),
+				windowIdsToDebugString(candidates)
+			)
+		)
 		candidates = filterDirectionalCandidatesByOcclusion(candidates, orderedWins, config)
+		debugLogDirectional(
+			config,
+			string.format("direction=%s afterOcclusion=%s", tostring(direction), windowIdsToDebugString(candidates))
+		)
 		local previousWin = resolvePreviousWindowForDirection()
-		local target = findDirectionalWindowTarget(focusedWin, candidates, direction, previousWin, orderedWins)
+		debugLogDirectional(
+			config,
+			string.format("direction=%s previous=%s", tostring(direction), tostring(windowIdOf(previousWin)))
+		)
+		local target = findDirectionalWindowTarget(focusedWin, candidates, direction, previousWin, orderedWins, config)
 		if not target then
+			debugLogDirectional(config, string.format("direction=%s no target", tostring(direction)))
 			return false
 		end
+		debugLogDirectional(
+			config,
+			string.format("direction=%s select target=%s", tostring(direction), tostring(windowIdOf(target)))
+		)
 		selectWindow(target, { swapWithFocused = swapWithFocused })
 		return true
 	end
@@ -1549,14 +1684,8 @@ function M.new(options)
 					local sampleCols, sampleRows = computeOcclusionSamplingGrid(wf, config)
 					occluded = isWindowOccluded(wf, coveringFrames, sampleCols, sampleRows)
 				end
-				local basePrefix, isOverridePrefix = resolveAppPrefix(
-					appTitle,
-					bundleID,
-					windowTitle,
-					hintChars[1],
-					allowedPrefixes,
-					appPrefixOverrides
-				)
+				local basePrefix, isOverridePrefix =
+					resolveAppPrefix(appTitle, bundleID, windowTitle, hintChars[1], allowedPrefixes, appPrefixOverrides)
 				table.insert(entries, {
 					win = win,
 					app = app,
@@ -1890,17 +2019,18 @@ function M.new(options)
 	local function placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale)
 		local bundleID = hint.app and hint.app:bundleID() or nil
 		local icon = bundleID and hs.image.imageFromAppBundle(bundleID) or nil
-		local canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayBorderIdx = newHintCanvas(
-			canvasFrame,
-			icon,
-			hint.keyText,
-			hint.titleText,
-			keyBoxWidth,
-			previewImage,
-			previewHeight,
-			hint.isOccluded,
-			scale
-		)
+		local canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayBorderIdx =
+			newHintCanvas(
+				canvasFrame,
+				icon,
+				hint.keyText,
+				hint.titleText,
+				keyBoxWidth,
+				previewImage,
+				previewHeight,
+				hint.isOccluded,
+				scale
+			)
 		hint.canvas = canvas
 		hint.keyBoxFrame = keyBoxFrame
 		hint.keyTextHeight = keyTextHeight

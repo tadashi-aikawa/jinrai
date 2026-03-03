@@ -608,6 +608,38 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(2, target2:id())
 	end)
 
+	it("上方向: 重なり差がしきい値以内なら前面候補を優先する", function()
+		local current = stubWindow(431, { x = 16, y = 60, w = 1768, h = 1093 })
+		local widerBack = stubWindow(328, { x = -237, y = -1424, w = 2276, h = 1408 })
+		local front = stubWindow(567, { x = 41, y = -1424, w = 1720, h = 1408 })
+
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ widerBack, front },
+			"up",
+			nil,
+			{ current, front, widerBack },
+			{ cardinalOverlapTieThresholdPx = 48 }
+		)
+		assert.are.equal(567, target:id())
+	end)
+
+	it("上方向: 重なり差がしきい値を超えるなら重なり量を優先する", function()
+		local current = stubWindow(431, { x = 16, y = 60, w = 1768, h = 1093 })
+		local widerBack = stubWindow(328, { x = -237, y = -1424, w = 2276, h = 1408 })
+		local front = stubWindow(567, { x = 41, y = -1424, w = 1720, h = 1408 })
+
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ widerBack, front },
+			"up",
+			nil,
+			{ current, front, widerBack },
+			{ cardinalOverlapTieThresholdPx = 47 }
+		)
+		assert.are.equal(328, target:id())
+	end)
+
 	it("右図: 1->下 は 4", function()
 		local win1 = stubWindow(1, { x = 100, y = 100, w = 140, h = 120 })
 		local win2 = stubWindow(2, { x = 250, y = 100, w = 80, h = 120 })

@@ -152,6 +152,8 @@ spoon.Jinrai:setup({
 | `appPrefixOverrides` | `nil`         | Override leading prefixes via rule array (`window:title()` `glob` support, 1-2 char prefixes) |
 | `focusBackKey`     | `nil`          | Key to trigger Focus Back equivalent while Window Hints is visible (`focus_back` must be enabled) |
 | `directionKeys`    | `nil`          | 8-direction navigation keys while Window Hints is visible  |
+| `cardinalOverlapTieThresholdPx` | `48` | Tie threshold (px) for orthogonal-overlap differences in cardinal directional navigation |
+| `debugDirectionalNavigation` | `false` | Emit directional candidate scoring logs for `directionKeys` debugging |
 | `swapWindowFrameSelectModifiers` | `nil` | Modifier keys for swapping frames between focused and target windows when selecting hints or using `focusBackKey` / `directionKeys` (exact match required; e.g. `{ "shift" }`) |
 | `dimmedHintOverlayBorderColor` | `{ red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 }` | Overlay border color for hints excluded by current key input |
 | `iconSize`         | `72`            | App icon size (px) |
@@ -208,7 +210,7 @@ There are many more customization options. See `DEFAULT_CONFIG` in `window_hints
 - `focusBackKey` works only when `focus_back` is enabled
 - If these keys conflict with `hintChars`, the conflicting hint chars are removed and navigation keys take priority
 - Fully occluded windows are excluded from directional navigation candidates
-- Cardinal directions prefer larger orthogonal overlap first, then smallest edge gap on the primary axis, frontmost order, orthogonal offset, and finally the previously active window
+- Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
 - Diagonal directions prefer the smallest sum of two axis edge gaps, then frontmost order, center distance, and finally the previously active window
 
 ## Focus Back Options
