@@ -41,6 +41,23 @@
 
 ## セットアップ
 
+### 前提準備
+
+まだ Hammerspoon をインストールしていない場合:
+
+```bash
+brew install --cask hammerspoon
+open -a Hammerspoon
+```
+
+続いて SpoonInstall をインストール:
+
+```bash
+mkdir -p ~/.hammerspoon/Spoons
+curl -L https://github.com/Hammerspoon/Spoons/raw/master/Spoons/SpoonInstall.spoon.zip -o /tmp/SpoonInstall.spoon.zip
+unzip -o /tmp/SpoonInstall.spoon.zip -d ~/.hammerspoon/Spoons
+```
+
 ### SpoonInstall でインストール（推奨）
 
 `~/.hammerspoon/init.lua` に以下を追加:

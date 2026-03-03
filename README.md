@@ -41,6 +41,23 @@
 
 ## Setup
 
+### Prerequisites
+
+If you do not have Hammerspoon yet:
+
+```bash
+brew install --cask hammerspoon
+open -a Hammerspoon
+```
+
+Then install SpoonInstall:
+
+```bash
+mkdir -p ~/.hammerspoon/Spoons
+curl -L https://github.com/Hammerspoon/Spoons/raw/master/Spoons/SpoonInstall.spoon.zip -o /tmp/SpoonInstall.spoon.zip
+unzip -o /tmp/SpoonInstall.spoon.zip -d ~/.hammerspoon/Spoons
+```
+
 ### Install via SpoonInstall (Recommended)
 
 Add this to `~/.hammerspoon/init.lua`:
