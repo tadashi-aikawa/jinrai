@@ -23,3 +23,9 @@ jobs:
 
       - name: Run tests
         run: busted
+
+      - name: Build Spoon distribution
+        run: ./scripts/build_spoon_dist.sh
+
+      - name: Validate Spoon distribution
+        run: ./scripts/validate_spoon_dist.sh

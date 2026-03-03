@@ -41,7 +41,41 @@
 
 ## Setup
 
-Install with Git + symlink:
+### Install via SpoonInstall (Recommended)
+
+Add this to `~/.hammerspoon/init.lua`:
+
+```lua
+hs.loadSpoon("SpoonInstall")
+
+spoon.SpoonInstall.repos.jinrai = {
+  url = "https://github.com/tadashi-aikawa/jinrai",
+  desc = "JINRAI Spoon repository",
+  branch = "spoons",
+}
+
+spoon.SpoonInstall:andUse("Jinrai", {
+  repo = "jinrai",
+  fn = function(jinrai)
+    jinrai:setup({
+      focus_border = {},
+      window_hints = {},
+      focus_back = {},
+    })
+  end,
+})
+```
+
+If you omit `focus_border`, `window_hints`, or `focus_back`, that module is disabled.
+
+To update an already installed Spoon:
+
+```lua
+spoon.SpoonInstall:updateRepo("jinrai")
+spoon.SpoonInstall:installSpoonFromRepo("Jinrai", "jinrai")
+```
+
+### Install from source (for development)
 
 ```bash
 git clone https://github.com/tadashi-aikawa/jinrai /path/to/jinrai
@@ -445,7 +479,7 @@ focus_back = {
 
 ## Development
 
-With the setup above, editing files under `Jinrai.spoon/` and running `Reload Config` in Hammerspoon reflects changes immediately.
+If you install from source with symlink, editing files under `Jinrai.spoon/` and running `Reload Config` in Hammerspoon reflects changes immediately.
 
 ## Test
 
