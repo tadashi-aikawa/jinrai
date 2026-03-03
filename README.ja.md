@@ -149,16 +149,30 @@ spoon.Jinrai:setup({
 | `hotkeyModifiers`  | `{ "alt" }`   | ヒント表示のホットキー修飾キー   |
 | `hotkeyKey`        | `"f20"`        | ヒント表示のホットキー           |
 | `hintChars`        | `A-Z (QWERTY)`| ヒント文字の配列                 |
-| `appPrefixOverrides` | `nil`        | ルール配列による先頭プレフィックス上書き（`window:title()` の `glob` 対応、1-2文字prefix対応） |
-| `focusBackKey`     | `nil`         | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
-| `directionKeys`    | `nil`         | Window Hints表示中に8方向移動を実行するキー |
-| `cardinalOverlapTieThresholdPx` | `960` | 上下左右の方向移動で副軸重なり量差を同点扱いするしきい値 (px) |
-| `debugDirectionalNavigation` | `false` | `directionKeys` の候補スコアリングをデバッグログ出力する |
-| `swapWindowFrameSelectModifiers` | `nil` | ヒント確定時または `focusBackKey` / `directionKeys` 実行時に現在ウィンドウと対象ウィンドウの位置・サイズを入れ替える修飾キー（完全一致時のみ。例: `{ "shift" }`） |
-| `dimmedHintOverlayBorderColor` | `{ red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 }` | 現在入力キーで候補外になったヒントのオーバーレイBorder色 |
 | `iconSize`         | `72`           | アプリアイコンのサイズ (px)      |
+| `keyBoxSize`       | `72`           | キー表示ボックスの高さ (px)      |
+| `keyBoxMinWidth`   | `72`           | キー表示ボックスの最小幅 (px)    |
+| `keyBoxHorizontalPadding` | `10`    | キー表示ボックスの左右パディング (px) |
+| `keyGap`           | `0`            | アイコンとキー表示ボックスの間隔 (px) |
+| `padding`          | `12`           | ヒントバッジ全体の内側余白 (px)  |
+| `fontName`         | `nil`          | キー・タイトルのフォント名（`nil` でシステムデフォルト） |
+| `fontSize`         | `48`           | キー文字のフォントサイズ         |
+| `titleFontSize`    | `16`           | タイトル文字のフォントサイズ     |
+| `rowGap`           | `8`            | アイコン行とタイトル行の間隔 (px) |
 | `titleMaxSize`     | `72`           | タイトルの最大表示文字数         |
 | `showTitles`       | `true`         | タイトル行の表示有無             |
+| `bgColor`          | `{ red = 0, green = 0, blue = 0, alpha = 0.72 }` | ヒントバッジの背景色 |
+| `dimmedBgAlpha`    | `0.22`         | 非アクティブ（入力不一致）時の背景アルファ値 |
+| `textColor`        | `{ red = 1, green = 1, blue = 1, alpha = 1 }` | キー文字の色 |
+| `dimmedTextColor`  | `{ red = 1, green = 1, blue = 1, alpha = 0.35 }` | 非アクティブ時のキー文字の色 |
+| `titleTextColor`   | `{ red = 0.84, green = 0.84, blue = 0.86, alpha = 1 }` | タイトル文字の色 |
+| `dimmedTitleTextColor` | `{ red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }` | 非アクティブ時のタイトル文字の色 |
+| `keyHighlightColor` | `{ red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }` | 入力済みキープレフィックスのハイライト色 |
+| `iconAlpha`        | `0.95`         | アプリアイコンの不透明度         |
+| `dimmedIconAlpha`  | `0.48`         | 非アクティブ時のアプリアイコン不透明度 |
+| `bumpMove`         | `90`           | ヒント重なり時のずらし量 (px)    |
+| `showPreviewForOccluded` | `true`   | 遮蔽ウィンドウのプレビュー画像を表示するか |
+| `appPrefixOverrides` | `nil`        | ルール配列による先頭プレフィックス上書き（`window:title()` の `glob` 対応、1-2文字prefix対応） |
 | `occlusionSamplingEnabled` | `true`  | 遮蔽判定サンプリングを動的化するか |
 | `occlusionSamplingBaseWidth` | `1920` | 遮蔽判定サンプリングの基準ウィンドウ幅 (px) |
 | `occlusionSamplingBaseHeight` | `1080` | 遮蔽判定サンプリングの基準ウィンドウ高さ (px) |
@@ -166,10 +180,34 @@ spoon.Jinrai:setup({
 | `occlusionSamplingMinRows` | `4`      | 遮蔽判定サンプリング行数の最小値 |
 | `occlusionSamplingMaxCols` | `8`      | 遮蔽判定サンプリング列数の最大値 |
 | `occlusionSamplingMaxRows` | `8`      | 遮蔽判定サンプリング行数の最大値 |
+| `previewWidth`     | `140`          | 遮蔽ウィンドウのプレビュー画像幅 (px) |
+| `previewPadding`   | `6`            | プレビュー画像の上余白 (px)      |
+| `occludedScale`    | `0.65`         | 遮蔽ヒントの縮小率（`1.0` で等倍） |
+| `occludedBgAlpha`  | `0.50`         | 遮蔽ヒントの背景アルファ値       |
+| `occludedIconAlpha` | `0.65`        | 遮蔽ヒントのアイコン不透明度     |
+| `occludedPreviewAlpha` | `0.65`     | 遮蔽ヒントのプレビュー画像不透明度 |
+| `activeOverlayColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }` | アクティブウィンドウのオーバーレイ塗り色 |
+| `activeOverlayBorderColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }` | アクティブウィンドウのオーバーレイボーダー色 |
+| `activeOverlayBorderWidth` | `10`    | アクティブウィンドウのオーバーレイボーダー幅 (px) |
+| `activeOverlayCornerRadius` | `10`   | アクティブウィンドウのオーバーレイ角丸半径 (px) |
+| `hintOverlayColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.38 }` | 前面ヒントバッジのオーバーレイ塗り色 |
+| `hintOverlayBorderColor` | `{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }` | 前面ヒントバッジのオーバーレイボーダー色 |
+| `dimmedHintOverlayBorderColor` | `{ red = 0.55, green = 0.55, blue = 0.55, alpha = 0.35 }` | 候補外になった前面ヒントのオーバーレイボーダー色 |
+| `hintOverlayBorderWidth` | `4`       | 前面ヒントバッジのオーバーレイボーダー幅 (px) |
+| `hintOverlayCornerRadius` | `12`     | 前面ヒントバッジのオーバーレイ角丸半径 (px) |
+| `dockBottomMargin` | `24`           | 遮蔽ヒントドックの画面下端マージン (px) |
+| `dockItemGap`      | `10`           | 遮蔽ヒントドック内のアイテム間隔 (px) |
+| `focusBackKey`     | `nil`          | Window Hints表示中に Focus Back 相当を実行するキー（`focus_back` 有効時のみ） |
+| `directionKeys`    | `nil`          | Window Hints表示中に8方向移動を実行するキー |
+| `cardinalOverlapTieThresholdPx` | `960` | 上下左右の方向移動で副軸重なり量差を同点扱いするしきい値 (px) |
+| `debugDirectionalNavigation` | `false` | `directionKeys` の候補スコアリングをデバッグログ出力する |
+| `swapWindowFrameSelectModifiers` | `nil` | ヒント確定時または `focusBackKey` / `directionKeys` 実行時に現在ウィンドウと対象ウィンドウの位置・サイズを入れ替える修飾キー |
 | `onSelect`         | `nil`          | ウィンドウ選択時のコールバック   |
 | `onError`          | `nil`          | エラー時のコールバック           |
 | `centerCursor`     | `false`        | 選択後にカーソルをウィンドウ中央に移動 |
 | `centerCursorOnStart` | `false`     | 起動時にアクティブウィンドウの中心にカーソルを移動 |
+
+`focusHistory` は内部注入用の設定で、通常のユーザー設定対象ではありません。
 
 遮蔽判定は対象ウィンドウ内のサンプル点で行う近似判定です。
 `occlusionSamplingEnabled=true` の場合、`occlusionSamplingBaseWidth/Height` を基準に
@@ -203,7 +241,7 @@ appPrefixOverrides = {
 - どのルールにも一致しない場合は、アプリ名の文字を先頭から見て `hintChars` に含まれる文字を選ぶ（同じ文字が使用済みなら次候補へ）。候補がなければ `hintChars[1]` にフォールバック
 - `prefix` が不正（`hintChars` 外の文字、3文字以上など）の場合はエラー
 
-その他多数のカスタマイズ項目があります。詳しくは `window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
+実装上のデフォルト値や内部向け設定は、`window_hints.lua` 内の `DEFAULT_CONFIG` を参照してください。
 
 ### Window Hints 内ナビゲーション
 
