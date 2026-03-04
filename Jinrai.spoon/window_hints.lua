@@ -795,6 +795,91 @@ local function resolveOccludedDockItemX(screenFrame, itemWidth, centeredX, windo
 	return clamp(math.max(minimumX, desiredX), screenFrame.x, maxX)
 end
 
+local function resolveOccludedDockItemXs(screenFrame, items, itemGap, windowXBlend)
+	if not items or #items == 0 then
+		return {}
+	end
+
+	itemGap = itemGap or 0
+	windowXBlend = windowXBlend or 0
+
+	local screenRight = screenFrame.x + screenFrame.w
+	local desiredXs = {}
+	local offsets = {}
+	local blocks = {}
+
+	for i, item in ipairs(items) do
+		local desiredX = item.centeredX
+		if windowXBlend > 0 and type(item.windowCenterX) == "number" and item.windowCenterX == item.windowCenterX then
+			local targetX = item.windowCenterX - (item.width / 2)
+			desiredX = item.centeredX + (targetX - item.centeredX) * windowXBlend
+		end
+		local maxX = screenRight - item.width
+		desiredX = clamp(desiredX, screenFrame.x, maxX)
+		desiredXs[i] = desiredX
+	end
+
+	local runningOffset = 0
+	for i, item in ipairs(items) do
+		offsets[i] = runningOffset
+		local z = desiredXs[i] - runningOffset
+		table.insert(blocks, {
+			startIndex = i,
+			endIndex = i,
+			sum = z,
+			count = 1,
+			mean = z,
+		})
+		while #blocks >= 2 and blocks[#blocks - 1].mean > blocks[#blocks].mean do
+			local b2 = table.remove(blocks)
+			local b1 = blocks[#blocks]
+			b1.endIndex = b2.endIndex
+			b1.sum = b1.sum + b2.sum
+			b1.count = b1.count + b2.count
+			b1.mean = b1.sum / b1.count
+		end
+		runningOffset = runningOffset + item.width + itemGap
+	end
+
+	local xs = {}
+	for _, block in ipairs(blocks) do
+		for i = block.startIndex, block.endIndex do
+			xs[i] = block.mean + offsets[i]
+		end
+	end
+
+	local lowerShift = -math.huge
+	local upperShift = math.huge
+	for i, item in ipairs(items) do
+		lowerShift = math.max(lowerShift, screenFrame.x - xs[i])
+		upperShift = math.min(upperShift, (screenRight - item.width) - xs[i])
+	end
+
+	if lowerShift <= upperShift then
+		local shift = clamp(0, lowerShift, upperShift)
+		for i = 1, #xs do
+			xs[i] = xs[i] + shift
+		end
+		return xs
+	end
+
+	local fallbackXs = {}
+	local curX = windowXBlend > 0 and screenFrame.x or items[1].centeredX
+	for i, item in ipairs(items) do
+		local x = resolveOccludedDockItemX(
+			screenFrame,
+			item.width,
+			item.centeredX,
+			item.windowCenterX,
+			curX,
+			windowXBlend
+		)
+		fallbackXs[i] = x
+		curX = x + item.width + itemGap
+	end
+	return fallbackXs
+end
+
 local function resolveOccludedDockItemY(screenFrame, itemHeight, centeredY, windowCenterY, windowYBlend, dockMargin)
 	windowYBlend = windowYBlend or 0
 	dockMargin = dockMargin or 0
@@ -2195,17 +2280,15 @@ function M.new(options)
 					item.centeredX = centeredX
 					centeredX = centeredX + item.width + config.dockItemGap
 				end
-				local curX = config.dockWindowXBlend > 0 and screenFrame.x or startX
+				local itemXs = resolveOccludedDockItemXs(
+					screenFrame,
+					group.items,
+					config.dockItemGap,
+					config.dockWindowXBlend
+				)
 
-				for _, item in ipairs(group.items) do
-					local itemX = resolveOccludedDockItemX(
-						screenFrame,
-						item.width,
-						item.centeredX,
-						item.windowCenterX,
-						curX,
-						config.dockWindowXBlend
-					)
+				for i, item in ipairs(group.items) do
+					local itemX = itemXs[i]
 					local centeredY = dockY + (maxHeight - item.height)
 					local itemY = resolveOccludedDockItemY(
 						screenFrame,
@@ -2222,10 +2305,9 @@ function M.new(options)
 						h = item.height,
 					}
 					placeHint(item.hint, canvasFrame, item.previewImage, item.previewHeight, item.keyBoxWidth, scale)
-					curX = itemX + item.width + config.dockItemGap
+				end
 				end
 			end
-		end
 
 		if #openHints == 0 then
 			clearHints()
@@ -2305,6 +2387,7 @@ M._test = {
 	resolveFocusBackTargetWindow = resolveFocusBackTargetWindow,
 	resolveHintOverlayBorderColor = resolveHintOverlayBorderColor,
 	resolveOccludedDockItemX = resolveOccludedDockItemX,
+	resolveOccludedDockItemXs = resolveOccludedDockItemXs,
 	resolveOccludedDockItemY = resolveOccludedDockItemY,
 	resolveOccludedDockStartX = resolveOccludedDockStartX,
 	comparePrefixes = comparePrefixes,

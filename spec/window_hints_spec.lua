@@ -426,6 +426,21 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(620, x)
 	end)
 
+	it("dockWindowXBlend=1 で同一中心の複数ウィンドウは中央寄せを維持する", function()
+		local xs = helper.resolveOccludedDockItemXs(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			{
+				{ width = 180, centeredX = 222, windowCenterX = 600 },
+				{ width = 180, centeredX = 414, windowCenterX = 600 },
+				{ width = 180, centeredX = 606, windowCenterX = 600 },
+				{ width = 180, centeredX = 798, windowCenterX = 600 },
+			},
+			12,
+			1
+		)
+		assert.are.same({ 222, 414, 606, 798 }, xs)
+	end)
+
 	it("dockWindowYBlend=0 では下ドック配置Yを使う", function()
 		local y = helper.resolveOccludedDockItemY(
 			{ x = 0, y = 0, w = 1200, h = 800 },
