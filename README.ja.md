@@ -90,6 +90,7 @@ spoon.SpoonInstall:andUse("Jinrai", {
 ```lua
 spoon.SpoonInstall:updateRepo("jinrai")
 spoon.SpoonInstall:installSpoonFromRepo("Jinrai", "jinrai")
+hs.reload()
 ```
 
 ### ソースからインストール（開発向け）

@@ -90,6 +90,7 @@ To update an already installed Spoon:
 ```lua
 spoon.SpoonInstall:updateRepo("jinrai")
 spoon.SpoonInstall:installSpoonFromRepo("Jinrai", "jinrai")
+hs.reload()
 ```
 
 ### Install from source (for development)
