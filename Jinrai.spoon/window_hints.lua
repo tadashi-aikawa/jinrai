@@ -648,12 +648,16 @@ local function assignUniquePrefixes(entries, fallbackPrefix, allowedPrefixes)
 	local appPrefixMap = {}
 	for _, entry in ipairs(entries) do
 		local appKey = entry.appKey
-		local existing = appPrefixMap[appKey]
-		if existing then
-			entry.prefix = existing
-		else
+		if entry.isOverridePrefix then
 			local chosen = entry.basePrefix or fallbackPrefix
-			if not entry.isOverridePrefix then
+			used[chosen] = true
+			entry.prefix = chosen
+		else
+			local existing = appPrefixMap[appKey]
+			if existing then
+				entry.prefix = existing
+			else
+				local chosen = entry.basePrefix or fallbackPrefix
 				local candidates = collectAppPrefixCandidates(entry.appTitle or "", chosen, allowedPrefixes)
 				for _, candidate in ipairs(candidates) do
 					if not used[candidate] then
@@ -661,10 +665,10 @@ local function assignUniquePrefixes(entries, fallbackPrefix, allowedPrefixes)
 						break
 					end
 				end
+				appPrefixMap[appKey] = chosen
+				used[chosen] = true
+				entry.prefix = chosen
 			end
-			appPrefixMap[appKey] = chosen
-			used[chosen] = true
-			entry.prefix = chosen
 		end
 	end
 end

@@ -630,6 +630,26 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal("G", entries[2].prefix)
 	end)
 
+	it("同一アプリでも異なる override prefix はそれぞれ維持される", function()
+		local entries = {
+			{
+				appKey = "md.obsidian",
+				appTitle = "Obsidian",
+				basePrefix = "M",
+				isOverridePrefix = true,
+			},
+			{
+				appKey = "md.obsidian",
+				appTitle = "Obsidian",
+				basePrefix = "D",
+				isOverridePrefix = true,
+			},
+		}
+		helper.assignUniquePrefixes(entries, "A", allowedPrefixes)
+		assert.are.equal("M", entries[1].prefix)
+		assert.are.equal("D", entries[2].prefix)
+	end)
+
 	local function stubWindow(id, frame)
 		return {
 			id = function()
