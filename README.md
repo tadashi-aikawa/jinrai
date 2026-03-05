@@ -85,13 +85,16 @@ spoon.SpoonInstall:andUse("Jinrai", {
 
 If you omit `focus_border`, `window_hints`, or `focus_back`, that module is disabled.
 
-To update an already installed Spoon:
+To update an already installed Spoon (run once in Hammerspoon Console):
 
 ```lua
 spoon.SpoonInstall:updateRepo("jinrai")
 spoon.SpoonInstall:installSpoonFromRepo("Jinrai", "jinrai")
 hs.reload()
 ```
+
+> [!WARNING]
+> Do not put these three lines in `~/.hammerspoon/init.lua`. `hs.reload()` will rerun the same update block on each reload and cause a loop. Keep only persistent setup in `init.lua`, and run this block manually only when updating.
 
 ### Install from source (for development)
 

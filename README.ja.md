@@ -85,13 +85,16 @@ spoon.SpoonInstall:andUse("Jinrai", {
 
 `focus_border` や `window_hints`、`focus_back` のキーを省略するとそのモジュールは無効になります。
 
-インストール済みの Spoon を更新する場合:
+インストール済みの Spoon を更新する場合（Hammerspoon Console で1回だけ実行）:
 
 ```lua
 spoon.SpoonInstall:updateRepo("jinrai")
 spoon.SpoonInstall:installSpoonFromRepo("Jinrai", "jinrai")
 hs.reload()
 ```
+
+> [!WARNING]
+> この3行を `~/.hammerspoon/init.lua` に置くと、`hs.reload()` によって再読込のたびに再実行されてループします。`init.lua` には常駐設定のみを書き、更新時だけ Console から手動実行してください。
 
 ### ソースからインストール（開発向け）
 
