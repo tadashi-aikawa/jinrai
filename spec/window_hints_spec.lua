@@ -1,6 +1,7 @@
 describe("window_hints appPrefixOverrides", function()
 	local helper
 	local allowedPrefixes
+	local originalHs
 	local defaultHintChars = {
 		"A",
 		"S",
@@ -32,6 +33,7 @@ describe("window_hints appPrefixOverrides", function()
 	local hintCharOrder
 
 	before_each(function()
+		originalHs = _G.hs
 		local mod = dofile("./Jinrai.spoon/window_hints.lua")
 		helper = mod._test
 		allowedPrefixes = {
@@ -67,6 +69,10 @@ describe("window_hints appPrefixOverrides", function()
 				hintCharOrder[c] = i
 			end
 		end)
+
+	after_each(function()
+		_G.hs = originalHs
+	end)
 
 	it("bundleID + titleGlob を上から先勝ちで評価できる", function()
 		local compiled = helper.compileAppPrefixOverrides({
@@ -361,6 +367,22 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.same(normal, color)
 	end)
 
+	it("別 Space 丸バッジ色は inactive で減衰する", function()
+		local badgeConfig = {
+			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
+			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+			offSpaceBadgeInactiveFillAlpha = 0.11,
+			offSpaceBadgeInactiveStrokeAlpha = 0.22,
+		}
+		local activeFill, activeStroke = helper.resolveOffSpaceBadgeColors(true, badgeConfig)
+		local inactiveFill, inactiveStroke = helper.resolveOffSpaceBadgeColors(false, badgeConfig)
+
+		assert.is_true(activeFill.alpha > inactiveFill.alpha)
+		assert.is_true(activeStroke.alpha > inactiveStroke.alpha)
+		assert.are.equal(0.11, inactiveFill.alpha)
+		assert.are.equal(0.22, inactiveStroke.alpha)
+	end)
+
 	it("dockWindowXBlend=0 では中央寄せレイアウトXを使う", function()
 		local x = helper.resolveOccludedDockItemX(
 			{ x = 0, y = 0, w = 1200, h = 800 },
@@ -564,6 +586,104 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(focusedWin, win)
 		assert.is_false(shouldSwap)
 		assert.are.equal(1, focusBackCalls)
+	end)
+
+	it("collectCandidateWindows は includeOtherSpaces=false なら current Space のみ返す", function()
+		local function makeWindow(id, frame)
+			return {
+				id = function()
+					return id
+				end,
+				frame = function()
+					return frame
+				end,
+			}
+		end
+		local currentA = makeWindow(1, { x = 0, y = 0, w = 100, h = 100 })
+		local currentB = makeWindow(2, { x = 120, y = 0, w = 100, h = 100 })
+		_G.hs = {
+			window = {
+				visibleWindows = function()
+					return { currentA, currentB }
+				end,
+				filter = {
+					new = function()
+						return {
+							getWindows = function()
+								error("should not be called")
+							end,
+						}
+					end,
+				},
+			},
+		}
+
+		local wins, lookup = helper.collectCandidateWindows(false)
+		assert.are.same({ currentA, currentB }, wins)
+		assert.is_true(lookup[1])
+		assert.is_true(lookup[2])
+	end)
+
+	it("collectCandidateWindows は includeOtherSpaces=true なら別 Space 候補を追加する", function()
+		local function makeWindow(id, frame)
+			return {
+				id = function()
+					return id
+				end,
+				frame = function()
+					return frame
+				end,
+			}
+		end
+		local currentA = makeWindow(1, { x = 0, y = 0, w = 100, h = 100 })
+		local currentB = makeWindow(2, { x = 120, y = 0, w = 100, h = 100 })
+		local offSpace = makeWindow(3, { x = 240, y = 0, w = 100, h = 100 })
+		_G.hs = {
+			window = {
+				visibleWindows = function()
+					return { currentA, currentB }
+				end,
+				filter = {
+					new = function()
+						return {
+							getWindows = function()
+								return { currentB, offSpace }
+							end,
+						}
+					end,
+				},
+			},
+		}
+
+		local wins, lookup = helper.collectCandidateWindows(true)
+		assert.are.same({ currentA, currentB, offSpace }, wins)
+		assert.is_true(lookup[1])
+		assert.is_true(lookup[2])
+		assert.is_nil(lookup[3])
+	end)
+
+	it("splitCandidatesByCurrentSpace は別 Space 候補を分離できる", function()
+		local function makeWindow(id, frame)
+			return {
+				id = function()
+					return id
+				end,
+				frame = function()
+					return frame
+				end,
+			}
+		end
+		local currentA = makeWindow(1, { x = 0, y = 0, w = 100, h = 100 })
+		local currentB = makeWindow(2, { x = 120, y = 0, w = 100, h = 100 })
+		local offSpace = makeWindow(3, { x = 240, y = 0, w = 100, h = 100 })
+
+		local currentWins, offSpaceWins = helper.splitCandidatesByCurrentSpace({ currentA, offSpace, currentB }, {
+			[1] = true,
+			[2] = true,
+		})
+
+		assert.are.same({ currentA, currentB }, currentWins)
+		assert.are.same({ offSpace }, offSpaceWins)
 	end)
 
 	it("通常 focusBack では focusBack を使う", function()

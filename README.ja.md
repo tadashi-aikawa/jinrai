@@ -295,6 +295,13 @@ window_hints = {
       dimmedBgAlpha = 0.14, -- 非アクティブ時背景アルファ
       bumpMove = 90, -- ヒント重なり時のずらし量 (px)
     },
+    offSpaceBadge = {
+      size = 16, -- 右上バッジ直径 (px)
+      fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- 別 Space バッジ塗り色
+      strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- 別 Space バッジ枠線色
+      inactiveFillAlpha = 0.28, -- 非アクティブ時の塗りアルファ
+      inactiveStrokeAlpha = 0.40, -- 非アクティブ時の枠線アルファ
+    },
   },
   overlay = {
     active = {
@@ -354,6 +361,7 @@ window_hints = {
     onError = nil,  -- エラー時コールバック
     centerCursor = false, -- 選択後にカーソルをウィンドウ中央へ移動
     centerCursorOnStart = false, -- 起動時にアクティブウィンドウ中央へカーソル移動
+    includeOtherSpaces = false, -- 他の Space の可視ウィンドウも候補に含める
   },
   internal = {
     focusHistory = nil, -- 内部注入専用（通常は設定しない）
@@ -431,6 +439,17 @@ navigation = {
 - キー押下で即フォーカス移動し、Window Hints UI は表示しない
 - `keys` を省略した場合は直接方向移動ホットキーを無効化
 - `modifiers` では `alt` の別名として `option` も指定可能
+
+### behavior.includeOtherSpaces
+
+`behavior.includeOtherSpaces = true` にすると、現在の Space だけでなく他の Space にある可視ウィンドウも
+Window Hints の候補表示に含めます。デフォルトは `false` です。
+
+- 別 Space の候補は前面オーバーレイではなく、遮蔽ヒントと同じドック系表示になります
+- 右上の丸バッジで識別します
+- バッジの色やサイズは `ui.offSpaceBadge` で変更できます
+- 選択するとそのまま対象ウィンドウへ `focus()` し、Space 切り替えは macOS 側の挙動に従います
+- Hints 中の方向移動と `navigation.directHotkeys` は常に current Space の候補だけを対象にします
 
 ## Focus Back オプション
 

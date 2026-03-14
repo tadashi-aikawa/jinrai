@@ -293,6 +293,13 @@ window_hints = {
       dimmedBgAlpha = 0.14, -- Badge background alpha for dimmed hints
       bumpMove = 90, -- Offset distance for overlapping hints (px)
     },
+    offSpaceBadge = {
+      size = 16, -- Top-right badge diameter (px)
+      fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- Other-Space badge fill
+      strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- Other-Space badge stroke
+      inactiveFillAlpha = 0.28, -- Fill alpha for dimmed hints
+      inactiveStrokeAlpha = 0.40, -- Stroke alpha for dimmed hints
+    },
   },
   overlay = {
     active = {
@@ -352,6 +359,7 @@ window_hints = {
     onError = nil,  -- Callback on errors
     centerCursor = false, -- Move cursor to selected window center
     centerCursorOnStart = false, -- Move cursor to active window center when hints start
+    includeOtherSpaces = false, -- Include visible windows from other Spaces as candidates
   },
   internal = {
     focusHistory = nil, -- Internal injection only (normally do not set)
@@ -428,6 +436,17 @@ navigation = {
 - Moves focus immediately; Window Hints UI is not shown
 - If `keys` is omitted or empty, direct-direction hotkeys are disabled
 - In `modifiers`, `option` is accepted as an alias for `alt`
+
+### behavior.includeOtherSpaces
+
+If `behavior.includeOtherSpaces = true`, Window Hints include visible windows from other Spaces, not just the
+current one. The default is `false`.
+
+- Other-Space candidates are rendered in the dock-style lane used for occluded/background hints
+- They are marked with a round badge in the top-right corner
+- You can customize the badge colors and size via `ui.offSpaceBadge`
+- Selecting one calls `focus()` directly and lets macOS handle the Space switch
+- Directional navigation during hints and `navigation.directHotkeys` still target current-Space candidates only
 
 ## Focus Back Options
 

@@ -36,6 +36,18 @@ describe("window_hints_config", function()
 					y = 0.25,
 				},
 			},
+			ui = {
+				offSpaceBadge = {
+					size = 20,
+					fillColor = { red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 },
+					strokeColor = { red = 0.8, green = 0.9, blue = 1.0, alpha = 0.7 },
+					inactiveFillAlpha = 0.12,
+					inactiveStrokeAlpha = 0.34,
+				},
+			},
+			behavior = {
+				includeOtherSpaces = true,
+			},
 			internal = {
 				focusHistory = focusHistory,
 			},
@@ -52,6 +64,12 @@ describe("window_hints_config", function()
 		assert.are.equal(300, built.cardinalOverlapTieThresholdPx)
 		assert.are.equal(0.5, built.dockWindowXBlend)
 		assert.are.equal(0.25, built.dockWindowYBlend)
+		assert.are.equal(20, built.offSpaceBadgeSize)
+		assert.are.same({ red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 }, built.offSpaceBadgeFillColor)
+		assert.are.same({ red = 0.8, green = 0.9, blue = 1.0, alpha = 0.7 }, built.offSpaceBadgeStrokeColor)
+		assert.are.equal(0.12, built.offSpaceBadgeInactiveFillAlpha)
+		assert.are.equal(0.34, built.offSpaceBadgeInactiveStrokeAlpha)
+		assert.is_true(built.includeOtherSpaces)
 		assert.are.equal(focusHistory, built.focusHistory)
 	end)
 
@@ -101,5 +119,19 @@ describe("window_hints_config", function()
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("no available hintChars"))
+	end)
+
+	it("offSpaceBadge.size が 0 以下ならエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				ui = {
+					offSpaceBadge = {
+						size = 0,
+					},
+				},
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("ui.offSpaceBadge.size must be > 0"))
 	end)
 end)
