@@ -30,7 +30,18 @@ describe("focus_border_config", function()
 		assert.are.equal(24, built.cornerRadius)
 		assert.are.equal(1.2, built.duration)
 		assert.are.equal(30, built.fadeSteps)
+		assert.are.equal(0.30, built.spaceSwitchDelay)
 		assert.are.equal(640, built.minWindowSize)
+	end)
+
+	it("spaceSwitchDelay を上書きできる", function()
+		local built = mod.build({
+			animation = {
+				spaceSwitchDelay = 0.42,
+			},
+		})
+
+		assert.are.equal(0.42, built.spaceSwitchDelay)
 	end)
 
 	it("旧フラットキーはエラー", function()

@@ -146,6 +146,7 @@ spoon.Jinrai:setup({
     animation = {
       duration = 0.5,
       fadeSteps = 18,
+      spaceSwitchDelay = 0.30,
     },
     window = {
       minSize = 480,
@@ -243,12 +244,15 @@ focus_border = {
   animation = {
     duration = 0.5, -- フェードアウト時間 (秒)
     fadeSteps = 18, -- フェードアウトのステップ数
+    spaceSwitchDelay = 0.30, -- 別 Space へ移動したときだけ追加で待つ時間 (秒)
   },
   window = {
     minSize = 480, -- 表示する最小ウィンドウサイズ (px)
   },
 }
 ```
+
+`spaceSwitchDelay` は、直前にフォーカスしていたウィンドウと別の macOS Space にあるウィンドウがアクティブになったときだけ適用されます。同じ Space 内のフォーカス移動では従来通り即時表示です。
 
 ## Window Hints オプション
 

@@ -24,18 +24,47 @@ function M.new(options)
 	local config = loadFocusBorderConfig().build(options)
 
 	local currentCanvas = nil
+	local delayTimer = nil
 	local fadeTimer = nil
 	local wf = nil
+	local focusCallback = nil
+	local lastFocusedSpaceId = nil
 
-	local function cleanup()
+	local function stopDelayTimer()
+		if delayTimer then
+			delayTimer:stop()
+			delayTimer = nil
+		end
+	end
+
+	local function stopFadeTimer()
 		if fadeTimer then
 			fadeTimer:stop()
 			fadeTimer = nil
 		end
+	end
+
+	local function cleanup()
+		stopDelayTimer()
+		stopFadeTimer()
 		if currentCanvas then
 			currentCanvas:delete()
 			currentCanvas = nil
 		end
+	end
+
+	local function currentSpaceIdForWindow(win)
+		if not hs or not hs.spaces or not hs.spaces.windowSpaces or not win or not win.id then
+			return nil
+		end
+
+		local ok, spaces = pcall(function()
+			return hs.spaces.windowSpaces(win:id())
+		end)
+		if not ok or type(spaces) ~= "table" then
+			return nil
+		end
+		return spaces[1]
 	end
 
 	local function showBorder(win)
@@ -115,17 +144,43 @@ function M.new(options)
 		end)
 	end
 
+	local function handleWindowFocused(win)
+		local currentSpaceId = currentSpaceIdForWindow(win)
+		local shouldDelay = currentSpaceId ~= nil
+			and lastFocusedSpaceId ~= nil
+			and currentSpaceId ~= lastFocusedSpaceId
+			and config.spaceSwitchDelay > 0
+
+		stopDelayTimer()
+		stopFadeTimer()
+		if currentCanvas then
+			currentCanvas:delete()
+			currentCanvas = nil
+		end
+
+		if shouldDelay then
+			delayTimer = hs.timer.doAfter(config.spaceSwitchDelay, function()
+				delayTimer = nil
+				showBorder(win)
+			end)
+		else
+			showBorder(win)
+		end
+
+		lastFocusedSpaceId = currentSpaceId
+	end
+
 	wf = hs.window.filter.default
-	wf:subscribe(hs.window.filter.windowFocused, function(win)
-		showBorder(win)
-	end)
+	focusCallback = handleWindowFocused
+	wf:subscribe(hs.window.filter.windowFocused, focusCallback)
 
 	local function teardown()
 		cleanup()
 		if wf then
-			wf:unsubscribe(hs.window.filter.windowFocused, showBorder)
+			wf:unsubscribe(hs.window.filter.windowFocused, focusCallback)
 			wf = nil
 		end
+		focusCallback = nil
 	end
 
 	return {

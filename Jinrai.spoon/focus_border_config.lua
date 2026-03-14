@@ -15,6 +15,7 @@ local DEFAULT_CONFIG = {
 	animation = {
 		duration = 0.5,
 		fadeSteps = 18,
+		spaceSwitchDelay = 0.30,
 	},
 	window = {
 		minSize = 480,
@@ -28,6 +29,7 @@ local LEGACY_FLAT_KEYS = {
 	outlineColor = true,
 	duration = true,
 	fadeSteps = true,
+	spaceSwitchDelay = true,
 	cornerRadius = true,
 	minWindowSize = true,
 }
@@ -115,6 +117,7 @@ function M.build(options)
 		outlineColor = merged.visual.outline.color,
 		duration = merged.animation.duration,
 		fadeSteps = merged.animation.fadeSteps,
+		spaceSwitchDelay = merged.animation.spaceSwitchDelay,
 		cornerRadius = merged.visual.cornerRadius,
 		minWindowSize = merged.window.minSize,
 	}

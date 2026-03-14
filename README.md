@@ -144,6 +144,7 @@ spoon.Jinrai:setup({
     animation = {
       duration = 0.5,
       fadeSteps = 18,
+      spaceSwitchDelay = 0.30,
     },
     window = {
       minSize = 480,
@@ -241,12 +242,15 @@ focus_border = {
   animation = {
     duration = 0.5, -- Fade-out duration (seconds)
     fadeSteps = 18, -- Number of fade-out steps
+    spaceSwitchDelay = 0.30, -- Extra delay only when focus moved to another Space (seconds)
   },
   window = {
     minSize = 480, -- Minimum window size to display (px)
   },
 }
 ```
+
+`spaceSwitchDelay` is applied only when focus moves to a window in a different macOS Space than the previously focused window. Focus changes within the same Space still render immediately.
 
 ## Window Hints Options
 
