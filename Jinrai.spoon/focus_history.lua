@@ -4,6 +4,8 @@ local DEFAULT_CONFIG = {
 	stateSync = nil,
 }
 
+local MAX_HISTORY_SIZE = 20
+
 local function mergeTable(defaults, overrides)
 	local merged = {}
 	for k, v in pairs(defaults) do
@@ -33,7 +35,11 @@ local function isWindowVisible(win)
 		return false
 	end
 	local ok, visible = pcall(function()
-		return win:isVisible()
+		if not win:isVisible() then
+			return false
+		end
+		local f = win:frame()
+		return f and (f.w or 0) > 0 and (f.h or 0) > 0
 	end)
 	return ok and visible
 end
@@ -44,7 +50,7 @@ function M.new(options)
 
 	local wf = nil
 	local stateSyncTimer = nil
-	local previousWindow = nil
+	local history = {}
 	local currentWindow = hs.window.focusedWindow()
 	local switching = false
 
@@ -81,7 +87,10 @@ function M.new(options)
 			return
 		end
 		if currentWindow and currentWindow:id() ~= (win and win:id()) and shouldPromotePrevious(currentWindow, win) then
-			previousWindow = currentWindow
+			table.insert(history, currentWindow)
+			if #history > MAX_HISTORY_SIZE then
+				table.remove(history, 1)
+			end
 		end
 		currentWindow = win
 	end
@@ -122,18 +131,26 @@ function M.new(options)
 	end
 
 	local function focusBack()
-		if not previousWindow then
+		local targetWindow = nil
+		while #history > 0 do
+			local candidate = table.remove(history)
+			if isWindowVisible(candidate) and candidate:id() ~= (currentWindow and currentWindow:id()) then
+				targetWindow = candidate
+				break
+			end
+		end
+		if not targetWindow then
 			return nil
 		end
 		local ok, focusedWindow = pcall(function()
-			if not isWindowVisible(previousWindow) then
-				previousWindow = nil
-				return nil
-			end
 			switching = true
-			previousWindow:focus()
+			targetWindow:focus()
 			switching = false
-			previousWindow, currentWindow = currentWindow, previousWindow
+			table.insert(history, currentWindow)
+			if #history > MAX_HISTORY_SIZE then
+				table.remove(history, 1)
+			end
+			currentWindow = targetWindow
 			return currentWindow
 		end)
 		if not ok then
@@ -144,8 +161,11 @@ function M.new(options)
 	end
 
 	local function getPreviousWindow()
-		if isWindowVisible(previousWindow) then
-			return previousWindow
+		for i = #history, 1, -1 do
+			local win = history[i]
+			if isWindowVisible(win) and win:id() ~= (currentWindow and currentWindow:id()) then
+				return win
+			end
 		end
 		return nil
 	end
@@ -159,7 +179,7 @@ function M.new(options)
 			wf:unsubscribe(hs.window.filter.windowFocused)
 			wf = nil
 		end
-		previousWindow = nil
+		history = {}
 		currentWindow = nil
 	end
 

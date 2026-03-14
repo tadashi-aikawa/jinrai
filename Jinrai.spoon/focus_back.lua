@@ -43,8 +43,12 @@ function M.new(options)
 			return
 		end
 		if config.centerCursor then
-			local frame = win:frame()
-			hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
+			local ok, frame = pcall(function()
+				return win:frame()
+			end)
+			if ok and frame and (frame.w or 0) > 0 and (frame.h or 0) > 0 then
+				hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
+			end
 		end
 	end
 

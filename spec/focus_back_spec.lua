@@ -36,6 +36,48 @@ describe("focus_back", function()
 		instance.teardown()
 	end)
 
+	it("閉じたウィンドウをスキップして履歴を辿れる", function()
+		local win1 = hsMock.newWindow(1, { bundleID = "com.example.a", appName = "A" })
+		local win2 = hsMock.newWindow(2, { bundleID = "com.example.b", appName = "B" })
+		local win3 = hsMock.newWindow(3, { bundleID = "com.example.c", appName = "C" })
+		local mock, instance = newFocusBackWithMock({}, win1)
+
+		mock.emitWindowFocused(win2)
+		mock.emitWindowFocused(win3)
+
+		-- ウィンドウCを閉じ、macOSがBを自動フォーカスする状況を再現
+		win3._visible = false
+		mock.emitWindowFocused(win2)
+
+		-- Focus Backを実行すると、閉じたCとcurrentのBをスキップしてAにフォーカス
+		mock.state.hotkeys[1].callback()
+		assert.are.equal(1, win1._focusCalls)
+
+		instance.teardown()
+	end)
+
+	it("staleなウィンドウ(visible=trueだがframe無効)をスキップする", function()
+		local win1 = hsMock.newWindow(1, { bundleID = "com.example.chrome", appName = "Chrome" })
+		local win2 = hsMock.newWindow(2, { bundleID = "com.example.chrome", appName = "Chrome" })
+		local win3 = hsMock.newWindow(3, { bundleID = "com.example.chrome", appName = "Chrome" })
+		local mock, instance = newFocusBackWithMock({}, win1)
+
+		mock.emitWindowFocused(win2)
+		mock.emitWindowFocused(win3)
+
+		-- ウィンドウCを閉じるが、isVisible()はtrueを返し続ける(stale)
+		-- frameが{0,0,0,0}になることでstaleを検出
+		win3._frame = { x = 0, y = 0, w = 0, h = 0 }
+		mock.emitWindowFocused(win2)
+
+		-- staleなCをスキップし、currentのBもスキップし、Aにフォーカス
+		mock.state.hotkeys[1].callback()
+		assert.are.equal(1, win1._focusCalls)
+		assert.are.equal(0, win3._focusCalls)
+
+		instance.teardown()
+	end)
+
 	it("centerCursor=true なら戻り先ウィンドウ中央にカーソル移動する", function()
 		local win1 = hsMock.newWindow(1, {
 			bundleID = "com.example.a",

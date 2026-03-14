@@ -134,7 +134,7 @@ function M.newWindow(id, options)
 	end
 
 	function win:frame()
-		return options.frame or { x = 0, y = 0, w = 100, h = 100 }
+		return self._frame or options.frame or { x = 0, y = 0, w = 100, h = 100 }
 	end
 
 	return win
