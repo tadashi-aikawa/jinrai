@@ -36,6 +36,9 @@ describe("window_hints_config", function()
 					y = 0.25,
 				},
 			},
+			behavior = {
+				includeOtherSpaces = true,
+			},
 			internal = {
 				focusHistory = focusHistory,
 			},
@@ -52,6 +55,7 @@ describe("window_hints_config", function()
 		assert.are.equal(300, built.cardinalOverlapTieThresholdPx)
 		assert.are.equal(0.5, built.dockWindowXBlend)
 		assert.are.equal(0.25, built.dockWindowYBlend)
+		assert.is_true(built.includeOtherSpaces)
 		assert.are.equal(focusHistory, built.focusHistory)
 	end)
 

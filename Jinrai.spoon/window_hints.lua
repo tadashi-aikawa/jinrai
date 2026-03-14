@@ -1027,6 +1027,109 @@ local function windowIdOf(win)
 	return id
 end
 
+local function isStandardWindow(win)
+	if not win or not win.isStandard then
+		return false
+	end
+	local ok, standard = pcall(function()
+		return win:isStandard()
+	end)
+	return ok and standard
+end
+
+local function buildWindowIdLookup(wins)
+	local lookup = {}
+	if type(wins) ~= "table" then
+		return lookup
+	end
+	for _, win in ipairs(wins) do
+		local id = windowIdOf(win)
+		if id ~= nil then
+			lookup[id] = true
+		end
+	end
+	return lookup
+end
+
+local function mergeUniqueWindows(primaryWins, secondaryWins)
+	local merged = {}
+	local seen = {}
+	local function appendWins(wins)
+		if type(wins) ~= "table" then
+			return
+		end
+		for _, win in ipairs(wins) do
+			local id = windowIdOf(win)
+			if id ~= nil then
+				if not seen[id] then
+					seen[id] = true
+					table.insert(merged, win)
+				end
+			else
+				table.insert(merged, win)
+			end
+		end
+	end
+	appendWins(primaryWins)
+	appendWins(secondaryWins)
+	return merged
+end
+
+local function currentSpaceVisibleWindows()
+	if not hs or not hs.window or not hs.window.visibleWindows then
+		return {}
+	end
+	local ok, wins = pcall(function()
+		return hs.window.visibleWindows()
+	end)
+	if not ok or type(wins) ~= "table" then
+		return {}
+	end
+	return wins
+end
+
+local function allSpaceVisibleWindows()
+	if not hs or not hs.window or not hs.window.filter or not hs.window.filter.new then
+		return currentSpaceVisibleWindows()
+	end
+	local ok, filter = pcall(function()
+		return hs.window.filter.new()
+	end)
+	if not ok or not filter or not filter.getWindows then
+		return currentSpaceVisibleWindows()
+	end
+	local getOk, wins = pcall(function()
+		return filter:getWindows()
+	end)
+	if not getOk or type(wins) ~= "table" then
+		return currentSpaceVisibleWindows()
+	end
+	return mergeUniqueWindows(currentSpaceVisibleWindows(), wins)
+end
+
+local function collectCandidateWindows(includeOtherSpaces)
+	local currentWins = currentSpaceVisibleWindows()
+	local currentLookup = buildWindowIdLookup(currentWins)
+	if includeOtherSpaces then
+		return allSpaceVisibleWindows(), currentLookup
+	end
+	return currentWins, currentLookup
+end
+
+local function splitCandidatesByCurrentSpace(candidateWins, currentSpaceLookup)
+	local currentSpaceWins = {}
+	local otherSpaceWins = {}
+	for _, win in ipairs(candidateWins or {}) do
+		local id = windowIdOf(win)
+		if id ~= nil and currentSpaceLookup[id] then
+			table.insert(currentSpaceWins, win)
+		else
+			table.insert(otherSpaceWins, win)
+		end
+	end
+	return currentSpaceWins, otherSpaceWins
+end
+
 local function debugLogDirectional(config, message)
 	if not config or not config.debugDirectionalNavigation then
 		return
@@ -1569,7 +1672,7 @@ function M.new(options)
 		local orderedWins = hs.window.orderedWindows()
 		local candidates = {}
 		for _, win in ipairs(hs.window.visibleWindows()) do
-			if win and win.isStandard and win:isStandard() then
+			if isStandardWindow(win) then
 				table.insert(candidates, win)
 			end
 		end
@@ -1713,6 +1816,7 @@ function M.new(options)
 		local focusedWin = hs.window.focusedWindow()
 		local focusedId = focusedWin and focusedWin:id() or nil
 		local orderedWins = hs.window.orderedWindows()
+		local candidateWins, currentSpaceLookup = collectCandidateWindows(config.includeOtherSpaces)
 		local orderedFrames = {}
 		for _, w in ipairs(orderedWins) do
 			local f = w:frame()
@@ -1721,26 +1825,29 @@ function M.new(options)
 			end
 		end
 
-		for _, win in ipairs(hs.window.visibleWindows()) do
+		for _, win in ipairs(candidateWins) do
 			local app = win:application()
 			local bundleID = app and app:bundleID() or nil
 			local screen = win:screen()
-			if app and bundleID and screen and win:isStandard() and win:id() ~= focusedId then
+			local winId = win:id()
+			local isOffSpace = config.includeOtherSpaces and not currentSpaceLookup[winId]
+			if app and bundleID and screen and isStandardWindow(win) and winId ~= focusedId then
 				local appTitle = app:title() or ""
 				local windowTitle = win:title() or ""
-				local occluded = false
+				local occluded = isOffSpace
 				local coveringFrames = {}
 				local wf = win:frame()
-				local wid = win:id()
-				for _, of in ipairs(orderedFrames) do
-					if of.id == wid then
-						break
+				if not isOffSpace then
+					for _, of in ipairs(orderedFrames) do
+						if of.id == winId then
+							break
+						end
+						table.insert(coveringFrames, of.frame)
 					end
-					table.insert(coveringFrames, of.frame)
-				end
-				if #coveringFrames > 0 and wf.w > 0 and wf.h > 0 then
-					local sampleCols, sampleRows = computeOcclusionSamplingGrid(wf, config)
-					occluded = isWindowOccluded(wf, coveringFrames, sampleCols, sampleRows)
+					if #coveringFrames > 0 and wf.w > 0 and wf.h > 0 then
+						local sampleCols, sampleRows = computeOcclusionSamplingGrid(wf, config)
+						occluded = isWindowOccluded(wf, coveringFrames, sampleCols, sampleRows)
+					end
 				end
 				local basePrefix, isOverridePrefix =
 					resolveAppPrefix(appTitle, bundleID, windowTitle, hintChars[1], allowedPrefixes, appPrefixOverrides)
@@ -1753,6 +1860,7 @@ function M.new(options)
 					basePrefix = basePrefix,
 					isOverridePrefix = isOverridePrefix,
 					isOccluded = occluded,
+					isOffSpace = isOffSpace,
 					coveringFrames = coveringFrames,
 				})
 			end
@@ -1817,6 +1925,9 @@ function M.new(options)
 					local key = hintKeyForGroup(prefix, #group, i, hintChars)
 					local title = entry.title ~= "" and entry.title or entry.appTitle
 					title = config.showTitles and utf8Truncate(title, config.titleMaxSize) or ""
+					if entry.isOffSpace then
+						title = title ~= "" and string.format("[Space] %s", title) or "[Space]"
+					end
 					table.insert(hints, {
 						key = key,
 						keyText = key,
@@ -1825,6 +1936,7 @@ function M.new(options)
 						win = entry.win,
 						app = entry.app,
 						isOccluded = entry.isOccluded,
+						isOffSpace = entry.isOffSpace,
 						coveringFrames = entry.coveringFrames,
 					})
 				end
@@ -2391,6 +2503,10 @@ M._test = {
 	resolveOccludedDockItemY = resolveOccludedDockItemY,
 	resolveOccludedDockStartX = resolveOccludedDockStartX,
 	comparePrefixes = comparePrefixes,
+	buildWindowIdLookup = buildWindowIdLookup,
+	mergeUniqueWindows = mergeUniqueWindows,
+	collectCandidateWindows = collectCandidateWindows,
+	splitCandidatesByCurrentSpace = splitCandidatesByCurrentSpace,
 	hintKeyForGroup = hintKeyForGroup,
 	findExpandedKey = findExpandedKey,
 	makeKeysPrefixFree = makeKeysPrefixFree,

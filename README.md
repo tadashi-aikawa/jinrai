@@ -352,6 +352,7 @@ window_hints = {
     onError = nil,  -- Callback on errors
     centerCursor = false, -- Move cursor to selected window center
     centerCursorOnStart = false, -- Move cursor to active window center when hints start
+    includeOtherSpaces = false, -- Include visible windows from other Spaces as candidates
   },
   internal = {
     focusHistory = nil, -- Internal injection only (normally do not set)
@@ -428,6 +429,16 @@ navigation = {
 - Moves focus immediately; Window Hints UI is not shown
 - If `keys` is omitted or empty, direct-direction hotkeys are disabled
 - In `modifiers`, `option` is accepted as an alias for `alt`
+
+### behavior.includeOtherSpaces
+
+If `behavior.includeOtherSpaces = true`, Window Hints include visible windows from other Spaces, not just the
+current one. The default is `false`.
+
+- Other-Space candidates are rendered in the dock-style lane used for occluded/background hints
+- They are labeled with `[Space]` in the title for clear identification
+- Selecting one calls `focus()` directly and lets macOS handle the Space switch
+- Directional navigation during hints and `navigation.directHotkeys` still target current-Space candidates only
 
 ## Focus Back Options
 

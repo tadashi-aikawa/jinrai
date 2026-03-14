@@ -128,6 +128,7 @@ local DEFAULT_CONFIG = {
 		onError = nil,
 		centerCursor = false,
 		centerCursorOnStart = false,
+		includeOtherSpaces = false,
 	},
 	internal = {
 		focusHistory = nil,
@@ -634,6 +635,7 @@ function M.build(options)
 		onError = merged.behavior.onError,
 		centerCursor = merged.behavior.centerCursor,
 		centerCursorOnStart = merged.behavior.centerCursorOnStart,
+		includeOtherSpaces = merged.behavior.includeOtherSpaces,
 		focusBackKey = focusBackKey,
 		directionKeys = directionKeys,
 		directionKeyLookup = directionKeyLookup,
