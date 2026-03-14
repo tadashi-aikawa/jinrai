@@ -36,6 +36,16 @@ local function resolveHintOverlayBorderColor(active, config)
 	return config.hintOverlayBorderColor
 end
 
+local function resolveOffSpaceBadgeColors(active, config)
+	local fill = cloneColor(config.offSpaceBadgeFillColor)
+	local stroke = cloneColor(config.offSpaceBadgeStrokeColor)
+	if not active then
+		fill.alpha = config.offSpaceBadgeInactiveFillAlpha
+		stroke.alpha = config.offSpaceBadgeInactiveStrokeAlpha
+	end
+	return fill, stroke
+end
+
 local function startsWith(s, prefix)
 	return string.sub(s, 1, #prefix) == prefix
 end
@@ -1575,6 +1585,15 @@ function M.new(options)
 		hint.canvas[hint.keyPrefixIdx].textColor = active and config.keyHighlightColor or config.dimmedTextColor
 		hint.canvas[hint.keyRestIdx].textColor = active and config.textColor or config.dimmedTextColor
 		hint.canvas[hint.titleIdx].textColor = active and config.titleTextColor or config.dimmedTitleTextColor
+		if hint.isOffSpace then
+			local badgeFillColor, badgeStrokeColor = resolveOffSpaceBadgeColors(active, config)
+			if hint.offSpaceBadgeFillIdx then
+				hint.canvas[hint.offSpaceBadgeFillIdx].fillColor = badgeFillColor
+			end
+			if hint.offSpaceBadgeStrokeIdx then
+				hint.canvas[hint.offSpaceBadgeStrokeIdx].strokeColor = badgeStrokeColor
+			end
+		end
 		if hint.overlayBorderIdx then
 			hint.canvas[hint.overlayBorderIdx].strokeColor = cloneColor(resolveHintOverlayBorderColor(active, config))
 		end
@@ -1925,9 +1944,6 @@ function M.new(options)
 					local key = hintKeyForGroup(prefix, #group, i, hintChars)
 					local title = entry.title ~= "" and entry.title or entry.appTitle
 					title = config.showTitles and utf8Truncate(title, config.titleMaxSize) or ""
-					if entry.isOffSpace then
-						title = title ~= "" and string.format("[Space] %s", title) or "[Space]"
-					end
 					table.insert(hints, {
 						key = key,
 						keyText = key,
@@ -1994,6 +2010,7 @@ function M.new(options)
 		previewImage,
 		previewHeight,
 		isOccluded,
+		isOffSpace,
 		scale
 	)
 		scale = scale or 1
@@ -2051,8 +2068,11 @@ function M.new(options)
 			bgColor.alpha = config.occludedBgAlpha
 		end
 		local curIconAlpha = isOccluded and config.occludedIconAlpha or config.iconAlpha
+		local offSpaceBadgeFillColor, offSpaceBadgeStrokeColor = resolveOffSpaceBadgeColors(true, config)
 
 		local overlayBorderIdx = nil
+		local offSpaceBadgeFillIdx = nil
+		local offSpaceBadgeStrokeIdx = nil
 		local nextIdx = 1
 		canvas[nextIdx] = {
 			type = "rectangle",
@@ -2062,6 +2082,32 @@ function M.new(options)
 			frame = { x = 0, y = 0, w = frame.w, h = frame.h },
 		}
 		nextIdx = nextIdx + 1
+
+		if isOffSpace then
+			local badgeDiameter = math.max(1, math.floor(config.offSpaceBadgeSize * scale))
+			local badgeInset = math.max(6, math.floor(8 * scale))
+			local badgeX = frame.w - badgeInset - badgeDiameter
+			local badgeY = badgeInset
+			canvas[nextIdx] = {
+				type = "rectangle",
+				action = "fill",
+				fillColor = offSpaceBadgeFillColor,
+				roundedRectRadii = { xRadius = badgeDiameter / 2, yRadius = badgeDiameter / 2 },
+				frame = { x = badgeX, y = badgeY, w = badgeDiameter, h = badgeDiameter },
+			}
+			offSpaceBadgeFillIdx = nextIdx
+			nextIdx = nextIdx + 1
+			canvas[nextIdx] = {
+				type = "rectangle",
+				action = "stroke",
+				strokeColor = offSpaceBadgeStrokeColor,
+				strokeWidth = math.max(1, math.floor(1.0 * scale)),
+				roundedRectRadii = { xRadius = badgeDiameter / 2, yRadius = badgeDiameter / 2 },
+				frame = { x = badgeX, y = badgeY, w = badgeDiameter, h = badgeDiameter },
+			}
+			offSpaceBadgeStrokeIdx = nextIdx
+			nextIdx = nextIdx + 1
+		end
 
 		if not isOccluded then
 			canvas[nextIdx] = {
@@ -2160,7 +2206,18 @@ function M.new(options)
 		end
 
 		canvas:show()
-		return canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayBorderIdx
+		return
+			canvas,
+			keyBoxFrame,
+			keyTextHeight,
+			iconIdx,
+			keyPrefixIdx,
+			keyRestIdx,
+			titleIdx,
+			fSize,
+			overlayBorderIdx,
+			offSpaceBadgeFillIdx,
+			offSpaceBadgeStrokeIdx
 	end
 
 	local function computeHintSize(hint, scale)
@@ -2189,7 +2246,18 @@ function M.new(options)
 	local function placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale)
 		local bundleID = hint.app and hint.app:bundleID() or nil
 		local icon = bundleID and hs.image.imageFromAppBundle(bundleID) or nil
-		local canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayBorderIdx =
+		local
+			canvas,
+			keyBoxFrame,
+			keyTextHeight,
+			iconIdx,
+			keyPrefixIdx,
+			keyRestIdx,
+			titleIdx,
+			fSize,
+			overlayBorderIdx,
+			offSpaceBadgeFillIdx,
+			offSpaceBadgeStrokeIdx =
 			newHintCanvas(
 				canvasFrame,
 				icon,
@@ -2199,6 +2267,7 @@ function M.new(options)
 				previewImage,
 				previewHeight,
 				hint.isOccluded,
+				hint.isOffSpace,
 				scale
 			)
 		hint.canvas = canvas
@@ -2210,6 +2279,8 @@ function M.new(options)
 		hint.titleIdx = titleIdx
 		hint.effectiveFontSize = fSize
 		hint.overlayBorderIdx = overlayBorderIdx
+		hint.offSpaceBadgeFillIdx = offSpaceBadgeFillIdx
+		hint.offSpaceBadgeStrokeIdx = offSpaceBadgeStrokeIdx
 		table.insert(openHints, hint)
 		hintByKey[hint.key] = hint
 	end
@@ -2507,6 +2578,7 @@ M._test = {
 	mergeUniqueWindows = mergeUniqueWindows,
 	collectCandidateWindows = collectCandidateWindows,
 	splitCandidatesByCurrentSpace = splitCandidatesByCurrentSpace,
+	resolveOffSpaceBadgeColors = resolveOffSpaceBadgeColors,
 	hintKeyForGroup = hintKeyForGroup,
 	findExpandedKey = findExpandedKey,
 	makeKeysPrefixFree = makeKeysPrefixFree,

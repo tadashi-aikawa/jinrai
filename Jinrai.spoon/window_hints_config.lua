@@ -69,6 +69,13 @@ local DEFAULT_CONFIG = {
 			dimmedBgAlpha = 0.14,
 			bumpMove = 90,
 		},
+		offSpaceBadge = {
+			size = 16,
+			fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 },
+			strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 },
+			inactiveFillAlpha = 0.28,
+			inactiveStrokeAlpha = 0.40,
+		},
 	},
 	overlay = {
 		active = {
@@ -490,6 +497,16 @@ local function normalizeUnitIntervalNumber(value, optionName)
 	return value
 end
 
+local function normalizePositiveNumber(value, optionName)
+	if type(value) ~= "number" or value ~= value then
+		error(string.format("[jinrai.window_hints] %s must be a number", optionName))
+	end
+	if value <= 0 then
+		error(string.format("[jinrai.window_hints] %s must be > 0", optionName))
+	end
+	return value
+end
+
 local function normalizeSelectModifiers(modifiers)
 	if modifiers == nil then
 		return nil
@@ -572,6 +589,15 @@ function M.build(options)
 
 	local dockWindowXBlend = normalizeUnitIntervalNumber(merged.dock.windowBlend.x, "dock.windowBlend.x")
 	local dockWindowYBlend = normalizeUnitIntervalNumber(merged.dock.windowBlend.y, "dock.windowBlend.y")
+	local offSpaceBadgeSize = normalizePositiveNumber(merged.ui.offSpaceBadge.size, "ui.offSpaceBadge.size")
+	local offSpaceBadgeInactiveFillAlpha = normalizeUnitIntervalNumber(
+		merged.ui.offSpaceBadge.inactiveFillAlpha,
+		"ui.offSpaceBadge.inactiveFillAlpha"
+	)
+	local offSpaceBadgeInactiveStrokeAlpha = normalizeUnitIntervalNumber(
+		merged.ui.offSpaceBadge.inactiveStrokeAlpha,
+		"ui.offSpaceBadge.inactiveStrokeAlpha"
+	)
 	local cardinalOverlapTieThresholdPx = normalizeNonNegativeNumber(
 		merged.navigation.cardinalOverlapTieThresholdPx,
 		"navigation.cardinalOverlapTieThresholdPx"
@@ -595,6 +621,11 @@ function M.build(options)
 		showTitles = merged.ui.text.showTitles,
 		bgColor = merged.ui.badge.bgColor,
 		dimmedBgAlpha = merged.ui.badge.dimmedBgAlpha,
+		offSpaceBadgeSize = offSpaceBadgeSize,
+		offSpaceBadgeFillColor = merged.ui.offSpaceBadge.fillColor,
+		offSpaceBadgeStrokeColor = merged.ui.offSpaceBadge.strokeColor,
+		offSpaceBadgeInactiveFillAlpha = offSpaceBadgeInactiveFillAlpha,
+		offSpaceBadgeInactiveStrokeAlpha = offSpaceBadgeInactiveStrokeAlpha,
 		textColor = merged.ui.text.keyColor,
 		dimmedTextColor = merged.ui.text.keyDimmedColor,
 		titleTextColor = merged.ui.text.titleColor,

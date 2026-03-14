@@ -367,6 +367,22 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.same(normal, color)
 	end)
 
+	it("別 Space 丸バッジ色は inactive で減衰する", function()
+		local badgeConfig = {
+			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
+			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+			offSpaceBadgeInactiveFillAlpha = 0.11,
+			offSpaceBadgeInactiveStrokeAlpha = 0.22,
+		}
+		local activeFill, activeStroke = helper.resolveOffSpaceBadgeColors(true, badgeConfig)
+		local inactiveFill, inactiveStroke = helper.resolveOffSpaceBadgeColors(false, badgeConfig)
+
+		assert.is_true(activeFill.alpha > inactiveFill.alpha)
+		assert.is_true(activeStroke.alpha > inactiveStroke.alpha)
+		assert.are.equal(0.11, inactiveFill.alpha)
+		assert.are.equal(0.22, inactiveStroke.alpha)
+	end)
+
 	it("dockWindowXBlend=0 では中央寄せレイアウトXを使う", function()
 		local x = helper.resolveOccludedDockItemX(
 			{ x = 0, y = 0, w = 1200, h = 800 },
