@@ -1513,7 +1513,7 @@ function M.new(options)
 
 	local hotkey = nil
 	local directDirectionBindings = {}
-	local modal = nil
+	local keyBlocker = nil
 	local openHints = {}
 	local hintByKey = {}
 	local hintCharByInputKey = {}
@@ -1621,9 +1621,9 @@ function M.new(options)
 		end
 	end
 
-	local function closeHints(exitModal)
-		if isShowing and exitModal and modal then
-			modal:exit()
+	local function closeHints(stopKeyBlocker)
+		if isShowing and stopKeyBlocker and keyBlocker then
+			keyBlocker:stop()
 		end
 		isShowing = false
 		clearHints()
@@ -1786,48 +1786,38 @@ function M.new(options)
 		end
 	end
 
-	local function bindModalKey(key)
-		if not key then
+	local function ensureKeyBlocker()
+		if keyBlocker then
 			return
 		end
-		local modifierBindings = collectModalInputModifiers(key, swapWindowFrameSelectModifiers)
-		for _, modifiers in ipairs(modifierBindings) do
-			modal:bind(modifiers, key, function()
-				handleInputKey(key, modifiers)
-			end)
-		end
-	end
-
-	local function ensureModal()
-		if modal then
-			return
-		end
-		modal = hs.hotkey.modal.new(nil, nil)
-		modal:bind({}, "escape", function()
-			closeHints(true)
-		end)
-		modal:bind({}, "delete", function()
-			handleBackspace()
-		end)
-		modal:bind({}, "forwarddelete", function()
-			handleBackspace()
-		end)
-		local boundKeys = {}
-		local function bindIfNeeded(key)
-			if key and not boundKeys[key] then
-				boundKeys[key] = true
-				bindModalKey(key)
+		keyBlocker = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
+			local keyCode = event:getKeyCode()
+			local key = hs.keycodes.map[keyCode]
+			local flags = event:getFlags()
+			local modifiers = {}
+			if flags.alt then
+				table.insert(modifiers, "alt")
 			end
-		end
-		for _, char in ipairs(hintChars) do
-			bindIfNeeded(string.lower(char))
-		end
-		if focusBackKey then
-			bindIfNeeded(focusBackKey)
-		end
-		for key, _ in pairs(directionKeyLookup) do
-			bindIfNeeded(key)
-		end
+			if flags.cmd then
+				table.insert(modifiers, "cmd")
+			end
+			if flags.ctrl then
+				table.insert(modifiers, "ctrl")
+			end
+			if flags.shift then
+				table.insert(modifiers, "shift")
+			end
+
+			if key == "escape" then
+				closeHints(true)
+			elseif key == "delete" or key == "forwarddelete" then
+				handleBackspace()
+			elseif key then
+				handleInputKey(key, modifiers)
+			end
+
+			return true
+		end)
 	end
 
 	local function collectEntries()
@@ -2351,7 +2341,7 @@ function M.new(options)
 			return
 		end
 
-		ensureModal()
+		ensureKeyBlocker()
 
 		local visibleHints = {}
 		local occludedHints = {}
@@ -2500,7 +2490,7 @@ function M.new(options)
 		isShowing = true
 		currentInput = ""
 		refreshHighlights()
-		modal:enter()
+		keyBlocker:start()
 	end
 
 	local function invokeShowHints()
@@ -2524,9 +2514,9 @@ function M.new(options)
 		end
 		directDirectionBindings = {}
 		closeHints(true)
-		if modal then
-			modal:delete()
-			modal = nil
+		if keyBlocker then
+			keyBlocker:stop()
+			keyBlocker = nil
 		end
 	end
 
