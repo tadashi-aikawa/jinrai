@@ -53,6 +53,22 @@ local function buildSpaceNumberLookup()
 	return lookup
 end
 
+local function buildSpaceIdByNumberLookup(screen)
+	if not hs or not hs.spaces then
+		return {}
+	end
+	local lookup = {}
+	local ok, spaces = pcall(hs.spaces.spacesForScreen, screen)
+	if ok and type(spaces) == "table" then
+		for idx, spaceId in ipairs(spaces) do
+			if idx <= 9 then
+				lookup[tostring(idx)] = spaceId
+			end
+		end
+	end
+	return lookup
+end
+
 local function spaceNumberForWindow(winId, spaceNumberLookup)
 	if not hs or not hs.spaces or not hs.spaces.windowSpaces then
 		return nil
@@ -1813,6 +1829,19 @@ function M.new(options)
 				return
 			end
 		end
+		if config.spaceKeys and tonumber(key) then
+			local num = tonumber(key)
+			if num >= 1 and num <= 9 then
+				local screen = hs.screen.mainScreen()
+				local spaceIdLookup = buildSpaceIdByNumberLookup(screen)
+				local spaceId = spaceIdLookup[key]
+				if spaceId then
+					closeHints(true)
+					hs.spaces.gotoSpace(spaceId)
+				end
+			end
+			return
+		end
 		local direction = directionKeyLookup[key]
 		if direction then
 			runDirectionalAction(direction, swapWithFocused)
@@ -2652,6 +2681,7 @@ M._test = {
 	splitCandidatesByCurrentSpace = splitCandidatesByCurrentSpace,
 	resolveOffSpaceBadgeColors = resolveOffSpaceBadgeColors,
 	buildSpaceNumberLookup = buildSpaceNumberLookup,
+	buildSpaceIdByNumberLookup = buildSpaceIdByNumberLookup,
 	spaceNumberForWindow = spaceNumberForWindow,
 	hintKeyForGroup = hintKeyForGroup,
 	findExpandedKey = findExpandedKey,

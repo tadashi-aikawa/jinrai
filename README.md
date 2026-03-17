@@ -362,6 +362,7 @@ window_hints = {
     focusBackKey = nil, -- Focus Back-equivalent key while hints are shown
     directionKeys = nil, -- Directional navigation keys while hints are shown
     directHotkeys = nil, -- Directional hotkeys without opening hints
+    spaceKeys = true, -- Press 1-9 during hints to switch Space
     cardinalOverlapTieThresholdPx = 720, -- Tie threshold for cardinal direction scoring (px)
     debugDirectionalNavigation = false, -- Emit directional scoring debug logs
     swapSelectModifiers = nil, -- Modifiers to swap window frames when selecting
@@ -448,6 +449,10 @@ navigation = {
 - Moves focus immediately; Window Hints UI is not shown
 - If `keys` is omitted or empty, direct-direction hotkeys are disabled
 - In `modifiers`, `option` is accepted as an alias for `alt`
+
+### navigation.spaceKeys
+
+When `navigation.spaceKeys = true` (default), pressing `1`–`9` while hints are shown switches to the corresponding Space using `hs.spaces.gotoSpace()`. If the Space number does not exist, the key is consumed but nothing happens. Set to `false` to disable.
 
 ### behavior.includeOtherSpaces
 

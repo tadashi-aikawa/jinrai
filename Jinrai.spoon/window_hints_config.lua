@@ -161,6 +161,7 @@ local DEFAULT_CONFIG = {
 		focusBackKey = nil,
 		directionKeys = nil,
 		directHotkeys = nil,
+		spaceKeys = true,
 		cardinalOverlapTieThresholdPx = 720,
 		debugDirectionalNavigation = false,
 		swapSelectModifiers = nil,
@@ -488,7 +489,7 @@ local function normalizeHintChars(rawHintChars)
 	return normalized
 end
 
-local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey)
+local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spaceKeys)
 	local reserved = {}
 	local function addKey(key)
 		if key and #key == 1 then
@@ -499,6 +500,11 @@ local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey)
 		addKey(key)
 	end
 	addKey(focusBackKey)
+	if spaceKeys then
+		for i = 1, 9 do
+			reserved[tostring(i)] = true
+		end
+	end
 	return reserved
 end
 
@@ -615,8 +621,10 @@ function M.build(options)
 		focusBackKey = nil
 	end
 
+	local spaceKeys = merged.navigation.spaceKeys and true or false
+
 	local hintChars = normalizeHintChars(merged.hint.chars or DEFAULT_HINT_CHARS)
-	local reservedHintCharLookup = buildReservedHintCharLookup(directionKeyLookup, focusBackKey)
+	local reservedHintCharLookup = buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spaceKeys)
 	hintChars = filterHintChars(hintChars, reservedHintCharLookup)
 	if #hintChars == 0 then
 		error("[jinrai.window_hints] no available hintChars after excluding reserved navigation keys")
@@ -716,6 +724,7 @@ function M.build(options)
 		directDirectionHotkeys = directDirectionHotkeys,
 		cardinalOverlapTieThresholdPx = cardinalOverlapTieThresholdPx,
 		debugDirectionalNavigation = merged.navigation.debugDirectionalNavigation,
+		spaceKeys = spaceKeys,
 		swapWindowFrameSelectModifiers = swapSelectModifiers,
 		focusHistory = focusHistory,
 	}

@@ -525,6 +525,43 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(3, lookup[103])
 	end)
 
+	it("buildSpaceIdByNumberLookup はスペースIDの逆引きルックアップを返す", function()
+		local screen = { id = function() return 1 end }
+		_G.hs = {
+			spaces = {
+				spacesForScreen = function()
+					return { 101, 102, 103 }
+				end,
+			},
+		}
+		local lookup = helper.buildSpaceIdByNumberLookup(screen)
+		assert.are.equal(101, lookup["1"])
+		assert.are.equal(102, lookup["2"])
+		assert.are.equal(103, lookup["3"])
+	end)
+
+	it("buildSpaceIdByNumberLookup は hs 未定義時に空テーブルを返す", function()
+		_G.hs = nil
+		local screen = { id = function() return 1 end }
+		local lookup = helper.buildSpaceIdByNumberLookup(screen)
+		assert.are.same({}, lookup)
+	end)
+
+	it("buildSpaceIdByNumberLookup は9を超えるスペースはルックアップに含めない", function()
+		local screen = { id = function() return 1 end }
+		_G.hs = {
+			spaces = {
+				spacesForScreen = function()
+					return { 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111 }
+				end,
+			},
+		}
+		local lookup = helper.buildSpaceIdByNumberLookup(screen)
+		assert.are.equal(109, lookup["9"])
+		assert.is_nil(lookup["10"])
+		assert.is_nil(lookup["11"])
+	end)
+
 	it("spaceNumberForWindow はウィンドウのスペース番号を返す", function()
 		_G.hs = {
 			spaces = {
@@ -1330,3 +1367,4 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(0, #filtered)
 	end)
 end)
+

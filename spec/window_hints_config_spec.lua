@@ -166,6 +166,24 @@ describe("window_hints_config", function()
 		assert.are.equal(0.99, built.offSpaceBadgeSpaceColors[1].fillColor.red)
 	end)
 
+	it("デフォルトで spaceKeys は true", function()
+		local built = mod.build({})
+		assert.is_true(built.spaceKeys)
+	end)
+
+	it("spaceKeys = true で hintChars から数字が除外される", function()
+		local built = mod.build({
+			hint = {
+				chars = { "A", "1", "2", "B", "9" },
+			},
+			navigation = {
+				spaceKeys = true,
+			},
+		})
+		assert.are.same({ "A", "B" }, built.hintChars)
+		assert.is_true(built.spaceKeys)
+	end)
+
 	it("offSpaceBadge.size が 0 以下ならエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
