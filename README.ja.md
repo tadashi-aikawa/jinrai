@@ -300,11 +300,19 @@ window_hints = {
       bumpMove = 90, -- ヒント重なり時のずらし量 (px)
     },
     offSpaceBadge = {
+      enabled = true, -- 別 Space バッジを表示するか
       size = 16, -- 右上バッジ直径 (px)
-      fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- 別 Space バッジ塗り色
-      strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- 別 Space バッジ枠線色
+      fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- 別 Space バッジ塗り色（デフォルト/フォールバック）
+      strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- 別 Space バッジ枠線色（デフォルト/フォールバック）
+      textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, -- 別 Space バッジ文字色（デフォルト/フォールバック）
       inactiveFillAlpha = 0.28, -- 非アクティブ時の塗りアルファ
       inactiveStrokeAlpha = 0.40, -- 非アクティブ時の枠線アルファ
+      inactiveTextAlpha = 0.35, -- 非アクティブ時の文字アルファ
+      spaceColors = { -- Space 番号ごとの色上書き（番号をインデックスに使用）。省略したフィールドは上記デフォルトにフォールバック
+        { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 1
+        { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 2
+        -- ...
+      },
     },
   },
   overlay = {
@@ -450,7 +458,9 @@ navigation = {
 Window Hints の候補表示に含めます。デフォルトは `false` です。
 
 - 別 Space の候補は前面オーバーレイではなく、遮蔽ヒントと同じドック系表示になります
-- 右上の丸バッジで識別します
+- 右上の丸バッジに Space 番号が表示され、番号ごとに異なる色で識別できます
+- バッジの色は `ui.offSpaceBadge.spaceColors` で Space 番号ごとに設定可能（プリセット5色付き。範囲外の番号はデフォルト色にフォールバック）
+- `ui.offSpaceBadge.enabled = false` でバッジ自体を非表示にできます
 - バッジの色やサイズは `ui.offSpaceBadge` で変更できます
 - 選択するとそのまま対象ウィンドウへ `focus()` し、Space 切り替えは macOS 側の挙動に従います
 - Hints 中の方向移動と `navigation.directHotkeys` は常に current Space の候補だけを対象にします

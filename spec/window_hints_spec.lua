@@ -371,16 +371,187 @@ describe("window_hints appPrefixOverrides", function()
 		local badgeConfig = {
 			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
 			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
 			offSpaceBadgeInactiveFillAlpha = 0.11,
 			offSpaceBadgeInactiveStrokeAlpha = 0.22,
+			offSpaceBadgeInactiveTextAlpha = 0.35,
 		}
-		local activeFill, activeStroke = helper.resolveOffSpaceBadgeColors(true, badgeConfig)
-		local inactiveFill, inactiveStroke = helper.resolveOffSpaceBadgeColors(false, badgeConfig)
+		local activeFill, activeStroke, activeText = helper.resolveOffSpaceBadgeColors(true, badgeConfig)
+		local inactiveFill, inactiveStroke, inactiveText = helper.resolveOffSpaceBadgeColors(false, badgeConfig)
 
 		assert.is_true(activeFill.alpha > inactiveFill.alpha)
 		assert.is_true(activeStroke.alpha > inactiveStroke.alpha)
+		assert.is_true(activeText.alpha > inactiveText.alpha)
 		assert.are.equal(0.11, inactiveFill.alpha)
 		assert.are.equal(0.22, inactiveStroke.alpha)
+		assert.are.equal(0.35, inactiveText.alpha)
+	end)
+
+	it("spaceColors[2] の色が使われる", function()
+		local badgeConfig = {
+			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
+			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+			offSpaceBadgeInactiveFillAlpha = 0.11,
+			offSpaceBadgeInactiveStrokeAlpha = 0.22,
+			offSpaceBadgeInactiveTextAlpha = 0.35,
+			offSpaceBadgeSpaceColors = {
+				[1] = {
+					fillColor = { red = 0.1, green = 0.1, blue = 0.1, alpha = 0.5 },
+					strokeColor = { red = 0.2, green = 0.2, blue = 0.2, alpha = 0.6 },
+					textColor = { red = 0.3, green = 0.3, blue = 0.3, alpha = 0.7 },
+				},
+				[2] = {
+					fillColor = { red = 0.30, green = 0.78, blue = 0.47, alpha = 0.56 },
+					strokeColor = { red = 0.85, green = 1.00, blue = 0.90, alpha = 0.72 },
+					textColor = { red = 0.9, green = 0.9, blue = 0.9, alpha = 0.85 },
+				},
+			},
+		}
+		local fill, stroke, text = helper.resolveOffSpaceBadgeColors(true, badgeConfig, 2)
+		assert.are.same({ red = 0.30, green = 0.78, blue = 0.47, alpha = 0.56 }, fill)
+		assert.are.same({ red = 0.85, green = 1.00, blue = 0.90, alpha = 0.72 }, stroke)
+		assert.are.same({ red = 0.9, green = 0.9, blue = 0.9, alpha = 0.85 }, text)
+	end)
+
+	it("spaceColors の範囲外はデフォルト色にフォールバック", function()
+		local badgeConfig = {
+			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
+			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+			offSpaceBadgeInactiveFillAlpha = 0.11,
+			offSpaceBadgeInactiveStrokeAlpha = 0.22,
+			offSpaceBadgeInactiveTextAlpha = 0.35,
+			offSpaceBadgeSpaceColors = {
+				[1] = {
+					fillColor = { red = 0.1, green = 0.1, blue = 0.1, alpha = 0.5 },
+					strokeColor = { red = 0.2, green = 0.2, blue = 0.2, alpha = 0.6 },
+					textColor = { red = 0.3, green = 0.3, blue = 0.3, alpha = 0.7 },
+				},
+			},
+		}
+		local fill, stroke, text = helper.resolveOffSpaceBadgeColors(true, badgeConfig, 10)
+		assert.are.same({ red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 }, fill)
+		assert.are.same({ red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 }, stroke)
+		assert.are.same({ red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, text)
+	end)
+
+	it("spaceColors=nil ならデフォルト色", function()
+		local badgeConfig = {
+			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
+			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+			offSpaceBadgeInactiveFillAlpha = 0.11,
+			offSpaceBadgeInactiveStrokeAlpha = 0.22,
+			offSpaceBadgeInactiveTextAlpha = 0.35,
+		}
+		local fill, stroke, text = helper.resolveOffSpaceBadgeColors(true, badgeConfig, 2)
+		assert.are.same({ red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 }, fill)
+		assert.are.same({ red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 }, stroke)
+		assert.are.same({ red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, text)
+	end)
+
+	it("spaceColors エントリで一部の色のみ指定時は未指定フィールドがデフォルトにフォールバック", function()
+		local badgeConfig = {
+			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
+			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+			offSpaceBadgeInactiveFillAlpha = 0.11,
+			offSpaceBadgeInactiveStrokeAlpha = 0.22,
+			offSpaceBadgeInactiveTextAlpha = 0.35,
+			offSpaceBadgeSpaceColors = {
+				[1] = {
+					fillColor = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5 },
+					-- strokeColor, textColor は未指定
+				},
+			},
+		}
+		local fill, stroke, text = helper.resolveOffSpaceBadgeColors(true, badgeConfig, 1)
+		assert.are.same({ red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5 }, fill)
+		assert.are.same({ red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 }, stroke)
+		assert.are.same({ red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, text)
+	end)
+
+	it("spaceColors 指定時も inactive でアルファ減衰が適用される", function()
+		local badgeConfig = {
+			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
+			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+			offSpaceBadgeInactiveFillAlpha = 0.11,
+			offSpaceBadgeInactiveStrokeAlpha = 0.22,
+			offSpaceBadgeInactiveTextAlpha = 0.35,
+			offSpaceBadgeSpaceColors = {
+				[2] = {
+					fillColor = { red = 0.30, green = 0.78, blue = 0.47, alpha = 0.56 },
+					strokeColor = { red = 0.85, green = 1.00, blue = 0.90, alpha = 0.72 },
+					textColor = { red = 0.9, green = 0.9, blue = 0.9, alpha = 0.85 },
+				},
+			},
+		}
+		local fill, stroke, text = helper.resolveOffSpaceBadgeColors(false, badgeConfig, 2)
+		assert.are.equal(0.11, fill.alpha)
+		assert.are.equal(0.22, stroke.alpha)
+		assert.are.equal(0.35, text.alpha)
+		-- 色相はスペースカラーのまま
+		assert.are.equal(0.30, fill.red)
+		assert.are.equal(0.85, stroke.red)
+		assert.are.equal(0.9, text.red)
+	end)
+
+	it("buildSpaceNumberLookup は hs がなければ空テーブルを返す", function()
+		_G.hs = nil
+		local lookup = helper.buildSpaceNumberLookup()
+		assert.are.same({}, lookup)
+	end)
+
+	it("buildSpaceNumberLookup はスペースID→番号の辞書を構築する", function()
+		_G.hs = {
+			screen = {
+				allScreens = function()
+					return {
+						{ id = function() return 1 end },
+					}
+				end,
+			},
+			spaces = {
+				spacesForScreen = function()
+					return { 101, 102, 103 }
+				end,
+			},
+		}
+		local lookup = helper.buildSpaceNumberLookup()
+		assert.are.equal(1, lookup[101])
+		assert.are.equal(2, lookup[102])
+		assert.are.equal(3, lookup[103])
+	end)
+
+	it("spaceNumberForWindow はウィンドウのスペース番号を返す", function()
+		_G.hs = {
+			spaces = {
+				windowSpaces = function()
+					return { 102 }
+				end,
+			},
+		}
+		local lookup = { [101] = 1, [102] = 2, [103] = 3 }
+		assert.are.equal(2, helper.spaceNumberForWindow(42, lookup))
+	end)
+
+	it("spaceNumberForWindow は hs.spaces がなければ nil を返す", function()
+		_G.hs = nil
+		assert.is_nil(helper.spaceNumberForWindow(42, {}))
+	end)
+
+	it("spaceNumberForWindow はルックアップにないスペースなら nil を返す", function()
+		_G.hs = {
+			spaces = {
+				windowSpaces = function()
+					return { 999 }
+				end,
+			},
+		}
+		local lookup = { [101] = 1 }
+		assert.is_nil(helper.spaceNumberForWindow(42, lookup))
 	end)
 
 	it("dockWindowXBlend=0 では中央寄せレイアウトXを使う", function()

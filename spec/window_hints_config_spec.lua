@@ -41,8 +41,10 @@ describe("window_hints_config", function()
 					size = 20,
 					fillColor = { red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 },
 					strokeColor = { red = 0.8, green = 0.9, blue = 1.0, alpha = 0.7 },
+					textColor = { red = 0.9, green = 0.9, blue = 0.9, alpha = 0.85 },
 					inactiveFillAlpha = 0.12,
 					inactiveStrokeAlpha = 0.34,
+					inactiveTextAlpha = 0.20,
 				},
 			},
 			behavior = {
@@ -69,6 +71,8 @@ describe("window_hints_config", function()
 		assert.are.same({ red = 0.8, green = 0.9, blue = 1.0, alpha = 0.7 }, built.offSpaceBadgeStrokeColor)
 		assert.are.equal(0.12, built.offSpaceBadgeInactiveFillAlpha)
 		assert.are.equal(0.34, built.offSpaceBadgeInactiveStrokeAlpha)
+		assert.are.same({ red = 0.9, green = 0.9, blue = 0.9, alpha = 0.85 }, built.offSpaceBadgeTextColor)
+		assert.are.equal(0.20, built.offSpaceBadgeInactiveTextAlpha)
 		assert.is_true(built.includeOtherSpaces)
 		assert.are.equal(focusHistory, built.focusHistory)
 	end)
@@ -119,6 +123,47 @@ describe("window_hints_config", function()
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("no available hintChars"))
+	end)
+
+	it("offSpaceBadge.enabled はデフォルトで true", function()
+		local built = mod.build({})
+		assert.is_true(built.offSpaceBadgeEnabled)
+	end)
+
+	it("offSpaceBadge.enabled を false に設定できる", function()
+		local built = mod.build({
+			ui = {
+				offSpaceBadge = {
+					enabled = false,
+				},
+			},
+		})
+		assert.is_false(built.offSpaceBadgeEnabled)
+	end)
+
+	it("spaceColors が flatten で渡される", function()
+		local built = mod.build({})
+		assert.is_not_nil(built.offSpaceBadgeSpaceColors)
+		assert.are.equal(5, #built.offSpaceBadgeSpaceColors)
+		-- 2番目（緑）の fillColor を確認
+		assert.are.equal(0.30, built.offSpaceBadgeSpaceColors[2].fillColor.red)
+		assert.are.equal(0.78, built.offSpaceBadgeSpaceColors[2].fillColor.green)
+	end)
+
+	it("spaceColors をユーザーが上書きできる", function()
+		local built = mod.build({
+			ui = {
+				offSpaceBadge = {
+					spaceColors = {
+						{
+							fillColor = { red = 0.99, green = 0.99, blue = 0.99, alpha = 0.99 },
+						},
+					},
+				},
+			},
+		})
+		assert.are.equal(1, #built.offSpaceBadgeSpaceColors)
+		assert.are.equal(0.99, built.offSpaceBadgeSpaceColors[1].fillColor.red)
 	end)
 
 	it("offSpaceBadge.size が 0 以下ならエラー", function()

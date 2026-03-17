@@ -36,14 +36,48 @@ local function resolveHintOverlayBorderColor(active, config)
 	return config.hintOverlayBorderColor
 end
 
-local function resolveOffSpaceBadgeColors(active, config)
-	local fill = cloneColor(config.offSpaceBadgeFillColor)
-	local stroke = cloneColor(config.offSpaceBadgeStrokeColor)
+local function buildSpaceNumberLookup()
+	if not hs or not hs.spaces or not hs.screen then
+		return {}
+	end
+	local lookup = {}
+	local screens = hs.screen.allScreens()
+	for _, screen in ipairs(screens) do
+		local ok, spaces = pcall(hs.spaces.spacesForScreen, screen)
+		if ok and type(spaces) == "table" then
+			for idx, spaceId in ipairs(spaces) do
+				lookup[spaceId] = idx
+			end
+		end
+	end
+	return lookup
+end
+
+local function spaceNumberForWindow(winId, spaceNumberLookup)
+	if not hs or not hs.spaces or not hs.spaces.windowSpaces then
+		return nil
+	end
+	local ok, spaces = pcall(hs.spaces.windowSpaces, winId)
+	if ok and type(spaces) == "table" and #spaces > 0 then
+		return spaceNumberLookup[spaces[1]]
+	end
+	return nil
+end
+
+local function resolveOffSpaceBadgeColors(active, config, spaceNumber)
+	local spaceOverride = nil
+	if spaceNumber and config.offSpaceBadgeSpaceColors then
+		spaceOverride = config.offSpaceBadgeSpaceColors[spaceNumber]
+	end
+	local fill = cloneColor(spaceOverride and spaceOverride.fillColor or config.offSpaceBadgeFillColor)
+	local stroke = cloneColor(spaceOverride and spaceOverride.strokeColor or config.offSpaceBadgeStrokeColor)
+	local text = cloneColor(spaceOverride and spaceOverride.textColor or config.offSpaceBadgeTextColor)
 	if not active then
 		fill.alpha = config.offSpaceBadgeInactiveFillAlpha
 		stroke.alpha = config.offSpaceBadgeInactiveStrokeAlpha
+		text.alpha = config.offSpaceBadgeInactiveTextAlpha
 	end
-	return fill, stroke
+	return fill, stroke, text
 end
 
 local function startsWith(s, prefix)
@@ -1585,13 +1619,17 @@ function M.new(options)
 		hint.canvas[hint.keyPrefixIdx].textColor = active and config.keyHighlightColor or config.dimmedTextColor
 		hint.canvas[hint.keyRestIdx].textColor = active and config.textColor or config.dimmedTextColor
 		hint.canvas[hint.titleIdx].textColor = active and config.titleTextColor or config.dimmedTitleTextColor
-		if hint.isOffSpace then
-			local badgeFillColor, badgeStrokeColor = resolveOffSpaceBadgeColors(active, config)
+		if hint.isOffSpace and config.offSpaceBadgeEnabled then
+			local badgeFillColor, badgeStrokeColor, badgeTextColor =
+				resolveOffSpaceBadgeColors(active, config, hint.spaceNumber)
 			if hint.offSpaceBadgeFillIdx then
 				hint.canvas[hint.offSpaceBadgeFillIdx].fillColor = badgeFillColor
 			end
 			if hint.offSpaceBadgeStrokeIdx then
 				hint.canvas[hint.offSpaceBadgeStrokeIdx].strokeColor = badgeStrokeColor
+			end
+			if hint.offSpaceBadgeTextIdx then
+				hint.canvas[hint.offSpaceBadgeTextIdx].textColor = badgeTextColor
 			end
 		end
 		if hint.overlayBorderIdx then
@@ -1826,6 +1864,7 @@ function M.new(options)
 		local focusedId = focusedWin and focusedWin:id() or nil
 		local orderedWins = hs.window.orderedWindows()
 		local candidateWins, currentSpaceLookup = collectCandidateWindows(config.includeOtherSpaces)
+		local spaceNumberLookup = config.includeOtherSpaces and buildSpaceNumberLookup() or {}
 		local orderedFrames = {}
 		for _, w in ipairs(orderedWins) do
 			local f = w:frame()
@@ -1870,6 +1909,7 @@ function M.new(options)
 					isOverridePrefix = isOverridePrefix,
 					isOccluded = occluded,
 					isOffSpace = isOffSpace,
+					spaceNumber = isOffSpace and spaceNumberForWindow(winId, spaceNumberLookup) or nil,
 					coveringFrames = coveringFrames,
 				})
 			end
@@ -1943,6 +1983,7 @@ function M.new(options)
 						app = entry.app,
 						isOccluded = entry.isOccluded,
 						isOffSpace = entry.isOffSpace,
+						spaceNumber = entry.spaceNumber,
 						coveringFrames = entry.coveringFrames,
 					})
 				end
@@ -2001,6 +2042,7 @@ function M.new(options)
 		previewHeight,
 		isOccluded,
 		isOffSpace,
+		spaceNumber,
 		scale
 	)
 		scale = scale or 1
@@ -2017,20 +2059,30 @@ function M.new(options)
 		local gap = math.floor(config.keyGap * scale)
 		local rGap = math.floor(config.rowGap * scale)
 
+		-- badge offset: when isOffSpace and badge enabled, reserve space for badge at top-right edge
+		local showBadge = isOffSpace and config.offSpaceBadgeEnabled
+		local badgeR = 0
+		if showBadge then
+			local badgeDiameter = math.floor(config.offSpaceBadgeSize * scale)
+			badgeR = math.ceil(badgeDiameter / 2)
+		end
+		local contentW = frame.w - badgeR
+		local oY = badgeR -- vertical offset for content
+
 		local topRowHeight = math.max(iconSz, keyBoxSz)
 		local topRowWidth = iconSz + gap + keyBoxWidth
-		local topRowLeft = (frame.w - topRowWidth) / 2
+		local topRowLeft = (contentW - topRowWidth) / 2
 		local keyTextHeight = fSize + 8
 		local titleTextHeight = tFontSize + 8
 		local iconFrame = {
 			x = topRowLeft,
-			y = pad + (topRowHeight - iconSz) / 2,
+			y = oY + pad + (topRowHeight - iconSz) / 2,
 			w = iconSz,
 			h = iconSz,
 		}
 		local keyBoxFrame = {
 			x = topRowLeft + iconSz + gap,
-			y = pad + (topRowHeight - keyBoxSz) / 2,
+			y = oY + pad + (topRowHeight - keyBoxSz) / 2,
 			w = keyBoxWidth,
 			h = keyBoxSz,
 		}
@@ -2048,8 +2100,8 @@ function M.new(options)
 		}
 		local titleTextFrame = {
 			x = pad,
-			y = pad + topRowHeight + rGap,
-			w = frame.w - (pad * 2),
+			y = oY + pad + topRowHeight + rGap,
+			w = contentW - (pad * 2),
 			h = titleTextHeight,
 		}
 
@@ -2058,31 +2110,35 @@ function M.new(options)
 			bgColor.alpha = config.occludedBgAlpha
 		end
 		local curIconAlpha = isOccluded and config.occludedIconAlpha or config.iconAlpha
-		local offSpaceBadgeFillColor, offSpaceBadgeStrokeColor = resolveOffSpaceBadgeColors(true, config)
+		local offSpaceBadgeFillColor, offSpaceBadgeStrokeColor, offSpaceBadgeTextColor =
+			resolveOffSpaceBadgeColors(true, config, spaceNumber)
 
 		local overlayBorderIdx = nil
 		local offSpaceBadgeFillIdx = nil
 		local offSpaceBadgeStrokeIdx = nil
+		local offSpaceBadgeTextIdx = nil
 		local nextIdx = 1
 		canvas[nextIdx] = {
 			type = "rectangle",
 			action = "fill",
 			fillColor = bgColor,
 			roundedRectRadii = { xRadius = 12, yRadius = 12 },
-			frame = { x = 0, y = 0, w = frame.w, h = frame.h },
+			frame = { x = 0, y = oY, w = contentW, h = frame.h - oY },
 		}
 		nextIdx = nextIdx + 1
 
-		if isOffSpace then
+		if showBadge then
 			local badgeDiameter = math.max(1, math.floor(config.offSpaceBadgeSize * scale))
-			local badgeInset = math.max(6, math.floor(8 * scale))
-			local badgeX = frame.w - badgeInset - badgeDiameter
-			local badgeY = badgeInset
+			local badgeOffset = math.floor(badgeR * 0.3)
+			local badgeCx = contentW - badgeOffset
+			local badgeCy = badgeR + badgeOffset
+			local badgeX = badgeCx - badgeR
+			local badgeY = badgeCy - badgeR
 			canvas[nextIdx] = {
 				type = "rectangle",
 				action = "fill",
 				fillColor = offSpaceBadgeFillColor,
-				roundedRectRadii = { xRadius = badgeDiameter / 2, yRadius = badgeDiameter / 2 },
+				roundedRectRadii = { xRadius = badgeR, yRadius = badgeR },
 				frame = { x = badgeX, y = badgeY, w = badgeDiameter, h = badgeDiameter },
 			}
 			offSpaceBadgeFillIdx = nextIdx
@@ -2092,10 +2148,26 @@ function M.new(options)
 				action = "stroke",
 				strokeColor = offSpaceBadgeStrokeColor,
 				strokeWidth = math.max(1, math.floor(1.0 * scale)),
-				roundedRectRadii = { xRadius = badgeDiameter / 2, yRadius = badgeDiameter / 2 },
+				roundedRectRadii = { xRadius = badgeR, yRadius = badgeR },
 				frame = { x = badgeX, y = badgeY, w = badgeDiameter, h = badgeDiameter },
 			}
 			offSpaceBadgeStrokeIdx = nextIdx
+			nextIdx = nextIdx + 1
+			local badgeLabel = spaceNumber and tostring(spaceNumber) or "?"
+			local badgeTextColor = offSpaceBadgeTextColor
+			local badgeTextSize = math.floor(badgeDiameter * 0.6)
+			local badgeTextH = badgeTextSize + 4
+			local badgeTextY = badgeY + (badgeDiameter - badgeTextH) / 2
+			canvas[nextIdx] = {
+				type = "text",
+				text = badgeLabel,
+				textFont = config.fontName,
+				textSize = badgeTextSize,
+				textColor = badgeTextColor,
+				textAlignment = "center",
+				frame = { x = badgeX, y = badgeTextY, w = badgeDiameter, h = badgeTextH },
+			}
+			offSpaceBadgeTextIdx = nextIdx
 			nextIdx = nextIdx + 1
 		end
 
@@ -2108,7 +2180,7 @@ function M.new(options)
 					xRadius = config.hintOverlayCornerRadius,
 					yRadius = config.hintOverlayCornerRadius,
 				},
-				frame = { x = 0, y = 0, w = frame.w, h = frame.h },
+				frame = { x = 0, y = oY, w = contentW, h = frame.h - oY },
 			}
 			nextIdx = nextIdx + 1
 			local obw = config.hintOverlayBorderWidth
@@ -2121,7 +2193,7 @@ function M.new(options)
 					xRadius = config.hintOverlayCornerRadius,
 					yRadius = config.hintOverlayCornerRadius,
 				},
-				frame = { x = obw / 2, y = obw / 2, w = frame.w - obw, h = frame.h - obw },
+				frame = { x = obw / 2, y = oY + obw / 2, w = contentW - obw, h = frame.h - oY - obw },
 			}
 			overlayBorderIdx = nextIdx
 			nextIdx = nextIdx + 1
@@ -2178,8 +2250,8 @@ function M.new(options)
 
 		if previewImage and previewHeight and previewHeight > 0 then
 			local pPad = math.floor(config.previewPadding * scale)
-			local previewY = pad + topRowHeight + rGap + titleTextHeight + pPad
-			local previewW = frame.w - (pad * 2)
+			local previewY = oY + pad + topRowHeight + rGap + titleTextHeight + pPad
+			local previewW = contentW - (pad * 2)
 			canvas[nextIdx] = {
 				type = "image",
 				image = previewImage,
@@ -2207,7 +2279,8 @@ function M.new(options)
 			fSize,
 			overlayBorderIdx,
 			offSpaceBadgeFillIdx,
-			offSpaceBadgeStrokeIdx
+			offSpaceBadgeStrokeIdx,
+			offSpaceBadgeTextIdx
 	end
 
 	local function computeHintSize(hint, scale)
@@ -2230,6 +2303,12 @@ function M.new(options)
 		local topRowHeight = math.max(iconSz, keyBoxSz)
 		local titleRowHeight = tFontSize + 8
 		local height = pad * 2 + topRowHeight + math.floor(config.rowGap * scale) + titleRowHeight
+		if hint.isOffSpace and config.offSpaceBadgeEnabled then
+			local badgeDiameter = math.floor(config.offSpaceBadgeSize * scale)
+			local badgeR = math.ceil(badgeDiameter / 2)
+			width = width + badgeR
+			height = height + badgeR
+		end
 		return width, height, keyBoxWidth, scale
 	end
 
@@ -2247,7 +2326,8 @@ function M.new(options)
 			fSize,
 			overlayBorderIdx,
 			offSpaceBadgeFillIdx,
-			offSpaceBadgeStrokeIdx =
+			offSpaceBadgeStrokeIdx,
+			offSpaceBadgeTextIdx =
 			newHintCanvas(
 				canvasFrame,
 				icon,
@@ -2258,6 +2338,7 @@ function M.new(options)
 				previewHeight,
 				hint.isOccluded,
 				hint.isOffSpace,
+				hint.spaceNumber,
 				scale
 			)
 		hint.canvas = canvas
@@ -2271,6 +2352,7 @@ function M.new(options)
 		hint.overlayBorderIdx = overlayBorderIdx
 		hint.offSpaceBadgeFillIdx = offSpaceBadgeFillIdx
 		hint.offSpaceBadgeStrokeIdx = offSpaceBadgeStrokeIdx
+		hint.offSpaceBadgeTextIdx = offSpaceBadgeTextIdx
 		table.insert(openHints, hint)
 		hintByKey[hint.key] = hint
 	end
@@ -2569,6 +2651,8 @@ M._test = {
 	collectCandidateWindows = collectCandidateWindows,
 	splitCandidatesByCurrentSpace = splitCandidatesByCurrentSpace,
 	resolveOffSpaceBadgeColors = resolveOffSpaceBadgeColors,
+	buildSpaceNumberLookup = buildSpaceNumberLookup,
+	spaceNumberForWindow = spaceNumberForWindow,
 	hintKeyForGroup = hintKeyForGroup,
 	findExpandedKey = findExpandedKey,
 	makeKeysPrefixFree = makeKeysPrefixFree,

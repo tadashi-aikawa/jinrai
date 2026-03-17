@@ -70,11 +70,46 @@ local DEFAULT_CONFIG = {
 			bumpMove = 90,
 		},
 		offSpaceBadge = {
-			size = 16,
+			enabled = true,
+			size = 32,
 			fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 },
 			strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 },
+			textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
 			inactiveFillAlpha = 0.28,
 			inactiveStrokeAlpha = 0.40,
+			inactiveTextAlpha = 0.35,
+			spaceColors = {
+				-- 1: 青（デフォルトと同系色）
+				{
+					fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 },
+					strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 },
+					textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+				},
+				-- 2: 緑
+				{
+					fillColor = { red = 0.30, green = 0.78, blue = 0.47, alpha = 0.56 },
+					strokeColor = { red = 0.85, green = 1.00, blue = 0.90, alpha = 0.72 },
+					textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+				},
+				-- 3: オレンジ
+				{
+					fillColor = { red = 0.95, green = 0.60, blue = 0.25, alpha = 0.56 },
+					strokeColor = { red = 1.00, green = 0.92, blue = 0.80, alpha = 0.72 },
+					textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+				},
+				-- 4: 紫
+				{
+					fillColor = { red = 0.68, green = 0.42, blue = 0.90, alpha = 0.56 },
+					strokeColor = { red = 0.92, green = 0.85, blue = 1.00, alpha = 0.72 },
+					textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+				},
+				-- 5: ピンク
+				{
+					fillColor = { red = 0.92, green = 0.38, blue = 0.58, alpha = 0.56 },
+					strokeColor = { red = 1.00, green = 0.85, blue = 0.90, alpha = 0.72 },
+					textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+				},
+			},
 		},
 	},
 	overlay = {
@@ -598,6 +633,10 @@ function M.build(options)
 		merged.ui.offSpaceBadge.inactiveStrokeAlpha,
 		"ui.offSpaceBadge.inactiveStrokeAlpha"
 	)
+	local offSpaceBadgeInactiveTextAlpha = normalizeUnitIntervalNumber(
+		merged.ui.offSpaceBadge.inactiveTextAlpha,
+		"ui.offSpaceBadge.inactiveTextAlpha"
+	)
 	local cardinalOverlapTieThresholdPx = normalizeNonNegativeNumber(
 		merged.navigation.cardinalOverlapTieThresholdPx,
 		"navigation.cardinalOverlapTieThresholdPx"
@@ -621,11 +660,15 @@ function M.build(options)
 		showTitles = merged.ui.text.showTitles,
 		bgColor = merged.ui.badge.bgColor,
 		dimmedBgAlpha = merged.ui.badge.dimmedBgAlpha,
+		offSpaceBadgeEnabled = merged.ui.offSpaceBadge.enabled,
 		offSpaceBadgeSize = offSpaceBadgeSize,
 		offSpaceBadgeFillColor = merged.ui.offSpaceBadge.fillColor,
 		offSpaceBadgeStrokeColor = merged.ui.offSpaceBadge.strokeColor,
 		offSpaceBadgeInactiveFillAlpha = offSpaceBadgeInactiveFillAlpha,
 		offSpaceBadgeInactiveStrokeAlpha = offSpaceBadgeInactiveStrokeAlpha,
+		offSpaceBadgeTextColor = merged.ui.offSpaceBadge.textColor,
+		offSpaceBadgeInactiveTextAlpha = offSpaceBadgeInactiveTextAlpha,
+		offSpaceBadgeSpaceColors = merged.ui.offSpaceBadge.spaceColors,
 		textColor = merged.ui.text.keyColor,
 		dimmedTextColor = merged.ui.text.keyDimmedColor,
 		titleTextColor = merged.ui.text.titleColor,

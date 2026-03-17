@@ -298,11 +298,19 @@ window_hints = {
       bumpMove = 90, -- Offset distance for overlapping hints (px)
     },
     offSpaceBadge = {
+      enabled = true, -- Whether Other-Space badge is shown
       size = 16, -- Top-right badge diameter (px)
-      fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- Other-Space badge fill
-      strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- Other-Space badge stroke
+      fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- Other-Space badge fill (default/fallback)
+      strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- Other-Space badge stroke (default/fallback)
+      textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, -- Other-Space badge text (default/fallback)
       inactiveFillAlpha = 0.28, -- Fill alpha for dimmed hints
       inactiveStrokeAlpha = 0.40, -- Stroke alpha for dimmed hints
+      inactiveTextAlpha = 0.35, -- Text alpha for dimmed hints
+      spaceColors = { -- Per-Space color overrides (indexed by Space number). Omitted fields fall back to defaults above
+        { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 1
+        { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 2
+        -- ...
+      },
     },
   },
   overlay = {
@@ -447,7 +455,9 @@ If `behavior.includeOtherSpaces = true`, Window Hints include visible windows fr
 current one. The default is `false`.
 
 - Other-Space candidates are rendered in the dock-style lane used for occluded/background hints
-- They are marked with a round badge in the top-right corner
+- They are marked with a round badge in the top-right corner showing the Space number
+- Badge colors change per Space number via `ui.offSpaceBadge.spaceColors` (5 preset colors included; out-of-range numbers fall back to default)
+- Set `ui.offSpaceBadge.enabled = false` to hide the badge entirely
 - You can customize the badge colors and size via `ui.offSpaceBadge`
 - Selecting one calls `focus()` directly and lets macOS handle the Space switch
 - Directional navigation during hints and `navigation.directHotkeys` still target current-Space candidates only
