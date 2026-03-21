@@ -50,3 +50,10 @@ busted
 busted spec/focus_back_spec.lua
 busted spec/init_spec.lua
 ```
+
+## リリース方法
+
+1. `Jinrai.spoon/init.lua` の `obj.version` のバージョンを上げる (ex: 0.2.3)
+2. `chore: v<バージョン>` としてコミット
+3. `v<バージョン>` としてタグ付け
+4. 2と3をそれぞれpush
