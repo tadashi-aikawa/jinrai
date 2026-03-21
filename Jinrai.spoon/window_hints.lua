@@ -1558,6 +1558,8 @@ function M.new(options)
 	local directionKeyLookup = config.directionKeyLookup or buildDirectionKeyLookup(directionKeys)
 	local directDirectionHotkeys = config.directDirectionHotkeys
 	local focusBackKey = config.focusBackKey
+	local prevSpaceKey = config.prevSpaceKey
+	local nextSpaceKey = config.nextSpaceKey
 	local swapWindowFrameSelectModifiers = config.swapWindowFrameSelectModifiers
 	local hintChars = config.hintChars
 
@@ -1840,6 +1842,20 @@ function M.new(options)
 					hs.spaces.gotoSpace(spaceId)
 				end
 			end
+			return
+		end
+		if prevSpaceKey and key == prevSpaceKey then
+			closeHints(true)
+			hs.timer.doAfter(0.1, function()
+				hs.eventtap.keyStroke({ "fn", "ctrl" }, "left", 0)
+			end)
+			return
+		end
+		if nextSpaceKey and key == nextSpaceKey then
+			closeHints(true)
+			hs.timer.doAfter(0.1, function()
+				hs.eventtap.keyStroke({ "fn", "ctrl" }, "right", 0)
+			end)
 			return
 		end
 		local direction = directionKeyLookup[key]

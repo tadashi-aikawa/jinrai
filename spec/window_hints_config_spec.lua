@@ -184,6 +184,36 @@ describe("window_hints_config", function()
 		assert.is_true(built.spaceKeys)
 	end)
 
+	it("デフォルトで prevSpaceKey/nextSpaceKey は nil", function()
+		local built = mod.build({})
+		assert.is_nil(built.prevSpaceKey)
+		assert.is_nil(built.nextSpaceKey)
+	end)
+
+	it("prevSpaceKey/nextSpaceKey を設定できる", function()
+		local built = mod.build({
+			navigation = {
+				prevSpaceKey = "P",
+				nextSpaceKey = "N",
+			},
+		})
+		assert.are.equal("p", built.prevSpaceKey)
+		assert.are.equal("n", built.nextSpaceKey)
+	end)
+
+	it("prevSpaceKey/nextSpaceKey は hintChars から除外される", function()
+		local built = mod.build({
+			hint = {
+				chars = { "A", "P", "N", "B" },
+			},
+			navigation = {
+				prevSpaceKey = "P",
+				nextSpaceKey = "N",
+			},
+		})
+		assert.are.same({ "A", "B" }, built.hintChars)
+	end)
+
 	it("offSpaceBadge.size が 0 以下ならエラー", function()
 		local ok, err = pcall(function()
 			mod.build({

@@ -162,6 +162,8 @@ local DEFAULT_CONFIG = {
 		directionKeys = nil,
 		directHotkeys = nil,
 		spaceKeys = true,
+		prevSpaceKey = nil,
+		nextSpaceKey = nil,
 		cardinalOverlapTieThresholdPx = 720,
 		debugDirectionalNavigation = false,
 		swapSelectModifiers = nil,
@@ -489,7 +491,7 @@ local function normalizeHintChars(rawHintChars)
 	return normalized
 end
 
-local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spaceKeys)
+local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spaceKeys, prevSpaceKey, nextSpaceKey)
 	local reserved = {}
 	local function addKey(key)
 		if key and #key == 1 then
@@ -500,6 +502,8 @@ local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spa
 		addKey(key)
 	end
 	addKey(focusBackKey)
+	addKey(prevSpaceKey)
+	addKey(nextSpaceKey)
 	if spaceKeys then
 		for i = 1, 9 do
 			reserved[tostring(i)] = true
@@ -615,6 +619,8 @@ function M.build(options)
 	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
 	local directDirectionHotkeys = normalizeDirectDirectionHotkeys(merged.navigation.directHotkeys)
 	local focusBackKey = normalizeActionKey(merged.navigation.focusBackKey, "navigation.focusBackKey")
+	local prevSpaceKey = normalizeActionKey(merged.navigation.prevSpaceKey, "navigation.prevSpaceKey")
+	local nextSpaceKey = normalizeActionKey(merged.navigation.nextSpaceKey, "navigation.nextSpaceKey")
 	local swapSelectModifiers = normalizeSelectModifiers(merged.navigation.swapSelectModifiers)
 	local focusHistory = merged.internal.focusHistory
 	if not focusHistory then
@@ -624,7 +630,7 @@ function M.build(options)
 	local spaceKeys = merged.navigation.spaceKeys and true or false
 
 	local hintChars = normalizeHintChars(merged.hint.chars or DEFAULT_HINT_CHARS)
-	local reservedHintCharLookup = buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spaceKeys)
+	local reservedHintCharLookup = buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spaceKeys, prevSpaceKey, nextSpaceKey)
 	hintChars = filterHintChars(hintChars, reservedHintCharLookup)
 	if #hintChars == 0 then
 		error("[jinrai.window_hints] no available hintChars after excluding reserved navigation keys")
@@ -725,6 +731,8 @@ function M.build(options)
 		cardinalOverlapTieThresholdPx = cardinalOverlapTieThresholdPx,
 		debugDirectionalNavigation = merged.navigation.debugDirectionalNavigation,
 		spaceKeys = spaceKeys,
+		prevSpaceKey = prevSpaceKey,
+		nextSpaceKey = nextSpaceKey,
 		swapWindowFrameSelectModifiers = swapSelectModifiers,
 		focusHistory = focusHistory,
 	}
