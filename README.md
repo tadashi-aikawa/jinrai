@@ -363,6 +363,8 @@ window_hints = {
     directionKeys = nil, -- Directional navigation keys while hints are shown
     directHotkeys = nil, -- Directional hotkeys without opening hints
     spaceKeys = true, -- Press 1-9 during hints to switch Space
+    prevSpaceKey = nil, -- Key to move to the previous Space during hints
+    nextSpaceKey = nil, -- Key to move to the next Space during hints
     cardinalOverlapTieThresholdPx = 720, -- Tie threshold for cardinal direction scoring (px)
     debugDirectionalNavigation = false, -- Emit directional scoring debug logs
     swapSelectModifiers = nil, -- Modifiers to swap window frames when selecting
@@ -453,6 +455,10 @@ navigation = {
 ### navigation.spaceKeys
 
 When `navigation.spaceKeys = true` (default), pressing `1`–`9` while hints are shown switches to the corresponding Space using `hs.spaces.gotoSpace()`. If the Space number does not exist, the key is consumed but nothing happens. Set to `false` to disable.
+
+### navigation.prevSpaceKey / navigation.nextSpaceKey
+
+`navigation.prevSpaceKey` and `navigation.nextSpaceKey` let you move to the previous or next Space while hints are shown. Setting either to a single character key (e.g. `","` / `"."`) closes hints first, then triggers the Space switch. The default is `nil` (disabled).
 
 ### behavior.includeOtherSpaces
 

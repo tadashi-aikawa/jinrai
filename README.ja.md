@@ -364,6 +364,9 @@ window_hints = {
     focusBackKey = nil, -- Hints表示中に Focus Back 相当を実行するキー
     directionKeys = nil, -- Hints表示中の方向移動キー
     directHotkeys = nil, -- Hintsを表示せず方向移動するホットキー
+    spaceKeys = true, -- ヒント表示中に 1-9 キーで Space を切り替え
+    prevSpaceKey = nil, -- ヒント表示中に前の Space へ移動するキー
+    nextSpaceKey = nil, -- ヒント表示中に次の Space へ移動するキー
     cardinalOverlapTieThresholdPx = 720, -- 上下左右方向移動で同点扱いにする閾値 (px)
     debugDirectionalNavigation = false, -- 方向移動の候補スコアログを出すか
     swapSelectModifiers = nil, -- 確定時にウィンドウフレーム入れ替えする修飾キー
@@ -451,6 +454,14 @@ navigation = {
 - キー押下で即フォーカス移動し、Window Hints UI は表示しない
 - `keys` を省略した場合は直接方向移動ホットキーを無効化
 - `modifiers` では `alt` の別名として `option` も指定可能
+
+### navigation.spaceKeys
+
+`navigation.spaceKeys = true`（デフォルト）にすると、ヒント表示中に `1`〜`9` キーで `hs.spaces.gotoSpace()` を使って対応する Space に切り替えます。存在しない番号を押した場合はキーが消費されるだけで何も起こりません。`false` で無効化できます。
+
+### navigation.prevSpaceKey / navigation.nextSpaceKey
+
+`navigation.prevSpaceKey` と `navigation.nextSpaceKey` は、ヒント表示中に前後の Space へ移動するためのキーです。1文字のキー（例: `","` / `"."`）を指定すると、ヒントを閉じてから Space を切り替えます。デフォルトは `nil`（無効）です。
 
 ### behavior.includeOtherSpaces
 
