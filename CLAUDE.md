@@ -57,3 +57,4 @@ busted spec/init_spec.lua
 2. `chore: v<バージョン>` としてコミット
 3. `v<バージョン>` としてタグ付け
 4. 2と3をそれぞれpush
+5. Bluesky用のリリース連絡メッセージを作成
