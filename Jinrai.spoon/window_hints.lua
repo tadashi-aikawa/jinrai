@@ -1571,6 +1571,8 @@ function M.new(options)
 	local hintCharByInputKey = {}
 	local currentInput = ""
 	local isShowing = false
+	local isPreparing = false
+	local pendingKeys = {}
 	local activeOverlayCanvas = nil
 	local allowedPrefixes = {}
 	local hintCharOrder = {}
@@ -1678,10 +1680,12 @@ function M.new(options)
 	end
 
 	local function closeHints(stopKeyBlocker)
-		if isShowing and stopKeyBlocker and keyBlocker then
+		if (isShowing or isPreparing) and stopKeyBlocker and keyBlocker then
 			keyBlocker:stop()
 		end
 		isShowing = false
+		isPreparing = false
+		pendingKeys = {}
 		clearHints()
 	end
 
@@ -1891,6 +1895,11 @@ function M.new(options)
 				table.insert(modifiers, "shift")
 			end
 
+			if isPreparing then
+				table.insert(pendingKeys, { key = key, modifiers = modifiers })
+				return true
+			end
+
 			if key == "escape" then
 				closeHints(true)
 			elseif key == "delete" or key == "forwarddelete" then
@@ -1901,6 +1910,23 @@ function M.new(options)
 
 			return true
 		end)
+	end
+
+	local function replayPendingKeys()
+		local keys = pendingKeys
+		pendingKeys = {}
+		for _, pending in ipairs(keys) do
+			if not isShowing then
+				break
+			end
+			if pending.key == "escape" then
+				closeHints(true)
+			elseif pending.key == "delete" or pending.key == "forwarddelete" then
+				handleBackspace()
+			elseif pending.key then
+				handleInputKey(pending.key, pending.modifiers)
+			end
+		end
 	end
 
 	local function collectEntries()
@@ -2443,6 +2469,12 @@ function M.new(options)
 	end
 
 	local function showHints()
+		-- Start key blocker early to capture keys pressed during rendering
+		isPreparing = true
+		pendingKeys = {}
+		ensureKeyBlocker()
+		keyBlocker:start()
+
 		local entries = collectEntries()
 		local hintEntries = buildHintEntries(entries)
 
@@ -2459,6 +2491,9 @@ function M.new(options)
 
 		if #hintEntries == 0 then
 			-- No hints to show; auto-dismiss overlay after a short delay
+			isPreparing = false
+			keyBlocker:stop()
+			pendingKeys = {}
 			hs.timer.doAfter(0.5, function()
 				if activeOverlayCanvas then
 					activeOverlayCanvas:delete()
@@ -2467,8 +2502,6 @@ function M.new(options)
 			end)
 			return
 		end
-
-		ensureKeyBlocker()
 
 		local visibleHints = {}
 		local occludedHints = {}
@@ -2610,14 +2643,19 @@ function M.new(options)
 			end
 
 		if #openHints == 0 then
+			isPreparing = false
+			keyBlocker:stop()
+			pendingKeys = {}
 			clearHints()
 			return
 		end
 
 		isShowing = true
+		isPreparing = false
 		currentInput = ""
 		refreshHighlights()
-		keyBlocker:start()
+
+		replayPendingKeys()
 	end
 
 	local function invokeShowHints()
