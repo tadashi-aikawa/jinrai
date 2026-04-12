@@ -339,10 +339,11 @@ window_hints = {
       maxRows = 8,       -- Maximum sampling rows
     },
     preview = {
-      enabled = true, -- Whether previews are shown for occluded windows
-      width = 140,    -- Preview width (px)
-      padding = 6,    -- Preview top padding (px)
-      alpha = 0.46,   -- Preview opacity
+      enabled = true,        -- Whether previews are shown for occluded windows
+      mode = "background",   -- Preview display mode ("background": full hint background / "below": below title)
+      width = 140,           -- Preview width (px). In background mode, this is the thumbnail height for a full-screen-height window
+      padding = 6,           -- Preview top padding (px, below mode only)
+      alpha = 0.46,          -- Preview opacity
     },
     hint = {
       scale = 0.65,   -- Scale factor for occluded hints

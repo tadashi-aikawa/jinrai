@@ -2198,6 +2198,20 @@ function M.new(options)
 		}
 		nextIdx = nextIdx + 1
 
+		-- backgroundモード: プレビュー画像をヒント全体の背景として配置
+		if previewImage and previewHeight and previewHeight > 0 and config.previewMode == "background" then
+			canvas[nextIdx] = {
+				type = "image",
+				image = previewImage,
+				imageScaling = "scaleProportionally",
+				imageAlignment = "center",
+				imageAlpha = config.occludedPreviewAlpha or 0.46,
+				roundedRectRadii = { xRadius = 12, yRadius = 12 },
+				frame = { x = 0, y = oY, w = contentW, h = frame.h - oY },
+			}
+			nextIdx = nextIdx + 1
+		end
+
 		if showBadge then
 			local badgeDiameter = math.max(1, math.floor(config.offSpaceBadgeSize * scale))
 			local badgeOffset = math.floor(badgeR * 0.3)
@@ -2313,13 +2327,14 @@ function M.new(options)
 			textFont = config.fontName,
 			textSize = tFontSize,
 			textColor = config.titleTextColor,
-			textAlignment = "left",
+			textAlignment = "center",
 			textLineBreak = "truncateTail",
 			frame = titleTextFrame,
 		}
 		nextIdx = nextIdx + 1
 
-		if previewImage and previewHeight and previewHeight > 0 then
+		-- belowモード: プレビュー画像をタイトル下に配置 (従来の動作)
+		if previewImage and previewHeight and previewHeight > 0 and config.previewMode ~= "background" then
 			local pPad = math.floor(config.previewPadding * scale)
 			local previewY = oY + pad + topRowHeight + rGap + titleTextHeight + pPad
 			local previewW = contentW - (pad * 2)
@@ -2556,11 +2571,23 @@ function M.new(options)
 							local imgSize = snapshot:size()
 							if imgSize and imgSize.w > 0 and imgSize.h > 0 then
 								previewImage = snapshot
-								local previewW = config.previewWidth
-								previewHeight = math.floor(previewW * imgSize.h / imgSize.w)
-								local pad = math.floor(config.padding * scale)
-								width = math.max(width, pad * 2 + previewW)
-								height = height + math.floor(config.previewPadding * scale) + previewHeight
+								if config.previewMode == "background" then
+									-- backgroundモード: ウィンドウ実寸を均一スケールで縮小 (Mission Control風)
+									-- previewWidth = スクリーン高さいっぱいのウィンドウの縮小後の高さ
+									local screenFrame = screen:frame()
+									local winFrame = hint.win:frame()
+									local scaleFactor = 2 * config.previewWidth / screenFrame.h
+									width = math.max(width, math.floor(winFrame.w * scaleFactor))
+									height = math.max(height, math.floor(winFrame.h * scaleFactor))
+									previewHeight = height
+								else
+									-- belowモード (従来): プレビューをタイトル下に追加
+									local previewW = config.previewWidth
+									previewHeight = math.floor(previewW * imgSize.h / imgSize.w)
+									local pad = math.floor(config.padding * scale)
+									width = math.max(width, pad * 2 + previewW)
+									height = height + math.floor(config.previewPadding * scale) + previewHeight
+								end
 							end
 						end
 					end

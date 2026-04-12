@@ -341,10 +341,11 @@ window_hints = {
       maxRows = 8,      -- サンプリング行数の最大値
     },
     preview = {
-      enabled = true, -- 遮蔽ウィンドウのプレビューを表示するか
-      width = 140,    -- プレビュー幅 (px)
-      padding = 6,    -- プレビュー上余白 (px)
-      alpha = 0.46,   -- プレビュー不透明度
+      enabled = true,        -- 遮蔽ウィンドウのプレビューを表示するか
+      mode = "background",   -- プレビュー表示モード ("background": ヒント背景に全面表示 / "below": タイトル下に表示)
+      width = 140,           -- プレビュー幅 (px)。backgroundモードでは画面高さいっぱいのウィンドウの縮小後の高さ
+      padding = 6,           -- プレビュー上余白 (px, belowモードのみ)
+      alpha = 0.46,          -- プレビュー不透明度
     },
     hint = {
       scale = 0.65,  -- 遮蔽ヒント縮小率

@@ -139,6 +139,7 @@ local DEFAULT_CONFIG = {
 		},
 		preview = {
 			enabled = true,
+			mode = "background", -- "below": タイトル下に小さく表示, "background": ヒント全体の背景として表示
 			width = 140,
 			padding = 6,
 			alpha = 0.46,
@@ -207,6 +208,7 @@ local LEGACY_FLAT_KEYS = {
 	dimmedIconAlpha = true,
 	bumpMove = true,
 	showPreviewForOccluded = true,
+	previewMode = true,
 	appPrefixOverrides = true,
 	occlusionSamplingEnabled = true,
 	occlusionSamplingBaseWidth = true,
@@ -692,6 +694,7 @@ function M.build(options)
 		dimmedIconAlpha = merged.ui.icon.dimmedAlpha,
 		bumpMove = merged.ui.badge.bumpMove,
 		showPreviewForOccluded = merged.occlusion.preview.enabled,
+		previewMode = merged.occlusion.preview.mode,
 		occlusionSamplingEnabled = merged.occlusion.sampling.enabled,
 		occlusionSamplingBaseWidth = merged.occlusion.sampling.baseWidth,
 		occlusionSamplingBaseHeight = merged.occlusion.sampling.baseHeight,
