@@ -926,14 +926,8 @@ local function resolveOccludedDockItemXs(screenFrame, items, itemGap, windowXBle
 	local fallbackXs = {}
 	local curX = windowXBlend > 0 and screenFrame.x or items[1].centeredX
 	for i, item in ipairs(items) do
-		local x = resolveOccludedDockItemX(
-			screenFrame,
-			item.width,
-			item.centeredX,
-			item.windowCenterX,
-			curX,
-			windowXBlend
-		)
+		local x =
+			resolveOccludedDockItemX(screenFrame, item.width, item.centeredX, item.windowCenterX, curX, windowXBlend)
 		fallbackXs[i] = x
 		curX = x + item.width + itemGap
 	end
@@ -1640,6 +1634,8 @@ function M.new(options)
 	local isPreparing = false
 	local pendingKeys = {}
 	local activeOverlayCanvas = nil
+	local snapshotTimer = nil
+	local previewFadeTimer = nil
 	local allowedPrefixes = {}
 	local hintCharOrder = {}
 	for i, char in ipairs(hintChars) do
@@ -1752,6 +1748,14 @@ function M.new(options)
 		isShowing = false
 		isPreparing = false
 		pendingKeys = {}
+		if snapshotTimer then
+			snapshotTimer:stop()
+			snapshotTimer = nil
+		end
+		if previewFadeTimer then
+			previewFadeTimer:stop()
+			previewFadeTimer = nil
+		end
 		clearHints()
 	end
 
@@ -2265,16 +2269,23 @@ function M.new(options)
 		nextIdx = nextIdx + 1
 
 		-- backgroundモード: プレビュー画像をヒント全体の背景として配置
-		if previewImage and previewHeight and previewHeight > 0 and config.previewMode == "background" then
-			canvas[nextIdx] = {
+		local previewIdx = nil
+		if previewHeight and previewHeight > 0 and config.previewMode == "background" then
+			local element = {
 				type = "image",
-				image = previewImage,
 				imageScaling = "scaleProportionally",
 				imageAlignment = "center",
-				imageAlpha = config.occludedPreviewAlpha or 0.46,
 				roundedRectRadii = { xRadius = 12, yRadius = 12 },
 				frame = { x = 0, y = oY, w = contentW, h = frame.h - oY },
 			}
+			if previewImage then
+				element.image = previewImage
+				element.imageAlpha = config.occludedPreviewAlpha or 0.46
+			else
+				element.imageAlpha = 0
+			end
+			canvas[nextIdx] = element
+			previewIdx = nextIdx
 			nextIdx = nextIdx + 1
 		end
 
@@ -2400,16 +2411,14 @@ function M.new(options)
 		nextIdx = nextIdx + 1
 
 		-- belowモード: プレビュー画像をタイトル下に配置 (従来の動作)
-		if previewImage and previewHeight and previewHeight > 0 and config.previewMode ~= "background" then
+		if previewHeight and previewHeight > 0 and config.previewMode ~= "background" then
 			local pPad = math.floor(config.previewPadding * scale)
 			local previewY = oY + pad + topRowHeight + rGap + titleTextHeight + pPad
 			local previewW = contentW - (pad * 2)
-			canvas[nextIdx] = {
+			local element = {
 				type = "image",
-				image = previewImage,
 				imageScaling = "scaleProportionally",
 				imageAlignment = "center",
-				imageAlpha = isOccluded and config.occludedPreviewAlpha or 0.85,
 				frame = {
 					x = pad,
 					y = previewY,
@@ -2417,11 +2426,20 @@ function M.new(options)
 					h = previewHeight,
 				},
 			}
+			if previewImage then
+				element.image = previewImage
+				element.imageAlpha = isOccluded and config.occludedPreviewAlpha or 0.85
+			else
+				element.imageAlpha = 0
+			end
+			canvas[nextIdx] = element
+			if not previewIdx then
+				previewIdx = nextIdx
+			end
 		end
 
 		canvas:show()
-		return
-			canvas,
+		return canvas,
 			keyBoxFrame,
 			keyTextHeight,
 			iconIdx,
@@ -2432,7 +2450,8 @@ function M.new(options)
 			overlayBorderIdx,
 			offSpaceBadgeFillIdx,
 			offSpaceBadgeStrokeIdx,
-			offSpaceBadgeTextIdx
+			offSpaceBadgeTextIdx,
+			previewIdx
 	end
 
 	local function computeHintSize(hint, scale)
@@ -2469,19 +2488,7 @@ function M.new(options)
 	local function placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale)
 		local bundleID = hint.app and hint.app:bundleID() or nil
 		local icon = bundleID and hs.image.imageFromAppBundle(bundleID) or nil
-		local
-			canvas,
-			keyBoxFrame,
-			keyTextHeight,
-			iconIdx,
-			keyPrefixIdx,
-			keyRestIdx,
-			titleIdx,
-			fSize,
-			overlayBorderIdx,
-			offSpaceBadgeFillIdx,
-			offSpaceBadgeStrokeIdx,
-			offSpaceBadgeTextIdx =
+		local canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayBorderIdx, offSpaceBadgeFillIdx, offSpaceBadgeStrokeIdx, offSpaceBadgeTextIdx, previewIdx =
 			newHintCanvas(
 				canvasFrame,
 				icon,
@@ -2507,6 +2514,7 @@ function M.new(options)
 		hint.offSpaceBadgeFillIdx = offSpaceBadgeFillIdx
 		hint.offSpaceBadgeStrokeIdx = offSpaceBadgeStrokeIdx
 		hint.offSpaceBadgeTextIdx = offSpaceBadgeTextIdx
+		hint.previewIdx = previewIdx
 		table.insert(openHints, hint)
 		hintByKey[hint.key] = hint
 	end
@@ -2617,9 +2625,10 @@ function M.new(options)
 		end
 
 		-- Place occluded (background) hints in a dock at each screen's bottom
+		local deferredPreviewItems = {}
 		if #occludedHints > 0 then
 			local scale = config.occludedScale or 1
-			-- Group by screen and prepare sizes/snapshots
+			-- Group by screen and prepare sizes (without snapshots)
 			local screenGroups = {}
 			for _, hint in ipairs(occludedHints) do
 				local screen = hint.win:screen()
@@ -2629,50 +2638,43 @@ function M.new(options)
 						screenGroups[screenKey] = { screen = screen, items = {} }
 					end
 					local width, height, keyBoxWidth, _, minWidth = computeHintSize(hint, scale)
-					local previewImage = nil
 					local previewHeight = 0
 					if config.showPreviewForOccluded then
-						local ok, snapshot = pcall(function()
-							return hint.win:snapshot()
-						end)
-						if ok and snapshot then
-							local imgSize = snapshot:size()
-							if imgSize and imgSize.w > 0 and imgSize.h > 0 then
-								previewImage = snapshot
-								if config.previewMode == "background" then
-									-- backgroundモード: ウィンドウ実寸を均一スケールで縮小 (Mission Control風)
-									-- previewWidth = スクリーン高さいっぱいのウィンドウの縮小後の高さ
-									local screenFrame = screen:frame()
-									local winFrame = hint.win:frame()
-									local scaleFactor = 2 * config.previewWidth / screenFrame.h
-									width = math.max(width, math.floor(winFrame.w * scaleFactor))
-									height = math.max(height, math.floor(winFrame.h * scaleFactor))
-									previewHeight = height
-								else
-									-- belowモード (従来): プレビューをタイトル下に追加
-									local previewW = config.previewWidth
-									previewHeight = math.floor(previewW * imgSize.h / imgSize.w)
-									local pad = math.floor(config.padding * scale)
-									width = math.max(width, pad * 2 + previewW)
-									height = height + math.floor(config.previewPadding * scale) + previewHeight
-								end
+						local winFrame = hint.win:frame()
+						if winFrame and winFrame.w > 0 and winFrame.h > 0 then
+							if config.previewMode == "background" then
+								local screenFrame = screen:frame()
+								local scaleFactor = 2 * config.previewWidth / screenFrame.h
+								width = math.max(width, math.floor(winFrame.w * scaleFactor))
+								height = math.max(height, math.floor(winFrame.h * scaleFactor))
+								previewHeight = height
+							else
+								local previewW = config.previewWidth
+								previewHeight = math.floor(previewW * winFrame.h / winFrame.w)
+								local pad = math.floor(config.padding * scale)
+								width = math.max(width, pad * 2 + previewW)
+								height = height + math.floor(config.previewPadding * scale) + previewHeight
 							end
 						end
 					end
 					local winFrame = hint.win:frame()
 					local windowCenterX = winFrame.x + (winFrame.w / 2)
 					local windowCenterY = winFrame.y + (winFrame.h / 2)
-					table.insert(screenGroups[screenKey].items, {
+					local item = {
 						hint = hint,
 						width = width,
 						height = height,
 						minWidth = minWidth,
 						keyBoxWidth = keyBoxWidth,
-						previewImage = previewImage,
+						previewImage = nil,
 						previewHeight = previewHeight,
 						windowCenterX = windowCenterX,
 						windowCenterY = windowCenterY,
-					})
+					}
+					table.insert(screenGroups[screenKey].items, item)
+					if config.showPreviewForOccluded and previewHeight > 0 then
+						table.insert(deferredPreviewItems, item)
+					end
 				end
 			end
 
@@ -2720,12 +2722,8 @@ function M.new(options)
 						item.centeredX = centeredX
 						centeredX = centeredX + item.width + config.dockItemGap
 					end
-					local itemXs = resolveOccludedDockItemXs(
-						screenFrame,
-						rowItems,
-						config.dockItemGap,
-						config.dockWindowXBlend
-					)
+					local itemXs =
+						resolveOccludedDockItemXs(screenFrame, rowItems, config.dockItemGap, config.dockWindowXBlend)
 
 					for i, item in ipairs(rowItems) do
 						local itemX = itemXs[i]
@@ -2744,7 +2742,14 @@ function M.new(options)
 							w = item.width,
 							h = item.height,
 						}
-						placeHint(item.hint, canvasFrame, item.previewImage, item.previewHeight, item.keyBoxWidth, scale)
+						placeHint(
+							item.hint,
+							canvasFrame,
+							item.previewImage,
+							item.previewHeight,
+							item.keyBoxWidth,
+							scale
+						)
 					end
 
 					rowBottomY = dockY - config.dockItemGap
@@ -2766,6 +2771,60 @@ function M.new(options)
 		refreshHighlights()
 
 		replayPendingKeys()
+
+		-- Phase 2: snapshot を遅延取得してプレビュー画像をフェードインで差し込む
+		if #deferredPreviewItems > 0 then
+			snapshotTimer = hs.timer.doAfter(0, function()
+				snapshotTimer = nil
+				local fadingHints = {}
+				for _, item in ipairs(deferredPreviewItems) do
+					if not isShowing then
+						return
+					end
+					local hint = item.hint
+					if hint.canvas and hint.previewIdx then
+						local ok, snapshot = pcall(function()
+							return hint.win:snapshot()
+						end)
+						if ok and snapshot then
+							local imgSize = snapshot:size()
+							if imgSize and imgSize.w > 0 and imgSize.h > 0 then
+								hint.canvas[hint.previewIdx].image = snapshot
+								hint.canvas[hint.previewIdx].imageAlpha = 0
+								table.insert(fadingHints, hint)
+							end
+						end
+					end
+				end
+				-- フェードインアニメーション
+				if #fadingHints > 0 and isShowing then
+					local targetAlpha = config.occludedPreviewAlpha or 0.46
+					local fadeSteps = 8
+					local currentStep = 0
+					previewFadeTimer = hs.timer.doEvery(0.02, function()
+						currentStep = currentStep + 1
+						if not isShowing or currentStep >= fadeSteps then
+							if previewFadeTimer then
+								previewFadeTimer:stop()
+								previewFadeTimer = nil
+							end
+							for _, hint in ipairs(fadingHints) do
+								if hint.canvas and hint.previewIdx then
+									hint.canvas[hint.previewIdx].imageAlpha = targetAlpha
+								end
+							end
+							return
+						end
+						local alpha = targetAlpha * (currentStep / fadeSteps)
+						for _, hint in ipairs(fadingHints) do
+							if hint.canvas and hint.previewIdx then
+								hint.canvas[hint.previewIdx].imageAlpha = alpha
+							end
+						end
+					end)
+				end
+			end)
+		end
 	end
 
 	local function invokeShowHints()
