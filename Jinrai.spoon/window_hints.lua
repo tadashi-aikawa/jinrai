@@ -954,6 +954,103 @@ local function resolveOccludedDockStartX(screenFrame, totalWidth)
 	return screenFrame.x + (screenFrame.w - totalWidth) / 2
 end
 
+local function isOverlappingFrame(a, b)
+	return a.x < (b.x + b.w) and (a.x + a.w) > b.x and a.y < (b.y + b.h) and (a.y + a.h) > b.y
+end
+
+local function overlapsAnyFrame(frame, frames)
+	for _, other in ipairs(frames or {}) do
+		if isOverlappingFrame(frame, other) then
+			return true
+		end
+	end
+	return false
+end
+
+local function clampFrameToScreen(frame, screenFrame)
+	local maxX = math.max(screenFrame.x, screenFrame.x + screenFrame.w - frame.w)
+	local maxY = math.max(screenFrame.y, screenFrame.y + screenFrame.h - frame.h)
+	return {
+		x = clamp(frame.x, screenFrame.x, maxX),
+		y = clamp(frame.y, screenFrame.y, maxY),
+		w = frame.w,
+		h = frame.h,
+	}
+end
+
+local function collectDockCandidateYs(desiredY, screenFrame, itemHeight, step)
+	local maxY = screenFrame.y + screenFrame.h - itemHeight
+	local startY = clamp(desiredY, screenFrame.y, maxY)
+	local ys = { startY }
+	if step <= 0 then
+		return ys
+	end
+	local y = startY - step
+	while y > screenFrame.y do
+		table.insert(ys, y)
+		y = y - step
+	end
+	if ys[#ys] ~= screenFrame.y then
+		table.insert(ys, screenFrame.y)
+	end
+	return ys
+end
+
+local function resolveOccludedDockFrameAvoidingRects(screenFrame, desiredFrame, avoidFrames, step)
+	local baseFrame = clampFrameToScreen(desiredFrame, screenFrame)
+	if not overlapsAnyFrame(baseFrame, avoidFrames) then
+		return baseFrame
+	end
+
+	step = math.max(1, math.floor(step or 1))
+	local candidateYs = collectDockCandidateYs(baseFrame.y, screenFrame, baseFrame.h, step)
+
+	for i = 2, #candidateYs do
+		local candidate = {
+			x = baseFrame.x,
+			y = candidateYs[i],
+			w = baseFrame.w,
+			h = baseFrame.h,
+		}
+		if not overlapsAnyFrame(candidate, avoidFrames) then
+			return candidate
+		end
+	end
+
+	local minX = screenFrame.x
+	local maxX = screenFrame.x + screenFrame.w - baseFrame.w
+	local maxShift = math.max(baseFrame.x - minX, maxX - baseFrame.x)
+	for _, y in ipairs(candidateYs) do
+		for shift = step, maxShift, step do
+			local leftX = math.max(minX, baseFrame.x - shift)
+			local leftCandidate = {
+				x = leftX,
+				y = y,
+				w = baseFrame.w,
+				h = baseFrame.h,
+			}
+			if not overlapsAnyFrame(leftCandidate, avoidFrames) then
+				return leftCandidate
+			end
+
+			local rightX = math.min(maxX, baseFrame.x + shift)
+			if rightX ~= leftX then
+				local rightCandidate = {
+					x = rightX,
+					y = y,
+					w = baseFrame.w,
+					h = baseFrame.h,
+				}
+				if not overlapsAnyFrame(rightCandidate, avoidFrames) then
+					return rightCandidate
+				end
+			end
+		end
+	end
+
+	return baseFrame
+end
+
 local function shrinkDockItemWidths(items, availableWidth, gap)
 	if #items == 0 then
 		return false
@@ -2605,14 +2702,23 @@ function M.new(options)
 		end
 
 		-- Place visible (front) hints at uncovered area of window
-		local takenRects = {}
+		local takenRectsByScreen = {}
+		local avoidFramesByScreen = {}
 		for _, hint in ipairs(visibleHints) do
 			local screen = hint.win:screen()
 			local windowFrame = hint.win:frame()
 			if screen then
+				local screenKey = tostring(screen:id())
+				if not takenRectsByScreen[screenKey] then
+					takenRectsByScreen[screenKey] = {}
+				end
+				if not avoidFramesByScreen[screenKey] then
+					avoidFramesByScreen[screenKey] = {}
+				end
 				local width, height, keyBoxWidth = computeHintSize(hint)
 				local baseCx, baseCy = findUncoveredCenter(windowFrame, hint.coveringFrames)
-				local center = nextCenter({ x = baseCx, y = baseCy }, screen:frame(), width, height, takenRects)
+				local center =
+					nextCenter({ x = baseCx, y = baseCy }, screen:frame(), width, height, takenRectsByScreen[screenKey])
 				local canvasFrame = {
 					x = center.x - (width / 2),
 					y = center.y - (height / 2),
@@ -2620,7 +2726,8 @@ function M.new(options)
 					h = height,
 				}
 				placeHint(hint, canvasFrame, nil, 0, keyBoxWidth)
-				table.insert(takenRects, { x = center.x, y = center.y, w = width, h = height })
+				table.insert(takenRectsByScreen[screenKey], { x = center.x, y = center.y, w = width, h = height })
+				table.insert(avoidFramesByScreen[screenKey], canvasFrame)
 			end
 		end
 
@@ -2692,6 +2799,10 @@ function M.new(options)
 					end)
 				end
 				local screenFrame = group.screen:frame()
+				local screenKey = tostring(group.screen:id())
+				if not avoidFramesByScreen[screenKey] then
+					avoidFramesByScreen[screenKey] = {}
+				end
 
 				local needsMultiRow = shrinkDockItemWidths(group.items, screenFrame.w, config.dockItemGap)
 				local rows
@@ -2742,6 +2853,12 @@ function M.new(options)
 							w = item.width,
 							h = item.height,
 						}
+						canvasFrame = resolveOccludedDockFrameAvoidingRects(
+							screenFrame,
+							canvasFrame,
+							avoidFramesByScreen[screenKey],
+							config.dockItemGap
+						)
 						placeHint(
 							item.hint,
 							canvasFrame,
@@ -2750,6 +2867,7 @@ function M.new(options)
 							item.keyBoxWidth,
 							scale
 						)
+						table.insert(avoidFramesByScreen[screenKey], canvasFrame)
 					end
 
 					rowBottomY = dockY - config.dockItemGap
@@ -2897,6 +3015,7 @@ M._test = {
 	resolveOccludedDockItemXs = resolveOccludedDockItemXs,
 	resolveOccludedDockItemY = resolveOccludedDockItemY,
 	resolveOccludedDockStartX = resolveOccludedDockStartX,
+	resolveOccludedDockFrameAvoidingRects = resolveOccludedDockFrameAvoidingRects,
 	shrinkDockItemWidths = shrinkDockItemWidths,
 	splitDockItemsIntoRows = splitDockItemsIntoRows,
 	comparePrefixes = comparePrefixes,

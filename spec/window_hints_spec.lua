@@ -743,6 +743,42 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(680, y)
 	end)
 
+	it("前面ヒントと重なる背面ドックは上方向へ退避する", function()
+		local frame = helper.resolveOccludedDockFrameAvoidingRects(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			{ x = 400, y = 500, w = 180, h = 120 },
+			{
+				{ x = 420, y = 520, w = 200, h = 120 },
+			},
+			12
+		)
+		assert.are.same({ x = 400, y = 392, w = 180, h = 120 }, frame)
+	end)
+
+	it("上方向だけで解消できない場合は左右へ探索する", function()
+		local frame = helper.resolveOccludedDockFrameAvoidingRects(
+			{ x = 0, y = 0, w = 1200, h = 800 },
+			{ x = 400, y = 500, w = 180, h = 120 },
+			{
+				{ x = 390, y = 0, w = 220, h = 800 },
+			},
+			12
+		)
+		assert.are.same({ x = 208, y = 500, w = 180, h = 120 }, frame)
+	end)
+
+	it("逃げ場がない場合は元のドック位置を維持する", function()
+		local frame = helper.resolveOccludedDockFrameAvoidingRects(
+			{ x = 0, y = 0, w = 180, h = 120 },
+			{ x = 0, y = 0, w = 180, h = 120 },
+			{
+				{ x = 0, y = 0, w = 180, h = 120 },
+			},
+			12
+		)
+		assert.are.same({ x = 0, y = 0, w = 180, h = 120 }, frame)
+	end)
+
 	it("文字キーの入力修飾キー集合を生成できる", function()
 		local bindings = helper.collectModalInputModifiers("w", helper.normalizeSelectModifiers({ "cmd" }))
 		assert.are.same({ {}, { "cmd" }, { "shift" } }, bindings)
@@ -1521,4 +1557,3 @@ describe("splitDockItemsIntoRows", function()
 		assert.are.equal("d", rows[2][2].id)
 	end)
 end)
-

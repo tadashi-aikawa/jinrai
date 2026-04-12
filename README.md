@@ -25,6 +25,7 @@
         - Automatically assigns the first letter of each app name as the hint prefix
         - If multiple windows share the same prefix, narrow them down with additional key input
     - Windows completely hidden by others (sampling-based approximation) are shown at the bottom in a dock-style layout with previews
+        - Dock hints try to avoid overlapping front-window hints when possible
     - Highlights the active window with an overlay
 - 🔳 **Focus Border**
     - Briefly highlights the border of the newly focused window
