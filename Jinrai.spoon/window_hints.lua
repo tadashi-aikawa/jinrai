@@ -960,6 +960,72 @@ local function resolveOccludedDockStartX(screenFrame, totalWidth)
 	return screenFrame.x + (screenFrame.w - totalWidth) / 2
 end
 
+local function shrinkDockItemWidths(items, availableWidth, gap)
+	if #items == 0 then
+		return false
+	end
+	gap = gap or 0
+	local totalGap = gap * math.max(0, #items - 1)
+	local totalWidth = totalGap
+	for _, item in ipairs(items) do
+		totalWidth = totalWidth + item.width
+	end
+	if totalWidth <= availableWidth then
+		return false
+	end
+	local totalMinWidth = totalGap
+	for _, item in ipairs(items) do
+		totalMinWidth = totalMinWidth + item.minWidth
+	end
+	if totalMinWidth > availableWidth then
+		for _, item in ipairs(items) do
+			item.width = item.minWidth
+		end
+		return true
+	end
+	local availableForTitles = availableWidth - totalMinWidth
+	local totalTitleWidth = 0
+	for _, item in ipairs(items) do
+		totalTitleWidth = totalTitleWidth + math.max(0, item.width - item.minWidth)
+	end
+	if totalTitleWidth > 0 then
+		local ratio = availableForTitles / totalTitleWidth
+		for _, item in ipairs(items) do
+			local titleContrib = math.max(0, item.width - item.minWidth)
+			item.width = item.minWidth + math.floor(titleContrib * ratio)
+		end
+	end
+	return false
+end
+
+local function splitDockItemsIntoRows(items, availableWidth, gap)
+	if #items == 0 then
+		return {}
+	end
+	gap = gap or 0
+	local rows = {}
+	local currentRow = {}
+	local currentWidth = 0
+	for _, item in ipairs(items) do
+		local itemWidth = item.width
+		if #currentRow > 0 and currentWidth + gap + itemWidth > availableWidth then
+			table.insert(rows, currentRow)
+			currentRow = { item }
+			currentWidth = itemWidth
+		else
+			if #currentRow > 0 then
+				currentWidth = currentWidth + gap
+			end
+			table.insert(currentRow, item)
+			currentWidth = currentWidth + itemWidth
+		end
+	end
+	if #currentRow > 0 then
+		table.insert(rows, currentRow)
+	end
+	return rows
+end
+
 local function estimatedTextWidth(text, fontSize, minimum)
 	local len = utf8.len(text) or string.len(text)
 	return math.max(minimum or 40, math.floor((len + 1) * fontSize * 0.55))
@@ -2380,12 +2446,13 @@ function M.new(options)
 		local keyBoxWidth = keyBoxWidthForText(hint.displayKeyText)
 		if scale ~= 1 then
 			local textWidth = estimatedKeyTextWidth(hint.displayKeyText, fSize)
-			local minWidth = math.floor((config.keyBoxMinWidth or config.keyBoxSize) * scale)
-			keyBoxWidth = math.max(minWidth, textWidth + (math.floor(config.keyBoxHorizontalPadding * scale) * 2))
+			local minKbw = math.floor((config.keyBoxMinWidth or config.keyBoxSize) * scale)
+			keyBoxWidth = math.max(minKbw, textWidth + (math.floor(config.keyBoxHorizontalPadding * scale) * 2))
 		end
 		local topRowWidth = iconSz + math.floor(config.keyGap * scale) + keyBoxWidth
 		local contentWidth = math.max(topRowWidth, titleWidth)
 		local width = pad * 2 + contentWidth
+		local minWidth = pad * 2 + topRowWidth
 		local topRowHeight = math.max(iconSz, keyBoxSz)
 		local titleRowHeight = tFontSize + 8
 		local height = pad * 2 + topRowHeight + math.floor(config.rowGap * scale) + titleRowHeight
@@ -2393,9 +2460,10 @@ function M.new(options)
 			local badgeDiameter = math.floor(config.offSpaceBadgeSize * scale)
 			local badgeR = math.ceil(badgeDiameter / 2)
 			width = width + badgeR
+			minWidth = minWidth + badgeR
 			height = height + badgeR
 		end
-		return width, height, keyBoxWidth, scale
+		return width, height, keyBoxWidth, scale, minWidth
 	end
 
 	local function placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale)
@@ -2560,7 +2628,7 @@ function M.new(options)
 					if not screenGroups[screenKey] then
 						screenGroups[screenKey] = { screen = screen, items = {} }
 					end
-					local width, height, keyBoxWidth = computeHintSize(hint, scale)
+					local width, height, keyBoxWidth, _, minWidth = computeHintSize(hint, scale)
 					local previewImage = nil
 					local previewHeight = 0
 					if config.showPreviewForOccluded then
@@ -2598,6 +2666,7 @@ function M.new(options)
 						hint = hint,
 						width = width,
 						height = height,
+						minWidth = minWidth,
 						keyBoxWidth = keyBoxWidth,
 						previewImage = previewImage,
 						previewHeight = previewHeight,
@@ -2621,53 +2690,67 @@ function M.new(options)
 					end)
 				end
 				local screenFrame = group.screen:frame()
-				local maxHeight = 0
-				local totalWidth = 0
-				for i, item in ipairs(group.items) do
-					totalWidth = totalWidth + item.width
-					if i > 1 then
-						totalWidth = totalWidth + config.dockItemGap
-					end
-					if item.height > maxHeight then
-						maxHeight = item.height
-					end
+
+				local needsMultiRow = shrinkDockItemWidths(group.items, screenFrame.w, config.dockItemGap)
+				local rows
+				if needsMultiRow then
+					rows = splitDockItemsIntoRows(group.items, screenFrame.w, config.dockItemGap)
+				else
+					rows = { group.items }
 				end
 
-				local startX = resolveOccludedDockStartX(screenFrame, totalWidth)
-				local dockY = screenFrame.y + screenFrame.h - maxHeight - config.dockBottomMargin
-				local centeredX = startX
-				for _, item in ipairs(group.items) do
-					item.centeredX = centeredX
-					centeredX = centeredX + item.width + config.dockItemGap
-				end
-				local itemXs = resolveOccludedDockItemXs(
-					screenFrame,
-					group.items,
-					config.dockItemGap,
-					config.dockWindowXBlend
-				)
+				local rowBottomY = screenFrame.y + screenFrame.h - config.dockBottomMargin
+				for _, rowItems in ipairs(rows) do
+					local maxHeight = 0
+					local totalWidth = 0
+					for i, item in ipairs(rowItems) do
+						totalWidth = totalWidth + item.width
+						if i > 1 then
+							totalWidth = totalWidth + config.dockItemGap
+						end
+						if item.height > maxHeight then
+							maxHeight = item.height
+						end
+					end
 
-				for i, item in ipairs(group.items) do
-					local itemX = itemXs[i]
-					local centeredY = dockY + (maxHeight - item.height)
-					local itemY = resolveOccludedDockItemY(
+					local startX = resolveOccludedDockStartX(screenFrame, totalWidth)
+					local dockY = rowBottomY - maxHeight
+					local centeredX = startX
+					for _, item in ipairs(rowItems) do
+						item.centeredX = centeredX
+						centeredX = centeredX + item.width + config.dockItemGap
+					end
+					local itemXs = resolveOccludedDockItemXs(
 						screenFrame,
-						item.height,
-						centeredY,
-						item.windowCenterY,
-						config.dockWindowYBlend,
-						config.dockBottomMargin
+						rowItems,
+						config.dockItemGap,
+						config.dockWindowXBlend
 					)
-					local canvasFrame = {
-						x = itemX,
-						y = itemY,
-						w = item.width,
-						h = item.height,
-					}
-					placeHint(item.hint, canvasFrame, item.previewImage, item.previewHeight, item.keyBoxWidth, scale)
-				end
+
+					for i, item in ipairs(rowItems) do
+						local itemX = itemXs[i]
+						local centeredY = dockY + (maxHeight - item.height)
+						local itemY = resolveOccludedDockItemY(
+							screenFrame,
+							item.height,
+							centeredY,
+							item.windowCenterY,
+							config.dockWindowYBlend,
+							config.dockBottomMargin
+						)
+						local canvasFrame = {
+							x = itemX,
+							y = itemY,
+							w = item.width,
+							h = item.height,
+						}
+						placeHint(item.hint, canvasFrame, item.previewImage, item.previewHeight, item.keyBoxWidth, scale)
+					end
+
+					rowBottomY = dockY - config.dockItemGap
 				end
 			end
+		end
 
 		if #openHints == 0 then
 			isPreparing = false
@@ -2755,6 +2838,8 @@ M._test = {
 	resolveOccludedDockItemXs = resolveOccludedDockItemXs,
 	resolveOccludedDockItemY = resolveOccludedDockItemY,
 	resolveOccludedDockStartX = resolveOccludedDockStartX,
+	shrinkDockItemWidths = shrinkDockItemWidths,
+	splitDockItemsIntoRows = splitDockItemsIntoRows,
 	comparePrefixes = comparePrefixes,
 	buildWindowIdLookup = buildWindowIdLookup,
 	mergeUniqueWindows = mergeUniqueWindows,

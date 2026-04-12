@@ -1368,3 +1368,157 @@ describe("window_hints appPrefixOverrides", function()
 	end)
 end)
 
+describe("shrinkDockItemWidths", function()
+	local helper
+	before_each(function()
+		helper = dofile("./Jinrai.spoon/window_hints.lua")._test
+	end)
+
+	it("totalWidth が availableWidth 以下なら変更しない", function()
+		local items = {
+			{ width = 100, minWidth = 60 },
+			{ width = 100, minWidth = 60 },
+		}
+		local needsMultiRow = helper.shrinkDockItemWidths(items, 220, 10)
+		assert.is_false(needsMultiRow)
+		assert.are.equal(100, items[1].width)
+		assert.are.equal(100, items[2].width)
+	end)
+
+	it("totalWidth が超えるが minWidth で収まる場合、タイトル幅を比例縮小する", function()
+		local items = {
+			{ width = 200, minWidth = 80 },
+			{ width = 200, minWidth = 80 },
+		}
+		-- totalWidth = 200+10+200 = 410, availableWidth = 300
+		-- totalMinWidth = 80+10+80 = 170, availableForTitles = 300-170 = 130
+		-- ratio = 130 / 240 ≈ 0.541, titleContrib each = 120
+		-- new width = 80 + floor(120 * 130/240) = 80 + 65 = 145
+		local needsMultiRow = helper.shrinkDockItemWidths(items, 300, 10)
+		assert.is_false(needsMultiRow)
+		assert.are.equal(145, items[1].width)
+		assert.are.equal(145, items[2].width)
+	end)
+
+	it("minWidth でも収まらない場合、needsMultiRow = true を返す", function()
+		local items = {
+			{ width = 200, minWidth = 150 },
+			{ width = 200, minWidth = 150 },
+		}
+		-- totalMinWidth = 150+10+150 = 310 > 300
+		local needsMultiRow = helper.shrinkDockItemWidths(items, 300, 10)
+		assert.is_true(needsMultiRow)
+		assert.are.equal(150, items[1].width)
+		assert.are.equal(150, items[2].width)
+	end)
+
+	it("アイテムが1つだけで収まる場合は変更しない", function()
+		local items = {
+			{ width = 200, minWidth = 80 },
+		}
+		local needsMultiRow = helper.shrinkDockItemWidths(items, 300, 10)
+		assert.is_false(needsMultiRow)
+		assert.are.equal(200, items[1].width)
+	end)
+
+	it("空配列では false を返す", function()
+		local needsMultiRow = helper.shrinkDockItemWidths({}, 300, 10)
+		assert.is_false(needsMultiRow)
+	end)
+
+	it("gap = 0 でも正しく動作する", function()
+		local items = {
+			{ width = 200, minWidth = 80 },
+			{ width = 200, minWidth = 80 },
+		}
+		-- totalWidth = 400, availableWidth = 300
+		-- totalMinWidth = 160, availableForTitles = 140
+		-- ratio = 140 / 240 ≈ 0.583, each = 80 + floor(120 * 140/240) = 80 + 70 = 150
+		local needsMultiRow = helper.shrinkDockItemWidths(items, 300, 0)
+		assert.is_false(needsMultiRow)
+		assert.are.equal(150, items[1].width)
+		assert.are.equal(150, items[2].width)
+	end)
+
+	it("異なるタイトル幅のアイテムは比例縮小される", function()
+		local items = {
+			{ width = 300, minWidth = 100 }, -- titleContrib = 200
+			{ width = 150, minWidth = 100 }, -- titleContrib = 50
+		}
+		-- totalWidth = 300+10+150 = 460, availableWidth = 350
+		-- totalMinWidth = 100+10+100 = 210, availableForTitles = 140
+		-- totalTitleWidth = 250, ratio = 140/250 = 0.56
+		-- item1: 100 + floor(200 * 0.56) = 100 + 112 = 212
+		-- item2: 100 + floor(50 * 0.56) = 100 + 28 = 128
+		local needsMultiRow = helper.shrinkDockItemWidths(items, 350, 10)
+		assert.is_false(needsMultiRow)
+		assert.are.equal(212, items[1].width)
+		assert.are.equal(128, items[2].width)
+	end)
+end)
+
+describe("splitDockItemsIntoRows", function()
+	local helper
+	before_each(function()
+		helper = dofile("./Jinrai.spoon/window_hints.lua")._test
+	end)
+
+	it("1行に収まる場合は1行を返す", function()
+		local items = {
+			{ width = 100 },
+			{ width = 100 },
+		}
+		local rows = helper.splitDockItemsIntoRows(items, 220, 10)
+		assert.are.equal(1, #rows)
+		assert.are.equal(2, #rows[1])
+	end)
+
+	it("2行に分割されるケース", function()
+		local items = {
+			{ width = 100 },
+			{ width = 100 },
+			{ width = 100 },
+		}
+		-- availableWidth = 220, gap = 10
+		-- row1: 100 + 10 + 100 = 210 <= 220, then +10+100 = 320 > 220
+		-- row2: 100
+		local rows = helper.splitDockItemsIntoRows(items, 220, 10)
+		assert.are.equal(2, #rows)
+		assert.are.equal(2, #rows[1])
+		assert.are.equal(1, #rows[2])
+	end)
+
+	it("1アイテムが availableWidth を超える場合でも行に入る", function()
+		local items = {
+			{ width = 300 },
+			{ width = 100 },
+		}
+		local rows = helper.splitDockItemsIntoRows(items, 200, 10)
+		assert.are.equal(2, #rows)
+		assert.are.equal(1, #rows[1])
+		assert.are.equal(300, rows[1][1].width)
+		assert.are.equal(1, #rows[2])
+		assert.are.equal(100, rows[2][1].width)
+	end)
+
+	it("空配列の場合は空を返す", function()
+		local rows = helper.splitDockItemsIntoRows({}, 200, 10)
+		assert.are.equal(0, #rows)
+	end)
+
+	it("元の順序を保持する", function()
+		local items = {
+			{ width = 100, id = "a" },
+			{ width = 100, id = "b" },
+			{ width = 100, id = "c" },
+			{ width = 100, id = "d" },
+		}
+		local rows = helper.splitDockItemsIntoRows(items, 220, 10)
+		assert.are.equal(2, #rows)
+		assert.are.equal("a", rows[1][1].id)
+		assert.are.equal("b", rows[1][2].id)
+		assert.are.equal("c", rows[2][1].id)
+		assert.are.equal("d", rows[2][2].id)
+	end)
+end)
+
