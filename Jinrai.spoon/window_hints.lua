@@ -2280,7 +2280,7 @@ function M.new(options)
 			}
 			if previewImage then
 				element.image = previewImage
-				element.imageAlpha = config.occludedPreviewAlpha or 0.46
+				element.imageAlpha = config.occludedPreviewAlpha or 0.64
 			else
 				element.imageAlpha = 0
 			end
@@ -2798,7 +2798,7 @@ function M.new(options)
 				end
 				-- フェードインアニメーション
 				if #fadingHints > 0 and isShowing then
-					local targetAlpha = config.occludedPreviewAlpha or 0.46
+					local targetAlpha = config.occludedPreviewAlpha or 0.64
 					local fadeSteps = 8
 					local currentStep = 0
 					previewFadeTimer = hs.timer.doEvery(0.02, function()

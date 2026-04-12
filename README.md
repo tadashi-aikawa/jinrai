@@ -343,11 +343,11 @@ window_hints = {
       mode = "background",   -- Preview display mode ("background": full hint background / "below": below title)
       width = 140,           -- Preview width (px). In background mode, this is the thumbnail height for a full-screen-height window
       padding = 6,           -- Preview top padding (px, below mode only)
-      alpha = 0.46,          -- Preview opacity
+      alpha = 0.64,          -- Preview opacity
     },
     hint = {
-      scale = 0.65,   -- Scale factor for occluded hints
-      bgAlpha = 0.32, -- Background alpha for occluded hints
+      scale = 0.85,   -- Scale factor for occluded hints
+      bgAlpha = 0.7,  -- Background alpha for occluded hints
       iconAlpha = 0.46, -- Icon opacity for occluded hints
     },
   },

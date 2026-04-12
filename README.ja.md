@@ -345,11 +345,11 @@ window_hints = {
       mode = "background",   -- プレビュー表示モード ("background": ヒント背景に全面表示 / "below": タイトル下に表示)
       width = 140,           -- プレビュー幅 (px)。backgroundモードでは画面高さいっぱいのウィンドウの縮小後の高さ
       padding = 6,           -- プレビュー上余白 (px, belowモードのみ)
-      alpha = 0.46,          -- プレビュー不透明度
+      alpha = 0.64,          -- プレビュー不透明度
     },
     hint = {
-      scale = 0.65,  -- 遮蔽ヒント縮小率
-      bgAlpha = 0.32, -- 遮蔽ヒント背景アルファ
+      scale = 0.85,  -- 遮蔽ヒント縮小率
+      bgAlpha = 0.7, -- 遮蔽ヒント背景アルファ
       iconAlpha = 0.46, -- 遮蔽ヒントアイコン不透明度
     },
   },

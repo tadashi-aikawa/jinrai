@@ -150,6 +150,12 @@ describe("window_hints_config", function()
 		assert.are.equal(0.78, built.offSpaceBadgeSpaceColors[2].fillColor.green)
 	end)
 
+	it("occlusion のデフォルト値が反映される", function()
+		local built = mod.build({})
+		assert.are.equal(0.64, built.occludedPreviewAlpha)
+		assert.are.equal(0.7, built.occludedBgAlpha)
+	end)
+
 	it("spaceColors をユーザーが上書きできる", function()
 		local built = mod.build({
 			ui = {

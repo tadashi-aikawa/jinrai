@@ -142,11 +142,11 @@ local DEFAULT_CONFIG = {
 			mode = "background", -- "below": タイトル下に小さく表示, "background": ヒント全体の背景として表示
 			width = 140,
 			padding = 6,
-			alpha = 0.46,
+			alpha = 0.64,
 		},
 		hint = {
-			scale = 0.65,
-			bgAlpha = 0.32,
+			scale = 0.85,
+			bgAlpha = 0.7,
 			iconAlpha = 0.46,
 		},
 	},
