@@ -249,4 +249,23 @@ describe("window_hints_config", function()
 		})
 		assert.is_true(built.includeActiveWindow)
 	end)
+
+	it("activeHint のデフォルト色が設定される", function()
+		local built = mod.build({})
+		assert.are.same({ red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, built.activeHintOverlayColor)
+		assert.are.same({ red = 0.95, green = 0.68, blue = 0.40, alpha = 0.85 }, built.activeHintOverlayBorderColor)
+	end)
+
+	it("activeHint の色をカスタマイズできる", function()
+		local built = mod.build({
+			overlay = {
+				activeHint = {
+					fillColor = { red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 },
+					borderColor = { red = 0.5, green = 0.6, blue = 0.7, alpha = 0.8 },
+				},
+			},
+		})
+		assert.are.same({ red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 }, built.activeHintOverlayColor)
+		assert.are.same({ red = 0.5, green = 0.6, blue = 0.7, alpha = 0.8 }, built.activeHintOverlayBorderColor)
+	end)
 end)

@@ -1812,7 +1812,14 @@ function M.new(options)
 			end
 		end
 		if hint.overlayBorderIdx then
-			hint.canvas[hint.overlayBorderIdx].strokeColor = cloneColor(resolveHintOverlayBorderColor(active, config))
+			local borderColor
+			if hint.isActiveWindow then
+				borderColor = active and config.activeHintOverlayBorderColor or config.dimmedHintOverlayBorderColor
+					or config.activeHintOverlayBorderColor
+			else
+				borderColor = resolveHintOverlayBorderColor(active, config)
+			end
+			hint.canvas[hint.overlayBorderIdx].strokeColor = cloneColor(borderColor)
 		end
 	end
 
@@ -2147,6 +2154,7 @@ function M.new(options)
 					isOverridePrefix = isOverridePrefix,
 					isOccluded = occluded,
 					isOffSpace = isOffSpace,
+					isActiveWindow = (winId == focusedId),
 					spaceNumber = isOffSpace and spaceNumberForWindow(winId, spaceNumberLookup) or nil,
 					coveringFrames = coveringFrames,
 				})
@@ -2221,6 +2229,7 @@ function M.new(options)
 						app = entry.app,
 						isOccluded = entry.isOccluded,
 						isOffSpace = entry.isOffSpace,
+						isActiveWindow = entry.isActiveWindow,
 						spaceNumber = entry.spaceNumber,
 						coveringFrames = entry.coveringFrames,
 					})
@@ -2281,7 +2290,8 @@ function M.new(options)
 		isOccluded,
 		isOffSpace,
 		spaceNumber,
-		scale
+		scale,
+		isActiveWindow
 	)
 		scale = scale or 1
 		local canvas = hs.canvas
@@ -2431,10 +2441,13 @@ function M.new(options)
 		end
 
 		if not isOccluded then
+			local overlayFillColor = isActiveWindow and config.activeHintOverlayColor or config.hintOverlayColor
+			local overlayBorderColor = isActiveWindow and config.activeHintOverlayBorderColor
+				or config.hintOverlayBorderColor
 			canvas[nextIdx] = {
 				type = "rectangle",
 				action = "fill",
-				fillColor = cloneColor(config.hintOverlayColor),
+				fillColor = cloneColor(overlayFillColor),
 				roundedRectRadii = {
 					xRadius = config.hintOverlayCornerRadius,
 					yRadius = config.hintOverlayCornerRadius,
@@ -2446,7 +2459,7 @@ function M.new(options)
 			canvas[nextIdx] = {
 				type = "rectangle",
 				action = "stroke",
-				strokeColor = cloneColor(config.hintOverlayBorderColor),
+				strokeColor = cloneColor(overlayBorderColor),
 				strokeWidth = obw,
 				roundedRectRadii = {
 					xRadius = config.hintOverlayCornerRadius,
@@ -2597,7 +2610,8 @@ function M.new(options)
 				hint.isOccluded,
 				hint.isOffSpace,
 				hint.spaceNumber,
-				scale
+				scale,
+				hint.isActiveWindow
 			)
 		hint.canvas = canvas
 		hint.keyBoxFrame = keyBoxFrame

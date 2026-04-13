@@ -126,6 +126,10 @@ local DEFAULT_CONFIG = {
 			borderWidth = 6,
 			cornerRadius = 12,
 		},
+		activeHint = {
+			fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 },
+			borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.85 },
+		},
 	},
 	occlusion = {
 		sampling = {
@@ -718,6 +722,8 @@ function M.build(options)
 		dimmedHintOverlayBorderColor = merged.overlay.hint.dimmedBorderColor,
 		hintOverlayBorderWidth = merged.overlay.hint.borderWidth,
 		hintOverlayCornerRadius = merged.overlay.hint.cornerRadius,
+		activeHintOverlayColor = merged.overlay.activeHint.fillColor,
+		activeHintOverlayBorderColor = merged.overlay.activeHint.borderColor,
 		dockBottomMargin = merged.dock.bottomMargin,
 		dockItemGap = merged.dock.itemGap,
 		dockWindowXBlend = dockWindowXBlend,
