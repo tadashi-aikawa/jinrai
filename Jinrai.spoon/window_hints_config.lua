@@ -175,6 +175,7 @@ local DEFAULT_CONFIG = {
 		centerCursor = false,
 		centerCursorOnStart = false,
 		includeOtherSpaces = false,
+		includeActiveWindow = false,
 	},
 	internal = {
 		focusHistory = nil,
@@ -727,6 +728,7 @@ function M.build(options)
 		centerCursor = merged.behavior.centerCursor,
 		centerCursorOnStart = merged.behavior.centerCursorOnStart,
 		includeOtherSpaces = merged.behavior.includeOtherSpaces,
+		includeActiveWindow = merged.behavior.includeActiveWindow,
 		focusBackKey = focusBackKey,
 		directionKeys = directionKeys,
 		directionKeyLookup = directionKeyLookup,

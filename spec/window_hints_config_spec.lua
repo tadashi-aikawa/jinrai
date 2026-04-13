@@ -49,6 +49,7 @@ describe("window_hints_config", function()
 			},
 			behavior = {
 				includeOtherSpaces = true,
+				includeActiveWindow = true,
 			},
 			internal = {
 				focusHistory = focusHistory,
@@ -74,6 +75,7 @@ describe("window_hints_config", function()
 		assert.are.same({ red = 0.9, green = 0.9, blue = 0.9, alpha = 0.85 }, built.offSpaceBadgeTextColor)
 		assert.are.equal(0.20, built.offSpaceBadgeInactiveTextAlpha)
 		assert.is_true(built.includeOtherSpaces)
+		assert.is_true(built.includeActiveWindow)
 		assert.are.equal(focusHistory, built.focusHistory)
 	end)
 
@@ -232,5 +234,19 @@ describe("window_hints_config", function()
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("ui.offSpaceBadge.size must be > 0"))
+	end)
+
+	it("デフォルトで includeActiveWindow は false", function()
+		local built = mod.build({})
+		assert.is_false(built.includeActiveWindow)
+	end)
+
+	it("includeActiveWindow を true に設定できる", function()
+		local built = mod.build({
+			behavior = {
+				includeActiveWindow = true,
+			},
+		})
+		assert.is_true(built.includeActiveWindow)
 	end)
 end)

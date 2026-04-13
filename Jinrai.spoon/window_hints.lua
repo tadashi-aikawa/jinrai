@@ -2117,7 +2117,7 @@ function M.new(options)
 			local screen = win:screen()
 			local winId = win:id()
 			local isOffSpace = config.includeOtherSpaces and not currentSpaceLookup[winId]
-			if app and bundleID and screen and isStandardWindow(win) and winId ~= focusedId then
+			if app and bundleID and screen and isStandardWindow(win) and (config.includeActiveWindow or winId ~= focusedId) then
 				local appTitle = app:title() or ""
 				local windowTitle = win:title() or ""
 				local occluded = isOffSpace
