@@ -131,94 +131,13 @@ hs.loadSpoon("Jinrai")
 
 spoon.Jinrai:setup({
   focus_border = {
-    visual = {
-      border = {
-        width = 10,
-        color = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
-      },
-      outline = {
-        width = 2,
-        color = { red = 0, green = 0, blue = 0, alpha = 0.70 },
-      },
-      cornerRadius = 10,
-    },
-    animation = {
-      duration = 0.5,
-      fadeSteps = 18,
-      spaceSwitchDelay = 0.30,
-    },
-    window = {
-      minSize = 480,
-    },
+    -- See "Focus Border Options" below for the complete default schema and examples
   },
   window_hints = {
-    hotkey = {
-      modifiers = { "alt" },
-      key = "f20",
-    },
-    hint = {
-      chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" },
-      prefixOverrides = {
-        {
-          match = { bundleID = "md.obsidian", titleGlob = "*- minerva - Obsidian*" },
-          prefix = "M",
-        },
-        {
-          match = { bundleID = "md.obsidian" },
-          prefix = "O",
-        },
-        {
-          match = { bundleID = "com.google.Chrome" },
-          prefix = "GC",
-        },
-      },
-    },
-    navigation = {
-      focusBackKey = "i",
-      directionKeys = {
-        left = "h",
-        down = "j",
-        up = "k",
-        right = "l",
-        upLeft = "y",
-        upRight = "u",
-        downLeft = "b",
-        downRight = "n",
-      },
-      directHotkeys = {
-        modifiers = { "ctrl", "alt" },
-        keys = {
-          left = "h",
-          down = "j",
-          up = "k",
-          right = "l",
-          upLeft = "y",
-          upRight = "u",
-          downLeft = "b",
-          downRight = "n",
-        },
-      },
-      swapSelectModifiers = { "shift" },
-    },
-    ui = {
-      icon = { size = 72 },
-      text = { titleMaxSize = 72 },
-    },
-    behavior = {
-      centerCursor = true,
-      onError = function(err)
-        hs.alert.show("Window Hints error: " .. tostring(err), 3)
-      end,
-    },
+    -- See "Window Hints Options" below for the complete default schema and examples
   },
   focus_back = {
-    hotkey = {
-      modifiers = { "option" },
-      key = "w",
-    },
-    behavior = {
-      centerCursor = true,
-    },
+    -- See "Focus Back Options" below for the complete default schema and examples
   },
 })
 ```
@@ -255,6 +174,8 @@ focus_border = {
 
 ## Window Hints Options
 
+Note: this schema is breaking. Legacy keys such as `hint.keyBox`, `hint.text`, `hint.badge`, `hint.offSpaceBadge`, `hint.overlay`, `hint.onActiveWindow`, `activeWindow`, `navigation.focusBackKey`, `navigation.directionKeys`, `navigation.directHotkeys`, `navigation.spaceKeys`, and `behavior.centerCursor` are no longer supported.
+
 Complete sample including all options (default values):
 
 ```lua
@@ -266,68 +187,120 @@ window_hints = {
   hint = {
     chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" }, -- Hint character set
     prefixOverrides = nil, -- Prefix override rule array
-  },
-  ui = {
+    padding = 12, -- Hint card inner padding (px)
+    collisionOffset = 90, -- Offset distance for overlapping hints (px)
+    cornerRadius = 12, -- Hint card corner radius (px)
+    occludedScale = 0.85, -- Scale factor for occluded hints
+    highlight = {
+      borderWidth = 6, -- Border width for hint highlight (px)
+    },
+    state = {
+      normal = {
+        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 }, -- Hint card background
+        highlight = {
+          fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 }, -- Hint card highlight fill
+          borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }, -- Hint card highlight border
+        },
+      },
+      dimmed = {
+        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.14 }, -- Hint card background for dimmed hints
+        highlight = {
+          borderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 }, -- Hint card border for dimmed hints
+        },
+      },
+      occluded = {
+        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.70 }, -- Hint card background for occluded hints
+      },
+      active = {
+        bgColor = { red = 0.08, green = 0.05, blue = 0.03, alpha = 0.88 }, -- Hint card background on the active window
+        highlight = {
+          fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, -- Hint card highlight fill on the active window
+          borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- Hint card highlight border on the active window
+        },
+      },
+    },
     icon = {
-      size = 72,          -- Icon size (px)
-      alpha = 0.95,       -- Icon opacity
-      dimmedAlpha = 0.30, -- Icon opacity for dimmed hints
+      size = 72, -- Icon size (px)
+      state = {
+        normal = { alpha = 0.95 }, -- Icon opacity
+        dimmed = { alpha = 0.30 }, -- Icon opacity for dimmed hints
+        occluded = { alpha = 0.46 }, -- Icon opacity for occluded hints
+        active = { alpha = 1.0 }, -- Icon opacity on the active window
+      },
     },
-    keyBox = {
-      size = 72,              -- Key box height (px)
-      minWidth = 72,          -- Key box minimum width (px)
+    key = {
+      size = 72, -- Key box height (px)
+      minWidth = 72, -- Key box minimum width (px)
       horizontalPadding = 10, -- Key box left/right padding (px)
-      gap = 0,                -- Gap between icon and key box (px)
-    },
-    text = {
-      fontName = nil,      -- Font name (nil for system default)
-      keyFontSize = 48,    -- Key font size
-      titleFontSize = 16,  -- Title font size
-      rowGap = 8,          -- Gap between icon row and title row (px)
-      titleMaxSize = 72,   -- Max title length
-      showTitles = true,   -- Whether title row is shown
-      keyColor = { red = 1, green = 1, blue = 1, alpha = 1 }, -- Key text color
-      keyDimmedColor = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 }, -- Key color for dimmed hints
-      titleColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 }, -- Title text color
-      titleDimmedColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 }, -- Title color for dimmed hints
+      gap = 0, -- Gap between icon and key box (px)
+      fontName = nil, -- Key font name (nil for system default)
+      fontSize = 48, -- Key font size
       keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }, -- Highlight color for typed prefix
+      state = {
+        normal = {
+          color = { red = 1, green = 1, blue = 1, alpha = 1 }, -- Key text color
+        },
+        dimmed = {
+          color = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 }, -- Key text color for dimmed hints
+        },
+        occluded = {},
+        active = {
+          color = { red = 1.00, green = 0.93, blue = 0.86, alpha = 1.00 }, -- Key text color on the active window
+        },
+      },
     },
-    badge = {
-      padding = 12, -- Inner badge padding (px)
-      bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 }, -- Badge background color
-      dimmedBgAlpha = 0.14, -- Badge background alpha for dimmed hints
-      bumpMove = 90, -- Offset distance for overlapping hints (px)
+    title = {
+      fontName = nil, -- Title font name (nil falls back to key.fontName)
+      fontSize = 16, -- Title font size
+      rowGap = 8, -- Gap between icon row and title row (px)
+      maxSize = 72, -- Max title length
+      show = true, -- Whether title row is shown
+      state = {
+        normal = {
+          color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 }, -- Title text color
+        },
+        dimmed = {
+          color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 }, -- Title text color for dimmed hints
+        },
+        occluded = {},
+        active = {
+          color = { red = 0.99, green = 0.90, blue = 0.78, alpha = 1.00 }, -- Title text color on the active window
+        },
+      },
     },
-    offSpaceBadge = {
-      enabled = true, -- Whether Other-Space badge is shown
-      size = 16, -- Top-right badge diameter (px)
-      fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- Other-Space badge fill (default/fallback)
-      strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- Other-Space badge stroke (default/fallback)
-      textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, -- Other-Space badge text (default/fallback)
-      inactiveFillAlpha = 0.28, -- Fill alpha for dimmed hints
-      inactiveStrokeAlpha = 0.40, -- Stroke alpha for dimmed hints
-      inactiveTextAlpha = 0.35, -- Text alpha for dimmed hints
-      spaceColors = { -- Per-Space color overrides (indexed by Space number). Omitted fields fall back to defaults above
+    spaceBadge = {
+      enabled = true, -- Whether the Space badge is shown on other-Space candidates
+      size = 32, -- Top-right badge diameter (px)
+      state = {
+        normal = {
+          fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- Space badge fill (default/fallback)
+          strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- Space badge stroke (default/fallback)
+          textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, -- Space badge text (default/fallback)
+        },
+        dimmed = {
+          fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.28 }, -- Fill color for dimmed hints
+          strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.40 }, -- Stroke color for dimmed hints
+          textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.35 }, -- Text color for dimmed hints
+        },
+        occluded = {},
+        active = {
+          fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, -- Badge fill on the active window
+          strokeColor = { red = 1.00, green = 0.90, blue = 0.78, alpha = 0.72 }, -- Badge stroke on the active window
+          textColor = { red = 1.0, green = 0.98, blue = 0.94, alpha = 0.92 }, -- Badge text on the active window
+        },
+      },
+      spaceColors = { -- Per-Space color overrides (indexed by Space number). Omitted fields fall back to state.normal
         { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 1
         { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 2
         -- ...
       },
     },
   },
-  overlay = {
-    active = {
-      fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }, -- Active window overlay fill
-      borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- Active window overlay border
-      borderWidth = 13, -- Active window overlay border width (px)
-      cornerRadius = 10, -- Active window overlay corner radius (px)
-    },
-    hint = {
-      fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 }, -- Front hint overlay fill
-      borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }, -- Front hint overlay border
-      dimmedBorderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 }, -- Front hint overlay border for dimmed hints
-      borderWidth = 6, -- Front hint overlay border width (px)
-      cornerRadius = 12, -- Front hint overlay corner radius (px)
-    },
+  focusedWindowHighlight = {
+    fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }, -- Focused window overlay fill
+    borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- Focused window overlay border
+    borderWidth = 13, -- Focused window overlay border width (px)
+    cornerRadius = 10, -- Focused window overlay corner radius (px)
   },
   occlusion = {
     sampling = {
@@ -346,11 +319,6 @@ window_hints = {
       padding = 6,           -- Preview top padding (px, below mode only)
       alpha = 0.64,          -- Preview opacity
     },
-    hint = {
-      scale = 0.85,   -- Scale factor for occluded hints
-      bgAlpha = 0.7,  -- Background alpha for occluded hints
-      iconAlpha = 0.46, -- Icon opacity for occluded hints
-    },
   },
   dock = {
     bottomMargin = 24, -- Bottom margin for occluded-hint dock (px)
@@ -361,25 +329,50 @@ window_hints = {
     },
   },
   navigation = {
-    focusBackKey = nil, -- Focus Back-equivalent key while hints are shown
-    directionKeys = nil, -- Directional navigation keys while hints are shown
-    directHotkeys = nil, -- Directional hotkeys without opening hints
-    spaceKeys = true, -- Press 1-9 during hints to switch Space
-    prevSpaceKey = nil, -- Key to move to the previous Space during hints
-    nextSpaceKey = nil, -- Key to move to the next Space during hints
-    cardinalOverlapTieThresholdPx = 720, -- Tie threshold for cardinal direction scoring (px)
-    debugDirectionalNavigation = false, -- Emit directional scoring debug logs
-    swapSelectModifiers = nil, -- Modifiers to swap window frames when selecting
+    focusBack = {
+      key = nil, -- Focus Back-equivalent key while hints are shown
+    },
+    direction = {
+      hints = {
+        keys = nil, -- Directional navigation keys while hints are shown
+      },
+      direct = {
+        modifiers = nil, -- Directional hotkey modifiers without opening hints
+        keys = nil, -- Directional hotkeys without opening hints
+      },
+      scoring = {
+        cardinalOverlapTieThresholdPx = 720, -- Tie threshold for cardinal direction scoring (px)
+        debug = false, -- Emit directional scoring debug logs
+      },
+    },
+    spaces = {
+      numbers = true, -- Press 1-9 during hints to switch Space
+      prev = {
+        key = nil, -- Key to move to the previous Space during hints
+      },
+      next = {
+        key = nil, -- Key to move to the next Space during hints
+      },
+    },
   },
   behavior = {
-    onSelect = nil, -- Callback on window selection
-    onError = nil,  -- Callback on errors
-    centerCursor = false, -- Move cursor to selected window center
-    centerCursorOnStart = false, -- Move cursor to active window center when hints start
-    includeOtherSpaces = false, -- Include visible windows from other Spaces as candidates
-  },
-  internal = {
-    focusHistory = nil, -- Internal injection only (normally do not set)
+    selection = {
+      swapWindowFrame = {
+        modifiers = nil, -- Modifiers to swap window frames when selecting
+      },
+    },
+    cursor = {
+      onSelect = false, -- Move cursor to selected window center
+      onStart = false, -- Move cursor to active window center when hints start
+    },
+    candidates = {
+      includeOtherSpaces = false, -- Include visible windows from other Spaces as candidates
+      includeActiveWindow = false, -- Also show a hint on the currently active window
+    },
+    callbacks = {
+      onSelect = nil, -- Callback on window selection
+      onError = nil,  -- Callback on errors
+    },
   },
 }
 ```
@@ -420,60 +413,72 @@ For implementation defaults and internal options, see `DEFAULT_CONFIG` in `windo
 
 ### Navigation During Window Hints
 
-- `navigation.focusBackKey` and `navigation.directionKeys` are active only while hints are shown
-- `navigation.focusBackKey` works only when `focus_back` is enabled
+- `navigation.focusBack.key` and `navigation.direction.hints.keys` are active only while hints are shown
+- `navigation.focusBack.key` works only when `focus_back` is enabled
 - If these keys conflict with `hint.chars`, the conflicting hint chars are removed and navigation keys take priority
 - Fully occluded windows are excluded from directional navigation candidates
-- Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `navigation.cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
+- Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `navigation.direction.scoring.cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
 - Diagonal directions prefer the smallest sum of two axis edge gaps, then frontmost order, center distance, and finally the previously active window
 
 ### Direct Direction Hotkeys
 
-`navigation.directHotkeys` lets you bind directional movement without showing hints.
+`navigation.direction.direct` lets you bind directional movement without showing hints.
 
 ```lua
 navigation = {
-  directHotkeys = {
-    modifiers = { "ctrl", "alt" }, -- required
-    keys = {                       -- optional; only specified directions are enabled
-      left = "h",
-      down = "j",
-      up = "k",
-      right = "l",
-      upLeft = "y",
-      upRight = "u",
-      downLeft = "b",
-      downRight = "n",
+  direction = {
+    direct = {
+      modifiers = { "ctrl", "alt" }, -- required
+      keys = {                       -- optional; only specified directions are enabled
+        left = "h",
+        down = "j",
+        up = "k",
+        right = "l",
+        upLeft = "y",
+        upRight = "u",
+        downLeft = "b",
+        downRight = "n",
+      },
     },
   },
 }
 ```
 
-- Uses the same target selection rules as `navigation.directionKeys` (occlusion filtering and tie-break logic included)
+- Uses the same target selection rules as `navigation.direction.hints.keys` (occlusion filtering and tie-break logic included)
 - Moves focus immediately; Window Hints UI is not shown
 - If `keys` is omitted or empty, direct-direction hotkeys are disabled
 - In `modifiers`, `option` is accepted as an alias for `alt`
 
-### navigation.spaceKeys
+### navigation.spaces.numbers
 
-When `navigation.spaceKeys = true` (default), pressing `1`–`9` while hints are shown switches to the corresponding Space using `hs.spaces.gotoSpace()`. If the Space number does not exist, the key is consumed but nothing happens. Set to `false` to disable.
+When `navigation.spaces.numbers = true` (default), pressing `1`–`9` while hints are shown switches to the corresponding Space using `hs.spaces.gotoSpace()`. If the Space number does not exist, the key is consumed but nothing happens. Set to `false` to disable.
 
-### navigation.prevSpaceKey / navigation.nextSpaceKey
+### navigation.spaces.prev.key / navigation.spaces.next.key
 
-`navigation.prevSpaceKey` and `navigation.nextSpaceKey` let you move to the previous or next Space while hints are shown. Setting either to a single character key (e.g. `","` / `"."`) closes hints first, then triggers the Space switch. The default is `nil` (disabled).
+`navigation.spaces.prev.key` and `navigation.spaces.next.key` let you move to the previous or next Space while hints are shown. Setting either to a single character key (e.g. `","` / `"."`) closes hints first, then triggers the Space switch. The default is `nil` (disabled).
 
-### behavior.includeOtherSpaces
+### behavior.candidates.includeOtherSpaces
 
-If `behavior.includeOtherSpaces = true`, Window Hints include visible windows from other Spaces, not just the
+If `behavior.candidates.includeOtherSpaces = true`, Window Hints include visible windows from other Spaces, not just the
 current one. The default is `false`.
 
-- Other-Space candidates are rendered in the dock-style lane used for occluded/background hints
+- Other-Space candidates are rendered in the same dock-style lane as occluded hints
 - They are marked with a round badge in the top-right corner showing the Space number
-- Badge colors change per Space number via `ui.offSpaceBadge.spaceColors` (5 preset colors included; out-of-range numbers fall back to default)
-- Set `ui.offSpaceBadge.enabled = false` to hide the badge entirely
-- You can customize the badge colors and size via `ui.offSpaceBadge`
+- Badge colors change per Space number via `hint.spaceBadge.spaceColors` (5 preset colors included; out-of-range numbers fall back to default)
+- Set `hint.spaceBadge.enabled = false` to hide the badge entirely
+- You can customize the badge colors and size via `hint.spaceBadge`
 - Selecting one calls `focus()` directly and lets macOS handle the Space switch
-- Directional navigation during hints and `navigation.directHotkeys` still target current-Space candidates only
+- Directional navigation during hints and `navigation.direction.direct` still target current-Space candidates only
+
+### behavior.candidates.includeActiveWindow
+
+If `behavior.candidates.includeActiveWindow = true`, Window Hints also show a hint on the currently focused window. The default is `false`.
+
+- This keeps hint assignment more consistent when multiple windows of the same app are open
+- Selecting the active window still runs `behavior.cursor.onSelect` if enabled
+- The focused-window outline from `focusedWindowHighlight` remains visible
+- You can override the active-window hint appearance via `hint.state.active`, `hint.icon.state.active`, `hint.key.state.active`, `hint.title.state.active`, and `hint.spaceBadge.state.active`
+- Omitted fields in those `active` states fall back to each element's `normal` state
 
 ## Focus Back Options
 
@@ -489,7 +494,9 @@ focus_back = {
     name = nil, -- URL scheme name (trigger via hammerspoon://<name>)
   },
   behavior = {
-    centerCursor = false, -- Move cursor to window center after switching
+    cursor = {
+      onSelect = false, -- Move cursor to window center after switching
+    },
   },
   stateSync = nil, -- State sync settings to compensate for missed events (see below)
   internal = {

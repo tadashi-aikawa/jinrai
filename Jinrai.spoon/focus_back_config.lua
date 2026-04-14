@@ -9,7 +9,9 @@ local DEFAULT_CONFIG = {
 		name = nil,
 	},
 	behavior = {
-		centerCursor = false,
+		cursor = {
+			onSelect = false,
+		},
 	},
 	stateSync = nil,
 	internal = {
@@ -93,12 +95,19 @@ local function checkLegacyFlatKeys(options)
 	end
 end
 
+local function checkLegacyNestedKeys(options)
+	if type(options.behavior) == "table" and options.behavior.centerCursor ~= nil then
+		error("[jinrai.focus_back] legacy nested key 'behavior.centerCursor' is no longer supported; use 'behavior.cursor.onSelect'")
+	end
+end
+
 function M.build(options)
 	options = options or {}
 	if type(options) ~= "table" then
 		error("[jinrai.focus_back] options must be a table")
 	end
 	checkLegacyFlatKeys(options)
+	checkLegacyNestedKeys(options)
 	local merged = deepMerge(DEFAULT_CONFIG, options)
 	if options.internal and type(options.internal) == "table" and options.internal.focusHistory ~= nil then
 		merged.internal.focusHistory = options.internal.focusHistory
@@ -108,7 +117,7 @@ function M.build(options)
 		hotkeyModifiers = merged.hotkey.modifiers,
 		hotkeyKey = merged.hotkey.key,
 		urlEvent = merged.urlEvent and merged.urlEvent.name or nil,
-		centerCursor = merged.behavior.centerCursor,
+		centerCursor = merged.behavior.cursor.onSelect,
 		stateSync = merged.stateSync,
 		focusHistory = merged.internal.focusHistory,
 	}

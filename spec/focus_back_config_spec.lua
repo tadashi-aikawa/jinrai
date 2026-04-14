@@ -16,7 +16,9 @@ describe("focus_back_config", function()
 				name = "focus_back",
 			},
 			behavior = {
-				centerCursor = true,
+				cursor = {
+					onSelect = true,
+				},
 			},
 			stateSync = {
 				interval = 0.1,
@@ -42,5 +44,17 @@ describe("focus_back_config", function()
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("legacy flat key"))
+	end)
+
+	it("旧 nested key はエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				behavior = {
+					centerCursor = true,
+				},
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("legacy nested key"))
 	end)
 end)

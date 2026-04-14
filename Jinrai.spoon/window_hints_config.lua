@@ -37,47 +37,108 @@ local DEFAULT_CONFIG = {
 	hint = {
 		chars = DEFAULT_HINT_CHARS,
 		prefixOverrides = nil,
-	},
-	ui = {
+		padding = 12,
+		collisionOffset = 90,
+		cornerRadius = 12,
+		occludedScale = 0.85,
+		highlight = {
+			borderWidth = 6,
+		},
+		state = {
+			normal = {
+				bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 },
+				highlight = {
+					fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 },
+					borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 },
+				},
+			},
+			dimmed = {
+				bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.14 },
+				highlight = {
+					borderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 },
+				},
+			},
+			occluded = {
+				bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.70 },
+			},
+			active = {
+				bgColor = { red = 0.08, green = 0.05, blue = 0.03, alpha = 0.88 },
+				highlight = {
+					fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 },
+					borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 },
+				},
+			},
+		},
 		icon = {
 			size = 72,
-			alpha = 0.95,
-			dimmedAlpha = 0.30,
+			state = {
+				normal = { alpha = 0.95 },
+				dimmed = { alpha = 0.30 },
+				occluded = { alpha = 0.46 },
+				active = { alpha = 1.0 },
+			},
 		},
-		keyBox = {
+		key = {
 			size = 72,
 			minWidth = 72,
 			horizontalPadding = 10,
 			gap = 0,
-		},
-		text = {
 			fontName = nil,
-			keyFontSize = 48,
-			titleFontSize = 16,
-			rowGap = 8,
-			titleMaxSize = 72,
-			showTitles = true,
-			keyColor = { red = 1, green = 1, blue = 1, alpha = 1 },
-			keyDimmedColor = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 },
-			titleColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 },
-			titleDimmedColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 },
+			fontSize = 48,
 			keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 },
+			state = {
+				normal = {
+					color = { red = 1, green = 1, blue = 1, alpha = 1 },
+				},
+				dimmed = {
+					color = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 },
+				},
+				occluded = {},
+				active = {
+					color = { red = 1.00, green = 0.93, blue = 0.86, alpha = 1.00 },
+				},
+			},
 		},
-		badge = {
-			padding = 12,
-			bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 },
-			dimmedBgAlpha = 0.14,
-			bumpMove = 90,
+		title = {
+			fontName = nil,
+			fontSize = 16,
+			rowGap = 8,
+			maxSize = 72,
+			show = true,
+			state = {
+				normal = {
+					color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 },
+				},
+				dimmed = {
+					color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 },
+				},
+				occluded = {},
+				active = {
+					color = { red = 0.99, green = 0.90, blue = 0.78, alpha = 1.00 },
+				},
+			},
 		},
-		offSpaceBadge = {
+		spaceBadge = {
 			enabled = true,
 			size = 32,
-			fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 },
-			strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 },
-			textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
-			inactiveFillAlpha = 0.28,
-			inactiveStrokeAlpha = 0.40,
-			inactiveTextAlpha = 0.35,
+			state = {
+				normal = {
+					fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 },
+					strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 },
+					textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+				},
+				dimmed = {
+					fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.28 },
+					strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.40 },
+					textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.35 },
+				},
+				occluded = {},
+				active = {
+					fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 },
+					strokeColor = { red = 1.00, green = 0.90, blue = 0.78, alpha = 0.72 },
+					textColor = { red = 1.0, green = 0.98, blue = 0.94, alpha = 0.92 },
+				},
+			},
 			spaceColors = {
 				-- 1: 青（デフォルトと同系色）
 				{
@@ -112,24 +173,11 @@ local DEFAULT_CONFIG = {
 			},
 		},
 	},
-	overlay = {
-		active = {
-			fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 },
-			borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 },
-			borderWidth = 13,
-			cornerRadius = 10,
-		},
-		hint = {
-			fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 },
-			borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 },
-			dimmedBorderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 },
-			borderWidth = 6,
-			cornerRadius = 12,
-		},
-		activeHint = {
-			fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 },
-			borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.85 },
-		},
+	focusedWindowHighlight = {
+		fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 },
+		borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 },
+		borderWidth = 13,
+		cornerRadius = 10,
 	},
 	occlusion = {
 		sampling = {
@@ -148,11 +196,6 @@ local DEFAULT_CONFIG = {
 			padding = 6,
 			alpha = 0.64,
 		},
-		hint = {
-			scale = 0.85,
-			bgAlpha = 0.7,
-			iconAlpha = 0.46,
-		},
 	},
 	dock = {
 		bottomMargin = 24,
@@ -163,23 +206,50 @@ local DEFAULT_CONFIG = {
 		},
 	},
 	navigation = {
-		focusBackKey = nil,
-		directionKeys = nil,
-		directHotkeys = nil,
-		spaceKeys = true,
-		prevSpaceKey = nil,
-		nextSpaceKey = nil,
-		cardinalOverlapTieThresholdPx = 720,
-		debugDirectionalNavigation = false,
-		swapSelectModifiers = nil,
+		focusBack = {
+			key = nil,
+		},
+		direction = {
+			hints = {
+				keys = nil,
+			},
+			direct = {
+				modifiers = nil,
+				keys = nil,
+			},
+			scoring = {
+				cardinalOverlapTieThresholdPx = 720,
+				debug = false,
+			},
+		},
+		spaces = {
+			numbers = true,
+			prev = {
+				key = nil,
+			},
+			next = {
+				key = nil,
+			},
+		},
 	},
 	behavior = {
-		onSelect = nil,
-		onError = nil,
-		centerCursor = false,
-		centerCursorOnStart = false,
-		includeOtherSpaces = false,
-		includeActiveWindow = false,
+		selection = {
+			swapWindowFrame = {
+				modifiers = nil,
+			},
+		},
+		cursor = {
+			onSelect = false,
+			onStart = false,
+		},
+		candidates = {
+			includeOtherSpaces = false,
+			includeActiveWindow = false,
+		},
+		callbacks = {
+			onSelect = nil,
+			onError = nil,
+		},
 	},
 	internal = {
 		focusHistory = nil,
@@ -211,6 +281,8 @@ local LEGACY_FLAT_KEYS = {
 	keyHighlightColor = true,
 	iconAlpha = true,
 	dimmedIconAlpha = true,
+	keyFontName = true,
+	titleFontName = true,
 	bumpMove = true,
 	showPreviewForOccluded = true,
 	previewMode = true,
@@ -359,26 +431,26 @@ local function normalizeActionKey(value, optionName)
 	return string.lower(value)
 end
 
-local function normalizeDirectionKeys(directionKeys)
+local function normalizeDirectionKeys(directionKeys, optionName)
 	if directionKeys == nil then
 		return nil
 	end
 	if type(directionKeys) ~= "table" then
-		error("[jinrai.window_hints] navigation.directionKeys must be a table")
+		error(string.format("[jinrai.window_hints] %s must be a table", optionName))
 	end
 	return {
-		left = normalizeActionKey(directionKeys.left, "navigation.directionKeys.left"),
-		down = normalizeActionKey(directionKeys.down, "navigation.directionKeys.down"),
-		up = normalizeActionKey(directionKeys.up, "navigation.directionKeys.up"),
-		right = normalizeActionKey(directionKeys.right, "navigation.directionKeys.right"),
-		upLeft = normalizeActionKey(directionKeys.upLeft, "navigation.directionKeys.upLeft"),
-		upRight = normalizeActionKey(directionKeys.upRight, "navigation.directionKeys.upRight"),
-		downLeft = normalizeActionKey(directionKeys.downLeft, "navigation.directionKeys.downLeft"),
-		downRight = normalizeActionKey(directionKeys.downRight, "navigation.directionKeys.downRight"),
+		left = normalizeActionKey(directionKeys.left, optionName .. ".left"),
+		down = normalizeActionKey(directionKeys.down, optionName .. ".down"),
+		up = normalizeActionKey(directionKeys.up, optionName .. ".up"),
+		right = normalizeActionKey(directionKeys.right, optionName .. ".right"),
+		upLeft = normalizeActionKey(directionKeys.upLeft, optionName .. ".upLeft"),
+		upRight = normalizeActionKey(directionKeys.upRight, optionName .. ".upRight"),
+		downLeft = normalizeActionKey(directionKeys.downLeft, optionName .. ".downLeft"),
+		downRight = normalizeActionKey(directionKeys.downRight, optionName .. ".downRight"),
 	}
 end
 
-local function buildDirectionKeyLookup(directionKeys)
+local function buildDirectionKeyLookup(directionKeys, optionName)
 	if not directionKeys then
 		return {}
 	end
@@ -388,7 +460,7 @@ local function buildDirectionKeyLookup(directionKeys)
 		if key then
 			local existing = lookup[key]
 			if existing and existing ~= direction then
-				error("[jinrai.window_hints] navigation.directionKeys must not contain duplicate keys")
+				error(string.format("[jinrai.window_hints] %s must not contain duplicate keys", optionName))
 			end
 			lookup[key] = direction
 		end
@@ -406,27 +478,27 @@ local function normalizeDirectDirectionHotkeys(directDirectionHotkeys)
 		return nil
 	end
 	if type(directDirectionHotkeys) ~= "table" then
-		error("[jinrai.window_hints] navigation.directHotkeys must be a table")
+		error("[jinrai.window_hints] navigation.direction.direct must be a table")
 	end
 
 	local keys = directDirectionHotkeys.keys
 	if keys ~= nil and type(keys) ~= "table" then
-		error("[jinrai.window_hints] navigation.directHotkeys.keys must be a table")
+		error("[jinrai.window_hints] navigation.direction.direct.keys must be a table")
 	end
-	local directionKeys = normalizeDirectionKeys(keys)
-	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
+	local directionKeys = normalizeDirectionKeys(keys, "navigation.direction.direct.keys")
+	local directionKeyLookup = buildDirectionKeyLookup(directionKeys, "navigation.direction.direct.keys")
 	if next(directionKeyLookup) == nil then
 		return nil
 	end
 
 	local modifiers = directDirectionHotkeys.modifiers
 	if type(modifiers) ~= "table" then
-		error("[jinrai.window_hints] navigation.directHotkeys.modifiers must be an array")
+		error("[jinrai.window_hints] navigation.direction.direct.modifiers must be an array")
 	end
 	local maxIndex = 0
 	for k, _ in pairs(modifiers) do
 		if type(k) ~= "number" or k < 1 or k ~= math.floor(k) then
-			error("[jinrai.window_hints] navigation.directHotkeys.modifiers must be an array")
+			error("[jinrai.window_hints] navigation.direction.direct.modifiers must be an array")
 		end
 		if k > maxIndex then
 			maxIndex = k
@@ -434,32 +506,32 @@ local function normalizeDirectDirectionHotkeys(directDirectionHotkeys)
 	end
 	for i = 1, maxIndex do
 		if modifiers[i] == nil then
-			error("[jinrai.window_hints] navigation.directHotkeys.modifiers must be an array")
+			error("[jinrai.window_hints] navigation.direction.direct.modifiers must be an array")
 		end
 	end
 	if #modifiers == 0 then
-		error("[jinrai.window_hints] navigation.directHotkeys.modifiers must not be empty")
+		error("[jinrai.window_hints] navigation.direction.direct.modifiers must not be empty")
 	end
 
 	local modifierLookup = {}
 	for i, modifier in ipairs(modifiers) do
 		if type(modifier) ~= "string" then
-			error(string.format("[jinrai.window_hints] navigation.directHotkeys.modifiers[%d] must be a string", i))
+			error(string.format("[jinrai.window_hints] navigation.direction.direct.modifiers[%d] must be a string", i))
 		end
 		local normalized = normalizeModifierName(modifier)
 		if normalized == "" then
-			error(string.format("[jinrai.window_hints] navigation.directHotkeys.modifiers[%d] must not be empty", i))
+			error(string.format("[jinrai.window_hints] navigation.direction.direct.modifiers[%d] must not be empty", i))
 		end
 		if not SELECT_MODIFIER_LOOKUP[normalized] then
 			error(
 				string.format(
-					"[jinrai.window_hints] navigation.directHotkeys.modifiers[%d] must be one of cmd/alt/ctrl/shift/fn",
+					"[jinrai.window_hints] navigation.direction.direct.modifiers[%d] must be one of cmd/alt/ctrl/shift/fn",
 					i
 				)
 			)
 		end
 		if modifierLookup[normalized] then
-			error("[jinrai.window_hints] navigation.directHotkeys.modifiers must not contain duplicate modifiers")
+			error("[jinrai.window_hints] navigation.direction.direct.modifiers must not contain duplicate modifiers")
 		end
 		modifierLookup[normalized] = true
 	end
@@ -559,36 +631,37 @@ local function normalizePositiveNumber(value, optionName)
 	return value
 end
 
-local function normalizeSelectModifiers(modifiers)
+local function normalizeSelectModifiers(modifiers, optionName)
 	if modifiers == nil then
 		return nil
 	end
 	if type(modifiers) ~= "table" or not isArrayTable(modifiers) then
-		error("[jinrai.window_hints] navigation.swapSelectModifiers must be an array")
+		error(string.format("[jinrai.window_hints] %s must be an array", optionName))
 	end
 	if #modifiers == 0 then
-		error("[jinrai.window_hints] navigation.swapSelectModifiers must not be empty")
+		error(string.format("[jinrai.window_hints] %s must not be empty", optionName))
 	end
 
 	local lookup = {}
 	for i, modifier in ipairs(modifiers) do
 		if type(modifier) ~= "string" then
-			error(string.format("[jinrai.window_hints] navigation.swapSelectModifiers[%d] must be a string", i))
+			error(string.format("[jinrai.window_hints] %s[%d] must be a string", optionName, i))
 		end
 		local normalized = normalizeModifierName(modifier)
 		if normalized == "" then
-			error(string.format("[jinrai.window_hints] navigation.swapSelectModifiers[%d] must not be empty", i))
+			error(string.format("[jinrai.window_hints] %s[%d] must not be empty", optionName, i))
 		end
 		if not SELECT_MODIFIER_LOOKUP[normalized] then
 			error(
 				string.format(
-					"[jinrai.window_hints] navigation.swapSelectModifiers[%d] must be one of cmd/alt/ctrl/shift/fn",
+					"[jinrai.window_hints] %s[%d] must be one of cmd/alt/ctrl/shift/fn",
+					optionName,
 					i
 				)
 			)
 		end
 		if lookup[normalized] then
-			error("[jinrai.window_hints] navigation.swapSelectModifiers must not contain duplicate modifiers")
+			error(string.format("[jinrai.window_hints] %s must not contain duplicate modifiers", optionName))
 		end
 		lookup[normalized] = true
 	end
@@ -602,11 +675,140 @@ local function normalizeSelectModifiers(modifiers)
 	return normalized
 end
 
+local function resolveStateConfig(stateConfig, stateName)
+	if type(stateConfig) ~= "table" then
+		return {}
+	end
+	local resolved = stateConfig[stateName]
+	if type(resolved) ~= "table" then
+		return {}
+	end
+	return resolved
+end
+
+local function resolveStateValue(stateConfig, stateName, key, fallbackStateNames)
+	local stateValue = resolveStateConfig(stateConfig, stateName)[key]
+	if stateValue ~= nil then
+		return stateValue
+	end
+	for _, fallbackStateName in ipairs(fallbackStateNames or {}) do
+		local fallbackValue = resolveStateConfig(stateConfig, fallbackStateName)[key]
+		if fallbackValue ~= nil then
+			return fallbackValue
+		end
+	end
+	return nil
+end
+
+local function resolveHighlightStateValue(stateConfig, stateName, key, fallbackStateNames)
+	local highlightConfig = resolveStateConfig(stateConfig, stateName).highlight
+	if type(highlightConfig) == "table" and highlightConfig[key] ~= nil then
+		return highlightConfig[key]
+	end
+	for _, fallbackStateName in ipairs(fallbackStateNames or {}) do
+		local fallbackHighlightConfig = resolveStateConfig(stateConfig, fallbackStateName).highlight
+		if type(fallbackHighlightConfig) == "table" and fallbackHighlightConfig[key] ~= nil then
+			return fallbackHighlightConfig[key]
+		end
+	end
+	return nil
+end
+
 local function checkLegacyFlatKeys(options)
 	for key, _ in pairs(options) do
 		if LEGACY_FLAT_KEYS[key] then
 			error(string.format("[jinrai.window_hints] legacy flat key '%s' is no longer supported; use nested config", key))
 		end
+	end
+end
+
+local function checkLegacyNestedKeys(options)
+	if options.ui ~= nil then
+		error(
+			"[jinrai.window_hints] legacy nested key 'ui.*' is no longer supported; use 'hint.*' (hint.icon / hint.key / hint.title / hint.state / hint.spaceBadge)"
+		)
+	end
+	if options.activeWindow ~= nil then
+		error(
+			"[jinrai.window_hints] legacy nested key 'activeWindow.*' is no longer supported; use 'focusedWindowHighlight.*'"
+		)
+	end
+	if options.overlay ~= nil then
+		error(
+			"[jinrai.window_hints] legacy nested key 'overlay.*' is no longer supported; use 'focusedWindowHighlight' / 'hint.state.*.highlight'"
+		)
+	end
+	if type(options.hint) == "table" and options.hint.badge ~= nil then
+		error("[jinrai.window_hints] legacy nested key 'hint.badge.*' is no longer supported; use 'hint.state.*.bgColor'")
+	end
+	if type(options.hint) == "table" and options.hint.keyBox ~= nil then
+		error("[jinrai.window_hints] legacy nested key 'hint.keyBox.*' is no longer supported; use 'hint.key.*'")
+	end
+	if type(options.hint) == "table" and options.hint.text ~= nil then
+		error("[jinrai.window_hints] legacy nested key 'hint.text.*' is no longer supported; use 'hint.key.*' / 'hint.title.*'")
+	end
+	if type(options.hint) == "table" and options.hint.overlay ~= nil then
+		error("[jinrai.window_hints] legacy nested key 'hint.overlay.*' is no longer supported; use 'hint.state.*.highlight'")
+	end
+	if type(options.hint) == "table" and options.hint.onActiveWindow ~= nil then
+		error("[jinrai.window_hints] legacy nested key 'hint.onActiveWindow.*' is no longer supported; use 'hint.state.active.highlight'")
+	end
+	if type(options.hint) == "table" and options.hint.offSpaceBadge ~= nil then
+		error("[jinrai.window_hints] legacy nested key 'hint.offSpaceBadge.*' is no longer supported; use 'hint.spaceBadge.*'")
+	end
+	if type(options.navigation) == "table" then
+		if options.navigation.focusBackKey ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'navigation.focusBackKey' is no longer supported; use 'navigation.focusBack.key'")
+		end
+		if options.navigation.directionKeys ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'navigation.directionKeys.*' is no longer supported; use 'navigation.direction.hints.keys.*'")
+		end
+		if options.navigation.directHotkeys ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'navigation.directHotkeys.*' is no longer supported; use 'navigation.direction.direct.{modifiers,keys}'")
+		end
+		if options.navigation.spaceKeys ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'navigation.spaceKeys' is no longer supported; use 'navigation.spaces.numbers'")
+		end
+		if options.navigation.prevSpaceKey ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'navigation.prevSpaceKey' is no longer supported; use 'navigation.spaces.prev.key'")
+		end
+		if options.navigation.nextSpaceKey ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'navigation.nextSpaceKey' is no longer supported; use 'navigation.spaces.next.key'")
+		end
+		if options.navigation.cardinalOverlapTieThresholdPx ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'navigation.cardinalOverlapTieThresholdPx' is no longer supported; use 'navigation.direction.scoring.cardinalOverlapTieThresholdPx'")
+		end
+		if options.navigation.debugDirectionalNavigation ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'navigation.debugDirectionalNavigation' is no longer supported; use 'navigation.direction.scoring.debug'")
+		end
+		if options.navigation.swapSelectModifiers ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'navigation.swapSelectModifiers' is no longer supported; use 'behavior.selection.swapWindowFrame.modifiers'")
+		end
+	end
+	if type(options.behavior) == "table" then
+		if options.behavior.onSelect ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'behavior.onSelect' is no longer supported; use 'behavior.callbacks.onSelect'")
+		end
+		if options.behavior.onError ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'behavior.onError' is no longer supported; use 'behavior.callbacks.onError'")
+		end
+		if options.behavior.centerCursor ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'behavior.centerCursor' is no longer supported; use 'behavior.cursor.onSelect'")
+		end
+		if options.behavior.centerCursorOnStart ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'behavior.centerCursorOnStart' is no longer supported; use 'behavior.cursor.onStart'")
+		end
+		if options.behavior.includeOtherSpaces ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'behavior.includeOtherSpaces' is no longer supported; use 'behavior.candidates.includeOtherSpaces'")
+		end
+		if options.behavior.includeActiveWindow ~= nil then
+			error("[jinrai.window_hints] legacy nested key 'behavior.includeActiveWindow' is no longer supported; use 'behavior.candidates.includeActiveWindow'")
+		end
+	end
+	if type(options.occlusion) == "table" and options.occlusion.hint ~= nil then
+		error(
+			"[jinrai.window_hints] legacy nested key 'occlusion.hint.*' is no longer supported; use 'hint.occludedScale' / 'hint.state.occluded.bgColor' / 'hint.icon.state.occluded.alpha'"
+		)
 	end
 end
 
@@ -616,25 +818,29 @@ function M.build(options)
 		error("[jinrai.window_hints] options must be a table")
 	end
 	checkLegacyFlatKeys(options)
+	checkLegacyNestedKeys(options)
 
 	local merged = deepMerge(DEFAULT_CONFIG, options)
 	if options.internal and type(options.internal) == "table" and options.internal.focusHistory ~= nil then
 		merged.internal.focusHistory = options.internal.focusHistory
 	end
 
-	local directionKeys = normalizeDirectionKeys(merged.navigation.directionKeys)
-	local directionKeyLookup = buildDirectionKeyLookup(directionKeys)
-	local directDirectionHotkeys = normalizeDirectDirectionHotkeys(merged.navigation.directHotkeys)
-	local focusBackKey = normalizeActionKey(merged.navigation.focusBackKey, "navigation.focusBackKey")
-	local prevSpaceKey = normalizeActionKey(merged.navigation.prevSpaceKey, "navigation.prevSpaceKey")
-	local nextSpaceKey = normalizeActionKey(merged.navigation.nextSpaceKey, "navigation.nextSpaceKey")
-	local swapSelectModifiers = normalizeSelectModifiers(merged.navigation.swapSelectModifiers)
+	local directionKeys = normalizeDirectionKeys(merged.navigation.direction.hints.keys, "navigation.direction.hints.keys")
+	local directionKeyLookup = buildDirectionKeyLookup(directionKeys, "navigation.direction.hints.keys")
+	local directDirectionHotkeys = normalizeDirectDirectionHotkeys(merged.navigation.direction.direct)
+	local focusBackKey = normalizeActionKey(merged.navigation.focusBack.key, "navigation.focusBack.key")
+	local prevSpaceKey = normalizeActionKey(merged.navigation.spaces.prev.key, "navigation.spaces.prev.key")
+	local nextSpaceKey = normalizeActionKey(merged.navigation.spaces.next.key, "navigation.spaces.next.key")
+	local swapSelectModifiers = normalizeSelectModifiers(
+		merged.behavior.selection.swapWindowFrame.modifiers,
+		"behavior.selection.swapWindowFrame.modifiers"
+	)
 	local focusHistory = merged.internal.focusHistory
 	if not focusHistory then
 		focusBackKey = nil
 	end
 
-	local spaceKeys = merged.navigation.spaceKeys and true or false
+	local spaceKeys = merged.navigation.spaces.numbers and true or false
 
 	local hintChars = normalizeHintChars(merged.hint.chars or DEFAULT_HINT_CHARS)
 	local reservedHintCharLookup = buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spaceKeys, prevSpaceKey, nextSpaceKey)
@@ -645,59 +851,62 @@ function M.build(options)
 
 	local dockWindowXBlend = normalizeUnitIntervalNumber(merged.dock.windowBlend.x, "dock.windowBlend.x")
 	local dockWindowYBlend = normalizeUnitIntervalNumber(merged.dock.windowBlend.y, "dock.windowBlend.y")
-	local offSpaceBadgeSize = normalizePositiveNumber(merged.ui.offSpaceBadge.size, "ui.offSpaceBadge.size")
-	local offSpaceBadgeInactiveFillAlpha = normalizeUnitIntervalNumber(
-		merged.ui.offSpaceBadge.inactiveFillAlpha,
-		"ui.offSpaceBadge.inactiveFillAlpha"
-	)
-	local offSpaceBadgeInactiveStrokeAlpha = normalizeUnitIntervalNumber(
-		merged.ui.offSpaceBadge.inactiveStrokeAlpha,
-		"ui.offSpaceBadge.inactiveStrokeAlpha"
-	)
-	local offSpaceBadgeInactiveTextAlpha = normalizeUnitIntervalNumber(
-		merged.ui.offSpaceBadge.inactiveTextAlpha,
-		"ui.offSpaceBadge.inactiveTextAlpha"
-	)
+	local offSpaceBadgeSize = normalizePositiveNumber(merged.hint.spaceBadge.size, "hint.spaceBadge.size")
 	local cardinalOverlapTieThresholdPx = normalizeNonNegativeNumber(
-		merged.navigation.cardinalOverlapTieThresholdPx,
-		"navigation.cardinalOverlapTieThresholdPx"
+		merged.navigation.direction.scoring.cardinalOverlapTieThresholdPx,
+		"navigation.direction.scoring.cardinalOverlapTieThresholdPx"
 	)
+	local hintState = merged.hint.state
+	local iconState = merged.hint.icon.state
+	local keyState = merged.hint.key.state
+	local titleState = merged.hint.title.state
+	local spaceBadgeState = merged.hint.spaceBadge.state
 
 	return {
 		hotkeyModifiers = merged.hotkey.modifiers,
 		hotkeyKey = merged.hotkey.key,
 		hintChars = hintChars,
-		iconSize = merged.ui.icon.size,
-		keyBoxSize = merged.ui.keyBox.size,
-		keyBoxMinWidth = merged.ui.keyBox.minWidth,
-		keyBoxHorizontalPadding = merged.ui.keyBox.horizontalPadding,
-		keyGap = merged.ui.keyBox.gap,
-		padding = merged.ui.badge.padding,
-		fontName = merged.ui.text.fontName,
-		fontSize = merged.ui.text.keyFontSize,
-		titleFontSize = merged.ui.text.titleFontSize,
-		rowGap = merged.ui.text.rowGap,
-		titleMaxSize = merged.ui.text.titleMaxSize,
-		showTitles = merged.ui.text.showTitles,
-		bgColor = merged.ui.badge.bgColor,
-		dimmedBgAlpha = merged.ui.badge.dimmedBgAlpha,
-		offSpaceBadgeEnabled = merged.ui.offSpaceBadge.enabled,
+		iconSize = merged.hint.icon.size,
+		hintCornerRadius = merged.hint.cornerRadius,
+		keyBoxSize = merged.hint.key.size,
+		keyBoxMinWidth = merged.hint.key.minWidth,
+		keyBoxHorizontalPadding = merged.hint.key.horizontalPadding,
+		keyGap = merged.hint.key.gap,
+		padding = merged.hint.padding,
+		keyFontName = merged.hint.key.fontName,
+		titleFontName = merged.hint.title.fontName or merged.hint.key.fontName,
+		fontSize = merged.hint.key.fontSize,
+		titleFontSize = merged.hint.title.fontSize,
+		rowGap = merged.hint.title.rowGap,
+		titleMaxSize = merged.hint.title.maxSize,
+		showTitles = merged.hint.title.show,
+		bgColor = resolveStateValue(hintState, "normal", "bgColor"),
+		dimmedBgColor = resolveStateValue(hintState, "dimmed", "bgColor", { "normal" }),
+		activeBgColor = resolveStateValue(hintState, "active", "bgColor", { "normal" }),
+		offSpaceBadgeEnabled = merged.hint.spaceBadge.enabled,
 		offSpaceBadgeSize = offSpaceBadgeSize,
-		offSpaceBadgeFillColor = merged.ui.offSpaceBadge.fillColor,
-		offSpaceBadgeStrokeColor = merged.ui.offSpaceBadge.strokeColor,
-		offSpaceBadgeInactiveFillAlpha = offSpaceBadgeInactiveFillAlpha,
-		offSpaceBadgeInactiveStrokeAlpha = offSpaceBadgeInactiveStrokeAlpha,
-		offSpaceBadgeTextColor = merged.ui.offSpaceBadge.textColor,
-		offSpaceBadgeInactiveTextAlpha = offSpaceBadgeInactiveTextAlpha,
-		offSpaceBadgeSpaceColors = merged.ui.offSpaceBadge.spaceColors,
-		textColor = merged.ui.text.keyColor,
-		dimmedTextColor = merged.ui.text.keyDimmedColor,
-		titleTextColor = merged.ui.text.titleColor,
-		dimmedTitleTextColor = merged.ui.text.titleDimmedColor,
-		keyHighlightColor = merged.ui.text.keyHighlightColor,
-		iconAlpha = merged.ui.icon.alpha,
-		dimmedIconAlpha = merged.ui.icon.dimmedAlpha,
-		bumpMove = merged.ui.badge.bumpMove,
+		offSpaceBadgeFillColor = resolveStateValue(spaceBadgeState, "normal", "fillColor"),
+		offSpaceBadgeStrokeColor = resolveStateValue(spaceBadgeState, "normal", "strokeColor"),
+		offSpaceBadgeTextColor = resolveStateValue(spaceBadgeState, "normal", "textColor"),
+		offSpaceBadgeDimmedFillColor = resolveStateValue(spaceBadgeState, "dimmed", "fillColor", { "normal" }),
+		offSpaceBadgeDimmedStrokeColor = resolveStateValue(spaceBadgeState, "dimmed", "strokeColor", { "normal" }),
+		offSpaceBadgeDimmedTextColor = resolveStateValue(spaceBadgeState, "dimmed", "textColor", { "normal" }),
+		activeOffSpaceBadgeFillColor = resolveStateValue(spaceBadgeState, "active", "fillColor", { "normal" }),
+		activeOffSpaceBadgeStrokeColor = resolveStateValue(spaceBadgeState, "active", "strokeColor", { "normal" }),
+		activeOffSpaceBadgeTextColor = resolveStateValue(spaceBadgeState, "active", "textColor", { "normal" }),
+		offSpaceBadgeSpaceColors = merged.hint.spaceBadge.spaceColors,
+		textColor = resolveStateValue(keyState, "normal", "color"),
+		dimmedTextColor = resolveStateValue(keyState, "dimmed", "color", { "normal" }),
+		activeTextColor = resolveStateValue(keyState, "active", "color", { "normal" }),
+		titleTextColor = resolveStateValue(titleState, "normal", "color"),
+		dimmedTitleTextColor = resolveStateValue(titleState, "dimmed", "color", { "normal" }),
+		activeTitleTextColor = resolveStateValue(titleState, "active", "color", { "normal" }),
+		keyHighlightColor = merged.hint.key.keyHighlightColor,
+		iconAlpha = resolveStateValue(iconState, "normal", "alpha"),
+		dimmedIconAlpha = resolveStateValue(iconState, "dimmed", "alpha", { "normal" }),
+		occludedIconAlpha = resolveStateValue(iconState, "occluded", "alpha", { "normal" }),
+		activeIconAlpha = resolveStateValue(iconState, "active", "alpha", { "normal" }),
+		collisionOffset = merged.hint.collisionOffset,
 		showPreviewForOccluded = merged.occlusion.preview.enabled,
 		previewMode = merged.occlusion.preview.mode,
 		occlusionSamplingEnabled = merged.occlusion.sampling.enabled,
@@ -709,38 +918,37 @@ function M.build(options)
 		occlusionSamplingMaxRows = merged.occlusion.sampling.maxRows,
 		previewWidth = merged.occlusion.preview.width,
 		previewPadding = merged.occlusion.preview.padding,
-		occludedScale = merged.occlusion.hint.scale,
-		occludedBgAlpha = merged.occlusion.hint.bgAlpha,
-		occludedIconAlpha = merged.occlusion.hint.iconAlpha,
+		occludedScale = merged.hint.occludedScale,
+		occludedBgColor = resolveStateValue(hintState, "occluded", "bgColor", { "normal" }),
 		occludedPreviewAlpha = merged.occlusion.preview.alpha,
-		activeOverlayColor = merged.overlay.active.fillColor,
-		activeOverlayBorderColor = merged.overlay.active.borderColor,
-		activeOverlayBorderWidth = merged.overlay.active.borderWidth,
-		activeOverlayCornerRadius = merged.overlay.active.cornerRadius,
-		hintOverlayColor = merged.overlay.hint.fillColor,
-		hintOverlayBorderColor = merged.overlay.hint.borderColor,
-		dimmedHintOverlayBorderColor = merged.overlay.hint.dimmedBorderColor,
-		hintOverlayBorderWidth = merged.overlay.hint.borderWidth,
-		hintOverlayCornerRadius = merged.overlay.hint.cornerRadius,
-		activeHintOverlayColor = merged.overlay.activeHint.fillColor,
-		activeHintOverlayBorderColor = merged.overlay.activeHint.borderColor,
+		activeOverlayColor = merged.focusedWindowHighlight.fillColor,
+		activeOverlayBorderColor = merged.focusedWindowHighlight.borderColor,
+		activeOverlayBorderWidth = merged.focusedWindowHighlight.borderWidth,
+		activeOverlayCornerRadius = merged.focusedWindowHighlight.cornerRadius,
+		hintOverlayColor = resolveHighlightStateValue(hintState, "normal", "fillColor"),
+		hintOverlayBorderColor = resolveHighlightStateValue(hintState, "normal", "borderColor"),
+		dimmedHintOverlayBorderColor = resolveHighlightStateValue(hintState, "dimmed", "borderColor", { "normal" }),
+		hintOverlayBorderWidth = merged.hint.highlight.borderWidth,
+		hintOverlayCornerRadius = merged.hint.cornerRadius,
+		activeHintOverlayColor = resolveHighlightStateValue(hintState, "active", "fillColor", { "normal" }),
+		activeHintOverlayBorderColor = resolveHighlightStateValue(hintState, "active", "borderColor", { "normal" }),
 		dockBottomMargin = merged.dock.bottomMargin,
 		dockItemGap = merged.dock.itemGap,
 		dockWindowXBlend = dockWindowXBlend,
 		dockWindowYBlend = dockWindowYBlend,
 		appPrefixOverrides = merged.hint.prefixOverrides,
-		onSelect = merged.behavior.onSelect,
-		onError = merged.behavior.onError,
-		centerCursor = merged.behavior.centerCursor,
-		centerCursorOnStart = merged.behavior.centerCursorOnStart,
-		includeOtherSpaces = merged.behavior.includeOtherSpaces,
-		includeActiveWindow = merged.behavior.includeActiveWindow,
+		onSelect = merged.behavior.callbacks.onSelect,
+		onError = merged.behavior.callbacks.onError,
+		centerCursor = merged.behavior.cursor.onSelect,
+		centerCursorOnStart = merged.behavior.cursor.onStart,
+		includeOtherSpaces = merged.behavior.candidates.includeOtherSpaces,
+		includeActiveWindow = merged.behavior.candidates.includeActiveWindow,
 		focusBackKey = focusBackKey,
 		directionKeys = directionKeys,
 		directionKeyLookup = directionKeyLookup,
 		directDirectionHotkeys = directDirectionHotkeys,
 		cardinalOverlapTieThresholdPx = cardinalOverlapTieThresholdPx,
-		debugDirectionalNavigation = merged.navigation.debugDirectionalNavigation,
+		debugDirectionalNavigation = merged.navigation.direction.scoring.debug,
 		spaceKeys = spaceKeys,
 		prevSpaceKey = prevSpaceKey,
 		nextSpaceKey = nextSpaceKey,

@@ -87,7 +87,9 @@ describe("focus_back", function()
 		local win2 = hsMock.newWindow(2, { bundleID = "com.example.b", appName = "B" })
 		local mock, instance = newFocusBackWithMock({
 			behavior = {
-				centerCursor = true,
+				cursor = {
+					onSelect = true,
+				},
 			},
 		}, win1)
 

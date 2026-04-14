@@ -225,12 +225,12 @@ describe("window_hints appPrefixOverrides", function()
 	end)
 
 	it("swapWindowFrameSelectModifiers を正規化できる", function()
-		local normalized = helper.normalizeSelectModifiers({ "Shift", "CMD" })
+		local normalized = helper.normalizeSelectModifiers({ "Shift", "CMD" }, "behavior.selection.swapWindowFrame.modifiers")
 		assert.are.same({ "cmd", "shift" }, normalized)
 	end)
 
 	it("swapWindowFrameSelectModifiers で option は alt として扱う", function()
-		local normalized = helper.normalizeSelectModifiers({ "option", "cmd" })
+		local normalized = helper.normalizeSelectModifiers({ "option", "cmd" }, "behavior.selection.swapWindowFrame.modifiers")
 		assert.are.same({ "cmd", "alt" }, normalized)
 	end)
 
@@ -304,12 +304,12 @@ describe("window_hints appPrefixOverrides", function()
 			})
 		end)
 		assert.is_false(ok)
-		assert.is_truthy(tostring(err):match("directionKeys must not contain duplicate keys"))
+		assert.is_truthy(tostring(err):match("must not contain duplicate keys"))
 	end)
 
 	it("swapWindowFrameSelectModifiers が空配列ならエラー", function()
 		local ok, err = pcall(function()
-			helper.normalizeSelectModifiers({})
+			helper.normalizeSelectModifiers({}, "behavior.selection.swapWindowFrame.modifiers")
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("must not be empty"))
@@ -317,7 +317,7 @@ describe("window_hints appPrefixOverrides", function()
 
 	it("swapWindowFrameSelectModifiers に重複があればエラー", function()
 		local ok, err = pcall(function()
-			helper.normalizeSelectModifiers({ "shift", "SHIFT" })
+			helper.normalizeSelectModifiers({ "shift", "SHIFT" }, "behavior.selection.swapWindowFrame.modifiers")
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("duplicate"))
@@ -325,14 +325,14 @@ describe("window_hints appPrefixOverrides", function()
 
 	it("swapWindowFrameSelectModifiers に不正な修飾キーがあればエラー", function()
 		local ok, err = pcall(function()
-			helper.normalizeSelectModifiers({ "hyper" })
+			helper.normalizeSelectModifiers({ "hyper" }, "behavior.selection.swapWindowFrame.modifiers")
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("cmd/alt/ctrl/shift/fn"))
 	end)
 
 	it("swap判定は修飾キー完全一致のときだけ true", function()
-		local swapModifiers = helper.normalizeSelectModifiers({ "shift", "cmd" })
+		local swapModifiers = helper.normalizeSelectModifiers({ "shift", "cmd" }, "behavior.selection.swapWindowFrame.modifiers")
 		assert.is_true(helper.shouldSwapWindowFrameOnSelect(swapModifiers, { "cmd", "shift" }))
 		assert.is_false(helper.shouldSwapWindowFrameOnSelect(swapModifiers, { "shift" }))
 		assert.is_false(helper.shouldSwapWindowFrameOnSelect(swapModifiers, { "cmd", "alt", "shift" }))
@@ -367,14 +367,40 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.same(normal, color)
 	end)
 
-	it("別 Space 丸バッジ色は inactive で減衰する", function()
+	it("active window のヒント本体色は active state を使う", function()
+		local color = helper.resolveHintBackgroundColor(true, false, true, {
+			bgColor = { red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 },
+			dimmedBgColor = { red = 0.01, green = 0.02, blue = 0.03, alpha = 0.04 },
+			activeBgColor = { red = 0.7, green = 0.8, blue = 0.9, alpha = 1.0 },
+		})
+		assert.are.same({ red = 0.7, green = 0.8, blue = 0.9, alpha = 1.0 }, color)
+	end)
+
+	it("active window のヒント文字色は active state を使う", function()
+		local color = helper.resolveHintTextColor(true, true, {
+			textColor = { red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 },
+			dimmedTextColor = { red = 0.01, green = 0.02, blue = 0.03, alpha = 0.04 },
+			activeTextColor = { red = 0.7, green = 0.8, blue = 0.9, alpha = 1.0 },
+		})
+		assert.are.same({ red = 0.7, green = 0.8, blue = 0.9, alpha = 1.0 }, color)
+	end)
+
+	it("active window の hint overlay fill 色は active state を使う", function()
+		local color = helper.resolveHintOverlayFillColor(true, true, {
+			hintOverlayColor = { red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 },
+			activeHintOverlayColor = { red = 0.7, green = 0.8, blue = 0.9, alpha = 1.0 },
+		})
+		assert.are.same({ red = 0.7, green = 0.8, blue = 0.9, alpha = 1.0 }, color)
+	end)
+
+	it("別 Space 丸バッジは dimmed で別色セットに切り替わる", function()
 		local badgeConfig = {
 			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
 			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
 			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
-			offSpaceBadgeInactiveFillAlpha = 0.11,
-			offSpaceBadgeInactiveStrokeAlpha = 0.22,
-			offSpaceBadgeInactiveTextAlpha = 0.35,
+			offSpaceBadgeDimmedFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.11 },
+			offSpaceBadgeDimmedStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.22 },
+			offSpaceBadgeDimmedTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.35 },
 		}
 		local activeFill, activeStroke, activeText = helper.resolveOffSpaceBadgeColors(true, badgeConfig)
 		local inactiveFill, inactiveStroke, inactiveText = helper.resolveOffSpaceBadgeColors(false, badgeConfig)
@@ -387,14 +413,26 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(0.35, inactiveText.alpha)
 	end)
 
+	it("active window の Space バッジは active state を使う", function()
+		local fill, stroke, text = helper.resolveOffSpaceBadgeColors(true, {
+			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
+			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+			activeOffSpaceBadgeFillColor = { red = 0.31, green = 0.32, blue = 0.33, alpha = 0.34 },
+			activeOffSpaceBadgeStrokeColor = { red = 0.41, green = 0.42, blue = 0.43, alpha = 0.44 },
+			activeOffSpaceBadgeTextColor = { red = 0.51, green = 0.52, blue = 0.53, alpha = 0.54 },
+		}, nil, true)
+
+		assert.are.same({ red = 0.31, green = 0.32, blue = 0.33, alpha = 0.34 }, fill)
+		assert.are.same({ red = 0.41, green = 0.42, blue = 0.43, alpha = 0.44 }, stroke)
+		assert.are.same({ red = 0.51, green = 0.52, blue = 0.53, alpha = 0.54 }, text)
+	end)
+
 	it("spaceColors[2] の色が使われる", function()
 		local badgeConfig = {
 			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
 			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
 			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
-			offSpaceBadgeInactiveFillAlpha = 0.11,
-			offSpaceBadgeInactiveStrokeAlpha = 0.22,
-			offSpaceBadgeInactiveTextAlpha = 0.35,
 			offSpaceBadgeSpaceColors = {
 				[1] = {
 					fillColor = { red = 0.1, green = 0.1, blue = 0.1, alpha = 0.5 },
@@ -419,9 +457,6 @@ describe("window_hints appPrefixOverrides", function()
 			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
 			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
 			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
-			offSpaceBadgeInactiveFillAlpha = 0.11,
-			offSpaceBadgeInactiveStrokeAlpha = 0.22,
-			offSpaceBadgeInactiveTextAlpha = 0.35,
 			offSpaceBadgeSpaceColors = {
 				[1] = {
 					fillColor = { red = 0.1, green = 0.1, blue = 0.1, alpha = 0.5 },
@@ -441,9 +476,6 @@ describe("window_hints appPrefixOverrides", function()
 			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
 			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
 			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
-			offSpaceBadgeInactiveFillAlpha = 0.11,
-			offSpaceBadgeInactiveStrokeAlpha = 0.22,
-			offSpaceBadgeInactiveTextAlpha = 0.35,
 		}
 		local fill, stroke, text = helper.resolveOffSpaceBadgeColors(true, badgeConfig, 2)
 		assert.are.same({ red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 }, fill)
@@ -456,9 +488,6 @@ describe("window_hints appPrefixOverrides", function()
 			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
 			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
 			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
-			offSpaceBadgeInactiveFillAlpha = 0.11,
-			offSpaceBadgeInactiveStrokeAlpha = 0.22,
-			offSpaceBadgeInactiveTextAlpha = 0.35,
 			offSpaceBadgeSpaceColors = {
 				[1] = {
 					fillColor = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5 },
@@ -472,14 +501,14 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.same({ red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, text)
 	end)
 
-	it("spaceColors 指定時も inactive でアルファ減衰が適用される", function()
+	it("dimmed では spaceColors を無視してグローバルの dimmed 色が使われる", function()
 		local badgeConfig = {
 			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
 			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
 			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
-			offSpaceBadgeInactiveFillAlpha = 0.11,
-			offSpaceBadgeInactiveStrokeAlpha = 0.22,
-			offSpaceBadgeInactiveTextAlpha = 0.35,
+			offSpaceBadgeDimmedFillColor = { red = 0.11, green = 0.12, blue = 0.13, alpha = 0.11 },
+			offSpaceBadgeDimmedStrokeColor = { red = 0.21, green = 0.22, blue = 0.23, alpha = 0.22 },
+			offSpaceBadgeDimmedTextColor = { red = 0.31, green = 0.32, blue = 0.33, alpha = 0.35 },
 			offSpaceBadgeSpaceColors = {
 				[2] = {
 					fillColor = { red = 0.30, green = 0.78, blue = 0.47, alpha = 0.56 },
@@ -489,13 +518,9 @@ describe("window_hints appPrefixOverrides", function()
 			},
 		}
 		local fill, stroke, text = helper.resolveOffSpaceBadgeColors(false, badgeConfig, 2)
-		assert.are.equal(0.11, fill.alpha)
-		assert.are.equal(0.22, stroke.alpha)
-		assert.are.equal(0.35, text.alpha)
-		-- 色相はスペースカラーのまま
-		assert.are.equal(0.30, fill.red)
-		assert.are.equal(0.85, stroke.red)
-		assert.are.equal(0.9, text.red)
+		assert.are.same({ red = 0.11, green = 0.12, blue = 0.13, alpha = 0.11 }, fill)
+		assert.are.same({ red = 0.21, green = 0.22, blue = 0.23, alpha = 0.22 }, stroke)
+		assert.are.same({ red = 0.31, green = 0.32, blue = 0.33, alpha = 0.35 }, text)
 	end)
 
 	it("buildSpaceNumberLookup は hs がなければ空テーブルを返す", function()
@@ -780,17 +805,26 @@ describe("window_hints appPrefixOverrides", function()
 	end)
 
 	it("文字キーの入力修飾キー集合を生成できる", function()
-		local bindings = helper.collectModalInputModifiers("w", helper.normalizeSelectModifiers({ "cmd" }))
+		local bindings = helper.collectModalInputModifiers(
+			"w",
+			helper.normalizeSelectModifiers({ "cmd" }, "behavior.selection.swapWindowFrame.modifiers")
+		)
 		assert.are.same({ {}, { "cmd" }, { "shift" } }, bindings)
 	end)
 
 	it("非文字キーでも swap 修飾キーを追加できる", function()
-		local bindings = helper.collectModalInputModifiers("f18", helper.normalizeSelectModifiers({ "shift" }))
+		local bindings = helper.collectModalInputModifiers(
+			"f18",
+			helper.normalizeSelectModifiers({ "shift" }, "behavior.selection.swapWindowFrame.modifiers")
+		)
 		assert.are.same({ {}, { "shift" } }, bindings)
 	end)
 
 	it("swap修飾キーが shift のとき文字キーで重複を除去できる", function()
-		local bindings = helper.collectModalInputModifiers("w", helper.normalizeSelectModifiers({ "shift" }))
+		local bindings = helper.collectModalInputModifiers(
+			"w",
+			helper.normalizeSelectModifiers({ "shift" }, "behavior.selection.swapWindowFrame.modifiers")
+		)
 		assert.are.same({ {}, { "shift" } }, bindings)
 	end)
 

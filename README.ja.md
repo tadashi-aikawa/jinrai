@@ -133,94 +133,13 @@ hs.loadSpoon("Jinrai")
 
 spoon.Jinrai:setup({
   focus_border = {
-    visual = {
-      border = {
-        width = 10,
-        color = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
-      },
-      outline = {
-        width = 2,
-        color = { red = 0, green = 0, blue = 0, alpha = 0.70 },
-      },
-      cornerRadius = 10,
-    },
-    animation = {
-      duration = 0.5,
-      fadeSteps = 18,
-      spaceSwitchDelay = 0.30,
-    },
-    window = {
-      minSize = 480,
-    },
+    -- 詳細は後続の「Focus Border オプション」の全設定例を参照
   },
   window_hints = {
-    hotkey = {
-      modifiers = { "alt" },
-      key = "f20",
-    },
-    hint = {
-      chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" },
-      prefixOverrides = {
-        {
-          match = { bundleID = "md.obsidian", titleGlob = "*- minerva - Obsidian*" },
-          prefix = "M",
-        },
-        {
-          match = { bundleID = "md.obsidian" },
-          prefix = "O",
-        },
-        {
-          match = { bundleID = "com.google.Chrome" },
-          prefix = "GC",
-        },
-      },
-    },
-    navigation = {
-      focusBackKey = "i",
-      directionKeys = {
-        left = "h",
-        down = "j",
-        up = "k",
-        right = "l",
-        upLeft = "y",
-        upRight = "u",
-        downLeft = "b",
-        downRight = "n",
-      },
-      directHotkeys = {
-        modifiers = { "ctrl", "alt" },
-        keys = {
-          left = "h",
-          down = "j",
-          up = "k",
-          right = "l",
-          upLeft = "y",
-          upRight = "u",
-          downLeft = "b",
-          downRight = "n",
-        },
-      },
-      swapSelectModifiers = { "shift" },
-    },
-    ui = {
-      icon = { size = 72 },
-      text = { titleMaxSize = 72 },
-    },
-    behavior = {
-      centerCursor = true,
-      onError = function(err)
-        hs.alert.show("Window Hints error: " .. tostring(err), 3)
-      end,
-    },
+    -- 詳細は後続の「Window Hints オプション」の全設定例を参照
   },
   focus_back = {
-    hotkey = {
-      modifiers = { "option" },
-      key = "w",
-    },
-    behavior = {
-      centerCursor = true,
-    },
+    -- 詳細は後続の「Focus Back オプション」の全設定例を参照
   },
 })
 ```
@@ -257,6 +176,8 @@ focus_border = {
 
 ## Window Hints オプション
 
+注: このスキーマは破壊的変更です。`hint.keyBox`、`hint.text`、`hint.badge`、`hint.offSpaceBadge`、`hint.overlay`、`hint.onActiveWindow`、`activeWindow`、`navigation.focusBackKey`、`navigation.directionKeys`、`navigation.directHotkeys`、`navigation.spaceKeys`、`behavior.centerCursor` などの旧キーは使えません。
+
 全設定を含むサンプル（デフォルト値）:
 
 ```lua
@@ -268,72 +189,120 @@ window_hints = {
   hint = {
     chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" }, -- ヒント文字配列
     prefixOverrides = nil, -- prefix 上書きルール配列
-  },
-  ui = {
+    padding = 12, -- ヒント本体の内側余白 (px)
+    collisionOffset = 90, -- ヒント重なり時のずらし量 (px)
+    cornerRadius = 12, -- ヒント本体の角丸半径 (px)
+    occludedScale = 0.85, -- 遮蔽ヒント縮小率
+    highlight = {
+      borderWidth = 6, -- ヒント本体ハイライトのボーダー幅 (px)
+    },
+    state = {
+      normal = {
+        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 }, -- ヒント本体背景色
+        highlight = {
+          fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 }, -- 通常ヒントの塗り色
+          borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }, -- 通常ヒントのボーダー色
+        },
+      },
+      dimmed = {
+        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.14 }, -- dimmed 時ヒント本体背景色
+        highlight = {
+          borderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 }, -- dimmed 時ヒント本体ボーダー色
+        },
+      },
+      occluded = {
+        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.70 }, -- 遮蔽ヒント本体背景色
+      },
+      active = {
+        bgColor = { red = 0.08, green = 0.05, blue = 0.03, alpha = 0.88 }, -- アクティブウィンドウ上ヒントの背景色
+        highlight = {
+          fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, -- アクティブウィンドウ上ヒントの塗り色
+          borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- アクティブウィンドウ上ヒントのボーダー色
+        },
+      },
+    },
     icon = {
-      size = 72,         -- アイコンサイズ (px)
-      alpha = 0.95,      -- アイコン不透明度
-      dimmedAlpha = 0.30, -- 非アクティブ時アイコン不透明度
+      size = 72, -- アイコンサイズ (px)
+      state = {
+        normal = { alpha = 0.95 }, -- アイコン不透明度
+        dimmed = { alpha = 0.30 }, -- dimmed 時アイコン不透明度
+        occluded = { alpha = 0.46 }, -- 遮蔽ヒントアイコン不透明度
+        active = { alpha = 1.0 }, -- アクティブウィンドウ上ヒントのアイコン不透明度
+      },
     },
-    keyBox = {
-      size = 72,             -- キー表示ボックス高さ (px)
-      minWidth = 72,         -- キー表示ボックス最小幅 (px)
+    key = {
+      size = 72, -- キー表示ボックス高さ (px)
+      minWidth = 72, -- キー表示ボックス最小幅 (px)
       horizontalPadding = 10, -- キー表示ボックス左右パディング (px)
-      gap = 0,               -- アイコンとキー表示ボックスの間隔 (px)
-    },
-    text = {
-      fontName = nil,      -- フォント名（nil でシステムデフォルト）
-      keyFontSize = 48,    -- キー文字フォントサイズ
-      titleFontSize = 16,  -- タイトル文字フォントサイズ
-      rowGap = 8,          -- アイコン行とタイトル行の間隔 (px)
-      titleMaxSize = 72,   -- タイトル最大表示文字数
-      showTitles = true,   -- タイトル行表示
-      keyColor = { red = 1, green = 1, blue = 1, alpha = 1 }, -- キー文字色
-      keyDimmedColor = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 }, -- 非アクティブキー文字色
-      titleColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 }, -- タイトル文字色
-      titleDimmedColor = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 }, -- 非アクティブタイトル文字色
+      gap = 0, -- アイコンとキー表示ボックスの間隔 (px)
+      fontName = nil, -- キー文字フォント名（nil でシステムデフォルト）
+      fontSize = 48, -- キー文字フォントサイズ
       keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }, -- 入力済みプレフィックス色
+      state = {
+        normal = {
+          color = { red = 1, green = 1, blue = 1, alpha = 1 }, -- キー文字色
+        },
+        dimmed = {
+          color = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 }, -- dimmed 時キー文字色
+        },
+        occluded = {},
+        active = {
+          color = { red = 1.00, green = 0.93, blue = 0.86, alpha = 1.00 }, -- アクティブウィンドウ上ヒントのキー文字色
+        },
+      },
     },
-    badge = {
-      padding = 12, -- バッジ内側余白 (px)
-      bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 }, -- バッジ背景色
-      dimmedBgAlpha = 0.14, -- 非アクティブ時背景アルファ
-      bumpMove = 90, -- ヒント重なり時のずらし量 (px)
+    title = {
+      fontName = nil, -- タイトル文字フォント名（nil の場合は key.fontName にフォールバック）
+      fontSize = 16, -- タイトル文字フォントサイズ
+      rowGap = 8, -- アイコン行とタイトル行の間隔 (px)
+      maxSize = 72, -- タイトル最大表示文字数
+      show = true, -- タイトル行表示
+      state = {
+        normal = {
+          color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 }, -- タイトル文字色
+        },
+        dimmed = {
+          color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 }, -- dimmed 時タイトル文字色
+        },
+        occluded = {},
+        active = {
+          color = { red = 0.99, green = 0.90, blue = 0.78, alpha = 1.00 }, -- アクティブウィンドウ上ヒントのタイトル文字色
+        },
+      },
     },
-    offSpaceBadge = {
-      enabled = true, -- 別 Space バッジを表示するか
-      size = 16, -- 右上バッジ直径 (px)
-      fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- 別 Space バッジ塗り色（デフォルト/フォールバック）
-      strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- 別 Space バッジ枠線色（デフォルト/フォールバック）
-      textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, -- 別 Space バッジ文字色（デフォルト/フォールバック）
-      inactiveFillAlpha = 0.28, -- 非アクティブ時の塗りアルファ
-      inactiveStrokeAlpha = 0.40, -- 非アクティブ時の枠線アルファ
-      inactiveTextAlpha = 0.35, -- 非アクティブ時の文字アルファ
-      spaceColors = { -- Space 番号ごとの色上書き（番号をインデックスに使用）。省略したフィールドは上記デフォルトにフォールバック
+    spaceBadge = {
+      enabled = true, -- 別 Space 候補に Space バッジを表示するか
+      size = 32, -- 右上バッジ直径 (px)
+      state = {
+        normal = {
+          fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- Space バッジ塗り色（デフォルト/フォールバック）
+          strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- Space バッジ枠線色（デフォルト/フォールバック）
+          textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, -- Space バッジ文字色（デフォルト/フォールバック）
+        },
+        dimmed = {
+          fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.28 }, -- dimmed 時の塗り色
+          strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.40 }, -- dimmed 時の枠線色
+          textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.35 }, -- dimmed 時の文字色
+        },
+        occluded = {},
+        active = {
+          fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, -- アクティブウィンドウ上ヒントの Space バッジ塗り色
+          strokeColor = { red = 1.00, green = 0.90, blue = 0.78, alpha = 0.72 }, -- アクティブウィンドウ上ヒントの Space バッジ枠線色
+          textColor = { red = 1.0, green = 0.98, blue = 0.94, alpha = 0.92 }, -- アクティブウィンドウ上ヒントの Space バッジ文字色
+        },
+      },
+      spaceColors = { -- Space 番号ごとの色上書き（番号をインデックスに使用）。省略したフィールドは state.normal にフォールバック
         { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 1
         { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 2
         -- ...
       },
     },
   },
-  overlay = {
-    active = {
-      fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }, -- アクティブウィンドウの塗り色
-      borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- アクティブウィンドウのボーダー色
-      borderWidth = 13, -- アクティブウィンドウのボーダー幅 (px)
-      cornerRadius = 10, -- アクティブウィンドウの角丸半径 (px)
-    },
-    hint = {
-      fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 }, -- 前面ヒントの塗り色
-      borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }, -- 前面ヒントのボーダー色
-      dimmedBorderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 }, -- 候補外前面ヒントのボーダー色
-      borderWidth = 6, -- 前面ヒントのボーダー幅 (px)
-      cornerRadius = 12, -- 前面ヒントの角丸半径 (px)
-    },
-    activeHint = {
-      fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, -- アクティブウィンドウのヒントオーバーレイ塗り色
-      borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.85 }, -- アクティブウィンドウのヒントオーバーレイボーダー色
-    },
+  focusedWindowHighlight = {
+    fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }, -- フォーカス中ウィンドウの塗り色
+    borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- フォーカス中ウィンドウのボーダー色
+    borderWidth = 13, -- フォーカス中ウィンドウのボーダー幅 (px)
+    cornerRadius = 10, -- フォーカス中ウィンドウの角丸半径 (px)
   },
   occlusion = {
     sampling = {
@@ -352,11 +321,6 @@ window_hints = {
       padding = 6,           -- プレビュー上余白 (px, belowモードのみ)
       alpha = 0.64,          -- プレビュー不透明度
     },
-    hint = {
-      scale = 0.85,  -- 遮蔽ヒント縮小率
-      bgAlpha = 0.7, -- 遮蔽ヒント背景アルファ
-      iconAlpha = 0.46, -- 遮蔽ヒントアイコン不透明度
-    },
   },
   dock = {
     bottomMargin = 24, -- 遮蔽ヒントドックの下端マージン (px)
@@ -367,26 +331,50 @@ window_hints = {
     },
   },
   navigation = {
-    focusBackKey = nil, -- Hints表示中に Focus Back 相当を実行するキー
-    directionKeys = nil, -- Hints表示中の方向移動キー
-    directHotkeys = nil, -- Hintsを表示せず方向移動するホットキー
-    spaceKeys = true, -- ヒント表示中に 1-9 キーで Space を切り替え
-    prevSpaceKey = nil, -- ヒント表示中に前の Space へ移動するキー
-    nextSpaceKey = nil, -- ヒント表示中に次の Space へ移動するキー
-    cardinalOverlapTieThresholdPx = 720, -- 上下左右方向移動で同点扱いにする閾値 (px)
-    debugDirectionalNavigation = false, -- 方向移動の候補スコアログを出すか
-    swapSelectModifiers = nil, -- 確定時にウィンドウフレーム入れ替えする修飾キー
+    focusBack = {
+      key = nil, -- Hints表示中に Focus Back 相当を実行するキー
+    },
+    direction = {
+      hints = {
+        keys = nil, -- Hints表示中の方向移動キー
+      },
+      direct = {
+        modifiers = nil, -- Hintsを表示せず方向移動するホットキー修飾キー
+        keys = nil, -- Hintsを表示せず方向移動するホットキー
+      },
+      scoring = {
+        cardinalOverlapTieThresholdPx = 720, -- 上下左右方向移動で同点扱いにする閾値 (px)
+        debug = false, -- 方向移動の候補スコアログを出すか
+      },
+    },
+    spaces = {
+      numbers = true, -- ヒント表示中に 1-9 キーで Space を切り替え
+      prev = {
+        key = nil, -- ヒント表示中に前の Space へ移動するキー
+      },
+      next = {
+        key = nil, -- ヒント表示中に次の Space へ移動するキー
+      },
+    },
   },
   behavior = {
-    onSelect = nil, -- ウィンドウ選択時コールバック
-    onError = nil,  -- エラー時コールバック
-    centerCursor = false, -- 選択後にカーソルをウィンドウ中央へ移動
-    centerCursorOnStart = false, -- 起動時にアクティブウィンドウ中央へカーソル移動
-    includeOtherSpaces = false, -- 他の Space の可視ウィンドウも候補に含める
-    includeActiveWindow = false, -- アクティブウィンドウにもヒントを表示する
-  },
-  internal = {
-    focusHistory = nil, -- 内部注入専用（通常は設定しない）
+    selection = {
+      swapWindowFrame = {
+        modifiers = nil, -- 確定時にウィンドウフレーム入れ替えする修飾キー
+      },
+    },
+    cursor = {
+      onSelect = false, -- 選択後にカーソルをウィンドウ中央へ移動
+      onStart = false, -- 起動時にアクティブウィンドウ中央へカーソル移動
+    },
+    candidates = {
+      includeOtherSpaces = false, -- 他の Space の可視ウィンドウも候補に含める
+      includeActiveWindow = false, -- アクティブウィンドウにもヒントを表示する
+    },
+    callbacks = {
+      onSelect = nil, -- ウィンドウ選択時コールバック
+      onError = nil,  -- エラー時コールバック
+    },
   },
 }
 ```
@@ -428,69 +416,72 @@ hint = {
 
 ### Window Hints 内ナビゲーション
 
-- `navigation.focusBackKey` と `navigation.directionKeys` はヒント表示中のみ有効です
-- `navigation.focusBackKey` は `focus_back` 設定が有効なときだけ動作します
+- `navigation.focusBack.key` と `navigation.direction.hints.keys` はヒント表示中のみ有効です
+- `navigation.focusBack.key` は `focus_back` 設定が有効なときだけ動作します
 - これらのキーと `hint.chars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
 - 完全に背面に遮蔽されているウィンドウは方向移動の候補から除外されます
-- 上下左右は基本的に「副軸の重なり量が大きい」候補を優先し、重なり差が `navigation.cardinalOverlapTieThresholdPx` 以内なら同点扱いとして次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
+- 上下左右は基本的に「副軸の重なり量が大きい」候補を優先し、重なり差が `navigation.direction.scoring.cardinalOverlapTieThresholdPx` 以内なら同点扱いとして次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
 - 斜め方向は2軸のエッジ距離合計が小さい候補を優先し、同率時は前面順、中心距離、直前アクティブウィンドウの順で決定します
 
 ### 直接方向移動ホットキー
 
-`navigation.directHotkeys` は、Window Hints を出さずに方向移動を直接実行する設定です。
+`navigation.direction.direct` は、Window Hints を出さずに方向移動を直接実行する設定です。
 
 ```lua
 navigation = {
-  directHotkeys = {
-    modifiers = { "ctrl", "alt" }, -- 必須
-    keys = {                       -- 任意。指定した方向だけ有効
-      left = "h",
-      down = "j",
-      up = "k",
-      right = "l",
-      upLeft = "y",
-      upRight = "u",
-      downLeft = "b",
-      downRight = "n",
+  direction = {
+    direct = {
+      modifiers = { "ctrl", "alt" }, -- 必須
+      keys = {                       -- 任意。指定した方向だけ有効
+        left = "h",
+        down = "j",
+        up = "k",
+        right = "l",
+        upLeft = "y",
+        upRight = "u",
+        downLeft = "b",
+        downRight = "n",
+      },
     },
   },
 }
 ```
 
-- 移動先の判定は `navigation.directionKeys` と同じ（遮蔽除外・同点時の優先順位を含む）
+- 移動先の判定は `navigation.direction.hints.keys` と同じ（遮蔽除外・同点時の優先順位を含む）
 - キー押下で即フォーカス移動し、Window Hints UI は表示しない
 - `keys` を省略した場合は直接方向移動ホットキーを無効化
 - `modifiers` では `alt` の別名として `option` も指定可能
 
-### navigation.spaceKeys
+### navigation.spaces.numbers
 
-`navigation.spaceKeys = true`（デフォルト）にすると、ヒント表示中に `1`〜`9` キーで `hs.spaces.gotoSpace()` を使って対応する Space に切り替えます。存在しない番号を押した場合はキーが消費されるだけで何も起こりません。`false` で無効化できます。
+`navigation.spaces.numbers = true`（デフォルト）にすると、ヒント表示中に `1`〜`9` キーで `hs.spaces.gotoSpace()` を使って対応する Space に切り替えます。存在しない番号を押した場合はキーが消費されるだけで何も起こりません。`false` で無効化できます。
 
-### navigation.prevSpaceKey / navigation.nextSpaceKey
+### navigation.spaces.prev.key / navigation.spaces.next.key
 
-`navigation.prevSpaceKey` と `navigation.nextSpaceKey` は、ヒント表示中に前後の Space へ移動するためのキーです。1文字のキー（例: `","` / `"."`）を指定すると、ヒントを閉じてから Space を切り替えます。デフォルトは `nil`（無効）です。
+`navigation.spaces.prev.key` と `navigation.spaces.next.key` は、ヒント表示中に前後の Space へ移動するためのキーです。1文字のキー（例: `","` / `"."`）を指定すると、ヒントを閉じてから Space を切り替えます。デフォルトは `nil`（無効）です。
 
-### behavior.includeOtherSpaces
+### behavior.candidates.includeOtherSpaces
 
-`behavior.includeOtherSpaces = true` にすると、現在の Space だけでなく他の Space にある可視ウィンドウも
+`behavior.candidates.includeOtherSpaces = true` にすると、現在の Space だけでなく他の Space にある可視ウィンドウも
 Window Hints の候補表示に含めます。デフォルトは `false` です。
 
-- 別 Space の候補は前面オーバーレイではなく、遮蔽ヒントと同じドック系表示になります
+- 別 Space の候補は前面オーバーレイではなく、遮蔽ヒントと同じドック系レーンに表示されます
 - 右上の丸バッジに Space 番号が表示され、番号ごとに異なる色で識別できます
-- バッジの色は `ui.offSpaceBadge.spaceColors` で Space 番号ごとに設定可能（プリセット5色付き。範囲外の番号はデフォルト色にフォールバック）
-- `ui.offSpaceBadge.enabled = false` でバッジ自体を非表示にできます
-- バッジの色やサイズは `ui.offSpaceBadge` で変更できます
+- バッジの色は `hint.spaceBadge.spaceColors` で Space 番号ごとに設定可能（プリセット5色付き。範囲外の番号はデフォルト色にフォールバック）
+- `hint.spaceBadge.enabled = false` でバッジ自体を非表示にできます
+- バッジの色やサイズは `hint.spaceBadge` で変更できます
 - 選択するとそのまま対象ウィンドウへ `focus()` し、Space 切り替えは macOS 側の挙動に従います
-- Hints 中の方向移動と `navigation.directHotkeys` は常に current Space の候補だけを対象にします
+- Hints 中の方向移動と `navigation.direction.direct` は常に current Space の候補だけを対象にします
 
-### behavior.includeActiveWindow
+### behavior.candidates.includeActiveWindow
 
-`behavior.includeActiveWindow = true` にすると、現在フォーカスしているアクティブウィンドウにもヒントを表示します。デフォルトは `false` です。
+`behavior.candidates.includeActiveWindow = true` にすると、現在フォーカスしているアクティブウィンドウにもヒントを表示します。デフォルトは `false` です。
 
 - 同一アプリの複数ウィンドウがある場合、アクティブウィンドウも含めてヒントキーが割り当てられるため、キーの一貫性が向上します
-- アクティブウィンドウを選択すると、`centerCursor` が有効であればカーソルをウィンドウ中央に移動します
+- アクティブウィンドウを選択すると、`behavior.cursor.onSelect` が有効であればカーソルをウィンドウ中央に移動します
 - アクティブウィンドウの枠線（アクティブオーバーレイ）は引き続き表示されるため、どのウィンドウが現在フォーカスされているか視覚的に判別できます
-- `overlay.activeHint` でアクティブウィンドウのヒントオーバーレイ色をカスタマイズできます（デフォルトはオレンジ系で通常ヒントと区別）
+- `hint.state.active`、`hint.icon.state.active`、`hint.key.state.active`、`hint.title.state.active`、`hint.spaceBadge.state.active` で、アクティブウィンドウ上ヒントの見た目全体を上書きできます
+- それぞれの `active` で省略したフィールドは対応する `normal` にフォールバックします
 
 ## Focus Back オプション
 
@@ -506,7 +497,9 @@ focus_back = {
     name = nil, -- URL scheme名（hammerspoon://<名前> で発火）
   },
   behavior = {
-    centerCursor = false, -- 切り替え後にカーソルをウィンドウ中央に移動
+    cursor = {
+      onSelect = false, -- 切り替え後にカーソルをウィンドウ中央に移動
+    },
   },
   stateSync = nil, -- イベント漏れを補完する状態同期設定（下記参照）
   internal = {

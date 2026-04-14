@@ -109,12 +109,18 @@ describe("init", function()
 				hotkey = {
 					key = "q",
 				},
+				behavior = {
+					cursor = {
+						onSelect = true,
+					},
+				},
 			},
 		})
 
 		assert.are.equal(99, calls.new.focus_border.visual.border.width)
 		assert.are.same({ stateSync = nil }, calls.new.focus_history)
 		assert.are.equal("q", calls.new.focus_back.hotkey.key)
+		assert.is_true(calls.new.focus_back.behavior.cursor.onSelect)
 		assert.is_truthy(calls.new.focus_back.internal.focusHistory)
 		assert.are.equal(nil, calls.new.window_hints)
 

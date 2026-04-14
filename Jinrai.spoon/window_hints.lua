@@ -36,6 +36,47 @@ local function resolveHintOverlayBorderColor(active, config)
 	return config.hintOverlayBorderColor
 end
 
+local function resolveHintBackgroundColor(active, isOccluded, isActiveWindow, config)
+	if isOccluded then
+		return config.occludedBgColor
+	end
+	if active and isActiveWindow and config.activeBgColor then
+		return config.activeBgColor
+	end
+	return active and config.bgColor or config.dimmedBgColor
+end
+
+local function resolveHintIconAlpha(active, isOccluded, isActiveWindow, config)
+	if isOccluded then
+		return config.occludedIconAlpha
+	end
+	if active and isActiveWindow and config.activeIconAlpha then
+		return config.activeIconAlpha
+	end
+	return active and config.iconAlpha or config.dimmedIconAlpha
+end
+
+local function resolveHintTextColor(active, isActiveWindow, config)
+	if active and isActiveWindow and config.activeTextColor then
+		return config.activeTextColor
+	end
+	return active and config.textColor or config.dimmedTextColor
+end
+
+local function resolveHintTitleTextColor(active, isActiveWindow, config)
+	if active and isActiveWindow and config.activeTitleTextColor then
+		return config.activeTitleTextColor
+	end
+	return active and config.titleTextColor or config.dimmedTitleTextColor
+end
+
+local function resolveHintOverlayFillColor(active, isActiveWindow, config)
+	if active and isActiveWindow and config.activeHintOverlayColor then
+		return config.activeHintOverlayColor
+	end
+	return config.hintOverlayColor
+end
+
 local function buildSpaceNumberLookup()
 	if not hs or not hs.spaces or not hs.screen then
 		return {}
@@ -80,18 +121,24 @@ local function spaceNumberForWindow(winId, spaceNumberLookup)
 	return nil
 end
 
-local function resolveOffSpaceBadgeColors(active, config, spaceNumber)
+local function resolveOffSpaceBadgeColors(active, config, spaceNumber, isActiveWindow)
 	local spaceOverride = nil
 	if spaceNumber and config.offSpaceBadgeSpaceColors then
 		spaceOverride = config.offSpaceBadgeSpaceColors[spaceNumber]
 	end
-	local fill = cloneColor(spaceOverride and spaceOverride.fillColor or config.offSpaceBadgeFillColor)
-	local stroke = cloneColor(spaceOverride and spaceOverride.strokeColor or config.offSpaceBadgeStrokeColor)
-	local text = cloneColor(spaceOverride and spaceOverride.textColor or config.offSpaceBadgeTextColor)
-	if not active then
-		fill.alpha = config.offSpaceBadgeInactiveFillAlpha
-		stroke.alpha = config.offSpaceBadgeInactiveStrokeAlpha
-		text.alpha = config.offSpaceBadgeInactiveTextAlpha
+	local fill, stroke, text
+	if active and isActiveWindow then
+		fill = cloneColor(config.activeOffSpaceBadgeFillColor or config.offSpaceBadgeFillColor)
+		stroke = cloneColor(config.activeOffSpaceBadgeStrokeColor or config.offSpaceBadgeStrokeColor)
+		text = cloneColor(config.activeOffSpaceBadgeTextColor or config.offSpaceBadgeTextColor)
+	elseif active then
+		fill = cloneColor(spaceOverride and spaceOverride.fillColor or config.offSpaceBadgeFillColor)
+		stroke = cloneColor(spaceOverride and spaceOverride.strokeColor or config.offSpaceBadgeStrokeColor)
+		text = cloneColor(spaceOverride and spaceOverride.textColor or config.offSpaceBadgeTextColor)
+	else
+		fill = cloneColor(config.offSpaceBadgeDimmedFillColor)
+		stroke = cloneColor(config.offSpaceBadgeDimmedStrokeColor)
+		text = cloneColor(config.offSpaceBadgeDimmedTextColor)
 	end
 	return fill, stroke, text
 end
@@ -1758,12 +1805,7 @@ function M.new(options)
 	end
 
 	local function setHintActive(hint, active)
-		local bg = cloneColor(config.bgColor)
-		if hint.isOccluded then
-			bg.alpha = active and config.occludedBgAlpha or config.dimmedBgAlpha
-		elseif not active then
-			bg.alpha = config.dimmedBgAlpha
-		end
+		local bg = cloneColor(resolveHintBackgroundColor(active, hint.isOccluded, hint.isActiveWindow, config))
 		local prefixLen = 0
 		if active and currentInput ~= "" and startsWith(hint.key, currentInput) then
 			prefixLen = math.min(#currentInput, #hint.keyText)
@@ -1779,8 +1821,8 @@ function M.new(options)
 		local textTop = hint.keyBoxFrame.y + (hint.keyBoxFrame.h - hint.keyTextHeight) / 2
 
 		hint.canvas[1].fillColor = bg
-		local activeIconAlpha = hint.isOccluded and config.occludedIconAlpha or config.iconAlpha
-		hint.canvas[hint.iconIdx].imageAlpha = active and activeIconAlpha or config.dimmedIconAlpha
+		hint.canvas[hint.iconIdx].imageAlpha =
+			resolveHintIconAlpha(active, hint.isOccluded, hint.isActiveWindow, config)
 		hint.canvas[hint.keyPrefixIdx].text = prefixText
 		hint.canvas[hint.keyPrefixIdx].frame = {
 			x = textLeft,
@@ -1796,11 +1838,11 @@ function M.new(options)
 			h = hint.keyTextHeight,
 		}
 		hint.canvas[hint.keyPrefixIdx].textColor = active and config.keyHighlightColor or config.dimmedTextColor
-		hint.canvas[hint.keyRestIdx].textColor = active and config.textColor or config.dimmedTextColor
-		hint.canvas[hint.titleIdx].textColor = active and config.titleTextColor or config.dimmedTitleTextColor
+		hint.canvas[hint.keyRestIdx].textColor = resolveHintTextColor(active, hint.isActiveWindow, config)
+		hint.canvas[hint.titleIdx].textColor = resolveHintTitleTextColor(active, hint.isActiveWindow, config)
 		if hint.isOffSpace and config.offSpaceBadgeEnabled then
 			local badgeFillColor, badgeStrokeColor, badgeTextColor =
-				resolveOffSpaceBadgeColors(active, config, hint.spaceNumber)
+				resolveOffSpaceBadgeColors(active, config, hint.spaceNumber, hint.isActiveWindow)
 			if hint.offSpaceBadgeFillIdx then
 				hint.canvas[hint.offSpaceBadgeFillIdx].fillColor = badgeFillColor
 			end
@@ -1810,6 +1852,10 @@ function M.new(options)
 			if hint.offSpaceBadgeTextIdx then
 				hint.canvas[hint.offSpaceBadgeTextIdx].textColor = badgeTextColor
 			end
+		end
+		if hint.overlayFillIdx then
+			hint.canvas[hint.overlayFillIdx].fillColor =
+				cloneColor(resolveHintOverlayFillColor(active, hint.isActiveWindow, config))
 		end
 		if hint.overlayBorderIdx then
 			local borderColor
@@ -2260,11 +2306,11 @@ function M.new(options)
 				break
 			end
 
-			y = y + config.bumpMove
+			y = y + config.collisionOffset
 			local maxY = screenFrame.y + screenFrame.h - (height / 2)
 			if y > maxY then
 				y = baseCenter.y
-				x = x + config.bumpMove
+				x = x + config.collisionOffset
 			end
 		end
 
@@ -2353,14 +2399,13 @@ function M.new(options)
 			h = titleTextHeight,
 		}
 
-		local bgColor = cloneColor(config.bgColor)
-		if isOccluded then
-			bgColor.alpha = config.occludedBgAlpha
-		end
-		local curIconAlpha = isOccluded and config.occludedIconAlpha or config.iconAlpha
+		local bgColor = cloneColor(resolveHintBackgroundColor(true, isOccluded, isActiveWindow, config))
+		local curIconAlpha = resolveHintIconAlpha(true, isOccluded, isActiveWindow, config)
 		local offSpaceBadgeFillColor, offSpaceBadgeStrokeColor, offSpaceBadgeTextColor =
-			resolveOffSpaceBadgeColors(true, config, spaceNumber)
+			resolveOffSpaceBadgeColors(true, config, spaceNumber, isActiveWindow)
+		local hintCornerRadius = config.hintCornerRadius or config.hintOverlayCornerRadius or 12
 
+		local overlayFillIdx = nil
 		local overlayBorderIdx = nil
 		local offSpaceBadgeFillIdx = nil
 		local offSpaceBadgeStrokeIdx = nil
@@ -2370,19 +2415,19 @@ function M.new(options)
 			type = "rectangle",
 			action = "fill",
 			fillColor = bgColor,
-			roundedRectRadii = { xRadius = 12, yRadius = 12 },
+			roundedRectRadii = { xRadius = hintCornerRadius, yRadius = hintCornerRadius },
 			frame = { x = 0, y = oY, w = contentW, h = frame.h - oY },
 		}
 		nextIdx = nextIdx + 1
 
-		-- backgroundモード: プレビュー画像をヒント全体の背景として配置
+		-- previewMode="background": プレビュー画像をヒント全体の背景として配置
 		local previewIdx = nil
 		if previewHeight and previewHeight > 0 and config.previewMode == "background" then
 			local element = {
 				type = "image",
 				imageScaling = "scaleProportionally",
 				imageAlignment = "center",
-				roundedRectRadii = { xRadius = 12, yRadius = 12 },
+				roundedRectRadii = { xRadius = hintCornerRadius, yRadius = hintCornerRadius },
 				frame = { x = 0, y = oY, w = contentW, h = frame.h - oY },
 			}
 			if previewImage then
@@ -2430,7 +2475,7 @@ function M.new(options)
 			canvas[nextIdx] = {
 				type = "text",
 				text = badgeLabel,
-				textFont = config.fontName,
+				textFont = config.titleFontName or config.keyFontName,
 				textSize = badgeTextSize,
 				textColor = badgeTextColor,
 				textAlignment = "center",
@@ -2441,7 +2486,7 @@ function M.new(options)
 		end
 
 		if not isOccluded then
-			local overlayFillColor = isActiveWindow and config.activeHintOverlayColor or config.hintOverlayColor
+			local overlayFillColor = resolveHintOverlayFillColor(true, isActiveWindow, config)
 			local overlayBorderColor = isActiveWindow and config.activeHintOverlayBorderColor
 				or config.hintOverlayBorderColor
 			canvas[nextIdx] = {
@@ -2454,6 +2499,7 @@ function M.new(options)
 				},
 				frame = { x = 0, y = oY, w = contentW, h = frame.h - oY },
 			}
+			overlayFillIdx = nextIdx
 			nextIdx = nextIdx + 1
 			local obw = config.hintOverlayBorderWidth
 			canvas[nextIdx] = {
@@ -2485,7 +2531,7 @@ function M.new(options)
 		canvas[nextIdx] = {
 			type = "text",
 			text = "",
-			textFont = config.fontName,
+			textFont = config.keyFontName,
 			textSize = fSize,
 			textColor = config.keyHighlightColor,
 			textAlignment = "left",
@@ -2498,9 +2544,9 @@ function M.new(options)
 		canvas[nextIdx] = {
 			type = "text",
 			text = keyToDisplayText(keyText),
-			textFont = config.fontName,
+			textFont = config.keyFontName,
 			textSize = fSize,
-			textColor = config.textColor,
+			textColor = resolveHintTextColor(true, isActiveWindow, config),
 			textAlignment = "left",
 			textLineBreak = "clip",
 			frame = keyRestFrame,
@@ -2511,9 +2557,9 @@ function M.new(options)
 		canvas[nextIdx] = {
 			type = "text",
 			text = titleText or "",
-			textFont = config.fontName,
+			textFont = config.titleFontName or config.keyFontName,
 			textSize = tFontSize,
-			textColor = config.titleTextColor,
+			textColor = resolveHintTitleTextColor(true, isActiveWindow, config),
 			textAlignment = "center",
 			textLineBreak = "truncateTail",
 			frame = titleTextFrame,
@@ -2557,6 +2603,7 @@ function M.new(options)
 			keyRestIdx,
 			titleIdx,
 			fSize,
+			overlayFillIdx,
 			overlayBorderIdx,
 			offSpaceBadgeFillIdx,
 			offSpaceBadgeStrokeIdx,
@@ -2598,7 +2645,7 @@ function M.new(options)
 	local function placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale)
 		local bundleID = hint.app and hint.app:bundleID() or nil
 		local icon = bundleID and hs.image.imageFromAppBundle(bundleID) or nil
-		local canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayBorderIdx, offSpaceBadgeFillIdx, offSpaceBadgeStrokeIdx, offSpaceBadgeTextIdx, previewIdx =
+		local canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayFillIdx, overlayBorderIdx, offSpaceBadgeFillIdx, offSpaceBadgeStrokeIdx, offSpaceBadgeTextIdx, previewIdx =
 			newHintCanvas(
 				canvasFrame,
 				icon,
@@ -2621,6 +2668,7 @@ function M.new(options)
 		hint.keyRestIdx = keyRestIdx
 		hint.titleIdx = titleIdx
 		hint.effectiveFontSize = fSize
+		hint.overlayFillIdx = overlayFillIdx
 		hint.overlayBorderIdx = overlayBorderIdx
 		hint.offSpaceBadgeFillIdx = offSpaceBadgeFillIdx
 		hint.offSpaceBadgeStrokeIdx = offSpaceBadgeStrokeIdx
@@ -3025,6 +3073,11 @@ M._test = {
 	swapWindowFrames = swapWindowFrames,
 	resolveFocusBackTargetWindow = resolveFocusBackTargetWindow,
 	resolveHintOverlayBorderColor = resolveHintOverlayBorderColor,
+	resolveHintBackgroundColor = resolveHintBackgroundColor,
+	resolveHintIconAlpha = resolveHintIconAlpha,
+	resolveHintTextColor = resolveHintTextColor,
+	resolveHintTitleTextColor = resolveHintTitleTextColor,
+	resolveHintOverlayFillColor = resolveHintOverlayFillColor,
 	resolveOccludedDockItemX = resolveOccludedDockItemX,
 	resolveOccludedDockItemXs = resolveOccludedDockItemXs,
 	resolveOccludedDockItemY = resolveOccludedDockItemY,
