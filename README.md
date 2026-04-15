@@ -321,11 +321,11 @@ window_hints = {
     },
   },
   dock = {
-    bottomMargin = 24, -- Bottom margin for occluded-hint dock (px)
+    bottomMargin = 96, -- Bottom margin for occluded-hint dock (px)
     itemGap = 12,      -- Item gap in occluded-hint dock (px)
     windowBlend = {
-      x = 0.0, -- Blend ratio to shift dock x toward each target window
-      y = 0.0, -- Blend ratio to shift dock y toward each target window
+      x = 0.65, -- Blend ratio to shift dock x toward each target window
+      y = 1, -- Blend ratio to shift dock y toward each target window
     },
   },
   navigation = {
@@ -362,12 +362,12 @@ window_hints = {
       },
     },
     cursor = {
-      onSelect = false, -- Move cursor to selected window center
-      onStart = false, -- Move cursor to active window center when hints start
+      onSelect = true, -- Move cursor to selected window center
+      onStart = true, -- Move cursor to active window center when hints start
     },
     candidates = {
-      includeOtherSpaces = false, -- Include visible windows from other Spaces as candidates
-      includeActiveWindow = false, -- Also show a hint on the currently active window
+      includeOtherSpaces = true, -- Include visible windows from other Spaces as candidates
+      includeActiveWindow = true, -- Also show a hint on the currently active window
     },
     callbacks = {
       onSelect = nil, -- Callback on window selection
@@ -460,7 +460,7 @@ When `navigation.spaces.numbers = true` (default), pressing `1`–`9` while hint
 ### behavior.candidates.includeOtherSpaces
 
 If `behavior.candidates.includeOtherSpaces = true`, Window Hints include visible windows from other Spaces, not just the
-current one. The default is `false`.
+current one. The default is `true`.
 
 - Other-Space candidates are rendered in the same dock-style lane as occluded hints
 - They are marked with a round badge in the top-right corner showing the Space number
@@ -472,7 +472,7 @@ current one. The default is `false`.
 
 ### behavior.candidates.includeActiveWindow
 
-If `behavior.candidates.includeActiveWindow = true`, Window Hints also show a hint on the currently focused window. The default is `false`.
+If `behavior.candidates.includeActiveWindow = true`, Window Hints also show a hint on the currently focused window. The default is `true`.
 
 - This keeps hint assignment more consistent when multiple windows of the same app are open
 - Selecting the active window still runs `behavior.cursor.onSelect` if enabled
@@ -495,7 +495,7 @@ focus_back = {
   },
   behavior = {
     cursor = {
-      onSelect = false, -- Move cursor to window center after switching
+      onSelect = true, -- Move cursor to window center after switching
     },
   },
   stateSync = nil, -- State sync settings to compensate for missed events (see below)

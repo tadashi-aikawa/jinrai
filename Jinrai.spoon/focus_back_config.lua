@@ -10,7 +10,7 @@ local DEFAULT_CONFIG = {
 	},
 	behavior = {
 		cursor = {
-			onSelect = false,
+			onSelect = true,
 		},
 	},
 	stateSync = nil,

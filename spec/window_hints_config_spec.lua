@@ -291,6 +291,18 @@ describe("window_hints_config", function()
 		assert.are.equal("KeyFont", built.titleFontName)
 	end)
 
+	it("未指定時は更新済みデフォルト値を使う", function()
+		local built = mod.build()
+
+		assert.is_true(built.centerCursor)
+		assert.is_true(built.centerCursorOnStart)
+		assert.is_true(built.includeOtherSpaces)
+		assert.is_true(built.includeActiveWindow)
+		assert.are.equal(96, built.dockBottomMargin)
+		assert.are.equal(0.65, built.dockWindowXBlend)
+		assert.are.equal(1, built.dockWindowYBlend)
+	end)
+
 	it("focusHistory が無いと focusBackKey は無効化される", function()
 		local built = mod.build({
 			hint = {

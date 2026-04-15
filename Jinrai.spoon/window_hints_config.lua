@@ -198,11 +198,11 @@ local DEFAULT_CONFIG = {
 		},
 	},
 	dock = {
-		bottomMargin = 24,
+		bottomMargin = 96,
 		itemGap = 12,
 		windowBlend = {
-			x = 0.0,
-			y = 0.0,
+			x = 0.65,
+			y = 1,
 		},
 	},
 	navigation = {
@@ -239,12 +239,12 @@ local DEFAULT_CONFIG = {
 			},
 		},
 		cursor = {
-			onSelect = false,
-			onStart = false,
+			onSelect = true,
+			onStart = true,
 		},
 		candidates = {
-			includeOtherSpaces = false,
-			includeActiveWindow = false,
+			includeOtherSpaces = true,
+			includeActiveWindow = true,
 		},
 		callbacks = {
 			onSelect = nil,

@@ -36,6 +36,12 @@ describe("focus_back_config", function()
 		assert.are.equal(focusHistory, built.focusHistory)
 	end)
 
+	it("未指定時は更新済みデフォルト値を使う", function()
+		local built = mod.build()
+
+		assert.is_true(built.centerCursor)
+	end)
+
 	it("旧フラットキーはエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
