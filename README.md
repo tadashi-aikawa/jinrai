@@ -414,6 +414,7 @@ For implementation defaults and internal options, see `DEFAULT_CONFIG` in `windo
 
 ### Navigation During Window Hints
 
+- Pressing the Window Hints hotkey again while hints are shown closes the hints
 - `navigation.focusBack.key` and `navigation.direction.hints.keys` are active only while hints are shown
 - `navigation.focusBack.key` works only when `focus_back` is enabled
 - If these keys conflict with `hint.chars`, the conflicting hint chars are removed and navigation keys take priority

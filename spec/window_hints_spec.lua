@@ -1544,6 +1544,7 @@ describe("window_hints mouse selection", function()
 				return string.len(text)
 			end,
 		}
+		local hotkeys = {}
 		local keyBlocker = {
 			started = false,
 			start = function(self)
@@ -1560,10 +1561,15 @@ describe("window_hints mouse selection", function()
 				end,
 			},
 			hotkey = {
-				bind = function()
-					return {
+				bind = function(modifiers, key, callback)
+					local binding = {
+						modifiers = modifiers,
+						key = key,
+						callback = callback,
 						delete = function() end,
 					}
+					table.insert(hotkeys, binding)
+					return binding
 				end,
 			},
 			eventtap = {
@@ -1572,12 +1578,15 @@ describe("window_hints mouse selection", function()
 						keyDown = 1,
 					},
 				},
-				new = function()
+				new = function(_, callback)
+					keyBlocker.callback = callback
 					return keyBlocker
 				end,
 			},
 			keycodes = {
-				map = {},
+				map = {
+					[42] = "f20",
+				},
 			},
 			window = {
 				focusedWindow = function()
@@ -1612,6 +1621,10 @@ describe("window_hints mouse selection", function()
 					}
 				end,
 			},
+		}
+		return {
+			hotkeys = hotkeys,
+			keyBlocker = keyBlocker,
 		}
 	end
 
@@ -1698,6 +1711,95 @@ describe("window_hints mouse selection", function()
 
 		assert.are.equal(0, focusCounter.count)
 		assert.is_nil(hintCanvas._deleted)
+	end)
+
+	it("ヒント表示中に同じホットキーを押すと keyBlocker 経由で閉じる", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hotkey = {
+				modifiers = { "alt" },
+				key = "f20",
+			},
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+		assert.is_true(instance.show())
+		assert.is_true(mocks.keyBlocker.started)
+		assert.is_truthy(mocks.keyBlocker.callback)
+
+		local consumed = mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 42
+			end,
+			getFlags = function()
+				return { alt = true }
+			end,
+		})
+
+		assert.is_true(consumed)
+		assert.is_false(mocks.keyBlocker.started)
+		for _, canvas in ipairs(createdCanvases) do
+			assert.is_true(canvas._deleted)
+		end
+	end)
+
+	it("ヒント表示中に同じホットキー callback が発火しても閉じる", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hotkey = {
+				modifiers = { "alt" },
+				key = "f20",
+			},
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+		assert.is_true(instance.show())
+		assert.is_truthy(mocks.hotkeys[1])
+
+		mocks.hotkeys[1].callback()
+
+		assert.is_false(mocks.keyBlocker.started)
+		for _, canvas in ipairs(createdCanvases) do
+			assert.is_true(canvas._deleted)
+		end
 	end)
 end)
 

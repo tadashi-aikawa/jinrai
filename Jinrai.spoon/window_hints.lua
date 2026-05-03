@@ -475,6 +475,19 @@ local function modifierListKey(modifiers)
 	return table.concat(modifiers, "+")
 end
 
+local function collectInputModifiers(flags)
+	local modifiers = {}
+	if not flags then
+		return modifiers
+	end
+	for _, modifier in ipairs(SELECT_MODIFIER_ORDER) do
+		if flags[modifier] then
+			table.insert(modifiers, modifier)
+		end
+	end
+	return modifiers
+end
+
 local function shouldSwapWindowFrameOnSelect(swapModifiers, inputModifiers)
 	if not swapModifiers or not inputModifiers then
 		return false
@@ -2101,18 +2114,11 @@ function M.new(options)
 			local keyCode = event:getKeyCode()
 			local key = hs.keycodes.map[keyCode]
 			local flags = event:getFlags()
-			local modifiers = {}
-			if flags.alt then
-				table.insert(modifiers, "alt")
-			end
-			if flags.cmd then
-				table.insert(modifiers, "cmd")
-			end
-			if flags.ctrl then
-				table.insert(modifiers, "ctrl")
-			end
-			if flags.shift then
-				table.insert(modifiers, "shift")
+			local modifiers = collectInputModifiers(flags)
+
+			if key == config.hotkeyKey and modifierListKey(modifiers) == modifierListKey(config.hotkeyModifiers) then
+				closeHints(true)
+				return true
 			end
 
 			if isPreparing then
@@ -3045,6 +3051,10 @@ function M.new(options)
 	end
 
 	hotkey = hs.hotkey.bind(config.hotkeyModifiers, config.hotkeyKey, function()
+		if isShowing or isPreparing then
+			closeHints(true)
+			return
+		end
 		invokeShowHints()
 	end)
 	if directDirectionHotkeys then

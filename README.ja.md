@@ -417,6 +417,7 @@ hint = {
 
 ### Window Hints 内ナビゲーション
 
+- ヒント表示中に Window Hints のホットキーをもう一度押すと、ヒントを閉じます
 - `navigation.focusBack.key` と `navigation.direction.hints.keys` はヒント表示中のみ有効です
 - `navigation.focusBack.key` は `focus_back` 設定が有効なときだけ動作します
 - これらのキーと `hint.chars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
