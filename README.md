@@ -24,6 +24,7 @@
     - Switch windows with app icons + key hints
         - Automatically assigns the first letter of each app name as the hint prefix
         - If multiple windows share the same prefix, narrow them down with additional key input
+        - You can also click a hint to activate its window
     - Windows completely hidden by others (sampling-based approximation) are shown at the bottom in a dock-style layout with previews
         - Dock hints try to avoid overlapping front-window hints when possible
     - Highlights the active window with an overlay
@@ -416,6 +417,7 @@ For implementation defaults and internal options, see `DEFAULT_CONFIG` in `windo
 - `navigation.focusBack.key` and `navigation.direction.hints.keys` are active only while hints are shown
 - `navigation.focusBack.key` works only when `focus_back` is enabled
 - If these keys conflict with `hint.chars`, the conflicting hint chars are removed and navigation keys take priority
+- Clicking a hint selects the same window as entering its hint key
 - Fully occluded windows are excluded from directional navigation candidates
 - Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `navigation.direction.scoring.cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
 - Diagonal directions prefer the smallest sum of two axis edge gaps, then frontmost order, center distance, and finally the previously active window

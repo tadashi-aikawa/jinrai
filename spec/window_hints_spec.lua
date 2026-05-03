@@ -1438,6 +1438,269 @@ describe("window_hints appPrefixOverrides", function()
 	end)
 end)
 
+describe("window_hints mouse selection", function()
+	local originalHs
+	local originalUtf8
+
+	before_each(function()
+		originalHs = _G.hs
+		originalUtf8 = _G.utf8
+	end)
+
+	after_each(function()
+		_G.hs = originalHs
+		_G.utf8 = originalUtf8
+	end)
+
+	local function makeCanvasMock(createdCanvases)
+		local canvasMethods = {}
+		canvasMethods.__index = canvasMethods
+
+		function canvasMethods:level()
+			return self
+		end
+
+		function canvasMethods:behavior()
+			return self
+		end
+
+		function canvasMethods:appendElements(elements)
+			table.insert(self, elements)
+			return self
+		end
+
+		function canvasMethods:show()
+			self._shown = true
+			return self
+		end
+
+		function canvasMethods:delete()
+			self._deleted = true
+			return self
+		end
+
+		function canvasMethods:mouseCallback(callback)
+			self._mouseCallback = callback
+			return self
+		end
+
+		return {
+			windowLevels = {
+				overlay = 1,
+			},
+			new = function(frame)
+				local canvas = setmetatable({ _frame = frame }, canvasMethods)
+				table.insert(createdCanvases, canvas)
+				return canvas
+			end,
+		}
+	end
+
+	local function makeWindow(id, title, focusCounter)
+		local app = {
+			title = function()
+				return "App" .. tostring(id)
+			end,
+			bundleID = function()
+				return "com.example.app" .. tostring(id)
+			end,
+		}
+		local screen = {
+			id = function()
+				return 1
+			end,
+			frame = function()
+				return { x = 0, y = 0, w = 1200, h = 800 }
+			end,
+		}
+		return {
+			id = function()
+				return id
+			end,
+			isStandard = function()
+				return true
+			end,
+			application = function()
+				return app
+			end,
+			screen = function()
+				return screen
+			end,
+			title = function()
+				return title
+			end,
+			frame = function()
+				return { x = 100, y = 100, w = 400, h = 300 }
+			end,
+			focus = function()
+				focusCounter.count = focusCounter.count + 1
+			end,
+		}
+	end
+
+	local function installHsMock(targetWindow, createdCanvases)
+		_G.utf8 = {
+			len = function(text)
+				return string.len(text)
+			end,
+		}
+		local keyBlocker = {
+			started = false,
+			start = function(self)
+				self.started = true
+			end,
+			stop = function(self)
+				self.started = false
+			end,
+		}
+		_G.hs = {
+			spoons = {
+				resourcePath = function(fileName)
+					return "./Jinrai.spoon/" .. fileName
+				end,
+			},
+			hotkey = {
+				bind = function()
+					return {
+						delete = function() end,
+					}
+				end,
+			},
+			eventtap = {
+				event = {
+					types = {
+						keyDown = 1,
+					},
+				},
+				new = function()
+					return keyBlocker
+				end,
+			},
+			keycodes = {
+				map = {},
+			},
+			window = {
+				focusedWindow = function()
+					return targetWindow
+				end,
+				orderedWindows = function()
+					return { targetWindow }
+				end,
+				visibleWindows = function()
+					return { targetWindow }
+				end,
+			},
+			canvas = makeCanvasMock(createdCanvases),
+			image = {
+				imageFromAppBundle = function()
+					return {}
+				end,
+			},
+			mouse = {
+				absolutePosition = function() end,
+			},
+			timer = {
+				doAfter = function(_, callback)
+					callback()
+					return {
+						stop = function() end,
+					}
+				end,
+				doEvery = function()
+					return {
+						stop = function() end,
+					}
+				end,
+			},
+		}
+	end
+
+	it("ヒントの mouseUp で該当ウィンドウを選択する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+		assert.is_true(instance.show())
+
+		local hintCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas._mouseCallback then
+				hintCanvas = canvas
+				break
+			end
+		end
+		assert.is_truthy(hintCanvas)
+		assert.is_true(hintCanvas[1].trackMouseUp)
+
+		hintCanvas._mouseCallback(hintCanvas, "mouseUp")
+
+		assert.are.equal(1, focusCounter.count)
+		assert.is_true(hintCanvas._deleted)
+	end)
+
+	it("ヒントの mouseDown では該当ウィンドウを選択しない", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+		assert.is_true(instance.show())
+
+		local hintCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas._mouseCallback then
+				hintCanvas = canvas
+				break
+			end
+		end
+		assert.is_truthy(hintCanvas)
+
+		hintCanvas._mouseCallback(hintCanvas, "mouseDown")
+
+		assert.are.equal(0, focusCounter.count)
+		assert.is_nil(hintCanvas._deleted)
+	end)
+end)
+
 describe("shrinkDockItemWidths", function()
 	local helper
 	before_each(function()

@@ -2592,6 +2592,11 @@ function M.new(options)
 			if not previewIdx then
 				previewIdx = nextIdx
 			end
+			nextIdx = nextIdx + 1
+		end
+
+		for i = 1, nextIdx - 1 do
+			canvas[i].trackMouseUp = true
 		end
 
 		canvas:show()
@@ -2674,6 +2679,11 @@ function M.new(options)
 		hint.offSpaceBadgeStrokeIdx = offSpaceBadgeStrokeIdx
 		hint.offSpaceBadgeTextIdx = offSpaceBadgeTextIdx
 		hint.previewIdx = previewIdx
+		canvas:mouseCallback(function(_, message)
+			if message == "mouseUp" and isShowing then
+				selectWindow(hint.win, { swapWithFocused = false })
+			end
+		end)
 		table.insert(openHints, hint)
 		hintByKey[hint.key] = hint
 	end
