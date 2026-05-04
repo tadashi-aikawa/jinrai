@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Jinrai",
+    "desc": "A Hammerspoon script for switching and recognizing windows at the speed of thought.",
+    "author": "tadashi-aikawa",
+    "homepage": "https://github.com/tadashi-aikawa/jinrai",
+    "license": "MIT - https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE",
+    "version": "0.13.0"
+  }
+]
