@@ -126,7 +126,7 @@ function M.new(options)
 	if syncTargetLookup then
 		local interval = macosNativeTabsConfig.stateSyncInterval
 		if type(interval) ~= "number" or interval <= 0 then
-			interval = 0.2
+			interval = 0.5
 		end
 		nativeTabsTimer = hs.timer.doEvery(interval, function()
 			local focusedWindow = hs.window.focusedWindow()

@@ -134,8 +134,7 @@ hs.loadSpoon("Jinrai")
 
 spoon.Jinrai:setup({
   macosNativeTabs = {
-    apps = { "com.mitchellh.ghostty" }, -- macOSネイティブタブを使うアプリ名またはbundle ID
-    stateSyncInterval = 0.15,           -- Focus Back用の状態同期間隔（秒）
+    -- 詳細は後続の「macOS Native Tabs オプション」の全設定例を参照
   },
   focus_border = {
     -- 詳細は後続の「Focus Border オプション」の全設定例を参照
@@ -157,12 +156,16 @@ spoon.Jinrai:setup({
 
 ```lua
 macosNativeTabs = {
-  apps = { "com.mitchellh.ghostty" }, -- アプリ名またはbundle IDの配列
-  stateSyncInterval = 0.15,           -- Focus Back用の状態同期間隔（秒、未指定時は0.2）
+  apps = { "com.example.terminal" }, -- 追加アプリ名またはbundle IDの配列
+  stateSyncInterval = 0.5,           -- Focus Back用の状態同期間隔（秒、未指定時は0.5）
 }
 ```
 
-GhosttyはmacOSネイティブタブを使うため、Hammerspoonからはタブごとに別ウィンドウとして見えます。
+`apps` に指定したアプリは組み込みのデフォルト設定へ追加されます。補正を完全に無効化する場合は `macosNativeTabs = false` を指定します。
+
+デフォルト設定:
+
+- `com.mitchellh.ghostty`
 
 ## Focus Border オプション
 

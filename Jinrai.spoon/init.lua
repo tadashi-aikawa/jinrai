@@ -20,6 +20,11 @@ local windowHints = nil
 local focusBack = nil
 local focusHistory = nil
 
+local DEFAULT_MACOS_NATIVE_TABS = {
+	apps = { "com.mitchellh.ghostty" },
+	stateSyncInterval = 0.5,
+}
+
 local function resourcePath(fileName)
 	if not hs or not hs.spoons or not hs.spoons.resourcePath then
 		error("[jinrai] hs.spoons.resourcePath is not available")
@@ -45,6 +50,38 @@ local function mergeTable(defaults, overrides)
 	return merged
 end
 
+local function mergeAppList(defaultApps, overrideApps)
+	local apps = {}
+	local seen = {}
+	local function add(app)
+		if type(app) == "string" and app ~= "" and not seen[app] then
+			table.insert(apps, app)
+			seen[app] = true
+		end
+	end
+	for _, app in ipairs(defaultApps or {}) do
+		add(app)
+	end
+	for _, app in ipairs(overrideApps or {}) do
+		add(app)
+	end
+	return apps
+end
+
+local function normalizeMacosNativeTabs(config)
+	if config == false then
+		return nil
+	end
+	local normalized = {
+		apps = mergeAppList(DEFAULT_MACOS_NATIVE_TABS.apps, type(config) == "table" and config.apps or nil),
+		stateSyncInterval = DEFAULT_MACOS_NATIVE_TABS.stateSyncInterval,
+	}
+	if type(config) == "table" and config.stateSyncInterval ~= nil then
+		normalized.stateSyncInterval = config.stateSyncInterval
+	end
+	return normalized
+end
+
 local function normalizeConfig(selfOrConfig, maybeConfig)
 	if maybeConfig ~= nil then
 		return maybeConfig
@@ -57,6 +94,7 @@ end
 
 function obj:setup(config)
 	config = normalizeConfig(self, config)
+	local macosNativeTabs = normalizeMacosNativeTabs(config.macosNativeTabs)
 
 	obj:teardown()
 
@@ -79,7 +117,7 @@ function obj:setup(config)
 
 	if config.focus_back then
 		focusHistory = focusHistoryModule.new({
-			macosNativeTabs = config.macosNativeTabs,
+			macosNativeTabs = macosNativeTabs,
 		})
 	end
 
@@ -89,8 +127,8 @@ function obj:setup(config)
 			local internalConfig = mergeTable(windowHintsConfig.internal or {}, { focusHistory = focusHistory })
 			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })
 		end
-		if config.macosNativeTabs ~= nil then
-			local internalConfig = mergeTable(windowHintsConfig.internal or {}, { macosNativeTabs = config.macosNativeTabs })
+		if macosNativeTabs ~= nil then
+			local internalConfig = mergeTable(windowHintsConfig.internal or {}, { macosNativeTabs = macosNativeTabs })
 			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })
 		end
 		windowHints = windowHintsModule.new(windowHintsConfig)

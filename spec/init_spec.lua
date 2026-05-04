@@ -199,9 +199,186 @@ describe("init", function()
 		assert.is_truthy(calls.new.focus_history)
 		assert.is_truthy(calls.new.window_hints.internal)
 		assert.is_truthy(calls.new.window_hints.internal.focusHistory)
-		assert.are.same({ apps = { "com.mitchellh.ghostty" } }, calls.new.window_hints.internal.macosNativeTabs)
+		assert.are.same({
+			apps = { "com.mitchellh.ghostty" },
+			stateSyncInterval = 0.5,
+		}, calls.new.window_hints.internal.macosNativeTabs)
 		assert.are.equal(nil, calls.new.window_hints.macosNativeTabs)
 		assert.are.equal(nil, calls.new.window_hints.focusHistory)
+	end)
+
+	it("macosNativeTabs 未指定時は Ghostty のデフォルト設定を注入する", function()
+		_G.__jinrai = nil
+		local init = dofile("./Jinrai.spoon/init.lua")
+		local calls = {
+			new = {},
+		}
+
+		_G.dofile = function(path)
+			if path:match("window_hints.lua$") then
+				return {
+					new = function(options)
+						calls.new.window_hints = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_back.lua$") then
+				return {
+					new = function(options)
+						calls.new.focus_back = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_history.lua$") then
+				return {
+					new = function(options)
+						calls.new.focus_history = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_border.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
+			return originalDofile(path)
+		end
+
+		init:setup({
+			window_hints = {},
+			focus_back = {},
+		})
+
+		assert.are.same({
+			macosNativeTabs = {
+				apps = { "com.mitchellh.ghostty" },
+				stateSyncInterval = 0.5,
+			},
+		}, calls.new.focus_history)
+		assert.are.same({
+			apps = { "com.mitchellh.ghostty" },
+			stateSyncInterval = 0.5,
+		}, calls.new.window_hints.internal.macosNativeTabs)
+	end)
+
+	it("macosNativeTabs.apps はデフォルトアプリに追加される", function()
+		_G.__jinrai = nil
+		local init = dofile("./Jinrai.spoon/init.lua")
+		local calls = {
+			new = {},
+		}
+
+		_G.dofile = function(path)
+			if path:match("window_hints.lua$") then
+				return {
+					new = function(options)
+						calls.new.window_hints = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_back.lua$") then
+				return {
+					new = function(options)
+						calls.new.focus_back = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_history.lua$") then
+				return {
+					new = function(options)
+						calls.new.focus_history = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_border.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
+			return originalDofile(path)
+		end
+
+		init:setup({
+			macosNativeTabs = {
+				apps = { "com.example.terminal", "com.mitchellh.ghostty" },
+				stateSyncInterval = 0.75,
+			},
+			window_hints = {},
+			focus_back = {},
+		})
+
+		assert.are.same({
+			apps = { "com.mitchellh.ghostty", "com.example.terminal" },
+			stateSyncInterval = 0.75,
+		}, calls.new.window_hints.internal.macosNativeTabs)
+		assert.are.same({
+			macosNativeTabs = {
+				apps = { "com.mitchellh.ghostty", "com.example.terminal" },
+				stateSyncInterval = 0.75,
+			},
+		}, calls.new.focus_history)
+	end)
+
+	it("macosNativeTabs = false なら補正設定を注入しない", function()
+		_G.__jinrai = nil
+		local init = dofile("./Jinrai.spoon/init.lua")
+		local calls = {
+			new = {},
+		}
+
+		_G.dofile = function(path)
+			if path:match("window_hints.lua$") then
+				return {
+					new = function(options)
+						calls.new.window_hints = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_back.lua$") then
+				return {
+					new = function(options)
+						calls.new.focus_back = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_history.lua$") then
+				return {
+					new = function(options)
+						calls.new.focus_history = options
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_border.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
+			return originalDofile(path)
+		end
+
+		init:setup({
+			macosNativeTabs = false,
+			window_hints = {},
+			focus_back = {},
+		})
+
+		assert.are.same({ macosNativeTabs = nil }, calls.new.focus_history)
+		assert.are.equal(nil, calls.new.window_hints.internal.macosNativeTabs)
 	end)
 
 	it("teardown は focus_back -> window_hints -> focus_border の順に実行される", function()

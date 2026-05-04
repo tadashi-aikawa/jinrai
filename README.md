@@ -132,8 +132,7 @@ hs.loadSpoon("Jinrai")
 
 spoon.Jinrai:setup({
   macosNativeTabs = {
-    apps = { "com.mitchellh.ghostty" }, -- App names or bundle IDs using macOS native tabs
-    stateSyncInterval = 0.15,           -- Focus Back state sync interval (seconds)
+    -- See "macOS Native Tabs Options" below for the complete default schema and examples
   },
   focus_border = {
     -- See "Focus Border Options" below for the complete default schema and examples
@@ -155,12 +154,16 @@ For target apps, each tab can have a different window ID. JINRAI hides tab-like 
 
 ```lua
 macosNativeTabs = {
-  apps = { "com.mitchellh.ghostty" }, -- Array of app names or bundle IDs
-  stateSyncInterval = 0.15,           -- Focus Back state sync interval (default: 0.2)
+  apps = { "com.example.terminal" }, -- Additional app names or bundle IDs
+  stateSyncInterval = 0.5,           -- Focus Back state sync interval (default: 0.5)
 }
 ```
 
-Ghostty uses macOS native tabs, so Hammerspoon sees each tab as a separate window.
+Apps listed in `apps` are added to the built-in defaults. Set `macosNativeTabs = false` to disable this compensation entirely.
+
+Default configuration:
+
+- `com.mitchellh.ghostty`
 
 ## Focus Border Options
 

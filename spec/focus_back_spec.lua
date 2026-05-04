@@ -162,6 +162,21 @@ describe("focus_back", function()
 		focusHistory:teardown()
 	end)
 
+	it("macosNativeTabs.stateSyncInterval 未指定時は 0.5 秒で同期する", function()
+		local win1 = hsMock.newWindow(1, { bundleID = "com.example.main", appName = "Main" })
+		local mock, instance, focusHistory = newFocusBackWithFocusHistoryOptions({
+			macosNativeTabs = {
+				apps = { "com.mitchellh.ghostty" },
+			},
+		}, win1)
+
+		assert.are.equal(1, #mock.state.timers)
+		assert.are.equal(0.5, mock.state.timers[1].interval)
+
+		instance.teardown()
+		focusHistory:teardown()
+	end)
+
 	it("macosNativeTabs.apps 対象アプリは focusBack 直前にも現在タブを同期する", function()
 		local ghosttyTab1 = hsMock.newWindow(1, { bundleID = "com.mitchellh.ghostty", appName = "Ghostty" })
 		local ghosttyTab2 = hsMock.newWindow(2, { bundleID = "com.mitchellh.ghostty", appName = "Ghostty" })
