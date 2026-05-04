@@ -53,8 +53,22 @@ busted spec/init_spec.lua
 
 ## リリース方法
 
-1. `Jinrai.spoon/init.lua` の `obj.version` のバージョンを上げる (ex: 0.2.3)
-2. `chore: v<バージョン>` としてコミット
-3. `v<バージョン>` としてタグ付け
-4. 2と3をそれぞれpush
-5. Bluesky用のリリース連絡メッセージを作成
+リリースはリポジトリルートで以下を実行します。
+
+```bash
+scripts/release.sh <バージョン>
+```
+
+例:
+
+```bash
+scripts/release.sh 0.13.0
+```
+
+スクリプトは `Jinrai.spoon/init.lua` のバージョン更新、テスト、配布物のbuild/validate、`chore: v<バージョン>` コミット、`v<バージョン>` タグ作成、`main` とタグのpushまで実行します。タグpush後、GitHub Actionsが `spoons` ブランチへ配布物を公開します。
+
+Codex CLIが使えない環境やBluesky投稿文生成を省略したい場合は `--skip-codex` を指定します。
+
+```bash
+scripts/release.sh --skip-codex 0.13.0
+```
