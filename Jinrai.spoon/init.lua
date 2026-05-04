@@ -79,7 +79,7 @@ function obj:setup(config)
 
 	if config.focus_back then
 		focusHistory = focusHistoryModule.new({
-			stateSync = config.focus_back.stateSync,
+			macosNativeTabs = config.macosNativeTabs,
 		})
 	end
 
@@ -87,6 +87,10 @@ function obj:setup(config)
 		local windowHintsConfig = config.window_hints
 		if focusHistory then
 			local internalConfig = mergeTable(windowHintsConfig.internal or {}, { focusHistory = focusHistory })
+			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })
+		end
+		if config.macosNativeTabs ~= nil then
+			local internalConfig = mergeTable(windowHintsConfig.internal or {}, { macosNativeTabs = config.macosNativeTabs })
 			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })
 		end
 		windowHints = windowHintsModule.new(windowHintsConfig)

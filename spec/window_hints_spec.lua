@@ -964,6 +964,13 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.same({ offSpace }, offSpaceWins)
 	end)
 
+	it("macOS Native Tabs 対象アプリの別 Space かつ Space番号不明な候補は除外する", function()
+		assert.is_true(helper.shouldSkipUnknownSpaceMacosNativeTabCandidate(true, true, nil))
+		assert.is_false(helper.shouldSkipUnknownSpaceMacosNativeTabCandidate(true, true, 2))
+		assert.is_false(helper.shouldSkipUnknownSpaceMacosNativeTabCandidate(true, false, nil))
+		assert.is_false(helper.shouldSkipUnknownSpaceMacosNativeTabCandidate(false, true, nil))
+	end)
+
 	it("通常 focusBack では focusBack を使う", function()
 		local focusedWin = { label = "focused" }
 		local focusBackCalls = 0

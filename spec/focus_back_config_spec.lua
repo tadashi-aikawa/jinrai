@@ -20,9 +20,6 @@ describe("focus_back_config", function()
 					onSelect = true,
 				},
 			},
-			stateSync = {
-				interval = 0.1,
-			},
 			internal = {
 				focusHistory = focusHistory,
 			},
@@ -32,7 +29,6 @@ describe("focus_back_config", function()
 		assert.are.equal("f18", built.hotkeyKey)
 		assert.are.equal("focus_back", built.urlEvent)
 		assert.is_true(built.centerCursor)
-		assert.are.same({ interval = 0.1 }, built.stateSync)
 		assert.are.equal(focusHistory, built.focusHistory)
 	end)
 

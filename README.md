@@ -131,6 +131,10 @@ git -C /path/to/jinrai pull
 hs.loadSpoon("Jinrai")
 
 spoon.Jinrai:setup({
+  macosNativeTabs = {
+    apps = { "com.mitchellh.ghostty" }, -- App names or bundle IDs using macOS native tabs
+    stateSyncInterval = 0.15,           -- Focus Back state sync interval (seconds)
+  },
   focus_border = {
     -- See "Focus Border Options" below for the complete default schema and examples
   },
@@ -142,6 +146,21 @@ spoon.Jinrai:setup({
   },
 })
 ```
+
+## macOS Native Tabs Options
+
+`macosNativeTabs` configures compensation for apps that use macOS native tabs.
+
+For target apps, each tab can have a different window ID. JINRAI hides tab-like candidates whose Space cannot be resolved in Window Hints and excludes tab moves within the same app from Focus Back history updates.
+
+```lua
+macosNativeTabs = {
+  apps = { "com.mitchellh.ghostty" }, -- Array of app names or bundle IDs
+  stateSyncInterval = 0.15,           -- Focus Back state sync interval (default: 0.2)
+}
+```
+
+Ghostty uses macOS native tabs, so Hammerspoon sees each tab as a separate window.
 
 ## Focus Border Options
 
@@ -502,7 +521,6 @@ focus_back = {
       onSelect = true, -- Move cursor to window center after switching
     },
   },
-  stateSync = nil, -- State sync settings to compensate for missed events (see below)
   internal = {
     focusHistory = nil, -- Internal injection only (normally do not set)
   },
@@ -510,50 +528,6 @@ focus_back = {
 ```
 
 Pressing repeatedly lets you toggle between two windows.
-
-### stateSync
-
-`stateSync` helps prevent drift in `focus_back` history tracking.
-
-In most cases, macOS focus notifications are sufficient. However, some apps do not emit reliable notifications when switching tabs, which can cause `focus_back` to jump to unexpected locations.
-If you enable `stateSync`, JINRAI periodically checks window state and corrects history.
-
-#### Examples where it helps
-
-- Right after switching tabs, `focus_back` does not return to the tab you expected
-- When moving between apps, `focus_back` targets are unstable
-
-#### `stateSync` Definition
-
-```lua
-stateSync = {
-  interval = 0.2,      -- Sync interval (seconds)
-  targetApps = nil,    -- Array of target app names or bundle IDs (nil for all apps)
-  historyScope = "window", -- History update scope ("window" or "application")
-}
-```
-
-##### `historyScope` Behavior:
-
-- `"window"`: Updates history at the window (tab) level
-- `"application"`: Does not update history when moving tabs within the same app
-
-#### Ghostty Example
-
-Ghostty needs this because each tab has a different window ID, and tab switches are not delivered to JINRAI (hammerspoon) as focus notifications.
-
-```lua
-focus_back = {
-  stateSync = {
-    interval = 0.15,
-    targetApps = { "com.mitchellh.ghostty" },
-    historyScope = "application",
-  },
-}
-```
-
-> [!NOTE]
-> If you know a smarter solution, I'd love to hear it.
 
 ## Development
 

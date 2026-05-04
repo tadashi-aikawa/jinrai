@@ -1,7 +1,7 @@
 local M = {}
 
 local DEFAULT_CONFIG = {
-	stateSync = nil,
+	macosNativeTabs = nil,
 }
 
 local MAX_HISTORY_SIZE = 20
@@ -49,29 +49,27 @@ function M.new(options)
 	local config = mergeTable(DEFAULT_CONFIG, options)
 
 	local wf = nil
-	local stateSyncTimer = nil
+	local nativeTabsTimer = nil
 	local history = {}
 	local currentWindow = hs.window.focusedWindow()
 	local switching = false
 
-	local stateSyncConfig = type(config.stateSync) == "table" and config.stateSync or nil
-	local historyScope = "window"
-	if stateSyncConfig and stateSyncConfig.historyScope == "application" then
-		historyScope = "application"
-	end
-
+	local macosNativeTabsConfig = type(config.macosNativeTabs) == "table" and config.macosNativeTabs or nil
 	local syncTargetLookup = nil
-	if stateSyncConfig and type(stateSyncConfig.targetApps) == "table" then
+	if macosNativeTabsConfig and type(macosNativeTabsConfig.apps) == "table" then
 		syncTargetLookup = {}
-		for _, target in ipairs(stateSyncConfig.targetApps) do
+		for _, target in ipairs(macosNativeTabsConfig.apps) do
 			if type(target) == "string" and target ~= "" then
 				syncTargetLookup[target] = true
 			end
 		end
+		if next(syncTargetLookup) == nil then
+			syncTargetLookup = nil
+		end
 	end
 
 	local function shouldPromotePrevious(fromWin, toWin)
-		if historyScope ~= "application" then
+		if not syncTargetLookup then
 			return true
 		end
 		local fromKey = appKeyOfWindow(fromWin)
@@ -79,7 +77,16 @@ function M.new(options)
 		if not fromKey or not toKey then
 			return true
 		end
-		return fromKey ~= toKey
+		if fromKey ~= toKey then
+			return true
+		end
+		local app = toWin:application()
+		if not app then
+			return true
+		end
+		local appName = app:name()
+		local bundleID = app:bundleID()
+		return not ((appName and syncTargetLookup[appName]) or (bundleID and syncTargetLookup[bundleID]))
 	end
 
 	local function updateWindowState(win)
@@ -100,7 +107,7 @@ function M.new(options)
 			return false
 		end
 		if not syncTargetLookup then
-			return true
+			return false
 		end
 		local app = win:application()
 		if not app then
@@ -116,12 +123,12 @@ function M.new(options)
 		updateWindowState(win)
 	end)
 
-	if stateSyncConfig then
-		local interval = stateSyncConfig.interval
+	if syncTargetLookup then
+		local interval = macosNativeTabsConfig.stateSyncInterval
 		if type(interval) ~= "number" or interval <= 0 then
 			interval = 0.2
 		end
-		stateSyncTimer = hs.timer.doEvery(interval, function()
+		nativeTabsTimer = hs.timer.doEvery(interval, function()
 			local focusedWindow = hs.window.focusedWindow()
 			if not isStateSyncTargetWindow(focusedWindow) then
 				return
@@ -131,6 +138,15 @@ function M.new(options)
 	end
 
 	local function focusBack()
+		if syncTargetLookup and hs and hs.window and hs.window.focusedWindow then
+			local ok, focusedWindow = pcall(function()
+				return hs.window.focusedWindow()
+			end)
+			if ok and isStateSyncTargetWindow(focusedWindow) then
+				updateWindowState(focusedWindow)
+			end
+		end
+
 		local targetWindow = nil
 		while #history > 0 do
 			local candidate = table.remove(history)
@@ -171,9 +187,9 @@ function M.new(options)
 	end
 
 	local function teardown()
-		if stateSyncTimer then
-			stateSyncTimer:stop()
-			stateSyncTimer = nil
+		if nativeTabsTimer then
+			nativeTabsTimer:stop()
+			nativeTabsTimer = nil
 		end
 		if wf then
 			wf:unsubscribe(hs.window.filter.windowFocused)

@@ -253,6 +253,7 @@ local DEFAULT_CONFIG = {
 	},
 	internal = {
 		focusHistory = nil,
+		macosNativeTabs = nil,
 	},
 }
 
@@ -723,6 +724,9 @@ local function checkLegacyFlatKeys(options)
 end
 
 local function checkLegacyNestedKeys(options)
+	if options.macosNativeTabs ~= nil then
+		error("[jinrai.window_hints] macosNativeTabs must be configured at the top level")
+	end
 	if options.ui ~= nil then
 		error(
 			"[jinrai.window_hints] legacy nested key 'ui.*' is no longer supported; use 'hint.*' (hint.icon / hint.key / hint.title / hint.state / hint.spaceBadge)"
@@ -823,6 +827,9 @@ function M.build(options)
 	local merged = deepMerge(DEFAULT_CONFIG, options)
 	if options.internal and type(options.internal) == "table" and options.internal.focusHistory ~= nil then
 		merged.internal.focusHistory = options.internal.focusHistory
+	end
+	if options.internal and type(options.internal) == "table" and options.internal.macosNativeTabs ~= nil then
+		merged.internal.macosNativeTabs = options.internal.macosNativeTabs
 	end
 
 	local directionKeys = normalizeDirectionKeys(merged.navigation.direction.hints.keys, "navigation.direction.hints.keys")
@@ -943,6 +950,7 @@ function M.build(options)
 		centerCursorOnStart = merged.behavior.cursor.onStart,
 		includeOtherSpaces = merged.behavior.candidates.includeOtherSpaces,
 		includeActiveWindow = merged.behavior.candidates.includeActiveWindow,
+		macosNativeTabs = merged.internal.macosNativeTabs,
 		focusBackKey = focusBackKey,
 		directionKeys = directionKeys,
 		directionKeyLookup = directionKeyLookup,

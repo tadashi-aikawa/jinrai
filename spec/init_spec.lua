@@ -115,10 +115,19 @@ describe("init", function()
 					},
 				},
 			},
+			macosNativeTabs = {
+				apps = { "com.mitchellh.ghostty" },
+				stateSyncInterval = 0.15,
+			},
 		})
 
 		assert.are.equal(99, calls.new.focus_border.visual.border.width)
-		assert.are.same({ stateSync = nil }, calls.new.focus_history)
+		assert.are.same({
+			macosNativeTabs = {
+				apps = { "com.mitchellh.ghostty" },
+				stateSyncInterval = 0.15,
+			},
+		}, calls.new.focus_history)
 		assert.are.equal("q", calls.new.focus_back.hotkey.key)
 		assert.is_true(calls.new.focus_back.behavior.cursor.onSelect)
 		assert.is_truthy(calls.new.focus_back.internal.focusHistory)
@@ -180,6 +189,9 @@ describe("init", function()
 		end
 
 		init:setup({
+			macosNativeTabs = {
+				apps = { "com.mitchellh.ghostty" },
+			},
 			window_hints = {},
 			focus_back = {},
 		})
@@ -187,6 +199,8 @@ describe("init", function()
 		assert.is_truthy(calls.new.focus_history)
 		assert.is_truthy(calls.new.window_hints.internal)
 		assert.is_truthy(calls.new.window_hints.internal.focusHistory)
+		assert.are.same({ apps = { "com.mitchellh.ghostty" } }, calls.new.window_hints.internal.macosNativeTabs)
+		assert.are.equal(nil, calls.new.window_hints.macosNativeTabs)
 		assert.are.equal(nil, calls.new.window_hints.focusHistory)
 	end)
 

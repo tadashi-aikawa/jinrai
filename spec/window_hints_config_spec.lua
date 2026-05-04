@@ -183,6 +183,9 @@ describe("window_hints_config", function()
 			},
 			internal = {
 				focusHistory = focusHistory,
+				macosNativeTabs = {
+					apps = { "com.mitchellh.ghostty" },
+				},
 			},
 		})
 
@@ -252,6 +255,7 @@ describe("window_hints_config", function()
 		assert.are.equal(0.25, built.dockWindowYBlend)
 		assert.is_true(built.includeOtherSpaces)
 		assert.is_true(built.includeActiveWindow)
+		assert.are.same({ apps = { "com.mitchellh.ghostty" } }, built.macosNativeTabs)
 		assert.are.equal(focusHistory, built.focusHistory)
 	end)
 
@@ -464,5 +468,17 @@ describe("window_hints_config", function()
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("hint%.spaceBadge%.size must be > 0"))
+	end)
+
+	it("macosNativeTabs は window_hints 配下では指定できない", function()
+		local ok, err = pcall(function()
+			mod.build({
+				macosNativeTabs = {
+					apps = { "com.mitchellh.ghostty" },
+				},
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("top level"))
 	end)
 end)

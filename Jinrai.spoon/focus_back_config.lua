@@ -13,7 +13,6 @@ local DEFAULT_CONFIG = {
 			onSelect = true,
 		},
 	},
-	stateSync = nil,
 	internal = {
 		focusHistory = nil,
 	},
@@ -118,7 +117,6 @@ function M.build(options)
 		hotkeyKey = merged.hotkey.key,
 		urlEvent = merged.urlEvent and merged.urlEvent.name or nil,
 		centerCursor = merged.behavior.cursor.onSelect,
-		stateSync = merged.stateSync,
 		focusHistory = merged.internal.focusHistory,
 	}
 end

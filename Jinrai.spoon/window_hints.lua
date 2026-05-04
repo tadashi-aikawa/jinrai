@@ -1555,6 +1555,46 @@ local function buildWindowZOrderIndex(orderedWins)
 	return lookup
 end
 
+local function buildMacosNativeTabsAppLookup(macosNativeTabs)
+	if type(macosNativeTabs) ~= "table" or type(macosNativeTabs.apps) ~= "table" then
+		return nil
+	end
+	local lookup = {}
+	for _, app in ipairs(macosNativeTabs.apps) do
+		if type(app) == "string" and app ~= "" then
+			lookup[app] = true
+		end
+	end
+	if next(lookup) == nil then
+		return nil
+	end
+	return lookup
+end
+
+local function applicationNameOf(app)
+	if not app or not app.name then
+		return nil
+	end
+	local ok, name = pcall(function()
+		return app:name()
+	end)
+	if ok then
+		return name
+	end
+	return nil
+end
+
+local function isMacosNativeTabsTargetApp(app, bundleID, appName, lookup)
+	if not lookup then
+		return false
+	end
+	return (bundleID and lookup[bundleID]) or (appName and lookup[appName]) or false
+end
+
+local function shouldSkipUnknownSpaceMacosNativeTabCandidate(isMacosNativeTabsTarget, isOffSpace, spaceNumber)
+	return isMacosNativeTabsTarget and isOffSpace and spaceNumber == nil
+end
+
 local function collectCoveringFramesBeforeWindow(orderedWins, targetWindowId)
 	local frames = {}
 	if type(orderedWins) ~= "table" then
@@ -1802,6 +1842,7 @@ function M.new(options)
 		hintCharByInputKey[string.lower(char)] = char
 	end
 	local appPrefixOverrides = compileAppPrefixOverrides(config.appPrefixOverrides, allowedPrefixes)
+	local macosNativeTabsAppLookup = buildMacosNativeTabsAppLookup(config.macosNativeTabs)
 
 	local function clearHints()
 		for _, hint in ipairs(openHints) do
@@ -2221,6 +2262,7 @@ function M.new(options)
 		for _, win in ipairs(candidateWins) do
 			local app = win:application()
 			local bundleID = app and app:bundleID() or nil
+			local appName = applicationNameOf(app)
 			local screen = win:screen()
 			local winId = win:id()
 			local isOffSpace = config.includeOtherSpaces and not currentSpaceLookup[winId]
@@ -2244,20 +2286,25 @@ function M.new(options)
 				end
 				local basePrefix, isOverridePrefix =
 					resolveAppPrefix(appTitle, bundleID, windowTitle, hintChars[1], allowedPrefixes, appPrefixOverrides)
-				table.insert(entries, {
-					win = win,
-					app = app,
-					appKey = bundleID or appTitle,
-					appTitle = appTitle,
-					title = windowTitle,
-					basePrefix = basePrefix,
-					isOverridePrefix = isOverridePrefix,
-					isOccluded = occluded,
-					isOffSpace = isOffSpace,
-					isActiveWindow = (winId == focusedId),
-					spaceNumber = isOffSpace and spaceNumberForWindow(winId, spaceNumberLookup) or nil,
-					coveringFrames = coveringFrames,
-				})
+				local isMacosNativeTabsTarget =
+					isMacosNativeTabsTargetApp(app, bundleID, appName, macosNativeTabsAppLookup)
+				local spaceNumber = isOffSpace and spaceNumberForWindow(winId, spaceNumberLookup) or nil
+				if not shouldSkipUnknownSpaceMacosNativeTabCandidate(isMacosNativeTabsTarget, isOffSpace, spaceNumber) then
+					table.insert(entries, {
+						win = win,
+						app = app,
+						appKey = bundleID or appTitle,
+						appTitle = appTitle,
+						title = windowTitle,
+						basePrefix = basePrefix,
+						isOverridePrefix = isOverridePrefix,
+						isOccluded = occluded,
+						isOffSpace = isOffSpace,
+						isActiveWindow = (winId == focusedId),
+						spaceNumber = spaceNumber,
+						coveringFrames = coveringFrames,
+					})
+				end
 			end
 		end
 
@@ -3163,6 +3210,8 @@ M._test = {
 	shrinkDockItemWidths = shrinkDockItemWidths,
 	splitDockItemsIntoRows = splitDockItemsIntoRows,
 	comparePrefixes = comparePrefixes,
+	buildMacosNativeTabsAppLookup = buildMacosNativeTabsAppLookup,
+	shouldSkipUnknownSpaceMacosNativeTabCandidate = shouldSkipUnknownSpaceMacosNativeTabCandidate,
 	buildWindowIdLookup = buildWindowIdLookup,
 	mergeUniqueWindows = mergeUniqueWindows,
 	collectCandidateWindows = collectCandidateWindows,

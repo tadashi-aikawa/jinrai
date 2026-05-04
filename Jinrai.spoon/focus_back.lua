@@ -28,9 +28,7 @@ function M.new(options)
 	local ownsFocusHistory = false
 	local focusHistory = config.focusHistory
 	if not focusHistory then
-		focusHistory = focusHistoryModule.new({
-			stateSync = config.stateSync,
-		})
+		focusHistory = focusHistoryModule.new()
 		ownsFocusHistory = true
 	end
 
