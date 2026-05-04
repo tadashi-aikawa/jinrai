@@ -1554,6 +1554,15 @@ describe("window_hints mouse selection", function()
 				self.started = false
 			end,
 		}
+		local mouseClickWatcher = {
+			started = false,
+			start = function(self)
+				self.started = true
+			end,
+			stop = function(self)
+				self.started = false
+			end,
+		}
 		_G.hs = {
 			spoons = {
 				resourcePath = function(fileName)
@@ -1576,9 +1585,14 @@ describe("window_hints mouse selection", function()
 				event = {
 					types = {
 						keyDown = 1,
+						leftMouseDown = 2,
 					},
 				},
-				new = function(_, callback)
+				new = function(types, callback)
+					if types[1] == 2 then
+						mouseClickWatcher.callback = callback
+						return mouseClickWatcher
+					end
 					keyBlocker.callback = callback
 					return keyBlocker
 				end,
@@ -1625,6 +1639,7 @@ describe("window_hints mouse selection", function()
 		return {
 			hotkeys = hotkeys,
 			keyBlocker = keyBlocker,
+			mouseClickWatcher = mouseClickWatcher,
 		}
 	end
 
@@ -1711,6 +1726,103 @@ describe("window_hints mouse selection", function()
 
 		assert.are.equal(0, focusCounter.count)
 		assert.is_nil(hintCanvas._deleted)
+	end)
+
+	it("ヒント表示中にヒント外を左クリックすると閉じる", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+		assert.is_true(instance.show())
+
+		local hintCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas._mouseCallback then
+				hintCanvas = canvas
+				break
+			end
+		end
+		assert.is_truthy(hintCanvas)
+		assert.is_true(mocks.mouseClickWatcher.started)
+
+		local consumed = mocks.mouseClickWatcher.callback({
+			location = function()
+				return { x = 10, y = 10 }
+			end,
+		})
+
+		assert.is_true(consumed)
+		assert.are.equal(0, focusCounter.count)
+		assert.is_true(hintCanvas._deleted)
+		assert.is_false(mocks.mouseClickWatcher.started)
+	end)
+
+	it("ヒント表示中にヒント内を左クリックしても外側クリックとして閉じない", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+		assert.is_true(instance.show())
+
+		local hintCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas._mouseCallback then
+				hintCanvas = canvas
+				break
+			end
+		end
+		assert.is_truthy(hintCanvas)
+
+		local consumed = mocks.mouseClickWatcher.callback({
+			location = function()
+				return { x = hintCanvas._frame.x + 1, y = hintCanvas._frame.y + 1 }
+			end,
+		})
+
+		assert.is_false(consumed)
+		assert.are.equal(0, focusCounter.count)
+		assert.is_nil(hintCanvas._deleted)
+		assert.is_true(mocks.mouseClickWatcher.started)
 	end)
 
 	it("ヒント表示中に同じホットキーを押すと keyBlocker 経由で閉じる", function()

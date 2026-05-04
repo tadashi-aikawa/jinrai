@@ -1783,6 +1783,7 @@ function M.new(options)
 	local hotkey = nil
 	local directDirectionBindings = {}
 	local keyBlocker = nil
+	local mouseClickWatcher = nil
 	local openHints = {}
 	local hintByKey = {}
 	local hintCharByInputKey = {}
@@ -1815,6 +1816,34 @@ function M.new(options)
 		openHints = {}
 		hintByKey = {}
 		currentInput = ""
+	end
+
+	local function pointInFrame(point, frame)
+		if not point or not frame then
+			return false
+		end
+		return point.x >= frame.x and point.x <= frame.x + frame.w and point.y >= frame.y and point.y <= frame.y + frame.h
+	end
+
+	local function pointInAnyHint(point)
+		for _, hint in ipairs(openHints) do
+			if pointInFrame(point, hint.canvasFrame) then
+				return true
+			end
+		end
+		return false
+	end
+
+	local function eventLocation(event)
+		if event and event.location then
+			local ok, point = pcall(function()
+				return event:location()
+			end)
+			if ok and point then
+				return point
+			end
+		end
+		return hs.mouse.absolutePosition()
 	end
 
 	local function setHintActive(hint, active)
@@ -1907,6 +1936,9 @@ function M.new(options)
 	local function closeHints(stopKeyBlocker)
 		if (isShowing or isPreparing) and stopKeyBlocker and keyBlocker then
 			keyBlocker:stop()
+		end
+		if (isShowing or isPreparing) and stopKeyBlocker and mouseClickWatcher then
+			mouseClickWatcher:stop()
 		end
 		isShowing = false
 		isPreparing = false
@@ -2134,6 +2166,22 @@ function M.new(options)
 				handleInputKey(key, modifiers)
 			end
 
+			return true
+		end)
+	end
+
+	local function ensureMouseClickWatcher()
+		if mouseClickWatcher then
+			return
+		end
+		mouseClickWatcher = hs.eventtap.new({ hs.eventtap.event.types.leftMouseDown }, function(event)
+			if not isShowing then
+				return false
+			end
+			if pointInAnyHint(eventLocation(event)) then
+				return false
+			end
+			closeHints(true)
 			return true
 		end)
 	end
@@ -2670,8 +2718,9 @@ function M.new(options)
 				hint.spaceNumber,
 				scale,
 				hint.isActiveWindow
-			)
+		)
 		hint.canvas = canvas
+		hint.canvasFrame = canvasFrame
 		hint.keyBoxFrame = keyBoxFrame
 		hint.keyTextHeight = keyTextHeight
 		hint.iconIdx = iconIdx
@@ -2739,7 +2788,9 @@ function M.new(options)
 		isPreparing = true
 		pendingKeys = {}
 		ensureKeyBlocker()
+		ensureMouseClickWatcher()
 		keyBlocker:start()
+		mouseClickWatcher:start()
 
 		local entries = collectEntries()
 		local hintEntries = buildHintEntries(entries)
@@ -2759,6 +2810,7 @@ function M.new(options)
 			-- No hints to show; auto-dismiss overlay after a short delay
 			isPreparing = false
 			keyBlocker:stop()
+			mouseClickWatcher:stop()
 			pendingKeys = {}
 			hs.timer.doAfter(0.5, function()
 				if activeOverlayCanvas then
@@ -2956,6 +3008,7 @@ function M.new(options)
 		if #openHints == 0 then
 			isPreparing = false
 			keyBlocker:stop()
+			mouseClickWatcher:stop()
 			pendingKeys = {}
 			clearHints()
 			return
@@ -3047,6 +3100,10 @@ function M.new(options)
 		if keyBlocker then
 			keyBlocker:stop()
 			keyBlocker = nil
+		end
+		if mouseClickWatcher then
+			mouseClickWatcher:stop()
+			mouseClickWatcher = nil
 		end
 	end
 

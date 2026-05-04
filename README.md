@@ -419,6 +419,7 @@ For implementation defaults and internal options, see `DEFAULT_CONFIG` in `windo
 - `navigation.focusBack.key` works only when `focus_back` is enabled
 - If these keys conflict with `hint.chars`, the conflicting hint chars are removed and navigation keys take priority
 - Clicking a hint selects the same window as entering its hint key
+- Clicking outside all hints while hints are shown closes the hints
 - Fully occluded windows are excluded from directional navigation candidates
 - Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `navigation.direction.scoring.cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
 - Diagonal directions prefer the smallest sum of two axis edge gaps, then frontmost order, center distance, and finally the previously active window
