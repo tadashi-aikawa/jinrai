@@ -180,7 +180,6 @@ focus_border = {
       width = 2, -- Outer outline width (px)
       color = { red = 0, green = 0, blue = 0, alpha = 0.70 }, -- Outer outline color
     },
-    cornerRadius = 10, -- Corner radius (px)
   },
   animation = {
     duration = 0.5, -- Fade-out duration (seconds)
@@ -320,10 +319,8 @@ window_hints = {
     },
   },
   focusedWindowHighlight = {
-    fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }, -- Focused window overlay fill
     borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- Focused window overlay border
     borderWidth = 13, -- Focused window overlay border width (px)
-    cornerRadius = 10, -- Focused window overlay corner radius (px)
   },
   occlusion = {
     sampling = {

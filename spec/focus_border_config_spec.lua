@@ -14,7 +14,6 @@ describe("focus_border_config", function()
 				outline = {
 					width = 3,
 				},
-				cornerRadius = 24,
 			},
 			animation = {
 				duration = 1.2,
@@ -27,7 +26,6 @@ describe("focus_border_config", function()
 
 		assert.are.equal(20, built.borderWidth)
 		assert.are.equal(3, built.outlineWidth)
-		assert.are.equal(24, built.cornerRadius)
 		assert.are.equal(1.2, built.duration)
 		assert.are.equal(30, built.fadeSteps)
 		assert.are.equal(0.30, built.spaceSwitchDelay)

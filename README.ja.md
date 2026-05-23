@@ -182,7 +182,6 @@ focus_border = {
       width = 2, -- 外側アウトラインの太さ (px)
       color = { red = 0, green = 0, blue = 0, alpha = 0.70 }, -- 外側アウトラインの色
     },
-    cornerRadius = 10, -- 角丸半径 (px)
   },
   animation = {
     duration = 0.5, -- フェードアウト時間 (秒)
@@ -322,10 +321,8 @@ window_hints = {
     },
   },
   focusedWindowHighlight = {
-    fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 }, -- フォーカス中ウィンドウの塗り色
     borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- フォーカス中ウィンドウのボーダー色
     borderWidth = 13, -- フォーカス中ウィンドウのボーダー幅 (px)
-    cornerRadius = 10, -- フォーカス中ウィンドウの角丸半径 (px)
   },
   occlusion = {
     sampling = {

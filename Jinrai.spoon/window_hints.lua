@@ -1831,7 +1831,7 @@ function M.new(options)
 	local isShowing = false
 	local isPreparing = false
 	local pendingKeys = {}
-	local activeOverlayCanvas = nil
+	local activeOverlayCanvases = {}
 	local snapshotTimer = nil
 	local previewFadeTimer = nil
 	local allowedPrefixes = {}
@@ -1863,11 +1863,11 @@ function M.new(options)
 				hint.canvas = nil
 			end
 		end
-		if activeOverlayCanvas then
-			releaseCanvasImages(activeOverlayCanvas)
-			activeOverlayCanvas:delete()
-			activeOverlayCanvas = nil
+		for _, canvas in ipairs(activeOverlayCanvases) do
+			releaseCanvasImages(canvas)
+			canvas:delete()
 		end
+		activeOverlayCanvases = {}
 		openHints = {}
 		hintByKey = {}
 		currentInput = ""
@@ -2828,32 +2828,29 @@ function M.new(options)
 			return
 		end
 		local bw = config.activeOverlayBorderWidth
-		local canvas = hs.canvas.new({
-			x = frame.x,
-			y = frame.y,
-			w = frame.w,
-			h = frame.h,
-		})
-		canvas:level(hs.canvas.windowLevels.overlay)
-		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
-		canvas:appendElements({
-			type = "rectangle",
-			action = "fill",
-			fillColor = config.activeOverlayColor,
-		})
-		canvas:appendElements({
-			type = "rectangle",
-			action = "stroke",
-			frame = { x = bw / 2, y = bw / 2, w = frame.w - bw, h = frame.h - bw },
-			strokeColor = cloneColor(config.activeOverlayBorderColor),
-			strokeWidth = bw,
-			roundedRectRadii = {
-				xRadius = config.activeOverlayCornerRadius,
-				yRadius = config.activeOverlayCornerRadius,
-			},
-		})
-		canvas:show()
-		activeOverlayCanvas = canvas
+		if bw <= 0 then
+			return
+		end
+		local function newOverlayCanvas(canvasFrame)
+			if canvasFrame.w <= 0 or canvasFrame.h <= 0 then
+				return
+			end
+			local canvas = hs.canvas.new(canvasFrame)
+			canvas:level(hs.canvas.windowLevels.overlay)
+			canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
+			canvas:appendElements({
+				type = "rectangle",
+				action = "fill",
+				fillColor = cloneColor(config.activeOverlayBorderColor),
+				frame = { x = 0, y = 0, w = canvasFrame.w, h = canvasFrame.h },
+			})
+			canvas:show()
+			table.insert(activeOverlayCanvases, canvas)
+		end
+		newOverlayCanvas({ x = frame.x, y = frame.y, w = frame.w, h = bw })
+		newOverlayCanvas({ x = frame.x, y = frame.y + frame.h - bw, w = frame.w, h = bw })
+		newOverlayCanvas({ x = frame.x, y = frame.y + bw, w = bw, h = frame.h - (bw * 2) })
+		newOverlayCanvas({ x = frame.x + frame.w - bw, y = frame.y + bw, w = bw, h = frame.h - (bw * 2) })
 	end
 
 	local function showHints()
@@ -2886,10 +2883,10 @@ function M.new(options)
 			mouseClickWatcher:stop()
 			pendingKeys = {}
 			hs.timer.doAfter(0.5, function()
-				if activeOverlayCanvas then
-					activeOverlayCanvas:delete()
-					activeOverlayCanvas = nil
+				for _, canvas in ipairs(activeOverlayCanvases) do
+					canvas:delete()
 				end
+				activeOverlayCanvases = {}
 			end)
 			return
 		end

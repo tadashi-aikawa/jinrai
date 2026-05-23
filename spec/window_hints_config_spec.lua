@@ -120,10 +120,8 @@ describe("window_hints_config", function()
 				},
 			},
 			focusedWindowHighlight = {
-				fillColor = { red = 0.91, green = 0.92, blue = 0.93, alpha = 0.94 },
 				borderColor = { red = 0.81, green = 0.82, blue = 0.83, alpha = 0.84 },
 				borderWidth = 15,
-				cornerRadius = 16,
 			},
 			navigation = {
 				focusBack = {
@@ -241,10 +239,8 @@ describe("window_hints_config", function()
 		assert.are.same({ red = 0.39, green = 0.40, blue = 0.41, alpha = 0.42 }, built.activeHintOverlayBorderColor)
 		assert.are.equal(7, built.hintOverlayBorderWidth)
 		assert.are.equal(14, built.hintOverlayCornerRadius)
-		assert.are.same({ red = 0.91, green = 0.92, blue = 0.93, alpha = 0.94 }, built.activeOverlayColor)
 		assert.are.same({ red = 0.81, green = 0.82, blue = 0.83, alpha = 0.84 }, built.activeOverlayBorderColor)
 		assert.are.equal(15, built.activeOverlayBorderWidth)
-		assert.are.equal(16, built.activeOverlayCornerRadius)
 		assert.are.equal("h", built.directionKeys.left)
 		assert.are.equal("left", built.directionKeyLookup.h)
 		assert.are.same({ "cmd" }, built.directDirectionHotkeys.modifiers)

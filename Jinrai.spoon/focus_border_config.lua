@@ -10,7 +10,6 @@ local DEFAULT_CONFIG = {
 			width = 2,
 			color = { red = 0, green = 0, blue = 0, alpha = 0.70 },
 		},
-		cornerRadius = 10,
 	},
 	animation = {
 		duration = 0.5,
@@ -118,7 +117,6 @@ function M.build(options)
 		duration = merged.animation.duration,
 		fadeSteps = merged.animation.fadeSteps,
 		spaceSwitchDelay = merged.animation.spaceSwitchDelay,
-		cornerRadius = merged.visual.cornerRadius,
 		minWindowSize = merged.window.minSize,
 	}
 end

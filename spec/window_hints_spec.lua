@@ -1637,6 +1637,9 @@ describe("window_hints mouse selection", function()
 		assert.are.equal(1, focusCounter.count)
 		assert.are.equal(0, countCanvasImages(hintCanvas))
 		assert.is_true(hintCanvas._deleted)
+		for _, canvas in ipairs(createdCanvases) do
+			assert.is_true(canvas._deleted)
+		end
 	end)
 
 	it("ヒントの mouseDown では該当ウィンドウを選択しない", function()

@@ -174,10 +174,8 @@ local DEFAULT_CONFIG = {
 		},
 	},
 	focusedWindowHighlight = {
-		fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.08 },
 		borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 },
 		borderWidth = 13,
-		cornerRadius = 10,
 	},
 	occlusion = {
 		sampling = {
@@ -301,10 +299,8 @@ local LEGACY_FLAT_KEYS = {
 	occludedBgAlpha = true,
 	occludedIconAlpha = true,
 	occludedPreviewAlpha = true,
-	activeOverlayColor = true,
 	activeOverlayBorderColor = true,
 	activeOverlayBorderWidth = true,
-	activeOverlayCornerRadius = true,
 	hintOverlayColor = true,
 	hintOverlayBorderColor = true,
 	dimmedHintOverlayBorderColor = true,
@@ -928,10 +924,8 @@ function M.build(options)
 		occludedScale = merged.hint.occludedScale,
 		occludedBgColor = resolveStateValue(hintState, "occluded", "bgColor", { "normal" }),
 		occludedPreviewAlpha = merged.occlusion.preview.alpha,
-		activeOverlayColor = merged.focusedWindowHighlight.fillColor,
 		activeOverlayBorderColor = merged.focusedWindowHighlight.borderColor,
 		activeOverlayBorderWidth = merged.focusedWindowHighlight.borderWidth,
-		activeOverlayCornerRadius = merged.focusedWindowHighlight.cornerRadius,
 		hintOverlayColor = resolveHighlightStateValue(hintState, "normal", "fillColor"),
 		hintOverlayBorderColor = resolveHighlightStateValue(hintState, "normal", "borderColor"),
 		dimmedHintOverlayBorderColor = resolveHighlightStateValue(hintState, "dimmed", "borderColor", { "normal" }),
