@@ -20,6 +20,10 @@ local function loadFocusBorderConfig()
 	return focusBorderConfig
 end
 
+local function isUrl(source)
+	return type(source) == "string" and source:match("^https?://") ~= nil
+end
+
 function M.new(options)
 	local config = loadFocusBorderConfig().build(options)
 
@@ -47,10 +51,17 @@ function M.new(options)
 	local function cleanup()
 		stopDelayTimer()
 		stopFadeTimer()
-		for _, canvas in ipairs(currentCanvases) do
-			canvas:delete()
+		for _, item in ipairs(currentCanvases) do
+			item.canvas:delete()
 		end
 		currentCanvases = {}
+	end
+
+	local function trackCanvas(canvas, alpha)
+		table.insert(currentCanvases, {
+			canvas = canvas,
+			alpha = alpha or 1,
+		})
 	end
 
 	local function newBorderCanvas(frame, fillColor)
@@ -64,7 +75,51 @@ function M.new(options)
 			frame = { x = 0, y = 0, w = frame.w, h = frame.h },
 		})
 		canvas:show()
-		table.insert(currentCanvases, canvas)
+		trackCanvas(canvas, fillColor.alpha or 1)
+		return canvas
+	end
+
+	local function newLogoCanvas(frame, logo)
+		if not logo then
+			return
+		end
+
+		local size = logo.size
+		if size <= 0 then
+			return
+		end
+
+		local logoFrame = {
+			x = frame.x + (frame.w - size) / 2,
+			y = frame.y + (frame.h - size) / 2,
+			w = size,
+			h = size,
+		}
+		local source = logo.source or resourcePath("jinrai.svg")
+
+		local image = nil
+		if hs.image then
+			if isUrl(source) and hs.image.imageFromURL then
+				image = hs.image.imageFromURL(source)
+			elseif hs.image.imageFromPath then
+				image = hs.image.imageFromPath(source)
+			end
+		end
+		if not image then
+			return
+		end
+
+		local canvas = hs.canvas.new(logoFrame)
+		canvas:level(hs.canvas.windowLevels.overlay)
+		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
+		canvas:appendElements({
+			type = "image",
+			image = image,
+			frame = { x = 0, y = 0, w = size, h = size },
+		})
+		canvas:alpha(logo.alpha)
+		canvas:show()
+		trackCanvas(canvas, logo.alpha)
 		return canvas
 	end
 
@@ -126,10 +181,10 @@ function M.new(options)
 		local ow = config.outlineWidth
 		showBorderLayer(frame, 0, bw + ow * 2, config.outlineColor)
 		showBorderLayer(frame, ow, bw, config.borderColor)
+		newLogoCanvas(frame, config.logo)
 
 		local stepInterval = config.duration / config.fadeSteps
 		local step = 0
-		local initialAlpha = config.borderColor.alpha
 
 		fadeTimer = hs.timer.doEvery(stepInterval, function()
 			step = step + 1
@@ -137,9 +192,9 @@ function M.new(options)
 				cleanup()
 				return
 			end
-			local alpha = initialAlpha * (1 - step / config.fadeSteps)
-			for _, canvas in ipairs(currentCanvases) do
-				canvas:alpha(alpha)
+			local ratio = 1 - step / config.fadeSteps
+			for _, item in ipairs(currentCanvases) do
+				item.canvas:alpha(item.alpha * ratio)
 			end
 		end)
 	end
@@ -153,8 +208,8 @@ function M.new(options)
 
 		stopDelayTimer()
 		stopFadeTimer()
-		for _, canvas in ipairs(currentCanvases) do
-			canvas:delete()
+		for _, item in ipairs(currentCanvases) do
+			item.canvas:delete()
 		end
 		currentCanvases = {}
 

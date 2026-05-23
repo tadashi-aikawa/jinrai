@@ -100,6 +100,79 @@ describe("focus_border", function()
 		instance.teardown()
 	end)
 
+	it("logo 指定時はデフォルト画像をウィンドウ中央に表示してフェードする", function()
+		local win = hsMock.newWindow(1, { x = 100, y = 200, w = 900, h = 700 })
+		local mock, instance = newFocusBorderWithMock({
+			visual = {
+				logo = {
+					size = 200,
+					alpha = 0.8,
+				},
+			},
+			animation = {
+				fadeSteps = 10,
+			},
+		})
+		mock.setWindowSpaces(win, { 1 })
+
+		mock.emitWindowFocused(win)
+
+		assert.are.equal(CANVASES_PER_BORDER + 1, #mock.state.canvases)
+		local logoCanvas = mock.state.canvases[CANVASES_PER_BORDER + 1]
+		assert.are.same({ x = 450, y = 450, w = 200, h = 200 }, logoCanvas.frame)
+		assert.are.equal("image", logoCanvas.elements[1].type)
+		assert.are.equal("./Jinrai.spoon/jinrai.svg", logoCanvas.elements[1].image.path)
+		assert.are.equal(0.8, logoCanvas.alphaValue)
+
+		mock.state.fadeTimers[1].callback()
+		assert.is_true(math.abs(0.72 - logoCanvas.alphaValue) < 0.0001)
+
+		instance.teardown()
+		assert.is_true(logoCanvas.deleted)
+	end)
+
+	it("logo.source がローカルパスの場合はその画像を表示する", function()
+		local win = hsMock.newWindow(1)
+		local mock, instance = newFocusBorderWithMock({
+			visual = {
+				logo = {
+					source = "/tmp/logo.png",
+				},
+			},
+		})
+		mock.setWindowSpaces(win, { 1 })
+
+		mock.emitWindowFocused(win)
+
+		local logoCanvas = mock.state.canvases[CANVASES_PER_BORDER + 1]
+		assert.are.equal("/tmp/logo.png", logoCanvas.elements[1].image.path)
+		assert.are.same({ "/tmp/logo.png" }, mock.state.loadedImagePaths)
+		assert.are.same({}, mock.state.loadedImageUrls)
+
+		instance.teardown()
+	end)
+
+	it("logo.source がURLの場合はURL画像を表示する", function()
+		local win = hsMock.newWindow(1)
+		local mock, instance = newFocusBorderWithMock({
+			visual = {
+				logo = {
+					source = "https://example.com/logo.png",
+				},
+			},
+		})
+		mock.setWindowSpaces(win, { 1 })
+
+		mock.emitWindowFocused(win)
+
+		local logoCanvas = mock.state.canvases[CANVASES_PER_BORDER + 1]
+		assert.are.equal("https://example.com/logo.png", logoCanvas.elements[1].image.url)
+		assert.are.same({}, mock.state.loadedImagePaths)
+		assert.are.same({ "https://example.com/logo.png" }, mock.state.loadedImageUrls)
+
+		instance.teardown()
+	end)
+
 	it("teardown で購読とタイマーと canvas を解放する", function()
 		local win1 = hsMock.newWindow(1)
 		local win2 = hsMock.newWindow(2)

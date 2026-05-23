@@ -42,6 +42,50 @@ describe("focus_border_config", function()
 		assert.are.equal(0.42, built.spaceSwitchDelay)
 	end)
 
+	it("visual.logo 未指定ではロゴを無効にする", function()
+		local built = mod.build({})
+
+		assert.is_nil(built.logo)
+	end)
+
+	it("visual.logo false ではロゴを無効にする", function()
+		local built = mod.build({
+			visual = {
+				logo = false,
+			},
+		})
+
+		assert.is_nil(built.logo)
+	end)
+
+	it("visual.logo はデフォルト画像とサイズと透明度で有効化できる", function()
+		local built = mod.build({
+			visual = {
+				logo = {},
+			},
+		})
+
+		assert.is_nil(built.logo.source)
+		assert.are.equal(160, built.logo.size)
+		assert.are.equal(0.95, built.logo.alpha)
+	end)
+
+	it("visual.logo の画像ソースとサイズと透明度を上書きできる", function()
+		local built = mod.build({
+			visual = {
+				logo = {
+					source = "https://example.com/logo.png",
+					size = 240,
+					alpha = 0.8,
+				},
+			},
+		})
+
+		assert.are.equal("https://example.com/logo.png", built.logo.source)
+		assert.are.equal(240, built.logo.size)
+		assert.are.equal(0.8, built.logo.alpha)
+	end)
+
 	it("旧フラットキーはエラー", function()
 		local ok, err = pcall(function()
 			mod.build({

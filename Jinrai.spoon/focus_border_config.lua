@@ -10,6 +10,7 @@ local DEFAULT_CONFIG = {
 			width = 2,
 			color = { red = 0, green = 0, blue = 0, alpha = 0.70 },
 		},
+		logo = nil,
 	},
 	animation = {
 		duration = 0.5,
@@ -109,11 +110,20 @@ function M.build(options)
 	end
 	checkLegacyFlatKeys(options)
 	local merged = deepMerge(DEFAULT_CONFIG, options)
+	local logo = nil
+	if merged.visual.logo then
+		logo = {
+			source = merged.visual.logo.source,
+			size = merged.visual.logo.size or 160,
+			alpha = merged.visual.logo.alpha or 0.95,
+		}
+	end
 	return {
 		borderWidth = merged.visual.border.width,
 		borderColor = merged.visual.border.color,
 		outlineWidth = merged.visual.outline.width,
 		outlineColor = merged.visual.outline.color,
+		logo = logo,
 		duration = merged.animation.duration,
 		fadeSteps = merged.animation.fadeSteps,
 		spaceSwitchDelay = merged.animation.spaceSwitchDelay,

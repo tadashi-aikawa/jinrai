@@ -180,6 +180,12 @@ focus_border = {
       width = 2, -- Outer outline width (px)
       color = { red = 0, green = 0, blue = 0, alpha = 0.70 }, -- Outer outline color
     },
+    logo = nil, -- Logo shown at the center of the active window. nil/false disables it
+    -- logo = {
+    --   source = nil, -- Image path or URL. nil uses the bundled JINRAI logo
+    --   size = 160, -- Image display size (px)
+    --   alpha = 0.95, -- Image opacity
+    -- },
   },
   animation = {
     duration = 0.5, -- Fade-out duration (seconds)
@@ -193,6 +199,8 @@ focus_border = {
 ```
 
 `spaceSwitchDelay` is applied only when focus moves to a window in a different macOS Space than the previously focused window. Focus changes within the same Space still render immediately.
+
+Set `visual.logo` to show an image at the center of the active window. `source` can be a local image path or URL. Omit it or set it to `false` to keep the logo hidden.
 
 ## Window Hints Options
 

@@ -182,6 +182,12 @@ focus_border = {
       width = 2, -- 外側アウトラインの太さ (px)
       color = { red = 0, green = 0, blue = 0, alpha = 0.70 }, -- 外側アウトラインの色
     },
+    logo = nil, -- ウィンドウ中央に表示するロゴ。nil/false の場合は非表示
+    -- logo = {
+    --   source = nil, -- 画像パスまたはURL。nil の場合はJINRAI同梱ロゴ
+    --   size = 160, -- 画像の表示大きさ (px)
+    --   alpha = 0.95, -- 画像の透明度
+    -- },
   },
   animation = {
     duration = 0.5, -- フェードアウト時間 (秒)
@@ -195,6 +201,8 @@ focus_border = {
 ```
 
 `spaceSwitchDelay` は、直前にフォーカスしていたウィンドウと別の macOS Space にあるウィンドウがアクティブになったときだけ適用されます。同じ Space 内のフォーカス移動では従来通り即時表示です。
+
+`visual.logo` を指定すると、アクティブになったウィンドウの中央に画像を表示します。`source` にはローカル画像パスまたはURLを指定できます。未指定または `false` の場合は表示しません。
 
 ## Window Hints オプション
 

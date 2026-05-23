@@ -8,6 +8,8 @@ function M.new()
 		delayTimers = {},
 		fadeTimers = {},
 		windowSpaces = {},
+		loadedImagePaths = {},
+		loadedImageUrls = {},
 	}
 
 	local filterDefault = {}
@@ -54,6 +56,20 @@ function M.new()
 		spaces = {
 			windowSpaces = function(id)
 				return state.windowSpaces[id]
+			end,
+		},
+		image = {
+			imageFromPath = function(path)
+				table.insert(state.loadedImagePaths, path)
+				return {
+					path = path,
+				}
+			end,
+			imageFromURL = function(url)
+				table.insert(state.loadedImageUrls, url)
+				return {
+					url = url,
+				}
 			end,
 		},
 		canvas = {
