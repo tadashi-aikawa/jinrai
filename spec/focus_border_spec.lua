@@ -2,6 +2,7 @@ local hsMock = dofile("./spec/helpers/hs_focus_border_mock.lua")
 
 describe("focus_border", function()
 	local originalHs
+	local CANVASES_PER_BORDER = 8
 
 	before_each(function()
 		originalHs = _G.hs
@@ -26,11 +27,11 @@ describe("focus_border", function()
 		mock.setWindowSpaces(win2, { 1 })
 
 		mock.emitWindowFocused(win1)
-		assert.are.equal(1, #mock.state.canvases)
+		assert.are.equal(CANVASES_PER_BORDER, #mock.state.canvases)
 		assert.are.equal(0, #mock.state.delayTimers)
 
 		mock.emitWindowFocused(win2)
-		assert.are.equal(2, #mock.state.canvases)
+		assert.are.equal(CANVASES_PER_BORDER * 2, #mock.state.canvases)
 		assert.are.equal(0, #mock.state.delayTimers)
 
 		instance.teardown()
@@ -48,15 +49,15 @@ describe("focus_border", function()
 		mock.setWindowSpaces(win2, { 2 })
 
 		mock.emitWindowFocused(win1)
-		assert.are.equal(1, #mock.state.canvases)
+		assert.are.equal(CANVASES_PER_BORDER, #mock.state.canvases)
 
 		mock.emitWindowFocused(win2)
-		assert.are.equal(1, #mock.state.canvases)
+		assert.are.equal(CANVASES_PER_BORDER, #mock.state.canvases)
 		assert.are.equal(1, #mock.state.delayTimers)
 		assert.are.equal(0.42, mock.state.delayTimers[1].interval)
 
 		mock.state.delayTimers[1].callback()
-		assert.are.equal(2, #mock.state.canvases)
+		assert.are.equal(CANVASES_PER_BORDER * 2, #mock.state.canvases)
 
 		instance.teardown()
 	end)
@@ -70,7 +71,7 @@ describe("focus_border", function()
 		mock.emitWindowFocused(win1)
 		mock.emitWindowFocused(win2)
 
-		assert.are.equal(2, #mock.state.canvases)
+		assert.are.equal(CANVASES_PER_BORDER * 2, #mock.state.canvases)
 		assert.are.equal(0, #mock.state.delayTimers)
 
 		instance.teardown()
@@ -92,7 +93,7 @@ describe("focus_border", function()
 
 		mock.emitWindowFocused(win3)
 		assert.is_true(mock.state.delayTimers[1].stopped)
-		assert.are.equal(1, #mock.state.canvases)
+		assert.are.equal(CANVASES_PER_BORDER, #mock.state.canvases)
 		assert.are.equal(2, #mock.state.delayTimers)
 		assert.is_false(mock.state.delayTimers[2].stopped)
 
@@ -115,7 +116,9 @@ describe("focus_border", function()
 
 		assert.is_true(mock.state.fadeTimers[1].stopped)
 		assert.is_true(mock.state.delayTimers[1].stopped)
-		assert.is_true(mock.state.canvases[1].deleted)
+		for i = 1, CANVASES_PER_BORDER do
+			assert.is_true(mock.state.canvases[i].deleted)
+		end
 		assert.are.equal(1, #mock.state.unsubscriptions)
 		assert.are.equal(mock.hs.window.filter.windowFocused, mock.state.unsubscriptions[1].event)
 	end)

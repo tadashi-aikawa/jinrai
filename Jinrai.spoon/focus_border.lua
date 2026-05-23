@@ -23,7 +23,7 @@ end
 function M.new(options)
 	local config = loadFocusBorderConfig().build(options)
 
-	local currentCanvas = nil
+	local currentCanvases = {}
 	local delayTimer = nil
 	local fadeTimer = nil
 	local wf = nil
@@ -47,9 +47,46 @@ function M.new(options)
 	local function cleanup()
 		stopDelayTimer()
 		stopFadeTimer()
-		if currentCanvas then
-			currentCanvas:delete()
-			currentCanvas = nil
+		for _, canvas in ipairs(currentCanvases) do
+			canvas:delete()
+		end
+		currentCanvases = {}
+	end
+
+	local function newBorderCanvas(frame, fillColor)
+		local canvas = hs.canvas.new(frame)
+		canvas:level(hs.canvas.windowLevels.overlay)
+		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
+		canvas:appendElements({
+			type = "rectangle",
+			action = "fill",
+			fillColor = fillColor,
+			frame = { x = 0, y = 0, w = frame.w, h = frame.h },
+		})
+		canvas:show()
+		table.insert(currentCanvases, canvas)
+		return canvas
+	end
+
+	local function showBorderLayer(frame, inset, width, color)
+		if width <= 0 then
+			return
+		end
+		local left = frame.x + inset
+		local top = frame.y + inset
+		local right = frame.x + frame.w - inset
+		local bottom = frame.y + frame.h - inset
+		local horizontalWidth = right - left
+		local verticalHeight = bottom - top - (width * 2)
+		if horizontalWidth <= 0 or bottom - top <= 0 then
+			return
+		end
+
+		newBorderCanvas({ x = left, y = top, w = horizontalWidth, h = width }, color)
+		newBorderCanvas({ x = left, y = bottom - width, w = horizontalWidth, h = width }, color)
+		if verticalHeight > 0 then
+			newBorderCanvas({ x = left, y = top + width, w = width, h = verticalHeight }, color)
+			newBorderCanvas({ x = right - width, y = top + width, w = width, h = verticalHeight }, color)
 		end
 	end
 
@@ -86,46 +123,9 @@ function M.new(options)
 		cleanup()
 
 		local bw = config.borderWidth
-		local canvas = hs.canvas.new({
-			x = frame.x,
-			y = frame.y,
-			w = frame.w,
-			h = frame.h,
-		})
-		canvas:level(hs.canvas.windowLevels.overlay)
-		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
 		local ow = config.outlineWidth
-		local totalWidth = bw + ow * 2
-		-- 外側アウトライン
-		canvas:appendElements({
-			type = "rectangle",
-			action = "stroke",
-			frame = { x = totalWidth / 2, y = totalWidth / 2, w = frame.w - totalWidth, h = frame.h - totalWidth },
-			strokeColor = {
-				red = config.outlineColor.red,
-				green = config.outlineColor.green,
-				blue = config.outlineColor.blue,
-				alpha = config.outlineColor.alpha,
-			},
-			strokeWidth = totalWidth,
-			roundedRectRadii = { xRadius = config.cornerRadius + ow, yRadius = config.cornerRadius + ow },
-		})
-		-- 内側メインボーダー（上に重ねて描画）
-		canvas:appendElements({
-			type = "rectangle",
-			action = "stroke",
-			frame = { x = ow + bw / 2, y = ow + bw / 2, w = frame.w - ow * 2 - bw, h = frame.h - ow * 2 - bw },
-			strokeColor = {
-				red = config.borderColor.red,
-				green = config.borderColor.green,
-				blue = config.borderColor.blue,
-				alpha = config.borderColor.alpha,
-			},
-			strokeWidth = bw,
-			roundedRectRadii = { xRadius = config.cornerRadius, yRadius = config.cornerRadius },
-		})
-		canvas:show()
-		currentCanvas = canvas
+		showBorderLayer(frame, 0, bw + ow * 2, config.outlineColor)
+		showBorderLayer(frame, ow, bw, config.borderColor)
 
 		local stepInterval = config.duration / config.fadeSteps
 		local step = 0
@@ -138,8 +138,8 @@ function M.new(options)
 				return
 			end
 			local alpha = initialAlpha * (1 - step / config.fadeSteps)
-			if currentCanvas then
-				currentCanvas:alpha(alpha)
+			for _, canvas in ipairs(currentCanvases) do
+				canvas:alpha(alpha)
 			end
 		end)
 	end
@@ -153,10 +153,10 @@ function M.new(options)
 
 		stopDelayTimer()
 		stopFadeTimer()
-		if currentCanvas then
-			currentCanvas:delete()
-			currentCanvas = nil
+		for _, canvas in ipairs(currentCanvases) do
+			canvas:delete()
 		end
+		currentCanvases = {}
 
 		if shouldDelay then
 			delayTimer = hs.timer.doAfter(config.spaceSwitchDelay, function()
