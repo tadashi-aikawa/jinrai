@@ -1844,13 +1844,27 @@ function M.new(options)
 	local appPrefixOverrides = compileAppPrefixOverrides(config.appPrefixOverrides, allowedPrefixes)
 	local macosNativeTabsAppLookup = buildMacosNativeTabsAppLookup(config.macosNativeTabs)
 
+	local function releaseCanvasImages(canvas)
+		if not canvas then
+			return
+		end
+		for _, element in pairs(canvas) do
+			if type(element) == "table" and element.image ~= nil then
+				element.image = nil
+			end
+		end
+	end
+
 	local function clearHints()
 		for _, hint in ipairs(openHints) do
 			if hint.canvas then
+				releaseCanvasImages(hint.canvas)
 				hint.canvas:delete()
+				hint.canvas = nil
 			end
 		end
 		if activeOverlayCanvas then
+			releaseCanvasImages(activeOverlayCanvas)
 			activeOverlayCanvas:delete()
 			activeOverlayCanvas = nil
 		end
@@ -1863,7 +1877,10 @@ function M.new(options)
 		if not point or not frame then
 			return false
 		end
-		return point.x >= frame.x and point.x <= frame.x + frame.w and point.y >= frame.y and point.y <= frame.y + frame.h
+		return point.x >= frame.x
+			and point.x <= frame.x + frame.w
+			and point.y >= frame.y
+			and point.y <= frame.y + frame.h
 	end
 
 	local function pointInAnyHint(point)
@@ -1943,7 +1960,8 @@ function M.new(options)
 		if hint.overlayBorderIdx then
 			local borderColor
 			if hint.isActiveWindow then
-				borderColor = active and config.activeHintOverlayBorderColor or config.dimmedHintOverlayBorderColor
+				borderColor = active and config.activeHintOverlayBorderColor
+					or config.dimmedHintOverlayBorderColor
 					or config.activeHintOverlayBorderColor
 			else
 				borderColor = resolveHintOverlayBorderColor(active, config)
@@ -2266,7 +2284,13 @@ function M.new(options)
 			local screen = win:screen()
 			local winId = win:id()
 			local isOffSpace = config.includeOtherSpaces and not currentSpaceLookup[winId]
-			if app and bundleID and screen and isStandardWindow(win) and (config.includeActiveWindow or winId ~= focusedId) then
+			if
+				app
+				and bundleID
+				and screen
+				and isStandardWindow(win)
+				and (config.includeActiveWindow or winId ~= focusedId)
+			then
 				local appTitle = app:title() or ""
 				local windowTitle = win:title() or ""
 				local occluded = isOffSpace
@@ -2289,7 +2313,9 @@ function M.new(options)
 				local isMacosNativeTabsTarget =
 					isMacosNativeTabsTargetApp(app, bundleID, appName, macosNativeTabsAppLookup)
 				local spaceNumber = isOffSpace and spaceNumberForWindow(winId, spaceNumberLookup) or nil
-				if not shouldSkipUnknownSpaceMacosNativeTabCandidate(isMacosNativeTabsTarget, isOffSpace, spaceNumber) then
+				if
+					not shouldSkipUnknownSpaceMacosNativeTabCandidate(isMacosNativeTabsTarget, isOffSpace, spaceNumber)
+				then
 					table.insert(entries, {
 						win = win,
 						app = app,
@@ -2765,7 +2791,7 @@ function M.new(options)
 				hint.spaceNumber,
 				scale,
 				hint.isActiveWindow
-		)
+			)
 		hint.canvas = canvas
 		hint.canvasFrame = canvasFrame
 		hint.keyBoxFrame = keyBoxFrame
@@ -3089,9 +3115,11 @@ function M.new(options)
 								hint.canvas[hint.previewIdx].imageAlpha = 0
 								table.insert(fadingHints, hint)
 							end
+							snapshot = nil
 						end
 					end
 				end
+				deferredPreviewItems = {}
 				-- フェードインアニメーション
 				if #fadingHints > 0 and isShowing then
 					local targetAlpha = config.occludedPreviewAlpha or 0.64
@@ -3109,6 +3137,7 @@ function M.new(options)
 									hint.canvas[hint.previewIdx].imageAlpha = targetAlpha
 								end
 							end
+							fadingHints = {}
 							return
 						end
 						local alpha = targetAlpha * (currentStep / fadeSteps)

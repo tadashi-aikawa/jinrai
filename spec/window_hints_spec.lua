@@ -63,12 +63,12 @@ describe("window_hints appPrefixOverrides", function()
 			B = true,
 			N = true,
 			M = true,
-			}
-			hintCharOrder = {}
-			for i, c in ipairs(defaultHintChars) do
-				hintCharOrder[c] = i
-			end
-		end)
+		}
+		hintCharOrder = {}
+		for i, c in ipairs(defaultHintChars) do
+			hintCharOrder[c] = i
+		end
+	end)
 
 	after_each(function()
 		_G.hs = originalHs
@@ -86,24 +86,12 @@ describe("window_hints appPrefixOverrides", function()
 			},
 		}, allowedPrefixes)
 
-		local matched = helper.resolveAppPrefix(
-			"Obsidian",
-			"md.obsidian",
-			"Minerva - Daily",
-			"A",
-			allowedPrefixes,
-			compiled
-		)
+		local matched =
+			helper.resolveAppPrefix("Obsidian", "md.obsidian", "Minerva - Daily", "A", allowedPrefixes, compiled)
 		assert.are.equal("M", matched)
 
-		local fallbackRuleMatched = helper.resolveAppPrefix(
-			"Obsidian",
-			"md.obsidian",
-			"Scratch",
-			"A",
-			allowedPrefixes,
-			compiled
-		)
+		local fallbackRuleMatched =
+			helper.resolveAppPrefix("Obsidian", "md.obsidian", "Scratch", "A", allowedPrefixes, compiled)
 		assert.are.equal("O", fallbackRuleMatched)
 	end)
 
@@ -115,24 +103,12 @@ describe("window_hints appPrefixOverrides", function()
 			},
 		}, allowedPrefixes)
 
-		local matched = helper.resolveAppPrefix(
-			"Obsidian",
-			"md.obsidian",
-			"Minerva - Daily",
-			"A",
-			allowedPrefixes,
-			compiled
-		)
+		local matched =
+			helper.resolveAppPrefix("Obsidian", "md.obsidian", "Minerva - Daily", "A", allowedPrefixes, compiled)
 		assert.are.equal("M", matched)
 
-		local notMatched = helper.resolveAppPrefix(
-			"Obsidian",
-			"md.obsidian",
-			"minerva - Daily",
-			"A",
-			allowedPrefixes,
-			compiled
-		)
+		local notMatched =
+			helper.resolveAppPrefix("Obsidian", "md.obsidian", "minerva - Daily", "A", allowedPrefixes, compiled)
 		assert.are.equal("O", notMatched)
 	end)
 
@@ -225,12 +201,14 @@ describe("window_hints appPrefixOverrides", function()
 	end)
 
 	it("swapWindowFrameSelectModifiers を正規化できる", function()
-		local normalized = helper.normalizeSelectModifiers({ "Shift", "CMD" }, "behavior.selection.swapWindowFrame.modifiers")
+		local normalized =
+			helper.normalizeSelectModifiers({ "Shift", "CMD" }, "behavior.selection.swapWindowFrame.modifiers")
 		assert.are.same({ "cmd", "shift" }, normalized)
 	end)
 
 	it("swapWindowFrameSelectModifiers で option は alt として扱う", function()
-		local normalized = helper.normalizeSelectModifiers({ "option", "cmd" }, "behavior.selection.swapWindowFrame.modifiers")
+		local normalized =
+			helper.normalizeSelectModifiers({ "option", "cmd" }, "behavior.selection.swapWindowFrame.modifiers")
 		assert.are.same({ "cmd", "alt" }, normalized)
 	end)
 
@@ -332,7 +310,8 @@ describe("window_hints appPrefixOverrides", function()
 	end)
 
 	it("swap判定は修飾キー完全一致のときだけ true", function()
-		local swapModifiers = helper.normalizeSelectModifiers({ "shift", "cmd" }, "behavior.selection.swapWindowFrame.modifiers")
+		local swapModifiers =
+			helper.normalizeSelectModifiers({ "shift", "cmd" }, "behavior.selection.swapWindowFrame.modifiers")
 		assert.is_true(helper.shouldSwapWindowFrameOnSelect(swapModifiers, { "cmd", "shift" }))
 		assert.is_false(helper.shouldSwapWindowFrameOnSelect(swapModifiers, { "shift" }))
 		assert.is_false(helper.shouldSwapWindowFrameOnSelect(swapModifiers, { "cmd", "alt", "shift" }))
@@ -483,23 +462,26 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.same({ red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, text)
 	end)
 
-	it("spaceColors エントリで一部の色のみ指定時は未指定フィールドがデフォルトにフォールバック", function()
-		local badgeConfig = {
-			offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
-			offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
-			offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
-			offSpaceBadgeSpaceColors = {
-				[1] = {
-					fillColor = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5 },
-					-- strokeColor, textColor は未指定
+	it(
+		"spaceColors エントリで一部の色のみ指定時は未指定フィールドがデフォルトにフォールバック",
+		function()
+			local badgeConfig = {
+				offSpaceBadgeFillColor = { red = 0.2, green = 0.3, blue = 0.4, alpha = 0.8 },
+				offSpaceBadgeStrokeColor = { red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 },
+				offSpaceBadgeTextColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+				offSpaceBadgeSpaceColors = {
+					[1] = {
+						fillColor = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5 },
+						-- strokeColor, textColor は未指定
+					},
 				},
-			},
-		}
-		local fill, stroke, text = helper.resolveOffSpaceBadgeColors(true, badgeConfig, 1)
-		assert.are.same({ red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5 }, fill)
-		assert.are.same({ red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 }, stroke)
-		assert.are.same({ red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, text)
-	end)
+			}
+			local fill, stroke, text = helper.resolveOffSpaceBadgeColors(true, badgeConfig, 1)
+			assert.are.same({ red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5 }, fill)
+			assert.are.same({ red = 0.9, green = 1.0, blue = 1.0, alpha = 0.7 }, stroke)
+			assert.are.same({ red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, text)
+		end
+	)
 
 	it("dimmed では spaceColors を無視してグローバルの dimmed 色が使われる", function()
 		local badgeConfig = {
@@ -534,7 +516,11 @@ describe("window_hints appPrefixOverrides", function()
 			screen = {
 				allScreens = function()
 					return {
-						{ id = function() return 1 end },
+						{
+							id = function()
+								return 1
+							end,
+						},
 					}
 				end,
 			},
@@ -551,7 +537,11 @@ describe("window_hints appPrefixOverrides", function()
 	end)
 
 	it("buildSpaceIdByNumberLookup はスペースIDの逆引きルックアップを返す", function()
-		local screen = { id = function() return 1 end }
+		local screen = {
+			id = function()
+				return 1
+			end,
+		}
 		_G.hs = {
 			spaces = {
 				spacesForScreen = function()
@@ -567,13 +557,21 @@ describe("window_hints appPrefixOverrides", function()
 
 	it("buildSpaceIdByNumberLookup は hs 未定義時に空テーブルを返す", function()
 		_G.hs = nil
-		local screen = { id = function() return 1 end }
+		local screen = {
+			id = function()
+				return 1
+			end,
+		}
 		local lookup = helper.buildSpaceIdByNumberLookup(screen)
 		assert.are.same({}, lookup)
 	end)
 
 	it("buildSpaceIdByNumberLookup は9を超えるスペースはルックアップに含めない", function()
-		local screen = { id = function() return 1 end }
+		local screen = {
+			id = function()
+				return 1
+			end,
+		}
 		_G.hs = {
 			spaces = {
 				spacesForScreen = function()
@@ -617,14 +615,7 @@ describe("window_hints appPrefixOverrides", function()
 	end)
 
 	it("dockWindowXBlend=0 では中央寄せレイアウトXを使う", function()
-		local x = helper.resolveOccludedDockItemX(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			180,
-			320,
-			700,
-			320,
-			0
-		)
+		local x = helper.resolveOccludedDockItemX({ x = 0, y = 0, w = 1200, h = 800 }, 180, 320, 700, 320, 0)
 		assert.are.equal(320, x)
 	end)
 
@@ -634,137 +625,62 @@ describe("window_hints appPrefixOverrides", function()
 	end)
 
 	it("dockWindowXBlend=1 では対象ウィンドウ中心にヒント中心を合わせる", function()
-		local x = helper.resolveOccludedDockItemX(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			180,
-			320,
-			700,
-			320,
-			1
-		)
+		local x = helper.resolveOccludedDockItemX({ x = 0, y = 0, w = 1200, h = 800 }, 180, 320, 700, 320, 1)
 		assert.are.equal(610, x)
 	end)
 
 	it("dockWindowXBlend=0.5 では中央と対象中心基準xの中間へ寄る", function()
-		local x = helper.resolveOccludedDockItemX(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			180,
-			320,
-			700,
-			320,
-			0.5
-		)
+		local x = helper.resolveOccludedDockItemX({ x = 0, y = 0, w = 1200, h = 800 }, 180, 320, 700, 320, 0.5)
 		assert.are.equal(465, x)
 	end)
 
 	it("dockWindowXBlend=1 でも重なり回避の最小Xを下回らない", function()
-		local x = helper.resolveOccludedDockItemX(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			180,
-			320,
-			200,
-			320,
-			1
-		)
+		local x = helper.resolveOccludedDockItemX({ x = 0, y = 0, w = 1200, h = 800 }, 180, 320, 200, 320, 1)
 		assert.are.equal(320, x)
 	end)
 
 	it("dockWindowXBlend=1 では画面右端に収まるようにクランプされる", function()
-		local x = helper.resolveOccludedDockItemX(
-			{ x = 0, y = 0, w = 800, h = 600 },
-			180,
-			320,
-			900,
-			320,
-			1
-		)
+		local x = helper.resolveOccludedDockItemX({ x = 0, y = 0, w = 800, h = 600 }, 180, 320, 900, 320, 1)
 		assert.are.equal(620, x)
 	end)
 
 	it("dockWindowXBlend=1 で同一中心の複数ウィンドウは中央寄せを維持する", function()
-		local xs = helper.resolveOccludedDockItemXs(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			{
-				{ width = 180, centeredX = 222, windowCenterX = 600 },
-				{ width = 180, centeredX = 414, windowCenterX = 600 },
-				{ width = 180, centeredX = 606, windowCenterX = 600 },
-				{ width = 180, centeredX = 798, windowCenterX = 600 },
-			},
-			12,
-			1
-		)
+		local xs = helper.resolveOccludedDockItemXs({ x = 0, y = 0, w = 1200, h = 800 }, {
+			{ width = 180, centeredX = 222, windowCenterX = 600 },
+			{ width = 180, centeredX = 414, windowCenterX = 600 },
+			{ width = 180, centeredX = 606, windowCenterX = 600 },
+			{ width = 180, centeredX = 798, windowCenterX = 600 },
+		}, 12, 1)
 		assert.are.same({ 222, 414, 606, 798 }, xs)
 	end)
 
 	it("dockWindowYBlend=0 では下ドック配置Yを使う", function()
-		local y = helper.resolveOccludedDockItemY(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			120,
-			500,
-			220,
-			0,
-			180
-		)
+		local y = helper.resolveOccludedDockItemY({ x = 0, y = 0, w = 1200, h = 800 }, 120, 500, 220, 0, 180)
 		assert.are.equal(500, y)
 	end)
 
 	it("dockWindowYBlend=1 では上半分ウィンドウを上端マージンへ寄せる", function()
-		local y = helper.resolveOccludedDockItemY(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			120,
-			500,
-			220,
-			1,
-			180
-		)
+		local y = helper.resolveOccludedDockItemY({ x = 0, y = 0, w = 1200, h = 800 }, 120, 500, 220, 1, 180)
 		assert.are.equal(180, y)
 	end)
 
 	it("dockWindowYBlend=0.5 では下ドックと上端マージンの中間へ寄る", function()
-		local y = helper.resolveOccludedDockItemY(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			120,
-			500,
-			220,
-			0.5,
-			180
-		)
+		local y = helper.resolveOccludedDockItemY({ x = 0, y = 0, w = 1200, h = 800 }, 120, 500, 220, 0.5, 180)
 		assert.are.equal(340, y)
 	end)
 
 	it("dockWindowYBlend=1 でも下半分ウィンドウは下ドック配置を維持する", function()
-		local y = helper.resolveOccludedDockItemY(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			120,
-			500,
-			700,
-			1,
-			180
-		)
+		local y = helper.resolveOccludedDockItemY({ x = 0, y = 0, w = 1200, h = 800 }, 120, 500, 700, 1, 180)
 		assert.are.equal(500, y)
 	end)
 
 	it("dockWindowYBlend=1 では上端マージンが大きすぎても画面下端に収まる", function()
-		local y = helper.resolveOccludedDockItemY(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			120,
-			500,
-			220,
-			1,
-			760
-		)
+		local y = helper.resolveOccludedDockItemY({ x = 0, y = 0, w = 1200, h = 800 }, 120, 500, 220, 1, 760)
 		assert.are.equal(680, y)
 	end)
 
 	it("dockWindowYBlend=1 では画面下端に収まるようにクランプされる", function()
-		local y = helper.resolveOccludedDockItemY(
-			{ x = 0, y = 0, w = 1200, h = 800 },
-			120,
-			900,
-			900,
-			1,
-			180
-		)
+		local y = helper.resolveOccludedDockItemY({ x = 0, y = 0, w = 1200, h = 800 }, 120, 900, 900, 1, 180)
 		assert.are.equal(680, y)
 	end)
 
@@ -1364,10 +1280,22 @@ describe("window_hints appPrefixOverrides", function()
 		local win3 = stubWindow(3, { x = 340, y = 100, w = 140, h = 120 })
 		local win4 = stubWindow(4, { x = 180, y = 230, w = 130, h = 120 })
 
-		local target1 = helper.findDirectionalWindowTarget(win4, { win1, win2, win3 }, "up", nil, { win1, win2, win3, win4 })
+		local target1 = helper.findDirectionalWindowTarget(
+			win4,
+			{ win1, win2, win3 },
+			"up",
+			nil,
+			{ win1, win2, win3, win4 }
+		)
 		assert.are.equal(1, target1:id())
 
-		local target2 = helper.findDirectionalWindowTarget(win4, { win1, win2, win3 }, "up", nil, { win2, win1, win3, win4 })
+		local target2 = helper.findDirectionalWindowTarget(
+			win4,
+			{ win1, win2, win3 },
+			"up",
+			nil,
+			{ win2, win1, win3, win4 }
+		)
 		assert.are.equal(2, target2:id())
 	end)
 
@@ -1391,7 +1319,13 @@ describe("window_hints appPrefixOverrides", function()
 		local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
 		local win2 = stubWindow(2, { x = 220, y = 20, w = 80, h = 80 })
 		local win3 = stubWindow(3, { x = 220, y = 20, w = 80, h = 80 })
-		local target = helper.findDirectionalWindowTarget(current, { win2, win3 }, "upRight", nil, { win3, win2, current })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ win2, win3 },
+			"upRight",
+			nil,
+			{ win3, win2, current }
+		)
 		assert.are.equal(3, target:id())
 	end)
 
@@ -1650,6 +1584,16 @@ describe("window_hints mouse selection", function()
 		}
 	end
 
+	local function countCanvasImages(canvas)
+		local count = 0
+		for _, element in pairs(canvas) do
+			if type(element) == "table" and element.image ~= nil then
+				count = count + 1
+			end
+		end
+		return count
+	end
+
 	it("ヒントの mouseUp で該当ウィンドウを選択する", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
@@ -1686,10 +1630,12 @@ describe("window_hints mouse selection", function()
 		end
 		assert.is_truthy(hintCanvas)
 		assert.is_true(hintCanvas[1].trackMouseUp)
+		assert.is_true(countCanvasImages(hintCanvas) > 0)
 
 		hintCanvas._mouseCallback(hintCanvas, "mouseUp")
 
 		assert.are.equal(1, focusCounter.count)
+		assert.are.equal(0, countCanvasImages(hintCanvas))
 		assert.is_true(hintCanvas._deleted)
 	end)
 
