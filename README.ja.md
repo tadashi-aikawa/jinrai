@@ -166,6 +166,7 @@ macosNativeTabs = {
 デフォルト設定:
 
 - `com.mitchellh.ghostty`
+- `com.apple.finder`
 
 ## Focus Border オプション
 

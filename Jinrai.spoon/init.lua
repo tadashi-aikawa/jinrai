@@ -21,7 +21,7 @@ local focusBack = nil
 local focusHistory = nil
 
 local DEFAULT_MACOS_NATIVE_TABS = {
-	apps = { "com.mitchellh.ghostty" },
+	apps = { "com.mitchellh.ghostty", "com.apple.finder" },
 	stateSyncInterval = 0.5,
 }
 

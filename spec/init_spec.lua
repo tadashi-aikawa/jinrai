@@ -124,7 +124,7 @@ describe("init", function()
 		assert.are.equal(99, calls.new.focus_border.visual.border.width)
 		assert.are.same({
 			macosNativeTabs = {
-				apps = { "com.mitchellh.ghostty" },
+				apps = { "com.mitchellh.ghostty", "com.apple.finder" },
 				stateSyncInterval = 0.15,
 			},
 		}, calls.new.focus_history)
@@ -200,14 +200,14 @@ describe("init", function()
 		assert.is_truthy(calls.new.window_hints.internal)
 		assert.is_truthy(calls.new.window_hints.internal.focusHistory)
 		assert.are.same({
-			apps = { "com.mitchellh.ghostty" },
+			apps = { "com.mitchellh.ghostty", "com.apple.finder" },
 			stateSyncInterval = 0.5,
 		}, calls.new.window_hints.internal.macosNativeTabs)
 		assert.are.equal(nil, calls.new.window_hints.macosNativeTabs)
 		assert.are.equal(nil, calls.new.window_hints.focusHistory)
 	end)
 
-	it("macosNativeTabs 未指定時は Ghostty のデフォルト設定を注入する", function()
+	it("macosNativeTabs 未指定時は組み込みのデフォルト設定を注入する", function()
 		_G.__jinrai = nil
 		local init = dofile("./Jinrai.spoon/init.lua")
 		local calls = {
@@ -256,12 +256,12 @@ describe("init", function()
 
 		assert.are.same({
 			macosNativeTabs = {
-				apps = { "com.mitchellh.ghostty" },
+				apps = { "com.mitchellh.ghostty", "com.apple.finder" },
 				stateSyncInterval = 0.5,
 			},
 		}, calls.new.focus_history)
 		assert.are.same({
-			apps = { "com.mitchellh.ghostty" },
+			apps = { "com.mitchellh.ghostty", "com.apple.finder" },
 			stateSyncInterval = 0.5,
 		}, calls.new.window_hints.internal.macosNativeTabs)
 	end)
@@ -318,12 +318,12 @@ describe("init", function()
 		})
 
 		assert.are.same({
-			apps = { "com.mitchellh.ghostty", "com.example.terminal" },
+			apps = { "com.mitchellh.ghostty", "com.apple.finder", "com.example.terminal" },
 			stateSyncInterval = 0.75,
 		}, calls.new.window_hints.internal.macosNativeTabs)
 		assert.are.same({
 			macosNativeTabs = {
-				apps = { "com.mitchellh.ghostty", "com.example.terminal" },
+				apps = { "com.mitchellh.ghostty", "com.apple.finder", "com.example.terminal" },
 				stateSyncInterval = 0.75,
 			},
 		}, calls.new.focus_history)

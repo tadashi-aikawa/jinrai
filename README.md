@@ -164,6 +164,7 @@ Apps listed in `apps` are added to the built-in defaults. Set `macosNativeTabs =
 Default configuration:
 
 - `com.mitchellh.ghostty`
+- `com.apple.finder`
 
 ## Focus Border Options
 
