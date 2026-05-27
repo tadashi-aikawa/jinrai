@@ -370,6 +370,9 @@ window_hints = {
       },
       scoring = {
         cardinalOverlapTieThresholdPx = 720, -- Tie threshold for cardinal direction scoring (px)
+        maxPrimaryOverlapRatioForDetached = 0.2, -- Main-axis overlap ratio treated as detached
+        minOrthogonalOverlapRatio = 0.5, -- Required orthogonal overlap ratio for non-detached cardinal candidates
+        preferredVisibleRatio = 0.4, -- Prefer candidates at or above this sampled visible ratio
         debug = false, -- Emit directional scoring debug logs
       },
     },
@@ -448,7 +451,10 @@ For implementation defaults and internal options, see `DEFAULT_CONFIG` in `windo
 - Clicking a hint selects the same window as entering its hint key
 - Clicking outside all hints while hints are shown closes the hints
 - Fully occluded windows are excluded from directional navigation candidates
+- For cardinal directions, a candidate must extend past the current window's edge in that direction; a shorter window whose center is only slightly offset is not treated as a right/left/up/down target
+- Cardinal candidates whose main-axis overlap ratio is at most `navigation.direction.scoring.maxPrimaryOverlapRatioForDetached` are treated as detached in the movement direction and are not rejected by orthogonal overlap. More overlapped candidates must have at least `navigation.direction.scoring.minOrthogonalOverlapRatio` orthogonal overlap.
 - Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `navigation.direction.scoring.cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
+- `navigation.direction.scoring.preferredVisibleRatio` prefers cardinal-direction candidates whose sampled visible ratio is at least that value over heavily occluded candidates. If all directional candidates are below the threshold, the best below-threshold candidate is still selected, preferring the higher sampled visible ratio first. Set it to `0` to disable this preference.
 - Diagonal directions prefer the smallest sum of two axis edge gaps, then frontmost order, center distance, and finally the previously active window
 
 ### Direct Direction Hotkeys

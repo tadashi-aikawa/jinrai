@@ -142,6 +142,9 @@ describe("window_hints_config", function()
 					},
 					scoring = {
 						cardinalOverlapTieThresholdPx = 300,
+						maxPrimaryOverlapRatioForDetached = 0.15,
+						minOrthogonalOverlapRatio = 0.4,
+						preferredVisibleRatio = 0.25,
 					},
 				},
 				spaces = {
@@ -247,6 +250,9 @@ describe("window_hints_config", function()
 		assert.are.equal("i", built.focusBackKey)
 		assert.are.same({ "shift" }, built.swapWindowFrameSelectModifiers)
 		assert.are.equal(300, built.cardinalOverlapTieThresholdPx)
+		assert.are.equal(0.15, built.maxPrimaryOverlapRatioForDetached)
+		assert.are.equal(0.4, built.minOrthogonalOverlapRatio)
+		assert.are.equal(0.25, built.preferredVisibleRatio)
 		assert.are.equal(0.5, built.dockWindowXBlend)
 		assert.are.equal(0.25, built.dockWindowYBlend)
 		assert.is_true(built.includeOtherSpaces)
@@ -464,6 +470,61 @@ describe("window_hints_config", function()
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("hint%.spaceBadge%.size must be > 0"))
+	end)
+
+	it("方向移動スコアの重なり設定と preferredVisibleRatio はデフォルト値を持つ", function()
+		local built = mod.build()
+		assert.are.equal(0.2, built.maxPrimaryOverlapRatioForDetached)
+		assert.are.equal(0.5, built.minOrthogonalOverlapRatio)
+		assert.are.equal(0.4, built.preferredVisibleRatio)
+	end)
+
+	it("maxPrimaryOverlapRatioForDetached が範囲外ならエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				navigation = {
+					direction = {
+						scoring = {
+							maxPrimaryOverlapRatioForDetached = -0.1,
+						},
+					},
+				},
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("maxPrimaryOverlapRatioForDetached must be between 0 and 1"))
+	end)
+
+	it("minOrthogonalOverlapRatio が範囲外ならエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				navigation = {
+					direction = {
+						scoring = {
+							minOrthogonalOverlapRatio = 1.1,
+						},
+					},
+				},
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("minOrthogonalOverlapRatio must be between 0 and 1"))
+	end)
+
+	it("preferredVisibleRatio が範囲外ならエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				navigation = {
+					direction = {
+						scoring = {
+							preferredVisibleRatio = 1.2,
+						},
+					},
+				},
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("preferredVisibleRatio must be between 0 and 1"))
 	end)
 
 	it("macosNativeTabs は window_hints 配下では指定できない", function()

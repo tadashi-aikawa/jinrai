@@ -217,6 +217,9 @@ local DEFAULT_CONFIG = {
 			},
 			scoring = {
 				cardinalOverlapTieThresholdPx = 720,
+				maxPrimaryOverlapRatioForDetached = 0.2,
+				minOrthogonalOverlapRatio = 0.5,
+				preferredVisibleRatio = 0.4,
 				debug = false,
 			},
 		},
@@ -859,6 +862,18 @@ function M.build(options)
 		merged.navigation.direction.scoring.cardinalOverlapTieThresholdPx,
 		"navigation.direction.scoring.cardinalOverlapTieThresholdPx"
 	)
+	local maxPrimaryOverlapRatioForDetached = normalizeUnitIntervalNumber(
+		merged.navigation.direction.scoring.maxPrimaryOverlapRatioForDetached,
+		"navigation.direction.scoring.maxPrimaryOverlapRatioForDetached"
+	)
+	local minOrthogonalOverlapRatio = normalizeUnitIntervalNumber(
+		merged.navigation.direction.scoring.minOrthogonalOverlapRatio,
+		"navigation.direction.scoring.minOrthogonalOverlapRatio"
+	)
+	local preferredVisibleRatio = normalizeUnitIntervalNumber(
+		merged.navigation.direction.scoring.preferredVisibleRatio,
+		"navigation.direction.scoring.preferredVisibleRatio"
+	)
 	local hintState = merged.hint.state
 	local iconState = merged.hint.icon.state
 	local keyState = merged.hint.key.state
@@ -950,6 +965,9 @@ function M.build(options)
 		directionKeyLookup = directionKeyLookup,
 		directDirectionHotkeys = directDirectionHotkeys,
 		cardinalOverlapTieThresholdPx = cardinalOverlapTieThresholdPx,
+		maxPrimaryOverlapRatioForDetached = maxPrimaryOverlapRatioForDetached,
+		minOrthogonalOverlapRatio = minOrthogonalOverlapRatio,
+		preferredVisibleRatio = preferredVisibleRatio,
 		debugDirectionalNavigation = merged.navigation.direction.scoring.debug,
 		spaceKeys = spaceKeys,
 		prevSpaceKey = prevSpaceKey,

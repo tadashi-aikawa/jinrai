@@ -372,6 +372,9 @@ window_hints = {
       },
       scoring = {
         cardinalOverlapTieThresholdPx = 720, -- 上下左右方向移動で同点扱いにする閾値 (px)
+        maxPrimaryOverlapRatioForDetached = 0.2, -- 主軸の重なり率がこの値以下なら離れた候補として扱う
+        minOrthogonalOverlapRatio = 0.5, -- 離れた候補ではない場合に必要な副軸重なり率
+        preferredVisibleRatio = 0.4, -- サンプリング上の可視率がこの値以上の候補を優先
         debug = false, -- 方向移動の候補スコアログを出すか
       },
     },
@@ -451,7 +454,10 @@ hint = {
 - ヒントをクリックすると、そのヒントキーを入力した場合と同じウィンドウを選択します
 - ヒント表示中にすべてのヒントの外側をクリックすると、ヒントを閉じます
 - 完全に背面に遮蔽されているウィンドウは方向移動の候補から除外されます
+- 上下左右では、候補ウィンドウの方向側エッジが現在ウィンドウの方向側エッジを越えている必要があります。現在ウィンドウより短く、中心が少しだけ右/左/上/下にズレているだけのウィンドウは方向候補にしません
+- 上下左右では、主軸の重なり率が `navigation.direction.scoring.maxPrimaryOverlapRatioForDetached` 以下なら移動方向に離れた候補として扱い、副軸重なり率では除外しません。主軸の重なり率がそれを超える候補は、副軸重なり率が `navigation.direction.scoring.minOrthogonalOverlapRatio` 以上の場合だけ候補にします
 - 上下左右は基本的に「副軸の重なり量が大きい」候補を優先し、重なり差が `navigation.direction.scoring.cardinalOverlapTieThresholdPx` 以内なら同点扱いとして次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
+- `navigation.direction.scoring.preferredVisibleRatio` は、上下左右でサンプリング上の可視率がその値以上の候補を、大きく隠れた候補より優先します。方向候補がすべてしきい値未満の場合は、しきい値未満の候補も選択対象に残し、その中では可視率が高い候補を先に見ます。`0` にするとこの優先を無効化できます
 - 斜め方向は2軸のエッジ距離合計が小さい候補を優先し、同率時は前面順、中心距離、直前アクティブウィンドウの順で決定します
 
 ### 直接方向移動ホットキー

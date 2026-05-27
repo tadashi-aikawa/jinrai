@@ -1238,6 +1238,66 @@ local function isWindowOccluded(targetFrame, coveringFrames, cols, rows)
 	return true
 end
 
+local function isSampleInDirectionFromFrame(direction, fromFrame, px, py)
+	if direction == "left" then
+		return px <= fromFrame.x
+	end
+	if direction == "right" then
+		return px >= fromFrame.x + fromFrame.w
+	end
+	if direction == "up" then
+		return py <= fromFrame.y
+	end
+	if direction == "down" then
+		return py >= fromFrame.y + fromFrame.h
+	end
+	return true
+end
+
+local function measureWindowVisibility(targetFrame, coveringFrames, cols, rows, minVisibleRatio, visibilityFilter)
+	local sampleCols = math.max(1, cols or 4)
+	local sampleRows = math.max(1, rows or 4)
+	local total = sampleCols * sampleRows
+	local minRatio = minVisibleRatio
+	if type(minRatio) ~= "number" then
+		minRatio = 0
+	end
+	minRatio = clamp(minRatio, 0, 1)
+	local requiredVisible = math.ceil((total * minRatio) - 0.000001)
+	local visible = 0
+
+	for row = 0, sampleRows - 1 do
+		for col = 0, sampleCols - 1 do
+			local px = targetFrame.x + targetFrame.w * (col + 0.5) / sampleCols
+			local py = targetFrame.y + targetFrame.h * (row + 0.5) / sampleRows
+			local covered = false
+			for _, f in ipairs(coveringFrames or {}) do
+				if isPointInRect(px, py, f) then
+					covered = true
+					break
+				end
+			end
+			if not covered and (not visibilityFilter or visibilityFilter(px, py)) then
+				visible = visible + 1
+				if requiredVisible > 0 and visible >= requiredVisible then
+					return {
+						visibleRatio = visible / total,
+						isFullyOccluded = false,
+						meetsMinVisibleRatio = true,
+					}
+				end
+			end
+
+		end
+	end
+
+	return {
+		visibleRatio = visible / total,
+		isFullyOccluded = visible == 0,
+		meetsMinVisibleRatio = visible >= requiredVisible,
+	}
+end
+
 local function findUncoveredCenter(windowFrame, coveringFrames)
 	local cx = windowFrame.x + windowFrame.w / 2
 	local cy = windowFrame.y + windowFrame.h / 2
@@ -1517,11 +1577,107 @@ local function rangeOverlap(aStart, aEnd, bStart, bEnd)
 	return math.max(0, math.min(aEnd, bEnd) - math.max(aStart, bStart))
 end
 
+local function frameContainsFrameForDirection(direction, outer, inner)
+	if not outer or not inner then
+		return false
+	end
+	local tolerance = 8
+	local hasPrimaryAxisRoom = false
+	if direction == "left" or direction == "right" then
+		hasPrimaryAxisRoom = inner.w < outer.w
+	elseif direction == "up" or direction == "down" then
+		hasPrimaryAxisRoom = inner.h < outer.h
+	end
+	return hasPrimaryAxisRoom
+		and outer.x - tolerance <= inner.x
+		and outer.y - tolerance <= inner.y
+		and outer.x + outer.w + tolerance >= inner.x + inner.w
+		and outer.y + outer.h + tolerance >= inner.y + inner.h
+end
+
 local function orthogonalOverlap(direction, fromFrame, toFrame)
 	if direction == "left" or direction == "right" then
 		return rangeOverlap(fromFrame.y, fromFrame.y + fromFrame.h, toFrame.y, toFrame.y + toFrame.h)
 	end
 	return rangeOverlap(fromFrame.x, fromFrame.x + fromFrame.w, toFrame.x, toFrame.x + toFrame.w)
+end
+
+local function overlapRatio(overlap, denominator)
+	if type(denominator) ~= "number" or denominator <= 0 then
+		return 0
+	end
+	return overlap / denominator
+end
+
+local function primaryAxisOverlapRatio(direction, fromFrame, toFrame)
+	if direction == "left" or direction == "right" then
+		return overlapRatio(
+			rangeOverlap(fromFrame.x, fromFrame.x + fromFrame.w, toFrame.x, toFrame.x + toFrame.w),
+			math.min(fromFrame.w, toFrame.w)
+		)
+	end
+	if direction == "up" or direction == "down" then
+		return overlapRatio(
+			rangeOverlap(fromFrame.y, fromFrame.y + fromFrame.h, toFrame.y, toFrame.y + toFrame.h),
+			math.min(fromFrame.h, toFrame.h)
+		)
+	end
+	return 0
+end
+
+local function orthogonalOverlapRatio(direction, fromFrame, toFrame)
+	local overlap = orthogonalOverlap(direction, fromFrame, toFrame)
+	if direction == "left" or direction == "right" then
+		return overlapRatio(overlap, math.min(fromFrame.h, toFrame.h))
+	end
+	if direction == "up" or direction == "down" then
+		return overlapRatio(overlap, math.min(fromFrame.w, toFrame.w))
+	end
+	return 0
+end
+
+local function cardinalDirectionEdgePasses(direction, fromFrame, toFrame)
+	if direction == "left" then
+		return toFrame.x < fromFrame.x
+	end
+	if direction == "right" then
+		return toFrame.x + toFrame.w > fromFrame.x + fromFrame.w
+	end
+	if direction == "up" then
+		return toFrame.y < fromFrame.y
+	end
+	if direction == "down" then
+		return toFrame.y + toFrame.h > fromFrame.y + fromFrame.h
+	end
+	return false
+end
+
+local function cardinalOverlapMetadata(direction, fromFrame, toFrame, config)
+	local primaryRatio = primaryAxisOverlapRatio(direction, fromFrame, toFrame)
+	local orthogonalRatio = orthogonalOverlapRatio(direction, fromFrame, toFrame)
+	local maxPrimaryOverlapRatioForDetached = 0.2
+	if config and type(config.maxPrimaryOverlapRatioForDetached) == "number" then
+		maxPrimaryOverlapRatioForDetached = config.maxPrimaryOverlapRatioForDetached
+	end
+	local minOrthogonalOverlapRatio = 0.5
+	if config and type(config.minOrthogonalOverlapRatio) == "number" then
+		minOrthogonalOverlapRatio = config.minOrthogonalOverlapRatio
+	end
+	local requiresOrthogonalOverlap = primaryRatio > maxPrimaryOverlapRatioForDetached
+	return {
+		primaryOverlapRatio = primaryRatio,
+		orthogonalOverlapRatio = orthogonalRatio,
+		requiresOrthogonalOverlap = requiresOrthogonalOverlap,
+		passesOverlap = not requiresOrthogonalOverlap or orthogonalRatio >= minOrthogonalOverlapRatio,
+	}
+end
+
+local function isCardinalDirectionalCandidate(direction, fromFrame, toFrame, config)
+	if not cardinalDirectionEdgePasses(direction, fromFrame, toFrame) then
+		return false, nil
+	end
+	local metadata = cardinalOverlapMetadata(direction, fromFrame, toFrame, config)
+	return metadata.passesOverlap, metadata
 end
 
 local function secondaryAxisDelta(direction, fromCenter, toCenter)
@@ -1630,6 +1786,35 @@ local function isFullyOccludedWindow(win, orderedWins, config)
 	return isWindowOccluded(frame, coveringFrames, sampleCols, sampleRows)
 end
 
+local function measureWindowVisibilityForDirection(win, orderedWins, config, direction, currentFrame)
+	local winId = windowIdOf(win)
+	if winId == nil then
+		return nil
+	end
+	local frame = windowFrameOf(win)
+	if not frame then
+		return nil
+	end
+	local coveringFrames = collectCoveringFramesBeforeWindow(orderedWins, winId)
+	local hasDirectionFilter = CARDINAL_DIRECTIONS[direction] and currentFrame ~= nil
+	if #coveringFrames == 0 and not hasDirectionFilter then
+		return {
+			visibleRatio = 1,
+			isFullyOccluded = false,
+			meetsMinVisibleRatio = true,
+		}
+	end
+	local sampleCols, sampleRows = computeOcclusionSamplingGrid(frame, config or {})
+	local minVisibleRatio = config and config.preferredVisibleRatio or 0
+	local visibilityFilter = nil
+	if hasDirectionFilter then
+		visibilityFilter = function(px, py)
+			return isSampleInDirectionFromFrame(direction, currentFrame, px, py)
+		end
+	end
+	return measureWindowVisibility(frame, coveringFrames, sampleCols, sampleRows, minVisibleRatio, visibilityFilter)
+end
+
 local function filterDirectionalCandidatesByOcclusion(candidateWins, orderedWins, config)
 	local filtered = {}
 	for _, win in ipairs(candidateWins) do
@@ -1637,7 +1822,7 @@ local function filterDirectionalCandidatesByOcclusion(candidateWins, orderedWins
 			table.insert(filtered, win)
 		end
 	end
-	return filtered
+	return filtered, nil
 end
 
 local function findDirectionalWindowTarget(currentWin, candidateWins, direction, previousWin, orderedWins, config)
@@ -1656,17 +1841,22 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 	if config and type(config.cardinalOverlapTieThresholdPx) == "number" then
 		overlapTieThresholdPx = config.cardinalOverlapTieThresholdPx
 	end
+	local visibleRatioPreferenceEnabled = config
+		and type(config.preferredVisibleRatio) == "number"
+		and config.preferredVisibleRatio > 0
+		and CARDINAL_DIRECTIONS[direction]
 	debugLogDirectional(
 		config,
 		string.format(
-			"start direction=%s current=%s currentFrame=%s previous=%s candidates=%s ordered=%s overlapTieThresholdPx=%.3f",
+			"start direction=%s current=%s currentFrame=%s previous=%s candidates=%s ordered=%s overlapTieThresholdPx=%.3f preferredVisibleRatio=%s",
 			tostring(direction),
 			tostring(currentId),
 			frameToDebugString(currentFrame),
 			tostring(previousId),
 			windowIdsToDebugString(candidateWins),
 			windowIdsToDebugString(orderedWins),
-			overlapTieThresholdPx
+			overlapTieThresholdPx,
+			tostring(config and config.preferredVisibleRatio or nil)
 		)
 	)
 
@@ -1676,31 +1866,57 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 			local frame = windowFrameOf(win)
 			if frame then
 				local center = centerOfFrame(frame)
-				if isDirectionalCandidate(direction, currentCenter, center) then
+				local isCandidate
+				local overlapMetadata
+				if CARDINAL_DIRECTIONS[direction] then
+					isCandidate, overlapMetadata = isCardinalDirectionalCandidate(direction, currentFrame, frame, config)
+				else
+					isCandidate = isDirectionalCandidate(direction, currentCenter, center)
+				end
+				if isCandidate then
 					local primaryGap = directionalPrimaryGap(direction, currentFrame, frame)
 					local secondary = secondaryAxisDelta(direction, currentCenter, center)
 					local isPrevious = previousId ~= nil and winId == previousId
 					local candidate = {
 						win = win,
 						id = winId,
+						frame = frame,
 						zOrder = zOrderLookup[winId] or math.huge,
 						isPrevious = isPrevious,
 					}
 					if CARDINAL_DIRECTIONS[direction] then
+						local visibility = nil
+						if visibleRatioPreferenceEnabled and not visibility then
+							visibility = measureWindowVisibilityForDirection(win, orderedWins, config, direction, currentFrame)
+						end
 						candidate.primaryGap = primaryGap
 						candidate.orthogonalOverlap = orthogonalOverlap(direction, currentFrame, frame)
+						candidate.primaryOverlapRatio = overlapMetadata and overlapMetadata.primaryOverlapRatio or 0
+						candidate.orthogonalOverlapRatio = overlapMetadata and overlapMetadata.orthogonalOverlapRatio or 0
+						candidate.requiresOrthogonalOverlap = overlapMetadata
+							and overlapMetadata.requiresOrthogonalOverlap
+							or false
 						candidate.secondary = secondary
+						candidate.meetsMinVisibleRatio = not visibleRatioPreferenceEnabled
+							or not visibility
+							or visibility.meetsMinVisibleRatio
+						candidate.visibleRatio = visibility and visibility.visibleRatio or 1
 						debugLogDirectional(
 							config,
 							string.format(
-								"candidate id=%s frame=%s overlap=%.3f primaryGap=%.3f secondary=%.3f zOrder=%s isPrevious=%s",
+								"candidate id=%s frame=%s overlap=%.3f primaryOverlapRatio=%.3f orthogonalOverlapRatio=%.3f requiresOrthogonalOverlap=%s primaryGap=%.3f secondary=%.3f zOrder=%s isPrevious=%s visibleRatio=%.3f meetsMinVisibleRatio=%s",
 								tostring(winId),
 								frameToDebugString(frame),
 								candidate.orthogonalOverlap,
+								candidate.primaryOverlapRatio,
+								candidate.orthogonalOverlapRatio,
+								tostring(candidate.requiresOrthogonalOverlap),
 								candidate.primaryGap,
 								candidate.secondary,
 								tostring(candidate.zOrder),
-								tostring(candidate.isPrevious)
+								tostring(candidate.isPrevious),
+								candidate.visibleRatio,
+								tostring(candidate.meetsMinVisibleRatio)
 							)
 						)
 					else
@@ -1729,21 +1945,36 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 					else
 						local better = false
 						if CARDINAL_DIRECTIONS[direction] then
-							local overlapDiff = candidate.orthogonalOverlap - best.orthogonalOverlap
-							local overlapTie = math.abs(overlapDiff) <= (overlapTieThresholdPx + SCORE_EPSILON)
-							if not overlapTie and math.abs(overlapDiff) > SCORE_EPSILON then
-								better = overlapDiff > 0
-							elseif candidate.primaryGap < (best.primaryGap - SCORE_EPSILON) then
+							if frameContainsFrameForDirection(direction, best.frame, candidate.frame) then
 								better = true
-							elseif math.abs(candidate.primaryGap - best.primaryGap) <= SCORE_EPSILON then
-								if candidate.zOrder ~= best.zOrder then
-									better = candidate.zOrder < best.zOrder
-								elseif candidate.secondary ~= best.secondary then
-									better = candidate.secondary < best.secondary
-								elseif candidate.isPrevious ~= best.isPrevious then
-									better = candidate.isPrevious
+							elseif frameContainsFrameForDirection(direction, candidate.frame, best.frame) then
+								better = false
+							elseif candidate.meetsMinVisibleRatio ~= best.meetsMinVisibleRatio then
+								better = candidate.meetsMinVisibleRatio
+							elseif visibleRatioPreferenceEnabled
+								and not candidate.meetsMinVisibleRatio
+								and math.abs(candidate.visibleRatio - best.visibleRatio) > SCORE_EPSILON
+							then
+								better = candidate.visibleRatio > best.visibleRatio
+							else
+								local overlapDiff = candidate.orthogonalOverlap - best.orthogonalOverlap
+								local overlapTie = math.abs(overlapDiff) <= (overlapTieThresholdPx + SCORE_EPSILON)
+								if not overlapTie and math.abs(overlapDiff) > SCORE_EPSILON then
+									better = overlapDiff > 0
+								elseif candidate.primaryGap < (best.primaryGap - SCORE_EPSILON) then
+									better = true
+								elseif math.abs(candidate.primaryGap - best.primaryGap) <= SCORE_EPSILON then
+									if candidate.zOrder ~= best.zOrder then
+										better = candidate.zOrder < best.zOrder
+									elseif candidate.secondary ~= best.secondary then
+										better = candidate.secondary < best.secondary
+									elseif candidate.isPrevious ~= best.isPrevious then
+										better = candidate.isPrevious
+									else
+										better = compareWindowIds(candidate.id, best.id)
+									end
 								else
-									better = compareWindowIds(candidate.id, best.id)
+									better = false
 								end
 							end
 						else
@@ -2088,7 +2319,8 @@ function M.new(options)
 				windowIdsToDebugString(candidates)
 			)
 		)
-		candidates = filterDirectionalCandidatesByOcclusion(candidates, orderedWins, config)
+		local visibilityByWindowId
+		candidates, visibilityByWindowId = filterDirectionalCandidatesByOcclusion(candidates, orderedWins, config)
 		debugLogDirectional(
 			config,
 			string.format("direction=%s afterOcclusion=%s", tostring(direction), windowIdsToDebugString(candidates))
@@ -2098,7 +2330,15 @@ function M.new(options)
 			config,
 			string.format("direction=%s previous=%s", tostring(direction), tostring(windowIdOf(previousWin)))
 		)
-		local target = findDirectionalWindowTarget(focusedWin, candidates, direction, previousWin, orderedWins, config)
+		local scoringConfig = config
+		if visibilityByWindowId then
+			scoringConfig = {}
+			for key, value in pairs(config or {}) do
+				scoringConfig[key] = value
+			end
+			scoringConfig.visibilityByWindowId = visibilityByWindowId
+		end
+		local target = findDirectionalWindowTarget(focusedWin, candidates, direction, previousWin, orderedWins, scoringConfig)
 		if not target then
 			debugLogDirectional(config, string.format("direction=%s no target", tostring(direction)))
 			return false

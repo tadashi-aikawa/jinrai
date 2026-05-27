@@ -1120,6 +1120,191 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(2, target:id())
 	end)
 
+	it("上下左右: preferredVisibleRatio 指定時は大きく隠れた近傍候補より可視候補を優先する", function()
+		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
+		local nearRight = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
+		local farRight = stubWindow(3, { x = 140, y = 0, w = 100, h = 100 })
+		local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ nearRight, farRight },
+			"right",
+			nil,
+			{ blocker, current, nearRight, farRight },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0.5,
+			}
+		)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("上下左右: preferredVisibleRatio は移動方向側の露出を優先する", function()
+		local current = stubWindow(1, { x = 65, y = 20, w = 20, h = 60 })
+		local containingRight = stubWindow(2, { x = 0, y = 0, w = 100, h = 100 })
+		local exposedRight = stubWindow(3, { x = 130, y = 20, w = 80, h = 60 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ containingRight, exposedRight },
+			"right",
+			nil,
+			{ current, containingRight, exposedRight },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0.5,
+			}
+		)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("上下左右: 移動方向の大きな背面候補より内側の前面候補を優先する", function()
+		local current = stubWindow(1, { x = 0, y = 0, w = 100, h = 120 })
+		local backgroundRight = stubWindow(2, { x = 110, y = 0, w = 170, h = 120 })
+		local foregroundInside = stubWindow(3, { x = 140, y = 25, w = 70, h = 70 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ backgroundRight, foregroundInside },
+			"right",
+			nil,
+			{ current, foregroundInside, backgroundRight },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0.5,
+			}
+		)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("上下左右: 移動方向の大きな候補に内包された候補をウィンドウ順序に依存せず優先する", function()
+		local current = stubWindow(1, { x = 320, y = 0, w = 100, h = 120 })
+		local containingLeft = stubWindow(2, { x = 0, y = 0, w = 280, h = 120 })
+		local containedLeft = stubWindow(3, { x = 170, y = 25, w = 70, h = 70 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ containingLeft, containedLeft },
+			"left",
+			nil,
+			{ current, containingLeft, containedLeft },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0.5,
+			}
+		)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("上下左右: 数pxはみ出した内包候補も移動先として優先する", function()
+		local current = stubWindow(1, { x = 320, y = 0, w = 100, h = 120 })
+		local containingLeft = stubWindow(2, { x = 0, y = 0, w = 280, h = 120 })
+		local slightlyProtrudingLeft = stubWindow(3, { x = 206, y = 25, w = 80, h = 70 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ containingLeft, slightlyProtrudingLeft },
+			"left",
+			nil,
+			{ current, containingLeft, slightlyProtrudingLeft },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0.5,
+			}
+		)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("上下左右: 左右移動では高さが同じ内包候補も移動先として優先する", function()
+		local current = stubWindow(1, { x = 320, y = 0, w = 100, h = 120 })
+		local containingLeft = stubWindow(2, { x = 0, y = 0, w = 280, h = 120 })
+		local containedSameHeight = stubWindow(3, { x = 170, y = 0, w = 70, h = 120 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ containingLeft, containedSameHeight },
+			"left",
+			nil,
+			{ current, containingLeft, containedSameHeight },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0.5,
+			}
+		)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("上下左右: preferredVisibleRatio=0 なら部分遮蔽していても既存どおり近傍候補を優先する", function()
+		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
+		local nearRight = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
+		local farRight = stubWindow(3, { x = 140, y = 0, w = 100, h = 100 })
+		local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ nearRight, farRight },
+			"right",
+			nil,
+			{ blocker, current, nearRight, farRight },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0,
+			}
+		)
+		assert.are.equal(2, target:id())
+	end)
+
+	it("上下左右: 可視率がしきい値以上なら既存スコア順を維持する", function()
+		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
+		local nearRight = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
+		local farRight = stubWindow(3, { x = 140, y = 0, w = 100, h = 100 })
+		local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 50 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ nearRight, farRight },
+			"right",
+			nil,
+			{ blocker, current, nearRight, farRight },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0.5,
+			}
+		)
+		assert.are.equal(2, target:id())
+	end)
+
+	it("上下左右: すべてしきい値未満なら可視率が高い候補を優先する", function()
+		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
+		local mostlyHidden = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
+		local lessHidden = stubWindow(3, { x = 140, y = 0, w = 100, h = 100 })
+		local bigBlocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
+		local smallBlocker = stubWindow(8, { x = 140, y = 0, w = 100, h = 50 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ mostlyHidden, lessHidden },
+			"right",
+			nil,
+			{ bigBlocker, smallBlocker, current, mostlyHidden, lessHidden },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0.75,
+			}
+		)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("上下左右: しきい値未満の候補しかなくてもフォールバックとして選択する", function()
+		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
+		local mostlyHidden = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
+		local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
+		local target = helper.findDirectionalWindowTarget(
+			current,
+			{ mostlyHidden },
+			"right",
+			nil,
+			{ blocker, current, mostlyHidden },
+			{
+				occlusionSamplingEnabled = false,
+				preferredVisibleRatio = 0.5,
+			}
+		)
+		assert.are.equal(2, target:id())
+	end)
+
 	it("同距離候補に previousWindow が含まれるとそちらを優先する", function()
 		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 10 })
 		local win2 = stubWindow(2, { x = 20, y = 0, w = 10, h = 10 })
@@ -1133,6 +1318,50 @@ describe("window_hints appPrefixOverrides", function()
 		local left = stubWindow(2, { x = -30, y = 0, w = 10, h = 10 })
 		local target = helper.findDirectionalWindowTarget(current, { left }, "right", nil)
 		assert.are.equal(nil, target)
+	end)
+
+	it("右方向: 中心が少し右でも右端が現在ウィンドウ内なら候補にしない", function()
+		local current = stubWindow(1, { x = 100, y = 100, w = 300, h = 200 })
+		local centeredShort = stubWindow(2, { x = 160, y = 130, w = 260, h = 120 })
+		local right = stubWindow(3, { x = 430, y = 120, w = 120, h = 160 })
+		local target = helper.findDirectionalWindowTarget(current, { centeredShort, right }, "right", nil)
+		assert.are.equal(3, target:id())
+	end)
+
+	it("右方向: 右端が現在ウィンドウを越えない候補だけなら nil を返す", function()
+		local current = stubWindow(1, { x = 100, y = 100, w = 300, h = 200 })
+		local centeredShort = stubWindow(2, { x = 160, y = 130, w = 230, h = 120 })
+		local target = helper.findDirectionalWindowTarget(current, { centeredShort }, "right", nil)
+		assert.are.equal(nil, target)
+	end)
+
+	it("右方向: 主軸重なり率がしきい値以下なら副軸重なりが小さくても候補に残る", function()
+		local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
+		local detachedRight = stubWindow(2, { x = 180, y = 230, w = 100, h = 100 })
+		local target = helper.findDirectionalWindowTarget(current, { detachedRight }, "right", nil)
+		assert.are.equal(2, target:id())
+	end)
+
+	it("右方向: 主軸重なり率がしきい値を超え副軸重なり率が不足する候補は除外する", function()
+		local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
+		local mostlyStacked = stubWindow(2, { x = 170, y = 230, w = 100, h = 100 })
+		local target = helper.findDirectionalWindowTarget(current, { mostlyStacked }, "right", nil)
+		assert.are.equal(nil, target)
+	end)
+
+	it("右方向: 主軸重なり率がしきい値を超えても副軸重なり率が足りれば候補に残る", function()
+		local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
+		local alignedRight = stubWindow(2, { x = 170, y = 150, w = 100, h = 100 })
+		local target = helper.findDirectionalWindowTarget(current, { alignedRight }, "right", nil)
+		assert.are.equal(2, target:id())
+	end)
+
+	it("右方向: 主軸で重なった候補を除外し、離れた候補を選ぶ", function()
+		local current = stubWindow(1, { x = 100, y = 200, w = 100, h = 100 })
+		local stackedWide = stubWindow(2, { x = 120, y = 80, w = 220, h = 80 })
+		local detachedRight = stubWindow(3, { x = 260, y = 330, w = 100, h = 100 })
+		local target = helper.findDirectionalWindowTarget(current, { stackedWide, detachedRight }, "right", nil)
+		assert.are.equal(3, target:id())
 	end)
 
 	it("左図: 1->下 は 3", function()
