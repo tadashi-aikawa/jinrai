@@ -32,6 +32,8 @@
     - Briefly highlights the border of the newly focused window
 - ↩️ **Focus Back**
     - Hotkey to jump back to the previously active window
+- 🪟 **Window Mover**
+    - Move the active window to the next display and maximize it there
 
 ## Demo Video
 
@@ -80,12 +82,18 @@ spoon.SpoonInstall:andUse("Jinrai", {
       focus_border = {},
       window_hints = {},
       focus_back = {},
+      window_mover = {
+        hotkey = {
+          modifiers = { "ctrl", "alt" },
+          key = "m",
+        },
+      },
     })
   end,
 })
 ```
 
-If you omit `focus_border`, `window_hints`, or `focus_back`, that module is disabled.
+If you omit `focus_border`, `window_hints`, `focus_back`, or `window_mover`, that module is disabled.
 
 To update an already installed Spoon (run once in Hammerspoon Console):
 
@@ -114,10 +122,16 @@ spoon.Jinrai:setup({
   focus_border = {},
   window_hints = {},
   focus_back = {},
+  window_mover = {
+    hotkey = {
+      modifiers = { "ctrl", "alt" },
+      key = "m",
+    },
+  },
 })
 ```
 
-If you omit `focus_border`, `window_hints`, or `focus_back`, that module is disabled.
+If you omit `focus_border`, `window_hints`, `focus_back`, or `window_mover`, that module is disabled.
 
 To update:
 
@@ -142,6 +156,9 @@ spoon.Jinrai:setup({
   },
   focus_back = {
     -- See "Focus Back Options" below for the complete default schema and examples
+  },
+  window_mover = {
+    -- See "Window Mover Options" below for the complete default schema and examples
   },
 })
 ```
@@ -543,6 +560,28 @@ focus_back = {
 ```
 
 Pressing repeatedly lets you toggle between two windows.
+
+## Window Mover Options
+
+Moves the active window to the next display and resizes it to fill that display's working area.
+
+Complete sample including all options (default values):
+
+```lua
+window_mover = {
+  hotkey = {
+    modifiers = nil, -- Hotkey modifiers (nil to disable)
+    key = nil,       -- Hotkey (nil to disable)
+  },
+  behavior = {
+    cursor = {
+      afterMove = true, -- Move cursor to window center after moving
+    },
+  },
+}
+```
+
+The target display is `screen:next()` from the current display. To reduce flicker, JINRAI does not call `moveToScreen` and `maximize` in sequence; it applies the destination display's `frame()` once with `setFrame(..., 0)`.
 
 ## Development
 

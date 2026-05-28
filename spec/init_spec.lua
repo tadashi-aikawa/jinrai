@@ -94,6 +94,18 @@ describe("init", function()
 					end,
 				}
 			end
+			if path:match("window_mover.lua$") then
+				return {
+					new = function(options)
+						calls.new.window_mover = options
+						return {
+							teardown = function()
+								calls.teardown.window_mover = true
+							end,
+						}
+					end,
+				}
+			end
 			return originalDofile(path)
 		end
 
@@ -115,6 +127,11 @@ describe("init", function()
 					},
 				},
 			},
+			window_mover = {
+				hotkey = {
+					key = "m",
+				},
+			},
 			macosNativeTabs = {
 				apps = { "com.mitchellh.ghostty" },
 				stateSyncInterval = 0.15,
@@ -131,6 +148,7 @@ describe("init", function()
 		assert.are.equal("q", calls.new.focus_back.hotkey.key)
 		assert.is_true(calls.new.focus_back.behavior.cursor.onSelect)
 		assert.is_truthy(calls.new.focus_back.internal.focusHistory)
+		assert.are.equal("m", calls.new.window_mover.hotkey.key)
 		assert.are.equal(nil, calls.new.window_hints)
 
 		local joined = table.concat(calls.loadPaths, "\n")
@@ -138,11 +156,13 @@ describe("init", function()
 		assert.is_truthy(joined:match("window_hints.lua"))
 		assert.is_truthy(joined:match("focus_back.lua"))
 		assert.is_truthy(joined:match("focus_history.lua"))
+		assert.is_truthy(joined:match("window_mover.lua"))
 
 		init:teardown()
 		assert.is_true(calls.teardown.focus_border)
 		assert.is_true(calls.teardown.focus_back)
 		assert.is_true(calls.teardown.focus_history)
+		assert.is_true(calls.teardown.window_mover)
 		assert.are.equal(nil, calls.teardown.window_hints)
 	end)
 
@@ -179,6 +199,13 @@ describe("init", function()
 				}
 			end
 			if path:match("focus_border.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("window_mover.lua$") then
 				return {
 					new = function()
 						return { teardown = function() end }
@@ -246,6 +273,13 @@ describe("init", function()
 					end,
 				}
 			end
+			if path:match("window_mover.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
 			return originalDofile(path)
 		end
 
@@ -299,6 +333,13 @@ describe("init", function()
 				}
 			end
 			if path:match("focus_border.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("window_mover.lua$") then
 				return {
 					new = function()
 						return { teardown = function() end }
@@ -368,6 +409,13 @@ describe("init", function()
 					end,
 				}
 			end
+			if path:match("window_mover.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
 			return originalDofile(path)
 		end
 
@@ -431,6 +479,17 @@ describe("init", function()
 					end,
 				}
 			end
+			if path:match("window_mover.lua$") then
+				return {
+					new = function()
+						return {
+							teardown = function()
+								table.insert(order, "window_mover")
+							end,
+						}
+					end,
+				}
+			end
 			return originalDofile(path)
 		end
 
@@ -438,9 +497,10 @@ describe("init", function()
 			focus_border = {},
 			window_hints = {},
 			focus_back = {},
+			window_mover = {},
 		})
 		init:teardown()
 
-		assert.are.same({ "focus_back", "window_hints", "focus_history", "focus_border" }, order)
+		assert.are.same({ "window_mover", "focus_back", "window_hints", "focus_history", "focus_border" }, order)
 	end)
 end)

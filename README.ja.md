@@ -32,6 +32,8 @@
     - フォーカスが移動したウィンドウの枠を一瞬だけハイライト表示
 - ↩️ **Focus Back**
     - ホットキーで直前にアクティブだったウィンドウに戻る
+- 🪟 **Window Mover**
+    - アクティブウィンドウを次のディスプレイへ移動し、移動先で最大化する
 
 ## デモ動画
 
@@ -80,12 +82,18 @@ spoon.SpoonInstall:andUse("Jinrai", {
       focus_border = {},
       window_hints = {},
       focus_back = {},
+      window_mover = {
+        hotkey = {
+          modifiers = { "ctrl", "alt" },
+          key = "m",
+        },
+      },
     })
   end,
 })
 ```
 
-`focus_border` や `window_hints`、`focus_back` のキーを省略するとそのモジュールは無効になります。
+`focus_border` や `window_hints`、`focus_back`、`window_mover` のキーを省略するとそのモジュールは無効になります。
 
 インストール済みの Spoon を更新する場合（Hammerspoon Console で1回だけ実行）:
 
@@ -116,10 +124,16 @@ spoon.Jinrai:setup({
   focus_border = {},
   window_hints = {},
   focus_back = {},
+  window_mover = {
+    hotkey = {
+      modifiers = { "ctrl", "alt" },
+      key = "m",
+    },
+  },
 })
 ```
 
-`focus_border` や `window_hints`、`focus_back` のキーを省略するとそのモジュールは無効になります。
+`focus_border` や `window_hints`、`focus_back`、`window_mover` のキーを省略するとそのモジュールは無効になります。
 
 更新する場合:
 
@@ -144,6 +158,9 @@ spoon.Jinrai:setup({
   },
   focus_back = {
     -- 詳細は後続の「Focus Back オプション」の全設定例を参照
+  },
+  window_mover = {
+    -- 詳細は後続の「Window Mover オプション」の全設定例を参照
   },
 })
 ```
@@ -546,6 +563,28 @@ focus_back = {
 ```
 
 連続で押すと2つのウィンドウ間をトグルで行き来できます。
+
+## Window Mover オプション
+
+アクティブウィンドウを次のディスプレイへ移動し、移動先の作業領域いっぱいにリサイズします。
+
+全設定を含むサンプル（デフォルト値）:
+
+```lua
+window_mover = {
+  hotkey = {
+    modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+    key = nil,       -- ホットキー（nil で無効化）
+  },
+  behavior = {
+    cursor = {
+      afterMove = true, -- 移動後にカーソルをウィンドウ中央に移動
+    },
+  },
+}
+```
+
+移動先は現在のディスプレイの `screen:next()` です。ちらつきを抑えるため、`moveToScreen` と `maximize` を順に呼ばず、移動先ディスプレイの `frame()` を `setFrame(..., 0)` で一度だけ反映します。
 
 ## 開発
 

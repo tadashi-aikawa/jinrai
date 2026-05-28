@@ -15,10 +15,12 @@ local focusBorderModule = nil
 local windowHintsModule = nil
 local focusBackModule = nil
 local focusHistoryModule = nil
+local windowMoverModule = nil
 local focusBorder = nil
 local windowHints = nil
 local focusBack = nil
 local focusHistory = nil
+local windowMover = nil
 
 local DEFAULT_MACOS_NATIVE_TABS = {
 	apps = { "com.mitchellh.ghostty", "com.apple.finder" },
@@ -110,9 +112,16 @@ function obj:setup(config)
 	if focusHistoryModule == nil then
 		focusHistoryModule = dofile(resourcePath("focus_history.lua"))
 	end
+	if windowMoverModule == nil then
+		windowMoverModule = dofile(resourcePath("window_mover.lua"))
+	end
 
 	if config.focus_border then
 		focusBorder = focusBorderModule.new(config.focus_border)
+	end
+
+	if config.window_mover then
+		windowMover = windowMoverModule.new(config.window_mover)
 	end
 
 	if config.focus_back then
@@ -145,6 +154,9 @@ function obj:setup(config)
 end
 
 function obj:teardown()
+	if windowMover and windowMover.teardown then
+		windowMover.teardown()
+	end
 	if focusBack and focusBack.teardown then
 		focusBack.teardown()
 	end
@@ -161,6 +173,7 @@ function obj:teardown()
 	windowHints = nil
 	focusHistory = nil
 	focusBorder = nil
+	windowMover = nil
 
 	return obj
 end
