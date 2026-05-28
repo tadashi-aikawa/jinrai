@@ -34,6 +34,7 @@
     - Hotkey to jump back to the previously active window
 - 🪟 **Window Mover**
     - Move the active window to the next display and maximize it there
+    - Move and resize the active window to the largest free area on the active display
 
 ## Demo Video
 
@@ -83,9 +84,13 @@ spoon.SpoonInstall:andUse("Jinrai", {
       window_hints = {},
       focus_back = {},
       window_mover = {
-        hotkey = {
-          modifiers = { "ctrl", "alt" },
-          key = "m",
+        commands = {
+          moveToNextDisplay = {
+            hotkey = {
+              modifiers = { "ctrl", "alt" },
+              key = "m",
+            },
+          },
         },
       },
     })
@@ -123,9 +128,13 @@ spoon.Jinrai:setup({
   window_hints = {},
   focus_back = {},
   window_mover = {
-    hotkey = {
-      modifiers = { "ctrl", "alt" },
-      key = "m",
+    commands = {
+      moveToNextDisplay = {
+        hotkey = {
+          modifiers = { "ctrl", "alt" },
+          key = "m",
+        },
+      },
     },
   },
 })
@@ -563,15 +572,25 @@ Pressing repeatedly lets you toggle between two windows.
 
 ## Window Mover Options
 
-Moves the active window to the next display and resizes it to fill that display's working area.
+Moves the active window to the next display, or to the largest free area on the active display.
 
 Complete sample including all options (default values):
 
 ```lua
 window_mover = {
-  hotkey = {
-    modifiers = nil, -- Hotkey modifiers (nil to disable)
-    key = nil,       -- Hotkey (nil to disable)
+  commands = {
+    moveToNextDisplay = {
+      hotkey = {
+        modifiers = nil, -- Hotkey modifiers (nil to disable)
+        key = nil,       -- Hotkey (nil to disable)
+      },
+    },
+    moveToActiveDisplayFreeArea = {
+      hotkey = {
+        modifiers = nil, -- Hotkey modifiers (nil to disable)
+        key = nil,       -- Hotkey (nil to disable)
+      },
+    },
   },
   behavior = {
     cursor = {
@@ -581,7 +600,7 @@ window_mover = {
 }
 ```
 
-The target display is `screen:next()` from the current display. To reduce flicker, JINRAI does not call `moveToScreen` and `maximize` in sequence; it applies the destination display's `frame()` once with `setFrame(..., 0)`.
+`moveToNextDisplay` targets `screen:next()` from the current display. `moveToActiveDisplayFreeArea` targets the largest rectangle inside the current display's `frame()` that does not overlap other visible windows; ties prefer the area closest to the current active window. To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
 
 ## Development
 

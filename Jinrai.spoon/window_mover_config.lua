@@ -1,9 +1,19 @@
 local M = {}
 
 local DEFAULT_CONFIG = {
-	hotkey = {
-		modifiers = nil,
-		key = nil,
+	commands = {
+		moveToNextDisplay = {
+			hotkey = {
+				modifiers = nil,
+				key = nil,
+			},
+		},
+		moveToActiveDisplayFreeArea = {
+			hotkey = {
+				modifiers = nil,
+				key = nil,
+			},
+		},
 	},
 	behavior = {
 		cursor = {
@@ -73,16 +83,25 @@ local function deepMerge(defaults, overrides)
 	return merged
 end
 
+local function checkRemovedKeys(options)
+	if options.hotkey ~= nil then
+		error("[jinrai.window_mover] removed key 'hotkey' is no longer supported; use 'commands.moveToNextDisplay.hotkey'")
+	end
+end
+
 function M.build(options)
 	options = options or {}
 	if type(options) ~= "table" then
 		error("[jinrai.window_mover] options must be a table")
 	end
+	checkRemovedKeys(options)
 	local merged = deepMerge(DEFAULT_CONFIG, options)
 
 	return {
-		hotkeyModifiers = merged.hotkey.modifiers,
-		hotkeyKey = merged.hotkey.key,
+		moveToNextDisplayHotkeyModifiers = merged.commands.moveToNextDisplay.hotkey.modifiers,
+		moveToNextDisplayHotkeyKey = merged.commands.moveToNextDisplay.hotkey.key,
+		moveToActiveDisplayFreeAreaHotkeyModifiers = merged.commands.moveToActiveDisplayFreeArea.hotkey.modifiers,
+		moveToActiveDisplayFreeAreaHotkeyKey = merged.commands.moveToActiveDisplayFreeArea.hotkey.key,
 		centerCursor = merged.behavior.cursor.afterMove,
 	}
 end

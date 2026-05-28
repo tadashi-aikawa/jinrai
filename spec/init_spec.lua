@@ -128,8 +128,12 @@ describe("init", function()
 				},
 			},
 			window_mover = {
-				hotkey = {
-					key = "m",
+				commands = {
+					moveToNextDisplay = {
+						hotkey = {
+							key = "m",
+						},
+					},
 				},
 			},
 			macosNativeTabs = {
@@ -148,7 +152,7 @@ describe("init", function()
 		assert.are.equal("q", calls.new.focus_back.hotkey.key)
 		assert.is_true(calls.new.focus_back.behavior.cursor.onSelect)
 		assert.is_truthy(calls.new.focus_back.internal.focusHistory)
-		assert.are.equal("m", calls.new.window_mover.hotkey.key)
+		assert.are.equal("m", calls.new.window_mover.commands.moveToNextDisplay.hotkey.key)
 		assert.are.equal(nil, calls.new.window_hints)
 
 		local joined = table.concat(calls.loadPaths, "\n")

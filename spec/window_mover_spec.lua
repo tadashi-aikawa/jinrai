@@ -31,17 +31,25 @@ describe("window_mover", function()
 		local win = {
 			_screen = screen,
 			_frame = frame or { x = 0, y = 0, w = 100, h = 100 },
+			_id = nil,
+			_standard = true,
 			setFrameCalls = {},
 			moveToScreenCalls = {},
 			maximizeCalls = {},
 			raiseCalls = 0,
 			focusCalls = 0,
 		}
+		function win:id()
+			return self._id
+		end
 		function win:screen()
 			return self._screen
 		end
 		function win:frame()
 			return self._frame
+		end
+		function win:isStandard()
+			return self._standard
 		end
 		function win:setFrame(nextFrame, duration)
 			table.insert(self.setFrameCalls, { frame = nextFrame, duration = duration })
@@ -66,6 +74,7 @@ describe("window_mover", function()
 		local state = {
 			hotkeys = {},
 			mousePositions = {},
+			visibleWindows = {},
 		}
 		_G.hs = {
 			spoons = {
@@ -76,6 +85,9 @@ describe("window_mover", function()
 			window = {
 				focusedWindow = function()
 					return focusedWindow
+				end,
+				visibleWindows = function()
+					return state.visibleWindows
 				end,
 			},
 			hotkey = {
@@ -102,8 +114,9 @@ describe("window_mover", function()
 		return state
 	end
 
-	local function newWindowMoverWithMock(options, focusedWindow)
+	local function newWindowMoverWithMock(options, focusedWindow, visibleWindows)
 		local state = installHsMock(focusedWindow)
+		state.visibleWindows = visibleWindows or (focusedWindow and { focusedWindow } or {})
 		local module = dofile("./Jinrai.spoon/window_mover.lua")
 		return state, module.new(options or {})
 	end
@@ -115,7 +128,7 @@ describe("window_mover", function()
 		local win = newWindow(currentScreen, { x = 100, y = 100, w = 800, h = 600 })
 		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win)
 
-		instance.moveToNextScreen()
+		instance.moveToNextDisplay()
 
 		assert.are.equal(1, #win.setFrameCalls)
 		assert.are.same({ x = 1440, y = 0, w = 1920, h = 1080 }, win.setFrameCalls[1].frame)
@@ -133,7 +146,7 @@ describe("window_mover", function()
 		local win = newWindow(currentScreen)
 		local state, instance = newWindowMoverWithMock({}, win)
 
-		instance.moveToNextScreen()
+		instance.moveToNextDisplay()
 
 		assert.are.same({ x = 2400, y = 540 }, state.mousePositions[1])
 	end)
@@ -141,7 +154,7 @@ describe("window_mover", function()
 	it("フォーカスウィンドウがなければ何もしない", function()
 		local _, instance = newWindowMoverWithMock({}, nil)
 
-		instance.moveToNextScreen()
+		instance.moveToNextDisplay()
 
 		assert.is_truthy(instance)
 	end)
@@ -150,7 +163,7 @@ describe("window_mover", function()
 		local win = newWindow(nil)
 		local _, instance = newWindowMoverWithMock({}, win)
 
-		instance.moveToNextScreen()
+		instance.moveToNextDisplay()
 
 		assert.are.equal(0, #win.setFrameCalls)
 	end)
@@ -161,7 +174,7 @@ describe("window_mover", function()
 		local win = newWindow(currentScreen)
 		local _, instance = newWindowMoverWithMock({}, win)
 
-		instance.moveToNextScreen()
+		instance.moveToNextDisplay()
 
 		assert.are.equal(0, #win.setFrameCalls)
 	end)
@@ -171,7 +184,7 @@ describe("window_mover", function()
 		local win = newWindow(currentScreen)
 		local _, instance = newWindowMoverWithMock({}, win)
 
-		instance.moveToNextScreen()
+		instance.moveToNextDisplay()
 
 		assert.are.equal(0, #win.setFrameCalls)
 	end)
@@ -182,18 +195,29 @@ describe("window_mover", function()
 		currentScreen._next = nextScreen
 		local win = newWindow(currentScreen)
 		local state, instance = newWindowMoverWithMock({
-			hotkey = {
-				modifiers = { "ctrl", "alt" },
-				key = "m",
+			commands = {
+				moveToNextDisplay = {
+					hotkey = {
+						modifiers = { "ctrl", "alt" },
+						key = "m",
+					},
+				},
+				moveToActiveDisplayFreeArea = {
+					hotkey = {
+						modifiers = { "cmd", "shift" },
+						key = "f19",
+					},
+				},
 			},
 		}, win)
 
-		assert.are.equal(1, #state.hotkeys)
+		assert.are.equal(2, #state.hotkeys)
 		state.hotkeys[1].callback()
 		assert.are.equal(1, #win.setFrameCalls)
 
 		instance.teardown()
 		assert.is_true(state.hotkeys[1].deleted)
+		assert.is_true(state.hotkeys[2].deleted)
 	end)
 
 	it("ホットキー未指定時は bind しない", function()
@@ -202,5 +226,96 @@ describe("window_mover", function()
 		assert.are.equal(0, #state.hotkeys)
 
 		instance.teardown()
+	end)
+
+	it("空き領域移動は他ウィンドウがなければ現在ディスプレイの frame 全体へ移動する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1440, h = 900 })
+		local win = newWindow(screen, { x = 100, y = 100, w = 800, h = 600 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.equal(1, #win.setFrameCalls)
+		assert.are.same({ x = 0, y = 0, w = 1440, h = 900 }, win.setFrameCalls[1].frame)
+		assert.are.equal(0, win.setFrameCalls[1].duration)
+	end)
+
+	it("空き領域移動は同一ディスプレイの他ウィンドウを避けた最大領域へ移動する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 })
+		local win = newWindow(screen, { x = 300, y = 300, w = 200, h = 100 })
+		local occupied = newWindow(screen, { x = 0, y = 0, w = 400, h = 800 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, {
+			win,
+			occupied,
+		})
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 400, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("空き領域移動は同面積なら現在位置に近い領域を選ぶ", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 })
+		local win = newWindow(screen, { x = 550, y = 300, w = 100, h = 100 })
+		local occupied = newWindow(screen, { x = 400, y = 0, w = 200, h = 800 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, {
+			win,
+			occupied,
+		})
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 600, y = 0, w = 400, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("空き領域移動は他ディスプレイのウィンドウを占有対象にしない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 })
+		local otherScreen = newScreen(2, { x = 1000, y = 0, w = 1000, h = 800 })
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local otherDisplayWin = newWindow(otherScreen, { x = 0, y = 0, w = 900, h = 800 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, {
+			win,
+			otherDisplayWin,
+		})
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 0, y = 0, w = 1000, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("空き領域移動は非標準ウィンドウを占有対象にしない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 })
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local desktopLikeWindow = newWindow(screen, { x = 0, y = 0, w = 1000, h = 800 })
+		desktopLikeWindow._standard = false
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, {
+			win,
+			desktopLikeWindow,
+		})
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 0, y = 0, w = 1000, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("空き領域移動はアクティブウィンドウ自身を占有対象にしない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 })
+		local win = newWindow(screen, { x = 0, y = 0, w = 900, h = 800 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 0, y = 0, w = 1000, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("空き領域移動は空き領域がなければ何もしない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 })
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local occupied = newWindow(screen, { x = 0, y = 0, w = 1000, h = 800 })
+		local _, instance = newWindowMoverWithMock({}, win, { win, occupied })
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.equal(0, #win.setFrameCalls)
 	end)
 end)

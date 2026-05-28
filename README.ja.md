@@ -34,6 +34,7 @@
     - ホットキーで直前にアクティブだったウィンドウに戻る
 - 🪟 **Window Mover**
     - アクティブウィンドウを次のディスプレイへ移動し、移動先で最大化する
+    - アクティブウィンドウをアクティブディスプレイ上の最大空き領域へ移動・リサイズする
 
 ## デモ動画
 
@@ -83,9 +84,13 @@ spoon.SpoonInstall:andUse("Jinrai", {
       window_hints = {},
       focus_back = {},
       window_mover = {
-        hotkey = {
-          modifiers = { "ctrl", "alt" },
-          key = "m",
+        commands = {
+          moveToNextDisplay = {
+            hotkey = {
+              modifiers = { "ctrl", "alt" },
+              key = "m",
+            },
+          },
         },
       },
     })
@@ -125,9 +130,13 @@ spoon.Jinrai:setup({
   window_hints = {},
   focus_back = {},
   window_mover = {
-    hotkey = {
-      modifiers = { "ctrl", "alt" },
-      key = "m",
+    commands = {
+      moveToNextDisplay = {
+        hotkey = {
+          modifiers = { "ctrl", "alt" },
+          key = "m",
+        },
+      },
     },
   },
 })
@@ -566,15 +575,25 @@ focus_back = {
 
 ## Window Mover オプション
 
-アクティブウィンドウを次のディスプレイへ移動し、移動先の作業領域いっぱいにリサイズします。
+アクティブウィンドウを次のディスプレイ、またはアクティブディスプレイ上の最大空き領域へ移動・リサイズします。
 
 全設定を含むサンプル（デフォルト値）:
 
 ```lua
 window_mover = {
-  hotkey = {
-    modifiers = nil, -- ホットキー修飾キー（nil で無効化）
-    key = nil,       -- ホットキー（nil で無効化）
+  commands = {
+    moveToNextDisplay = {
+      hotkey = {
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
+      },
+    },
+    moveToActiveDisplayFreeArea = {
+      hotkey = {
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
+      },
+    },
   },
   behavior = {
     cursor = {
@@ -584,7 +603,7 @@ window_mover = {
 }
 ```
 
-移動先は現在のディスプレイの `screen:next()` です。ちらつきを抑えるため、`moveToScreen` と `maximize` を順に呼ばず、移動先ディスプレイの `frame()` を `setFrame(..., 0)` で一度だけ反映します。
+`moveToNextDisplay` の移動先は現在のディスプレイの `screen:next()` です。`moveToActiveDisplayFreeArea` は現在のディスプレイの `frame()` 内で、他の可視ウィンドウと重ならない最大の矩形を選びます。同面積の場合は現在のアクティブウィンドウに近い領域を優先します。ちらつきを抑えるため、移動先 frame を `setFrame(..., 0)` で一度だけ反映します。
 
 ## 開発
 
