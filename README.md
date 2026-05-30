@@ -35,6 +35,7 @@
 - 🪟 **Window Mover**
     - Move the active window to the next display and maximize it there
     - Move and resize the active window to the largest free area on the active display
+    - Select a configured display area with key hints and move the active window there
 
 ## Demo Video
 
@@ -572,7 +573,7 @@ Pressing repeatedly lets you toggle between two windows.
 
 ## Window Mover Options
 
-Moves the active window to the next display, or to the largest free area on the active display.
+Moves and resizes the active window to the next display, to the largest free area on the active display, or to a selected area on any display.
 
 Complete sample including all options (default values):
 
@@ -591,16 +592,93 @@ window_mover = {
         key = nil,       -- Hotkey (nil to disable)
       },
     },
+    moveToSelectedArea = {
+      hotkey = {
+        modifiers = nil, -- Hotkey modifiers (nil to disable)
+        key = nil,       -- Hotkey (nil to disable)
+      },
+    },
   },
   behavior = {
     cursor = {
       afterMove = true, -- Move cursor to window center after moving
+    },
+    selectedArea = {
+      default = nil, -- UUID whose keymap is reused for unconfigured displays
+      screens = {},  -- Map screen UUIDs to area keymaps
+    },
+  },
+  appearance = {
+    selectedArea = {
+      borderWidth = 2, -- Hint border width (px)
+      cornerRadius = 6, -- Hint corner radius (px)
+      state = {
+        normal = {
+          bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.88 },
+          textColor = { red = 0.96, green = 1.0, blue = 0.98, alpha = 1.0 },
+          typedTextColor = { red = 0.96, green = 1.0, blue = 0.98, alpha = 0.38 },
+        },
+        dimmed = {
+          bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.30 },
+          textColor = { red = 0.96, green = 1.0, blue = 0.98, alpha = 0.32 },
+        },
+      },
+      styles = {
+        full = {
+          color = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 },
+          dimmedColor = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.22 },
+        },
+        half = {
+          color = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
+          dimmedColor = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 },
+        },
+        third = {
+          color = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.92 },
+          dimmedColor = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.22 },
+        },
+        twoThirds = {
+          color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
+          dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
+        },
+        free = {
+          color = { red = 0.58, green = 0.64, blue = 0.70, alpha = 0.95 },
+          dimmedColor = { red = 0.58, green = 0.64, blue = 0.70, alpha = 0.22 },
+        },
+      },
     },
   },
 }
 ```
 
 `moveToNextDisplay` targets `screen:next()` from the current display. `moveToActiveDisplayFreeArea` targets the largest rectangle inside the current display's `frame()` that does not overlap other visible windows; ties prefer the area closest to the current active window. To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
+
+`moveToSelectedArea` shows only the area hints configured for each screen UUID. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`. Unconfigured displays reuse `behavior.selectedArea.default` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the default keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
+
+Example selected-area keymap:
+
+```lua
+selectedArea = {
+  default = "DISPLAY_UUID_A",
+  screens = {
+    ["DISPLAY_UUID_A"] = {
+      full = "A",
+      halfLeft = "S",
+      halfHorizontalCenter = "D",
+      halfRight = "F",
+      halfTop = "Q",
+      halfVerticalCenter = "W",
+      halfBottom = "E",
+      thirdLeft = "J",
+      thirdHorizontalCenter = "K",
+      thirdRight = "L",
+      twoThirdsHorizontalCenter = "R",
+      ["1920x1080Center"] = "M",
+    },
+  },
+}
+```
+
+Area names use explicit directions and never change based on display orientation. Use `Left`/`Right` for horizontal regions, `Top`/`Bottom` for vertical regions, and `HorizontalCenter`/`VerticalCenter` for centered split regions. Fixed-size center regions use `<width>x<height>Center`, for example `["1920x1080Center"] = "M"`; sizes larger than the display are clamped to the display frame. Keys must be 1-2 characters and cannot duplicate or prefix-conflict within the same screen keymap.
 
 ## Development
 

@@ -35,6 +35,7 @@
 - 🪟 **Window Mover**
     - アクティブウィンドウを次のディスプレイへ移動し、移動先で最大化する
     - アクティブウィンドウをアクティブディスプレイ上の最大空き領域へ移動・リサイズする
+    - キーヒントで設定済みエリアを選択し、アクティブウィンドウをそこへ移動する
 
 ## デモ動画
 
@@ -575,7 +576,7 @@ focus_back = {
 
 ## Window Mover オプション
 
-アクティブウィンドウを次のディスプレイ、またはアクティブディスプレイ上の最大空き領域へ移動・リサイズします。
+アクティブウィンドウを次のディスプレイ、アクティブディスプレイ上の最大空き領域、または候補から選んだ任意のディスプレイ領域へ移動・リサイズします。
 
 全設定を含むサンプル（デフォルト値）:
 
@@ -594,16 +595,93 @@ window_mover = {
         key = nil,       -- ホットキー（nil で無効化）
       },
     },
+    moveToSelectedArea = {
+      hotkey = {
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
+      },
+    },
   },
   behavior = {
     cursor = {
       afterMove = true, -- 移動後にカーソルをウィンドウ中央に移動
+    },
+    selectedArea = {
+      default = nil, -- 未設定ディスプレイに流用するキーマップの UUID
+      screens = {},  -- ディスプレイ UUID ごとのエリアキーマップ
+    },
+  },
+  appearance = {
+    selectedArea = {
+      borderWidth = 2, -- ヒント枠線の太さ (px)
+      cornerRadius = 6, -- ヒント角丸の半径 (px)
+      state = {
+        normal = {
+          bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.88 },
+          textColor = { red = 0.96, green = 1.0, blue = 0.98, alpha = 1.0 },
+          typedTextColor = { red = 0.96, green = 1.0, blue = 0.98, alpha = 0.38 },
+        },
+        dimmed = {
+          bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.30 },
+          textColor = { red = 0.96, green = 1.0, blue = 0.98, alpha = 0.32 },
+        },
+      },
+      styles = {
+        full = {
+          color = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 },
+          dimmedColor = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.22 },
+        },
+        half = {
+          color = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
+          dimmedColor = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 },
+        },
+        third = {
+          color = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.92 },
+          dimmedColor = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.22 },
+        },
+        twoThirds = {
+          color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
+          dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
+        },
+        free = {
+          color = { red = 0.58, green = 0.64, blue = 0.70, alpha = 0.95 },
+          dimmedColor = { red = 0.58, green = 0.64, blue = 0.70, alpha = 0.22 },
+        },
+      },
     },
   },
 }
 ```
 
 `moveToNextDisplay` の移動先は現在のディスプレイの `screen:next()` です。`moveToActiveDisplayFreeArea` は現在のディスプレイの `frame()` 内で、他の可視ウィンドウと重ならない最大の矩形を選びます。同面積の場合は現在のアクティブウィンドウに近い領域を優先します。ちらつきを抑えるため、移動先 frame を `setFrame(..., 0)` で一度だけ反映します。
+
+`moveToSelectedArea` はディスプレイ UUID ごとに設定された候補だけを表示します。UUID は Hammerspoon Console で `hs.inspect(jinrai.window_mover.screenInfos())` を実行して確認できます。未設定ディスプレイは `behavior.selectedArea.default` があればそのキーマップを流用し、なければそのディスプレイ上に選択可能な UUID と設定テンプレートを表示します。default のキーマップが既に表示中の候補と衝突する場合も、未設定ディスプレイ側は UUID テンプレート表示に切り替えます。表示中は `escape`、候補外クリック、または同じホットキーで閉じます。候補クリックでは移動しません。
+
+エリア選択キーマップの例:
+
+```lua
+selectedArea = {
+  default = "DISPLAY_UUID_A",
+  screens = {
+    ["DISPLAY_UUID_A"] = {
+      full = "A",
+      halfLeft = "S",
+      halfHorizontalCenter = "D",
+      halfRight = "F",
+      halfTop = "Q",
+      halfVerticalCenter = "W",
+      halfBottom = "E",
+      thirdLeft = "J",
+      thirdHorizontalCenter = "K",
+      thirdRight = "L",
+      twoThirdsHorizontalCenter = "R",
+      ["1920x1080Center"] = "M",
+    },
+  },
+}
+```
+
+エリア名は明示的な方角を使い、ディスプレイの向きによって意味は変わりません。横方向の領域は `Left`/`Right`、縦方向の領域は `Top`/`Bottom`、中央寄せの分割領域は `HorizontalCenter`/`VerticalCenter` を使います。固定サイズの中央配置は `<width>x<height>Center` で指定します。例: `["1920x1080Center"] = "M"`。ディスプレイより大きいサイズはディスプレイの frame に収まるように上限調整されます。キーは1〜2文字で、同じディスプレイのキーマップ内で重複または prefix 衝突してはいけません。
 
 ## 開発
 
