@@ -582,6 +582,7 @@ Complete sample including all options (default values):
 ```lua
 window_mover = {
   commands = {
+    -- Move to another display or computed/configured area
     moveToNextDisplay = {
       hotkey = {
         modifiers = nil, -- Hotkey modifiers (nil to disable)
@@ -600,18 +601,20 @@ window_mover = {
         key = nil,       -- Hotkey (nil to disable)
       },
     },
-    minimizeWindow = {
-      hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
-      },
-    },
+    -- Change the active window state or size
     maximizeWindow = {
       hotkey = {
         modifiers = nil, -- Hotkey modifiers (nil to disable)
         key = nil,       -- Hotkey (nil to disable)
       },
     },
+    minimizeWindow = {
+      hotkey = {
+        modifiers = nil, -- Hotkey modifiers (nil to disable)
+        key = nil,       -- Hotkey (nil to disable)
+      },
+    },
+    -- Cycle horizontal placement and width
     cycleLeft = {
       hotkey = {
         modifiers = nil, -- Hotkey modifiers (nil to disable)
@@ -630,6 +633,7 @@ window_mover = {
         key = nil,       -- Hotkey (nil to disable)
       },
     },
+    -- Cycle vertical placement and height
     cycleTop = {
       hotkey = {
         modifiers = nil, -- Hotkey modifiers (nil to disable)
@@ -701,11 +705,27 @@ window_mover = {
 }
 ```
 
-`moveToNextDisplay` targets `screen:next()` from the current display. `moveToActiveDisplayFreeArea` targets the largest rectangle inside the current display's `frame()` that does not overlap other visible windows; ties prefer the area closest to the current active window. To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
+| Command | Description |
+| --- | --- |
+| `moveToNextDisplay` | Moves the active window to `screen:next()` from the current display and maximizes it there. |
+| `moveToActiveDisplayFreeArea` | Moves the active window to the largest rectangle inside the current display's `frame()` that does not overlap other visible windows. Ties prefer the area closest to the active window. |
+| `moveToSelectedArea` | Opens the selected-area chooser for configured screen UUIDs. |
+| `maximizeWindow` | Moves and resizes the active window to the current display's `frame()` without using macOS fullscreen. |
+| `minimizeWindow` | Minimizes the active window. |
+| `cycleLeft` | Moves the active window to the left edge and cycles width through `1/2` → `1/3` → `2/3` → `1/2`. |
+| `cycleHorizontalCenter` | Moves the active window to the horizontal center and cycles width through the same sequence. |
+| `cycleRight` | Moves the active window to the right edge and cycles width through the same sequence. |
+| `cycleTop` | Moves the active window to the top edge and cycles height through `1/2` → `1/3` → `2/3` → `1/2`. |
+| `cycleVerticalCenter` | Moves the active window to the vertical center and cycles height through the same sequence. |
+| `cycleBottom` | Moves the active window to the bottom edge and cycles height through the same sequence. |
 
-`minimizeWindow` minimizes the active window. `maximizeWindow` does not use macOS fullscreen; it moves and resizes the active window to the current display's `frame()`. `cycleLeft` / `cycleHorizontalCenter` / `cycleRight` move the active window to the left edge, horizontal center, or right edge of the current display and cycle the width through `1/2` → `1/3` → `2/3` → `1/2` when repeated on the same window. `cycleTop` / `cycleVerticalCenter` / `cycleBottom` move the active window to the top edge, vertical center, or bottom edge and cycle the height in the same order.
+To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
 
-`moveToSelectedArea` shows only the area hints configured for each screen UUID. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`. Unconfigured displays reuse `selectedArea.defaultScreen` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the defaultScreen keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
+### moveToSelectedArea
+
+`moveToSelectedArea` shows only the area hints configured for each screen UUID. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`.
+
+Unconfigured displays reuse `selectedArea.defaultScreen` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the defaultScreen keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
 
 Set `selectedArea.hints.show = false` to skip canvas rendering for configured candidates and move by key input only. UUID template guidance for unconfigured displays is still shown.
 
@@ -733,7 +753,26 @@ selectedArea = {
 }
 ```
 
-Area names use explicit directions and never change based on display orientation. Use `Left`/`Right` for horizontal regions, `Top`/`Bottom` for vertical regions, and `HorizontalCenter`/`VerticalCenter` for centered split regions. Fixed-size center regions use `<width>x<height>Center`, for example `["1920x1080Center"] = "M"`; sizes larger than the display are clamped to the display frame. Keys must be 1-2 characters and cannot duplicate or prefix-conflict within the same screen keymap.
+| Area | Position | Size |
+| --- | --- | --- |
+| `full` | Full display | Full display |
+| `halfLeft` | Left edge | 1/2 width, full height |
+| `halfHorizontalCenter` | Horizontal center | 1/2 width, full height |
+| `halfRight` | Right edge | 1/2 width, full height |
+| `halfTop` | Top edge | Full width, 1/2 height |
+| `halfVerticalCenter` | Vertical center | Full width, 1/2 height |
+| `halfBottom` | Bottom edge | Full width, 1/2 height |
+| `thirdLeft` | Left edge | 1/3 width, full height |
+| `thirdHorizontalCenter` | Horizontal center | 1/3 width, full height |
+| `thirdRight` | Right edge | 1/3 width, full height |
+| `thirdTop` | Top edge | Full width, 1/3 height |
+| `thirdVerticalCenter` | Vertical center | Full width, 1/3 height |
+| `thirdBottom` | Bottom edge | Full width, 1/3 height |
+| `twoThirdsHorizontalCenter` | Horizontal center | 2/3 width, full height |
+| `twoThirdsVerticalCenter` | Vertical center | Full width, 2/3 height |
+| `<width>x<height>Center` | Display center | Fixed size, clamped to the display frame |
+
+Area names use explicit directions and never change based on display orientation. Keys must be 1-2 characters and cannot duplicate or prefix-conflict within the same screen keymap.
 
 ## Development
 

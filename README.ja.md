@@ -585,6 +585,7 @@ focus_back = {
 ```lua
 window_mover = {
   commands = {
+    -- 別ディスプレイや算出・設定済み領域へ移動
     moveToNextDisplay = {
       hotkey = {
         modifiers = nil, -- ホットキー修飾キー（nil で無効化）
@@ -603,18 +604,20 @@ window_mover = {
         key = nil,       -- ホットキー（nil で無効化）
       },
     },
-    minimizeWindow = {
-      hotkey = {
-        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
-        key = nil,       -- ホットキー（nil で無効化）
-      },
-    },
+    -- アクティブウィンドウの状態やサイズを変更
     maximizeWindow = {
       hotkey = {
         modifiers = nil, -- ホットキー修飾キー（nil で無効化）
         key = nil,       -- ホットキー（nil で無効化）
       },
     },
+    minimizeWindow = {
+      hotkey = {
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
+      },
+    },
+    -- 横方向の配置と幅を切り替え
     cycleLeft = {
       hotkey = {
         modifiers = nil, -- ホットキー修飾キー（nil で無効化）
@@ -633,6 +636,7 @@ window_mover = {
         key = nil,       -- ホットキー（nil で無効化）
       },
     },
+    -- 縦方向の配置と高さを切り替え
     cycleTop = {
       hotkey = {
         modifiers = nil, -- ホットキー修飾キー（nil で無効化）
@@ -704,11 +708,27 @@ window_mover = {
 }
 ```
 
-`moveToNextDisplay` の移動先は現在のディスプレイの `screen:next()` です。`moveToActiveDisplayFreeArea` は現在のディスプレイの `frame()` 内で、他の可視ウィンドウと重ならない最大の矩形を選びます。同面積の場合は現在のアクティブウィンドウに近い領域を優先します。ちらつきを抑えるため、移動先 frame を `setFrame(..., 0)` で一度だけ反映します。
+| コマンド | 説明 |
+| --- | --- |
+| `moveToNextDisplay` | アクティブウィンドウを現在のディスプレイの `screen:next()` へ移動し、移動先で最大化します。 |
+| `moveToActiveDisplayFreeArea` | 現在ディスプレイの `frame()` 内で、他の可視ウィンドウと重ならない最大の矩形へ移動します。同面積の場合はアクティブウィンドウに近い領域を優先します。 |
+| `moveToSelectedArea` | ディスプレイ UUID ごとに設定した領域を選ぶ chooser を開きます。 |
+| `maximizeWindow` | macOS のフルスクリーン化ではなく、アクティブウィンドウを現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。 |
+| `minimizeWindow` | アクティブウィンドウを最小化します。 |
+| `cycleLeft` | アクティブウィンドウを左端へ移動し、横幅を `1/2` → `1/3` → `2/3` → `1/2` の順に切り替えます。 |
+| `cycleHorizontalCenter` | アクティブウィンドウを横方向中央へ移動し、横幅を同じ順序で切り替えます。 |
+| `cycleRight` | アクティブウィンドウを右端へ移動し、横幅を同じ順序で切り替えます。 |
+| `cycleTop` | アクティブウィンドウを上端へ移動し、高さを `1/2` → `1/3` → `2/3` → `1/2` の順に切り替えます。 |
+| `cycleVerticalCenter` | アクティブウィンドウを縦方向中央へ移動し、高さを同じ順序で切り替えます。 |
+| `cycleBottom` | アクティブウィンドウを下端へ移動し、高さを同じ順序で切り替えます。 |
 
-`minimizeWindow` はアクティブウィンドウを最小化します。`maximizeWindow` は macOS のフルスクリーン化ではなく、現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。`cycleLeft` / `cycleHorizontalCenter` / `cycleRight` は現在ディスプレイの左端・横方向中央・右端へ移動し、同じウィンドウに連続実行するたびに横幅を `1/2` → `1/3` → `2/3` → `1/2` の順に切り替えます。`cycleTop` / `cycleVerticalCenter` / `cycleBottom` は上端・縦方向中央・下端へ移動し、同じ順序で高さを切り替えます。
+ちらつきを抑えるため、JINRAI は移動先 frame を `setFrame(..., 0)` で一度だけ反映します。
 
-`moveToSelectedArea` はディスプレイ UUID ごとに設定された候補だけを表示します。UUID は Hammerspoon Console で `hs.inspect(jinrai.window_mover.screenInfos())` を実行して確認できます。未設定ディスプレイは `selectedArea.defaultScreen` があればそのキーマップを流用し、なければそのディスプレイ上に選択可能な UUID と設定テンプレートを表示します。defaultScreen のキーマップが既に表示中の候補と衝突する場合も、未設定ディスプレイ側は UUID テンプレート表示に切り替えます。表示中は `escape`、候補外クリック、または同じホットキーで閉じます。候補クリックでは移動しません。
+### moveToSelectedArea
+
+`moveToSelectedArea` はディスプレイ UUID ごとに設定された候補だけを表示します。UUID は Hammerspoon Console で `hs.inspect(jinrai.window_mover.screenInfos())` を実行して確認できます。
+
+未設定ディスプレイは `selectedArea.defaultScreen` があればそのキーマップを流用し、なければそのディスプレイ上に選択可能な UUID と設定テンプレートを表示します。defaultScreen のキーマップが既に表示中の候補と衝突する場合も、未設定ディスプレイ側は UUID テンプレート表示に切り替えます。表示中は `escape`、候補外クリック、または同じホットキーで閉じます。候補クリックでは移動しません。
 
 `selectedArea.hints.show = false` にすると、設定済み候補のヒント canvas を描画せず、キー入力だけで移動します。未設定ディスプレイ向けの UUID テンプレート案内は引き続き表示されます。
 
@@ -736,7 +756,26 @@ selectedArea = {
 }
 ```
 
-エリア名は明示的な方角を使い、ディスプレイの向きによって意味は変わりません。横方向の領域は `Left`/`Right`、縦方向の領域は `Top`/`Bottom`、中央寄せの分割領域は `HorizontalCenter`/`VerticalCenter` を使います。固定サイズの中央配置は `<width>x<height>Center` で指定します。例: `["1920x1080Center"] = "M"`。ディスプレイより大きいサイズはディスプレイの frame に収まるように上限調整されます。キーは1〜2文字で、同じディスプレイのキーマップ内で重複または prefix 衝突してはいけません。
+| エリア | 位置 | サイズ |
+| --- | --- | --- |
+| `full` | ディスプレイ全体 | ディスプレイ全体 |
+| `halfLeft` | 左端 | 横幅 1/2、高さ全体 |
+| `halfHorizontalCenter` | 横方向中央 | 横幅 1/2、高さ全体 |
+| `halfRight` | 右端 | 横幅 1/2、高さ全体 |
+| `halfTop` | 上端 | 横幅全体、高さ 1/2 |
+| `halfVerticalCenter` | 縦方向中央 | 横幅全体、高さ 1/2 |
+| `halfBottom` | 下端 | 横幅全体、高さ 1/2 |
+| `thirdLeft` | 左端 | 横幅 1/3、高さ全体 |
+| `thirdHorizontalCenter` | 横方向中央 | 横幅 1/3、高さ全体 |
+| `thirdRight` | 右端 | 横幅 1/3、高さ全体 |
+| `thirdTop` | 上端 | 横幅全体、高さ 1/3 |
+| `thirdVerticalCenter` | 縦方向中央 | 横幅全体、高さ 1/3 |
+| `thirdBottom` | 下端 | 横幅全体、高さ 1/3 |
+| `twoThirdsHorizontalCenter` | 横方向中央 | 横幅 2/3、高さ全体 |
+| `twoThirdsVerticalCenter` | 縦方向中央 | 横幅全体、高さ 2/3 |
+| `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイの frame に収まるように上限調整 |
+
+エリア名は明示的な方角を使い、ディスプレイの向きによって意味は変わりません。キーは1〜2文字で、同じディスプレイのキーマップ内で重複または prefix 衝突してはいけません。
 
 ## 開発
 
