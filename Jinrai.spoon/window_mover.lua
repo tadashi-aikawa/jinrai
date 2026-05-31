@@ -239,6 +239,30 @@ local function frameKey(frame)
 	return table.concat({ frame.x, frame.y, frame.w, frame.h }, ":")
 end
 
+local function frameEquals(a, b)
+	return validFrame(a)
+		and validFrame(b)
+		and a.x == b.x
+		and a.y == b.y
+		and a.w == b.w
+		and a.h == b.h
+end
+
+local function windowIdentity(win)
+	if not win then
+		return nil
+	end
+	if win.id then
+		local ok, id = pcall(function()
+			return win:id()
+		end)
+		if ok and id ~= nil then
+			return id
+		end
+	end
+	return tostring(win)
+end
+
 local function markUniqueFrame(seen, frame)
 	local cloned = cloneFrame(frame)
 	if not cloned then
@@ -362,6 +386,7 @@ function M.new(options)
 	local areaKeyBlocker = nil
 	local areaMouseClickWatcher = nil
 	local areaChooserShowing = false
+	local cycleStateByPosition = {}
 
 	local function selectedAreaState(active)
 		local states = config.selectedAreaAppearance.state
@@ -1395,6 +1420,101 @@ button:active {
 		activateWindow(win)
 	end
 
+	local function minimizeWindow()
+		if not hs or not hs.window or not hs.window.focusedWindow then
+			return
+		end
+		local win = hs.window.focusedWindow()
+		if not win or not win.minimize then
+			return
+		end
+		win:minimize()
+	end
+
+	local function maximizeWindow()
+		if not hs or not hs.window or not hs.window.focusedWindow then
+			return
+		end
+		local win = hs.window.focusedWindow()
+		if not win then
+			return
+		end
+		local screen = screenOf(win)
+		if not screen or not screen.frame or not win.setFrame then
+			return
+		end
+		local targetFrame = cloneFrame(screen:frame())
+		if not targetFrame then
+			return
+		end
+		win:setFrame(targetFrame, 0)
+		activateWindow(win)
+	end
+
+	local function cycleFrameForPosition(screenFrame, position, ratio)
+		local width = screenFrame.w * ratio
+		local x = screenFrame.x
+		if position == "center" then
+			x = screenFrame.x + ((screenFrame.w - width) / 2)
+		elseif position == "right" then
+			x = screenFrame.x + screenFrame.w - width
+		end
+		return {
+			x = x,
+			y = screenFrame.y,
+			w = width,
+			h = screenFrame.h,
+		}
+	end
+
+	local function cycleWindow(position)
+		if not hs or not hs.window or not hs.window.focusedWindow then
+			return
+		end
+		local win = hs.window.focusedWindow()
+		if not win or not win.setFrame then
+			return
+		end
+		local screen = screenOf(win)
+		if not screen or not screen.frame then
+			return
+		end
+		local screenFrame = cloneFrame(screen:frame())
+		local currentFrame = cloneFrame(frameOf(win))
+		if not screenFrame or not currentFrame then
+			return
+		end
+
+		local ratios = { 1 / 2, 2 / 3, 1 / 3 }
+		local identity = windowIdentity(win)
+		local previous = cycleStateByPosition[position]
+		local nextIndex = 1
+		if previous and previous.windowIdentity == identity and frameEquals(currentFrame, previous.frame) then
+			nextIndex = (previous.index % #ratios) + 1
+		end
+
+		local targetFrame = cycleFrameForPosition(screenFrame, position, ratios[nextIndex])
+		win:setFrame(targetFrame, 0)
+		cycleStateByPosition[position] = {
+			windowIdentity = identity,
+			index = nextIndex,
+			frame = cloneFrame(targetFrame),
+		}
+		activateWindow(win)
+	end
+
+	local function cycleLeft()
+		cycleWindow("left")
+	end
+
+	local function cycleCenter()
+		cycleWindow("center")
+	end
+
+	local function cycleRight()
+		cycleWindow("right")
+	end
+
 	local function screenInfos()
 		if not hs or not hs.screen or not hs.screen.allScreens then
 			return {}
@@ -1425,6 +1545,11 @@ button:active {
 		moveToActiveDisplayFreeArea
 	)
 	bindHotkey(config.moveToSelectedAreaHotkeyModifiers, config.moveToSelectedAreaHotkeyKey, moveToSelectedArea)
+	bindHotkey(config.minimizeWindowHotkeyModifiers, config.minimizeWindowHotkeyKey, minimizeWindow)
+	bindHotkey(config.maximizeWindowHotkeyModifiers, config.maximizeWindowHotkeyKey, maximizeWindow)
+	bindHotkey(config.cycleLeftHotkeyModifiers, config.cycleLeftHotkeyKey, cycleLeft)
+	bindHotkey(config.cycleCenterHotkeyModifiers, config.cycleCenterHotkeyKey, cycleCenter)
+	bindHotkey(config.cycleRightHotkeyModifiers, config.cycleRightHotkeyKey, cycleRight)
 
 	local function teardown()
 		closeAreaChooser(true)
@@ -1438,6 +1563,11 @@ button:active {
 		moveToNextDisplay = moveToNextDisplay,
 		moveToActiveDisplayFreeArea = moveToActiveDisplayFreeArea,
 		moveToSelectedArea = moveToSelectedArea,
+		minimizeWindow = minimizeWindow,
+		maximizeWindow = maximizeWindow,
+		cycleLeft = cycleLeft,
+		cycleCenter = cycleCenter,
+		cycleRight = cycleRight,
 		screenInfos = screenInfos,
 		teardown = teardown,
 	}

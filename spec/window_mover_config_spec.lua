@@ -26,6 +26,36 @@ describe("window_mover_config", function()
 						key = "f18",
 					},
 				},
+				minimizeWindow = {
+					hotkey = {
+						modifiers = { "cmd" },
+						key = "m",
+					},
+				},
+				maximizeWindow = {
+					hotkey = {
+						modifiers = { "cmd" },
+						key = "f",
+					},
+				},
+				cycleLeft = {
+					hotkey = {
+						modifiers = { "ctrl", "alt" },
+						key = "h",
+					},
+				},
+				cycleCenter = {
+					hotkey = {
+						modifiers = { "ctrl", "alt" },
+						key = "j",
+					},
+				},
+				cycleRight = {
+					hotkey = {
+						modifiers = { "ctrl", "alt" },
+						key = "l",
+					},
+				},
 			},
 			behavior = {
 				cursor = {
@@ -80,6 +110,16 @@ describe("window_mover_config", function()
 		assert.are.equal("f19", built.moveToActiveDisplayFreeAreaHotkeyKey)
 		assert.are.same({ "cmd", "alt" }, built.moveToSelectedAreaHotkeyModifiers)
 		assert.are.equal("f18", built.moveToSelectedAreaHotkeyKey)
+		assert.are.same({ "cmd" }, built.minimizeWindowHotkeyModifiers)
+		assert.are.equal("m", built.minimizeWindowHotkeyKey)
+		assert.are.same({ "cmd" }, built.maximizeWindowHotkeyModifiers)
+		assert.are.equal("f", built.maximizeWindowHotkeyKey)
+		assert.are.same({ "ctrl", "alt" }, built.cycleLeftHotkeyModifiers)
+		assert.are.equal("h", built.cycleLeftHotkeyKey)
+		assert.are.same({ "ctrl", "alt" }, built.cycleCenterHotkeyModifiers)
+		assert.are.equal("j", built.cycleCenterHotkeyKey)
+		assert.are.same({ "ctrl", "alt" }, built.cycleRightHotkeyModifiers)
+		assert.are.equal("l", built.cycleRightHotkeyKey)
 		assert.is_false(built.centerCursor)
 		assert.are.equal("uuid-a", built.selectedAreaDefault)
 		assert.are.same({
@@ -119,6 +159,16 @@ describe("window_mover_config", function()
 		assert.are.equal(nil, built.moveToActiveDisplayFreeAreaHotkeyKey)
 		assert.are.equal(nil, built.moveToSelectedAreaHotkeyModifiers)
 		assert.are.equal(nil, built.moveToSelectedAreaHotkeyKey)
+		assert.are.equal(nil, built.minimizeWindowHotkeyModifiers)
+		assert.are.equal(nil, built.minimizeWindowHotkeyKey)
+		assert.are.equal(nil, built.maximizeWindowHotkeyModifiers)
+		assert.are.equal(nil, built.maximizeWindowHotkeyKey)
+		assert.are.equal(nil, built.cycleLeftHotkeyModifiers)
+		assert.are.equal(nil, built.cycleLeftHotkeyKey)
+		assert.are.equal(nil, built.cycleCenterHotkeyModifiers)
+		assert.are.equal(nil, built.cycleCenterHotkeyKey)
+		assert.are.equal(nil, built.cycleRightHotkeyModifiers)
+		assert.are.equal(nil, built.cycleRightHotkeyKey)
 		assert.is_true(built.centerCursor)
 		assert.is_nil(built.selectedAreaDefault)
 		assert.are.same({}, built.selectedAreaScreens)

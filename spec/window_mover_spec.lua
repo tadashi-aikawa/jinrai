@@ -44,6 +44,7 @@ describe("window_mover", function()
 			setFrameCalls = {},
 			moveToScreenCalls = {},
 			maximizeCalls = {},
+			minimizeCalls = 0,
 			raiseCalls = 0,
 			focusCalls = 0,
 		}
@@ -68,6 +69,9 @@ describe("window_mover", function()
 		end
 		function win:maximize(duration)
 			table.insert(self.maximizeCalls, duration)
+		end
+		function win:minimize()
+			self.minimizeCalls = self.minimizeCalls + 1
 		end
 		function win:raise()
 			self.raiseCalls = self.raiseCalls + 1
@@ -397,6 +401,98 @@ describe("window_mover", function()
 		instance.moveToActiveDisplayFreeArea()
 
 		assert.are.same({ x = 300, y = 0, w = 700, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("新しい直接実行コマンドのホットキーを登録して解放する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
+		local win = newWindow(screen)
+		local state, instance = newWindowMoverWithMock({
+			commands = {
+				minimizeWindow = { hotkey = { modifiers = { "cmd" }, key = "m" } },
+				maximizeWindow = { hotkey = { modifiers = { "cmd" }, key = "f" } },
+				cycleLeft = { hotkey = { modifiers = { "ctrl", "alt" }, key = "h" } },
+				cycleCenter = { hotkey = { modifiers = { "ctrl", "alt" }, key = "j" } },
+				cycleRight = { hotkey = { modifiers = { "ctrl", "alt" }, key = "l" } },
+			},
+		}, win, { win })
+
+		assert.are.equal(5, #state.hotkeys)
+		assert.are.same({ "m", "f", "h", "j", "l" }, {
+			state.hotkeys[1].key,
+			state.hotkeys[2].key,
+			state.hotkeys[3].key,
+			state.hotkeys[4].key,
+			state.hotkeys[5].key,
+		})
+
+		instance.teardown()
+
+		for _, hotkey in ipairs(state.hotkeys) do
+			assert.is_true(hotkey.deleted)
+		end
+	end)
+
+	it("フォーカスウィンドウを最小化する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
+		local win = newWindow(screen)
+		local _, instance = newWindowMoverWithMock({}, win, { win })
+
+		instance.minimizeWindow()
+
+		assert.are.equal(1, win.minimizeCalls)
+		assert.are.equal(0, win.raiseCalls)
+		assert.are.equal(0, win.focusCalls)
+	end)
+
+	it("フォーカスウィンドウを現在ディスプレイの full frame へ移動する", function()
+		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 800 })
+		local win = newWindow(screen, { x = 100, y = 100, w = 500, h = 300 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.maximizeWindow()
+
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 800 }, win.setFrameCalls[1].frame)
+		assert.are.equal(0, win.setFrameCalls[1].duration)
+		assert.are.equal(0, #win.maximizeCalls)
+		assert.are.equal(1, win.raiseCalls)
+		assert.are.equal(1, win.focusCalls)
+	end)
+
+	it("左中央右の cycle は 1/2、2/3、1/3 の順でサイズを切り替える", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.cycleLeft()
+		instance.cycleLeft()
+		instance.cycleLeft()
+		instance.cycleLeft()
+		instance.cycleCenter()
+		instance.cycleCenter()
+		instance.cycleRight()
+		instance.cycleRight()
+
+		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 0, y = 0, w = 800, h = 900 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 0, y = 0, w = 400, h = 900 }, win.setFrameCalls[3].frame)
+		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[4].frame)
+		assert.are.same({ x = 300, y = 0, w = 600, h = 900 }, win.setFrameCalls[5].frame)
+		assert.are.same({ x = 200, y = 0, w = 800, h = 900 }, win.setFrameCalls[6].frame)
+		assert.are.same({ x = 600, y = 0, w = 600, h = 900 }, win.setFrameCalls[7].frame)
+		assert.are.same({ x = 400, y = 0, w = 800, h = 900 }, win.setFrameCalls[8].frame)
+	end)
+
+	it("cycle は手動リサイズ後に 1/2 から再開する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.cycleLeft()
+		instance.cycleLeft()
+		win._frame = { x = 20, y = 30, w = 700, h = 500 }
+		instance.cycleLeft()
+
+		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[3].frame)
 	end)
 
 	it("UUID一致ディスプレイは設定キーマップで候補表示される", function()
