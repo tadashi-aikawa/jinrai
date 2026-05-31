@@ -36,7 +36,7 @@
     - アクティブウィンドウを次のディスプレイへ移動し、移動先で最大化する
     - アクティブウィンドウをアクティブディスプレイ上の最大空き領域へ移動・リサイズする
     - アクティブウィンドウの最小化と最大化をホットキーで実行する
-    - 左端・中央・右端へ移動し、実行のたびに横幅を 1/2・2/3・1/3 で切り替える
+    - 左端・中央・右端へ移動し、実行のたびに横幅を 1/2・1/3・2/3 で切り替える
     - キーヒントで設定済みエリアを選択し、アクティブウィンドウをそこへ移動する
 
 ## デモ動画
@@ -621,13 +621,31 @@ window_mover = {
         key = nil,       -- ホットキー（nil で無効化）
       },
     },
-    cycleCenter = {
+    cycleHorizontalCenter = {
       hotkey = {
         modifiers = nil, -- ホットキー修飾キー（nil で無効化）
         key = nil,       -- ホットキー（nil で無効化）
       },
     },
     cycleRight = {
+      hotkey = {
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
+      },
+    },
+    cycleTop = {
+      hotkey = {
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
+      },
+    },
+    cycleVerticalCenter = {
+      hotkey = {
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
+      },
+    },
+    cycleBottom = {
       hotkey = {
         modifiers = nil, -- ホットキー修飾キー（nil で無効化）
         key = nil,       -- ホットキー（nil で無効化）
@@ -688,7 +706,7 @@ window_mover = {
 
 `moveToNextDisplay` の移動先は現在のディスプレイの `screen:next()` です。`moveToActiveDisplayFreeArea` は現在のディスプレイの `frame()` 内で、他の可視ウィンドウと重ならない最大の矩形を選びます。同面積の場合は現在のアクティブウィンドウに近い領域を優先します。ちらつきを抑えるため、移動先 frame を `setFrame(..., 0)` で一度だけ反映します。
 
-`minimizeWindow` はアクティブウィンドウを最小化します。`maximizeWindow` は macOS のフルスクリーン化ではなく、現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。`cycleLeft` / `cycleCenter` / `cycleRight` は現在ディスプレイの左端・中央・右端へ移動し、同じウィンドウに連続実行するたびに横幅を `1/2` → `2/3` → `1/3` → `1/2` の順に切り替えます。
+`minimizeWindow` はアクティブウィンドウを最小化します。`maximizeWindow` は macOS のフルスクリーン化ではなく、現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。`cycleLeft` / `cycleHorizontalCenter` / `cycleRight` は現在ディスプレイの左端・横方向中央・右端へ移動し、同じウィンドウに連続実行するたびに横幅を `1/2` → `1/3` → `2/3` → `1/2` の順に切り替えます。`cycleTop` / `cycleVerticalCenter` / `cycleBottom` は上端・縦方向中央・下端へ移動し、同じ順序で高さを切り替えます。
 
 `moveToSelectedArea` はディスプレイ UUID ごとに設定された候補だけを表示します。UUID は Hammerspoon Console で `hs.inspect(jinrai.window_mover.screenInfos())` を実行して確認できます。未設定ディスプレイは `selectedArea.defaultScreen` があればそのキーマップを流用し、なければそのディスプレイ上に選択可能な UUID と設定テンプレートを表示します。defaultScreen のキーマップが既に表示中の候補と衝突する場合も、未設定ディスプレイ側は UUID テンプレート表示に切り替えます。表示中は `escape`、候補外クリック、または同じホットキーで閉じます。候補クリックでは移動しません。
 

@@ -239,13 +239,17 @@ local function frameKey(frame)
 	return table.concat({ frame.x, frame.y, frame.w, frame.h }, ":")
 end
 
+local function nearlyEqual(a, b)
+	return math.abs(a - b) <= 1
+end
+
 local function frameEquals(a, b)
 	return validFrame(a)
 		and validFrame(b)
-		and a.x == b.x
-		and a.y == b.y
-		and a.w == b.w
-		and a.h == b.h
+		and nearlyEqual(a.x, b.x)
+		and nearlyEqual(a.y, b.y)
+		and nearlyEqual(a.w, b.w)
+		and nearlyEqual(a.h, b.h)
 end
 
 local function windowIdentity(win)
@@ -1453,7 +1457,23 @@ button:active {
 		activateWindow(win)
 	end
 
-	local function cycleFrameForPosition(screenFrame, position, ratio)
+	local function cycleFrameForPosition(screenFrame, direction, position, ratio)
+		if direction == "vertical" then
+			local height = screenFrame.h * ratio
+			local y = screenFrame.y
+			if position == "verticalCenter" then
+				y = screenFrame.y + ((screenFrame.h - height) / 2)
+			elseif position == "bottom" then
+				y = screenFrame.y + screenFrame.h - height
+			end
+			return {
+				x = screenFrame.x,
+				y = y,
+				w = screenFrame.w,
+				h = height,
+			}
+		end
+
 		local width = screenFrame.w * ratio
 		local x = screenFrame.x
 		if position == "center" then
@@ -1469,7 +1489,7 @@ button:active {
 		}
 	end
 
-	local function cycleWindow(position)
+	local function cycleWindow(direction, position)
 		if not hs or not hs.window or not hs.window.focusedWindow then
 			return
 		end
@@ -1487,7 +1507,7 @@ button:active {
 			return
 		end
 
-		local ratios = { 1 / 2, 2 / 3, 1 / 3 }
+		local ratios = { 1 / 2, 1 / 3, 2 / 3 }
 		local identity = windowIdentity(win)
 		local previous = cycleStateByPosition[position]
 		local nextIndex = 1
@@ -1495,7 +1515,7 @@ button:active {
 			nextIndex = (previous.index % #ratios) + 1
 		end
 
-		local targetFrame = cycleFrameForPosition(screenFrame, position, ratios[nextIndex])
+		local targetFrame = cycleFrameForPosition(screenFrame, direction, position, ratios[nextIndex])
 		win:setFrame(targetFrame, 0)
 		cycleStateByPosition[position] = {
 			windowIdentity = identity,
@@ -1506,15 +1526,27 @@ button:active {
 	end
 
 	local function cycleLeft()
-		cycleWindow("left")
+		cycleWindow("horizontal", "left")
 	end
 
-	local function cycleCenter()
-		cycleWindow("center")
+	local function cycleHorizontalCenter()
+		cycleWindow("horizontal", "center")
 	end
 
 	local function cycleRight()
-		cycleWindow("right")
+		cycleWindow("horizontal", "right")
+	end
+
+	local function cycleTop()
+		cycleWindow("vertical", "top")
+	end
+
+	local function cycleVerticalCenter()
+		cycleWindow("vertical", "verticalCenter")
+	end
+
+	local function cycleBottom()
+		cycleWindow("vertical", "bottom")
 	end
 
 	local function screenInfos()
@@ -1550,8 +1582,11 @@ button:active {
 	bindHotkey(config.minimizeWindowHotkeyModifiers, config.minimizeWindowHotkeyKey, minimizeWindow)
 	bindHotkey(config.maximizeWindowHotkeyModifiers, config.maximizeWindowHotkeyKey, maximizeWindow)
 	bindHotkey(config.cycleLeftHotkeyModifiers, config.cycleLeftHotkeyKey, cycleLeft)
-	bindHotkey(config.cycleCenterHotkeyModifiers, config.cycleCenterHotkeyKey, cycleCenter)
+	bindHotkey(config.cycleHorizontalCenterHotkeyModifiers, config.cycleHorizontalCenterHotkeyKey, cycleHorizontalCenter)
 	bindHotkey(config.cycleRightHotkeyModifiers, config.cycleRightHotkeyKey, cycleRight)
+	bindHotkey(config.cycleTopHotkeyModifiers, config.cycleTopHotkeyKey, cycleTop)
+	bindHotkey(config.cycleVerticalCenterHotkeyModifiers, config.cycleVerticalCenterHotkeyKey, cycleVerticalCenter)
+	bindHotkey(config.cycleBottomHotkeyModifiers, config.cycleBottomHotkeyKey, cycleBottom)
 
 	local function teardown()
 		closeAreaChooser(true)
@@ -1568,8 +1603,11 @@ button:active {
 		minimizeWindow = minimizeWindow,
 		maximizeWindow = maximizeWindow,
 		cycleLeft = cycleLeft,
-		cycleCenter = cycleCenter,
+		cycleHorizontalCenter = cycleHorizontalCenter,
 		cycleRight = cycleRight,
+		cycleTop = cycleTop,
+		cycleVerticalCenter = cycleVerticalCenter,
+		cycleBottom = cycleBottom,
 		screenInfos = screenInfos,
 		teardown = teardown,
 	}

@@ -56,13 +56,31 @@ local DEFAULT_CONFIG = {
 				key = nil,
 			},
 		},
-		cycleCenter = {
+		cycleHorizontalCenter = {
 			hotkey = {
 				modifiers = nil,
 				key = nil,
 			},
 		},
 		cycleRight = {
+			hotkey = {
+				modifiers = nil,
+				key = nil,
+			},
+		},
+		cycleTop = {
+			hotkey = {
+				modifiers = nil,
+				key = nil,
+			},
+		},
+		cycleVerticalCenter = {
+			hotkey = {
+				modifiers = nil,
+				key = nil,
+			},
+		},
+		cycleBottom = {
 			hotkey = {
 				modifiers = nil,
 				key = nil,
@@ -303,10 +321,16 @@ function M.build(options)
 		maximizeWindowHotkeyKey = merged.commands.maximizeWindow.hotkey.key,
 		cycleLeftHotkeyModifiers = merged.commands.cycleLeft.hotkey.modifiers,
 		cycleLeftHotkeyKey = merged.commands.cycleLeft.hotkey.key,
-		cycleCenterHotkeyModifiers = merged.commands.cycleCenter.hotkey.modifiers,
-		cycleCenterHotkeyKey = merged.commands.cycleCenter.hotkey.key,
+		cycleHorizontalCenterHotkeyModifiers = merged.commands.cycleHorizontalCenter.hotkey.modifiers,
+		cycleHorizontalCenterHotkeyKey = merged.commands.cycleHorizontalCenter.hotkey.key,
 		cycleRightHotkeyModifiers = merged.commands.cycleRight.hotkey.modifiers,
 		cycleRightHotkeyKey = merged.commands.cycleRight.hotkey.key,
+		cycleTopHotkeyModifiers = merged.commands.cycleTop.hotkey.modifiers,
+		cycleTopHotkeyKey = merged.commands.cycleTop.hotkey.key,
+		cycleVerticalCenterHotkeyModifiers = merged.commands.cycleVerticalCenter.hotkey.modifiers,
+		cycleVerticalCenterHotkeyKey = merged.commands.cycleVerticalCenter.hotkey.key,
+		cycleBottomHotkeyModifiers = merged.commands.cycleBottom.hotkey.modifiers,
+		cycleBottomHotkeyKey = merged.commands.cycleBottom.hotkey.key,
 		centerCursor = merged.behavior.cursor.afterMove,
 		selectedAreaDefault = selectedAreaDefault,
 		selectedAreaScreens = selectedAreaScreens,

@@ -362,6 +362,15 @@ describe("window_mover", function()
 		return b.y + b.h + gap <= a.y
 	end
 
+	local function roundedFrame(frame)
+		return {
+			x = math.floor(frame.x + 0.5),
+			y = math.floor(frame.y + 0.5),
+			w = math.floor(frame.w + 0.5),
+			h = math.floor(frame.h + 0.5),
+		}
+	end
+
 	local function selectedAreaOptions(screens, defaultUuid, selectedAreaOverrides)
 		selectedAreaOverrides = selectedAreaOverrides or {}
 		return {
@@ -413,18 +422,24 @@ describe("window_mover", function()
 				minimizeWindow = { hotkey = { modifiers = { "cmd" }, key = "m" } },
 				maximizeWindow = { hotkey = { modifiers = { "cmd" }, key = "f" } },
 				cycleLeft = { hotkey = { modifiers = { "ctrl", "alt" }, key = "h" } },
-				cycleCenter = { hotkey = { modifiers = { "ctrl", "alt" }, key = "j" } },
+				cycleHorizontalCenter = { hotkey = { modifiers = { "ctrl", "alt" }, key = "j" } },
 				cycleRight = { hotkey = { modifiers = { "ctrl", "alt" }, key = "l" } },
+				cycleTop = { hotkey = { modifiers = { "ctrl", "alt" }, key = "k" } },
+				cycleVerticalCenter = { hotkey = { modifiers = { "ctrl", "alt" }, key = "i" } },
+				cycleBottom = { hotkey = { modifiers = { "ctrl", "alt" }, key = "n" } },
 			},
 		}, win, { win })
 
-		assert.are.equal(5, #state.hotkeys)
-		assert.are.same({ "m", "f", "h", "j", "l" }, {
+		assert.are.equal(8, #state.hotkeys)
+		assert.are.same({ "m", "f", "h", "j", "l", "k", "i", "n" }, {
 			state.hotkeys[1].key,
 			state.hotkeys[2].key,
 			state.hotkeys[3].key,
 			state.hotkeys[4].key,
 			state.hotkeys[5].key,
+			state.hotkeys[6].key,
+			state.hotkeys[7].key,
+			state.hotkeys[8].key,
 		})
 
 		instance.teardown()
@@ -460,7 +475,7 @@ describe("window_mover", function()
 		assert.are.equal(1, win.focusCalls)
 	end)
 
-	it("左中央右の cycle は 1/2、2/3、1/3 の順でサイズを切り替える", function()
+	it("横方向の cycle は 1/2、1/3、2/3 の順で幅を切り替える", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
 		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
 		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
@@ -469,19 +484,47 @@ describe("window_mover", function()
 		instance.cycleLeft()
 		instance.cycleLeft()
 		instance.cycleLeft()
-		instance.cycleCenter()
-		instance.cycleCenter()
+		instance.cycleHorizontalCenter()
+		instance.cycleHorizontalCenter()
 		instance.cycleRight()
 		instance.cycleRight()
 
 		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[1].frame)
-		assert.are.same({ x = 0, y = 0, w = 800, h = 900 }, win.setFrameCalls[2].frame)
-		assert.are.same({ x = 0, y = 0, w = 400, h = 900 }, win.setFrameCalls[3].frame)
+		assert.are.same({ x = 0, y = 0, w = 400, h = 900 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 0, y = 0, w = 800, h = 900 }, win.setFrameCalls[3].frame)
 		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[4].frame)
 		assert.are.same({ x = 300, y = 0, w = 600, h = 900 }, win.setFrameCalls[5].frame)
-		assert.are.same({ x = 200, y = 0, w = 800, h = 900 }, win.setFrameCalls[6].frame)
+		assert.are.same({ x = 400, y = 0, w = 400, h = 900 }, win.setFrameCalls[6].frame)
 		assert.are.same({ x = 600, y = 0, w = 600, h = 900 }, win.setFrameCalls[7].frame)
-		assert.are.same({ x = 400, y = 0, w = 800, h = 900 }, win.setFrameCalls[8].frame)
+		assert.are.same({ x = 800, y = 0, w = 400, h = 900 }, win.setFrameCalls[8].frame)
+	end)
+
+	it("縦方向の cycle は 1/2、1/3、2/3 の順で高さを切り替える", function()
+		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.cycleTop()
+		instance.cycleTop()
+		instance.cycleTop()
+		instance.cycleTop()
+		instance.cycleVerticalCenter()
+		instance.cycleVerticalCenter()
+		instance.cycleVerticalCenter()
+		instance.cycleBottom()
+		instance.cycleBottom()
+		instance.cycleBottom()
+
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 450 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 300 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 600 }, win.setFrameCalls[3].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 450 }, win.setFrameCalls[4].frame)
+		assert.are.same({ x = 10, y = 245, w = 1200, h = 450 }, win.setFrameCalls[5].frame)
+		assert.are.same({ x = 10, y = 320, w = 1200, h = 300 }, win.setFrameCalls[6].frame)
+		assert.are.same({ x = 10, y = 170, w = 1200, h = 600 }, win.setFrameCalls[7].frame)
+		assert.are.same({ x = 10, y = 470, w = 1200, h = 450 }, win.setFrameCalls[8].frame)
+		assert.are.same({ x = 10, y = 620, w = 1200, h = 300 }, win.setFrameCalls[9].frame)
+		assert.are.same({ x = 10, y = 320, w = 1200, h = 600 }, win.setFrameCalls[10].frame)
 	end)
 
 	it("cycle は手動リサイズ後に 1/2 から再開する", function()
@@ -495,6 +538,42 @@ describe("window_mover", function()
 		instance.cycleLeft()
 
 		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[3].frame)
+	end)
+
+	it("縦方向の cycle は実際の window frame が整数丸めされても次の比率へ進む", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 1000 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		function win:setFrame(nextFrame, duration)
+			table.insert(self.setFrameCalls, { frame = nextFrame, duration = duration })
+			self._frame = roundedFrame(nextFrame)
+		end
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.cycleVerticalCenter()
+		instance.cycleVerticalCenter()
+		instance.cycleVerticalCenter()
+
+		assert.are.same({ x = 0, y = 250, w = 1200, h = 500 }, roundedFrame(win.setFrameCalls[1].frame))
+		assert.are.same({ x = 0, y = 333, w = 1200, h = 333 }, roundedFrame(win.setFrameCalls[2].frame))
+		assert.are.same({ x = 0, y = 167, w = 1200, h = 667 }, roundedFrame(win.setFrameCalls[3].frame))
+	end)
+
+	it("横方向の cycle は実際の window frame が整数丸めされても次の比率へ進む", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 900 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		function win:setFrame(nextFrame, duration)
+			table.insert(self.setFrameCalls, { frame = nextFrame, duration = duration })
+			self._frame = roundedFrame(nextFrame)
+		end
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.cycleHorizontalCenter()
+		instance.cycleHorizontalCenter()
+		instance.cycleHorizontalCenter()
+
+		assert.are.same({ x = 250, y = 0, w = 500, h = 900 }, roundedFrame(win.setFrameCalls[1].frame))
+		assert.are.same({ x = 333, y = 0, w = 333, h = 900 }, roundedFrame(win.setFrameCalls[2].frame))
+		assert.are.same({ x = 167, y = 0, w = 667, h = 900 }, roundedFrame(win.setFrameCalls[3].frame))
 	end)
 
 	it("UUID一致ディスプレイは設定キーマップで候補表示される", function()

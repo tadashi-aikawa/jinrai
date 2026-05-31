@@ -36,7 +36,7 @@
     - Move the active window to the next display and maximize it there
     - Move and resize the active window to the largest free area on the active display
     - Minimize or maximize the active window with hotkeys
-    - Move the active window to the left edge, center, or right edge while cycling its width through 1/2, 2/3, and 1/3
+    - Move the active window to the left edge, center, or right edge while cycling its width through 1/2, 1/3, and 2/3
     - Select a configured display area with key hints and move the active window there
 
 ## Demo Video
@@ -618,13 +618,31 @@ window_mover = {
         key = nil,       -- Hotkey (nil to disable)
       },
     },
-    cycleCenter = {
+    cycleHorizontalCenter = {
       hotkey = {
         modifiers = nil, -- Hotkey modifiers (nil to disable)
         key = nil,       -- Hotkey (nil to disable)
       },
     },
     cycleRight = {
+      hotkey = {
+        modifiers = nil, -- Hotkey modifiers (nil to disable)
+        key = nil,       -- Hotkey (nil to disable)
+      },
+    },
+    cycleTop = {
+      hotkey = {
+        modifiers = nil, -- Hotkey modifiers (nil to disable)
+        key = nil,       -- Hotkey (nil to disable)
+      },
+    },
+    cycleVerticalCenter = {
+      hotkey = {
+        modifiers = nil, -- Hotkey modifiers (nil to disable)
+        key = nil,       -- Hotkey (nil to disable)
+      },
+    },
+    cycleBottom = {
       hotkey = {
         modifiers = nil, -- Hotkey modifiers (nil to disable)
         key = nil,       -- Hotkey (nil to disable)
@@ -685,7 +703,7 @@ window_mover = {
 
 `moveToNextDisplay` targets `screen:next()` from the current display. `moveToActiveDisplayFreeArea` targets the largest rectangle inside the current display's `frame()` that does not overlap other visible windows; ties prefer the area closest to the current active window. To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
 
-`minimizeWindow` minimizes the active window. `maximizeWindow` does not use macOS fullscreen; it moves and resizes the active window to the current display's `frame()`. `cycleLeft` / `cycleCenter` / `cycleRight` move the active window to the left edge, center, or right edge of the current display and cycle the width through `1/2` → `2/3` → `1/3` → `1/2` when repeated on the same window.
+`minimizeWindow` minimizes the active window. `maximizeWindow` does not use macOS fullscreen; it moves and resizes the active window to the current display's `frame()`. `cycleLeft` / `cycleHorizontalCenter` / `cycleRight` move the active window to the left edge, horizontal center, or right edge of the current display and cycle the width through `1/2` → `1/3` → `2/3` → `1/2` when repeated on the same window. `cycleTop` / `cycleVerticalCenter` / `cycleBottom` move the active window to the top edge, vertical center, or bottom edge and cycle the height in the same order.
 
 `moveToSelectedArea` shows only the area hints configured for each screen UUID. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`. Unconfigured displays reuse `selectedArea.defaultScreen` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the defaultScreen keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
 
