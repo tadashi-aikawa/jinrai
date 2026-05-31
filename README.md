@@ -691,6 +691,10 @@ window_mover = {
           color = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.92 },
           dimmedColor = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.22 },
         },
+        quarter = {
+          color = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.92 },
+          dimmedColor = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.22 },
+        },
         twoThirds = {
           color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
           dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
@@ -746,6 +750,14 @@ selectedArea = {
       thirdLeft = "J",
       thirdHorizontalCenter = "K",
       thirdRight = "L",
+      quarterLeft = "1",
+      quarterHorizontalLeftCenter = "2",
+      quarterHorizontalRightCenter = "3",
+      quarterRight = "4",
+      quarterTop = "5",
+      quarterVerticalTopCenter = "6",
+      quarterVerticalBottomCenter = "7",
+      quarterBottom = "8",
       twoThirdsHorizontalCenter = "R",
       ["1920x1080Center"] = "M",
     },
@@ -768,6 +780,14 @@ selectedArea = {
 | `thirdTop` | Top edge | Full width, 1/3 height |
 | `thirdVerticalCenter` | Vertical center | Full width, 1/3 height |
 | `thirdBottom` | Bottom edge | Full width, 1/3 height |
+| `quarterLeft` | Left edge | 1/4 width, full height |
+| `quarterHorizontalLeftCenter` | Horizontal left-center | 1/4 width, full height |
+| `quarterHorizontalRightCenter` | Horizontal right-center | 1/4 width, full height |
+| `quarterRight` | Right edge | 1/4 width, full height |
+| `quarterTop` | Top edge | Full width, 1/4 height |
+| `quarterVerticalTopCenter` | Vertical top-center | Full width, 1/4 height |
+| `quarterVerticalBottomCenter` | Vertical bottom-center | Full width, 1/4 height |
+| `quarterBottom` | Bottom edge | Full width, 1/4 height |
 | `twoThirdsHorizontalCenter` | Horizontal center | 2/3 width, full height |
 | `twoThirdsVerticalCenter` | Vertical center | Full width, 2/3 height |
 | `<width>x<height>Center` | Display center | Fixed size, clamped to the display frame |

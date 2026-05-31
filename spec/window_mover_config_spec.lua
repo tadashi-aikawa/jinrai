@@ -97,6 +97,14 @@ describe("window_mover_config", function()
 						thirdTop = "l",
 						thirdVerticalCenter = "m",
 						thirdBottom = "z",
+						quarterLeft = "1",
+						quarterHorizontalLeftCenter = "2",
+						quarterHorizontalRightCenter = "3",
+						quarterRight = "4",
+						quarterTop = "5",
+						quarterVerticalTopCenter = "6",
+						quarterVerticalBottomCenter = "7",
+						quarterBottom = "8",
 						twoThirdsHorizontalCenter = "x",
 						twoThirdsVerticalCenter = "c",
 						["1920x1080Center"] = "v",
@@ -163,6 +171,14 @@ describe("window_mover_config", function()
 				thirdTop = "L",
 				thirdVerticalCenter = "M",
 				thirdBottom = "Z",
+				quarterLeft = "1",
+				quarterHorizontalLeftCenter = "2",
+				quarterHorizontalRightCenter = "3",
+				quarterRight = "4",
+				quarterTop = "5",
+				quarterVerticalTopCenter = "6",
+				quarterVerticalBottomCenter = "7",
+				quarterBottom = "8",
 				twoThirdsHorizontalCenter = "X",
 				twoThirdsVerticalCenter = "C",
 				["1920x1080Center"] = "V",
@@ -174,6 +190,7 @@ describe("window_mover_config", function()
 		assert.are.same({ red = 0.9, green = 0.8, blue = 0.7, alpha = 0.6 }, built.selectedAreaAppearance.state.normal.textColor)
 		assert.are.same({ red = 0.2, green = 0.4, blue = 0.6, alpha = 0.8 }, built.selectedAreaAppearance.styles.half.color)
 		assert.are.same({ red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 }, built.selectedAreaAppearance.styles.half.dimmedColor)
+		assert.are.same({ red = 0.34, green = 0.78, blue = 0.68, alpha = 0.92 }, built.selectedAreaAppearance.styles.quarter.color)
 	end)
 
 	it("未指定時はホットキーなし、カーソル移動あり、選択エリア候補なし", function()

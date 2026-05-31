@@ -717,6 +717,62 @@ describe("window_mover", function()
 		assert.are.same({ x = 10, y = 20, w = 1200, h = 900 }, win.setFrameCalls[1].frame)
 	end)
 
+	it("明示された横方向の quarter エリアへ移動する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				quarterLeft = "A",
+				quarterHorizontalLeftCenter = "S",
+				quarterHorizontalRightCenter = "D",
+				quarterRight = "F",
+			},
+		}), win, { win })
+		state.screens = { screen }
+
+		instance.moveToSelectedArea()
+		sendKey(state, "a")
+		instance.moveToSelectedArea()
+		sendKey(state, "s")
+		instance.moveToSelectedArea()
+		sendKey(state, "d")
+		instance.moveToSelectedArea()
+		sendKey(state, "f")
+
+		assert.are.same({ x = 0, y = 0, w = 300, h = 800 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 300, y = 0, w = 300, h = 800 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 600, y = 0, w = 300, h = 800 }, win.setFrameCalls[3].frame)
+		assert.are.same({ x = 900, y = 0, w = 300, h = 800 }, win.setFrameCalls[4].frame)
+	end)
+
+	it("明示された縦方向の quarter エリアへ移動する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				quarterTop = "A",
+				quarterVerticalTopCenter = "S",
+				quarterVerticalBottomCenter = "D",
+				quarterBottom = "F",
+			},
+		}), win, { win })
+		state.screens = { screen }
+
+		instance.moveToSelectedArea()
+		sendKey(state, "a")
+		instance.moveToSelectedArea()
+		sendKey(state, "s")
+		instance.moveToSelectedArea()
+		sendKey(state, "d")
+		instance.moveToSelectedArea()
+		sendKey(state, "f")
+
+		assert.are.same({ x = 0, y = 0, w = 1200, h = 200 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 0, y = 200, w = 1200, h = 200 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 0, y = 400, w = 1200, h = 200 }, win.setFrameCalls[3].frame)
+		assert.are.same({ x = 0, y = 600, w = 1200, h = 200 }, win.setFrameCalls[4].frame)
+	end)
+
 	it("selectedArea ヒントは横方向に重なる列だけ縦方向にずらす", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 2560, h = 1440 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
@@ -782,6 +838,14 @@ describe("window_mover", function()
 		assert.is_truthy(state.webviews[1]._html:match("thirdTop"))
 		assert.is_truthy(state.webviews[1]._html:match("thirdVerticalCenter"))
 		assert.is_truthy(state.webviews[1]._html:match("thirdBottom"))
+		assert.is_truthy(state.webviews[1]._html:match("quarterLeft"))
+		assert.is_truthy(state.webviews[1]._html:match("quarterHorizontalLeftCenter"))
+		assert.is_truthy(state.webviews[1]._html:match("quarterHorizontalRightCenter"))
+		assert.is_truthy(state.webviews[1]._html:match("quarterRight"))
+		assert.is_truthy(state.webviews[1]._html:match("quarterTop"))
+		assert.is_truthy(state.webviews[1]._html:match("quarterVerticalTopCenter"))
+		assert.is_truthy(state.webviews[1]._html:match("quarterVerticalBottomCenter"))
+		assert.is_truthy(state.webviews[1]._html:match("quarterBottom"))
 		assert.is_truthy(state.webviews[1]._html:match("twoThirdsHorizontalCenter"))
 		assert.is_truthy(state.webviews[1]._html:match("twoThirdsVerticalCenter"))
 		assert.is_true(state.eventtaps[1].started)

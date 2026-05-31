@@ -694,6 +694,10 @@ window_mover = {
           color = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.92 },
           dimmedColor = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.22 },
         },
+        quarter = {
+          color = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.92 },
+          dimmedColor = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.22 },
+        },
         twoThirds = {
           color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
           dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
@@ -749,6 +753,14 @@ selectedArea = {
       thirdLeft = "J",
       thirdHorizontalCenter = "K",
       thirdRight = "L",
+      quarterLeft = "1",
+      quarterHorizontalLeftCenter = "2",
+      quarterHorizontalRightCenter = "3",
+      quarterRight = "4",
+      quarterTop = "5",
+      quarterVerticalTopCenter = "6",
+      quarterVerticalBottomCenter = "7",
+      quarterBottom = "8",
       twoThirdsHorizontalCenter = "R",
       ["1920x1080Center"] = "M",
     },
@@ -771,6 +783,14 @@ selectedArea = {
 | `thirdTop` | 上端 | 横幅全体、高さ 1/3 |
 | `thirdVerticalCenter` | 縦方向中央 | 横幅全体、高さ 1/3 |
 | `thirdBottom` | 下端 | 横幅全体、高さ 1/3 |
+| `quarterLeft` | 左端 | 横幅 1/4、高さ全体 |
+| `quarterHorizontalLeftCenter` | 横方向左中央 | 横幅 1/4、高さ全体 |
+| `quarterHorizontalRightCenter` | 横方向右中央 | 横幅 1/4、高さ全体 |
+| `quarterRight` | 右端 | 横幅 1/4、高さ全体 |
+| `quarterTop` | 上端 | 横幅全体、高さ 1/4 |
+| `quarterVerticalTopCenter` | 縦方向上中央 | 横幅全体、高さ 1/4 |
+| `quarterVerticalBottomCenter` | 縦方向下中央 | 横幅全体、高さ 1/4 |
+| `quarterBottom` | 下端 | 横幅全体、高さ 1/4 |
 | `twoThirdsHorizontalCenter` | 横方向中央 | 横幅 2/3、高さ全体 |
 | `twoThirdsVerticalCenter` | 縦方向中央 | 横幅全体、高さ 2/3 |
 | `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイの frame に収まるように上限調整 |

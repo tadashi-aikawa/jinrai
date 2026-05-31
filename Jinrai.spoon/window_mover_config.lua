@@ -14,6 +14,14 @@ local AREA_KEYS = {
 	"thirdTop",
 	"thirdVerticalCenter",
 	"thirdBottom",
+	"quarterLeft",
+	"quarterHorizontalLeftCenter",
+	"quarterHorizontalRightCenter",
+	"quarterRight",
+	"quarterTop",
+	"quarterVerticalTopCenter",
+	"quarterVerticalBottomCenter",
+	"quarterBottom",
 	"twoThirdsHorizontalCenter",
 	"twoThirdsVerticalCenter",
 }
@@ -124,6 +132,10 @@ local DEFAULT_CONFIG = {
 				third = {
 					color = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.92 },
 					dimmedColor = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.22 },
+				},
+				quarter = {
+					color = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.92 },
+					dimmedColor = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.22 },
 				},
 				twoThirds = {
 					color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },

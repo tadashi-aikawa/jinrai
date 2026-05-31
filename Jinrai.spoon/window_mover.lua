@@ -40,6 +40,14 @@ local AREA_ORDER = {
 	"thirdTop",
 	"thirdVerticalCenter",
 	"thirdBottom",
+	"quarterLeft",
+	"quarterHorizontalLeftCenter",
+	"quarterHorizontalRightCenter",
+	"quarterRight",
+	"quarterTop",
+	"quarterVerticalTopCenter",
+	"quarterVerticalBottomCenter",
+	"quarterBottom",
 	"twoThirdsHorizontalCenter",
 	"twoThirdsVerticalCenter",
 }
@@ -565,6 +573,62 @@ function M.new(options)
 				w = screenFrame.w,
 				h = screenFrame.h / 3,
 			}, "third", { slots = 3, index = 3, axis = "vertical" }, key)
+		elseif areaName == "quarterLeft" then
+			addAreaCandidate(candidates, seenByScreen, screen, {
+				x = screenFrame.x,
+				y = screenFrame.y,
+				w = screenFrame.w / 4,
+				h = screenFrame.h,
+			}, "quarter", { slots = 4, index = 1, axis = "horizontal" }, key)
+		elseif areaName == "quarterHorizontalLeftCenter" then
+			addAreaCandidate(candidates, seenByScreen, screen, {
+				x = screenFrame.x + (screenFrame.w / 4),
+				y = screenFrame.y,
+				w = screenFrame.w / 4,
+				h = screenFrame.h,
+			}, "quarter", { slots = 4, index = 2, axis = "horizontal" }, key)
+		elseif areaName == "quarterHorizontalRightCenter" then
+			addAreaCandidate(candidates, seenByScreen, screen, {
+				x = screenFrame.x + (screenFrame.w / 2),
+				y = screenFrame.y,
+				w = screenFrame.w / 4,
+				h = screenFrame.h,
+			}, "quarter", { slots = 4, index = 3, axis = "horizontal" }, key)
+		elseif areaName == "quarterRight" then
+			addAreaCandidate(candidates, seenByScreen, screen, {
+				x = screenFrame.x + (screenFrame.w * 3 / 4),
+				y = screenFrame.y,
+				w = screenFrame.w / 4,
+				h = screenFrame.h,
+			}, "quarter", { slots = 4, index = 4, axis = "horizontal" }, key)
+		elseif areaName == "quarterTop" then
+			addAreaCandidate(candidates, seenByScreen, screen, {
+				x = screenFrame.x,
+				y = screenFrame.y,
+				w = screenFrame.w,
+				h = screenFrame.h / 4,
+			}, "quarter", { slots = 4, index = 1, axis = "vertical" }, key)
+		elseif areaName == "quarterVerticalTopCenter" then
+			addAreaCandidate(candidates, seenByScreen, screen, {
+				x = screenFrame.x,
+				y = screenFrame.y + (screenFrame.h / 4),
+				w = screenFrame.w,
+				h = screenFrame.h / 4,
+			}, "quarter", { slots = 4, index = 2, axis = "vertical" }, key)
+		elseif areaName == "quarterVerticalBottomCenter" then
+			addAreaCandidate(candidates, seenByScreen, screen, {
+				x = screenFrame.x,
+				y = screenFrame.y + (screenFrame.h / 2),
+				w = screenFrame.w,
+				h = screenFrame.h / 4,
+			}, "quarter", { slots = 4, index = 3, axis = "vertical" }, key)
+		elseif areaName == "quarterBottom" then
+			addAreaCandidate(candidates, seenByScreen, screen, {
+				x = screenFrame.x,
+				y = screenFrame.y + (screenFrame.h * 3 / 4),
+				w = screenFrame.w,
+				h = screenFrame.h / 4,
+			}, "quarter", { slots = 4, index = 4, axis = "vertical" }, key)
 		elseif areaName == "twoThirdsHorizontalCenter" then
 			addAreaCandidate(candidates, seenByScreen, screen, {
 				x = screenFrame.x + (screenFrame.w / 6),
@@ -926,6 +990,7 @@ function M.new(options)
 				full = -72,
 				half = -28,
 				third = 28,
+				quarter = 52,
 				free = 72,
 			}
 			labelY = ((frame.h - labelH) / 2) + (labelOffsetYByKind[candidate.kind] or 0)
@@ -1147,6 +1212,14 @@ function M.new(options)
 			'  thirdTop = "U",',
 			'  thirdVerticalCenter = "I",',
 			'  thirdBottom = "O",',
+			'  quarterLeft = "1",',
+			'  quarterHorizontalLeftCenter = "2",',
+			'  quarterHorizontalRightCenter = "3",',
+			'  quarterRight = "4",',
+			'  quarterTop = "5",',
+			'  quarterVerticalTopCenter = "6",',
+			'  quarterVerticalBottomCenter = "7",',
+			'  quarterBottom = "8",',
 			'  twoThirdsHorizontalCenter = "R",',
 			'  twoThirdsVerticalCenter = "T",',
 			'  ["1920x1080Center"] = "M",',
