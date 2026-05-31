@@ -61,32 +61,30 @@ describe("window_mover_config", function()
 				cursor = {
 					afterMove = false,
 				},
-				selectedArea = {
-					default = "uuid-a",
-					screens = {
-						["uuid-a"] = {
-							full = "a",
-							halfLeft = "s",
-							halfHorizontalCenter = "d",
-							halfRight = "f",
-							halfTop = "q",
-							halfVerticalCenter = "w",
-							halfBottom = "e",
-							thirdLeft = "r",
-							thirdHorizontalCenter = "j",
-							thirdRight = "k",
-							thirdTop = "l",
-							thirdVerticalCenter = "m",
-							thirdBottom = "z",
-							twoThirdsHorizontalCenter = "x",
-							twoThirdsVerticalCenter = "c",
-							["1920x1080Center"] = "v",
-						},
+			},
+			selectedArea = {
+				defaultScreen = "uuid-a",
+				screens = {
+					["uuid-a"] = {
+						full = "a",
+						halfLeft = "s",
+						halfHorizontalCenter = "d",
+						halfRight = "f",
+						halfTop = "q",
+						halfVerticalCenter = "w",
+						halfBottom = "e",
+						thirdLeft = "r",
+						thirdHorizontalCenter = "j",
+						thirdRight = "k",
+						thirdTop = "l",
+						thirdVerticalCenter = "m",
+						thirdBottom = "z",
+						twoThirdsHorizontalCenter = "x",
+						twoThirdsVerticalCenter = "c",
+						["1920x1080Center"] = "v",
 					},
 				},
-			},
-			appearance = {
-				selectedArea = {
+				appearance = {
 					borderWidth = 4,
 					cornerRadius = 10,
 					state = {
@@ -177,34 +175,30 @@ describe("window_mover_config", function()
 		assert.are.same({ red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 }, built.selectedAreaAppearance.styles.full.color)
 	end)
 
-	it("selectedArea.default の参照先がなければエラー", function()
+	it("selectedArea.defaultScreen の参照先がなければエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
-				behavior = {
-					selectedArea = {
-						default = "missing",
-						screens = {
-							["uuid-a"] = {
-								full = "A",
-							},
+				selectedArea = {
+					defaultScreen = "missing",
+					screens = {
+						["uuid-a"] = {
+							full = "A",
 						},
 					},
 				},
 			})
 		end)
 		assert.is_false(ok)
-		assert.is_truthy(tostring(err):match("default must refer"))
+		assert.is_truthy(tostring(err):match("defaultScreen must refer"))
 	end)
 
 	it("selectedArea のキーが不正ならエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
-				behavior = {
-					selectedArea = {
-						screens = {
-							["uuid-a"] = {
-								full = "ABC",
-							},
+				selectedArea = {
+					screens = {
+						["uuid-a"] = {
+							full = "ABC",
 						},
 					},
 				},
@@ -217,13 +211,11 @@ describe("window_mover_config", function()
 	it("selectedArea の重複キーはエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
-				behavior = {
-					selectedArea = {
-						screens = {
-							["uuid-a"] = {
-								full = "A",
-								halfLeft = "a",
-							},
+				selectedArea = {
+					screens = {
+						["uuid-a"] = {
+							full = "A",
+							halfLeft = "a",
 						},
 					},
 				},
@@ -236,13 +228,11 @@ describe("window_mover_config", function()
 	it("selectedArea の prefix 衝突キーはエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
-				behavior = {
-					selectedArea = {
-						screens = {
-							["uuid-a"] = {
-								full = "A",
-								halfLeft = "AS",
-							},
+				selectedArea = {
+					screens = {
+						["uuid-a"] = {
+							full = "A",
+							halfLeft = "AS",
 						},
 					},
 				},
@@ -255,12 +245,10 @@ describe("window_mover_config", function()
 	it("旧 Start/End 系 area はエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
-				behavior = {
-					selectedArea = {
-						screens = {
-							["uuid-a"] = {
-								halfStart = "A",
-							},
+				selectedArea = {
+					screens = {
+						["uuid-a"] = {
+							halfStart = "A",
 						},
 					},
 				},
@@ -281,6 +269,35 @@ describe("window_mover_config", function()
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("removed key 'hotkey'"))
+	end)
+
+	it("旧 behavior.selectedArea はエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				behavior = {
+					selectedArea = {
+						default = "uuid-a",
+						screens = {},
+					},
+				},
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("removed key 'behavior%.selectedArea'"))
+	end)
+
+	it("旧 appearance.selectedArea はエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				appearance = {
+					selectedArea = {
+						borderWidth = 4,
+					},
+				},
+			})
+		end)
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("removed key 'appearance%.selectedArea'"))
 	end)
 
 	it("options が table でなければエラー", function()

@@ -635,13 +635,11 @@ window_mover = {
     cursor = {
       afterMove = true, -- Move cursor to window center after moving
     },
-    selectedArea = {
-      default = nil, -- UUID whose keymap is reused for unconfigured displays
-      screens = {},  -- Map screen UUIDs to area keymaps
-    },
   },
-  appearance = {
-    selectedArea = {
+  selectedArea = {
+    defaultScreen = nil, -- UUID whose keymap is reused for unconfigured displays
+    screens = {},        -- Map screen UUIDs to area keymaps
+    appearance = {
       borderWidth = 2, -- Hint border width (px)
       cornerRadius = 6, -- Hint corner radius (px)
       state = {
@@ -686,13 +684,13 @@ window_mover = {
 
 `minimizeWindow` minimizes the active window. `maximizeWindow` does not use macOS fullscreen; it moves and resizes the active window to the current display's `frame()`. `cycleLeft` / `cycleCenter` / `cycleRight` move the active window to the left edge, center, or right edge of the current display and cycle the width through `1/2` → `2/3` → `1/3` → `1/2` when repeated on the same window.
 
-`moveToSelectedArea` shows only the area hints configured for each screen UUID. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`. Unconfigured displays reuse `behavior.selectedArea.default` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the default keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
+`moveToSelectedArea` shows only the area hints configured for each screen UUID. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`. Unconfigured displays reuse `selectedArea.defaultScreen` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the defaultScreen keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
 
 Example selected-area keymap:
 
 ```lua
 selectedArea = {
-  default = "DISPLAY_UUID_A",
+  defaultScreen = "DISPLAY_UUID_A",
   screens = {
     ["DISPLAY_UUID_A"] = {
       full = "A",

@@ -366,10 +366,10 @@ describe("window_mover", function()
 		return {
 			behavior = {
 				cursor = { afterMove = false },
-				selectedArea = {
-					default = defaultUuid,
-					screens = screens,
-				},
+			},
+			selectedArea = {
+				defaultScreen = defaultUuid,
+				screens = screens,
 			},
 		}
 	end
@@ -674,7 +674,7 @@ describe("window_mover", function()
 
 		assert.are.equal("jinraiCopyTemplate", state.webviews[1]._usercontent._name)
 		state.webviews[1]._usercontent._callback([[
--- Add this under behavior.selectedArea.screens
+-- Add this under selectedArea.screens
 ["unknown-uuid"] = {
   full = "A",
 },

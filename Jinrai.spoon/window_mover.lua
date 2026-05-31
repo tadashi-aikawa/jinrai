@@ -1134,7 +1134,7 @@ function M.new(options)
 
 	local function screenInfoText(screen, uuid, frame)
 		local lines = {
-			"-- Add this under behavior.selectedArea.screens",
+			"-- Add this under selectedArea.screens",
 			"-- name: " .. tostring(screenName(screen) or ""),
 			"-- id: " .. tostring(screenID(screen) or ""),
 			"-- frame: x="

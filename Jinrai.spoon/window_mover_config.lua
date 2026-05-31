@@ -73,13 +73,11 @@ local DEFAULT_CONFIG = {
 		cursor = {
 			afterMove = true,
 		},
-		selectedArea = {
-			default = nil,
-			screens = {},
-		},
 	},
-	appearance = {
-		selectedArea = {
+	selectedArea = {
+		defaultScreen = nil,
+		screens = {},
+		appearance = {
 			borderWidth = 2,
 			cornerRadius = 6,
 			state = {
@@ -184,6 +182,14 @@ local function checkRemovedKeys(options)
 	if options.hotkey ~= nil then
 		error("[jinrai.window_mover] removed key 'hotkey' is no longer supported; use 'commands.moveToNextDisplay.hotkey'")
 	end
+	if type(options.behavior) == "table" and options.behavior.selectedArea ~= nil then
+		error("[jinrai.window_mover] removed key 'behavior.selectedArea' is no longer supported; use 'selectedArea'")
+	end
+	if type(options.appearance) == "table" and options.appearance.selectedArea ~= nil then
+		error(
+			"[jinrai.window_mover] removed key 'appearance.selectedArea' is no longer supported; use 'selectedArea.appearance'"
+		)
+	end
 end
 
 local function startsWith(value, prefix)
@@ -229,7 +235,7 @@ end
 
 local function normalizeSelectedAreaScreens(screens)
 	if type(screens) ~= "table" or isArrayTable(screens) then
-		error("[jinrai.window_mover] behavior.selectedArea.screens must be a table keyed by screen UUID")
+		error("[jinrai.window_mover] selectedArea.screens must be a table keyed by screen UUID")
 	end
 
 	local allowedAreaKeys = {}
@@ -240,10 +246,10 @@ local function normalizeSelectedAreaScreens(screens)
 	local normalized = {}
 	for uuid, areaMap in pairs(screens) do
 		if type(uuid) ~= "string" or uuid == "" then
-			error("[jinrai.window_mover] behavior.selectedArea.screens keys must be non-empty UUID strings")
+			error("[jinrai.window_mover] selectedArea.screens keys must be non-empty UUID strings")
 		end
 		if type(areaMap) ~= "table" or isArrayTable(areaMap) then
-			error("[jinrai.window_mover] behavior.selectedArea.screens['" .. uuid .. "'] must be an area map")
+			error("[jinrai.window_mover] selectedArea.screens['" .. uuid .. "'] must be an area map")
 		end
 		normalized[uuid] = {}
 		for areaName, key in pairs(areaMap) do
@@ -251,9 +257,9 @@ local function normalizeSelectedAreaScreens(screens)
 				error("[jinrai.window_mover] unsupported selectedArea area '" .. tostring(areaName) .. "'")
 			end
 			normalized[uuid][areaName] =
-				normalizeSelectedAreaKey(key, "behavior.selectedArea.screens['" .. uuid .. "']." .. areaName)
+				normalizeSelectedAreaKey(key, "selectedArea.screens['" .. uuid .. "']." .. areaName)
 		end
-		validateSelectedAreaKeys(normalized[uuid], "behavior.selectedArea.screens['" .. uuid .. "']")
+		validateSelectedAreaKeys(normalized[uuid], "selectedArea.screens['" .. uuid .. "']")
 	end
 	return normalized
 end
@@ -263,10 +269,10 @@ local function normalizeSelectedAreaDefault(defaultUuid, screens)
 		return nil
 	end
 	if type(defaultUuid) ~= "string" or defaultUuid == "" then
-		error("[jinrai.window_mover] behavior.selectedArea.default must be a screen UUID string")
+		error("[jinrai.window_mover] selectedArea.defaultScreen must be a screen UUID string")
 	end
 	if screens[defaultUuid] == nil then
-		error("[jinrai.window_mover] behavior.selectedArea.default must refer to behavior.selectedArea.screens")
+		error("[jinrai.window_mover] selectedArea.defaultScreen must refer to selectedArea.screens")
 	end
 	return defaultUuid
 end
@@ -278,8 +284,8 @@ function M.build(options)
 	end
 	checkRemovedKeys(options)
 	local merged = deepMerge(DEFAULT_CONFIG, options)
-	local selectedAreaScreens = normalizeSelectedAreaScreens(merged.behavior.selectedArea.screens)
-	local selectedAreaDefault = normalizeSelectedAreaDefault(merged.behavior.selectedArea.default, selectedAreaScreens)
+	local selectedAreaScreens = normalizeSelectedAreaScreens(merged.selectedArea.screens)
+	local selectedAreaDefault = normalizeSelectedAreaDefault(merged.selectedArea.defaultScreen, selectedAreaScreens)
 
 	return {
 		moveToNextDisplayHotkeyModifiers = merged.commands.moveToNextDisplay.hotkey.modifiers,
@@ -301,7 +307,7 @@ function M.build(options)
 		centerCursor = merged.behavior.cursor.afterMove,
 		selectedAreaDefault = selectedAreaDefault,
 		selectedAreaScreens = selectedAreaScreens,
-		selectedAreaAppearance = merged.appearance.selectedArea,
+		selectedAreaAppearance = merged.selectedArea.appearance,
 	}
 end
 

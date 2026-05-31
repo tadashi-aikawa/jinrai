@@ -638,13 +638,11 @@ window_mover = {
     cursor = {
       afterMove = true, -- 移動後にカーソルをウィンドウ中央に移動
     },
-    selectedArea = {
-      default = nil, -- 未設定ディスプレイに流用するキーマップの UUID
-      screens = {},  -- ディスプレイ UUID ごとのエリアキーマップ
-    },
   },
-  appearance = {
-    selectedArea = {
+  selectedArea = {
+    defaultScreen = nil, -- 未設定ディスプレイに流用するキーマップの UUID
+    screens = {},        -- ディスプレイ UUID ごとのエリアキーマップ
+    appearance = {
       borderWidth = 2, -- ヒント枠線の太さ (px)
       cornerRadius = 6, -- ヒント角丸の半径 (px)
       state = {
@@ -689,13 +687,13 @@ window_mover = {
 
 `minimizeWindow` はアクティブウィンドウを最小化します。`maximizeWindow` は macOS のフルスクリーン化ではなく、現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。`cycleLeft` / `cycleCenter` / `cycleRight` は現在ディスプレイの左端・中央・右端へ移動し、同じウィンドウに連続実行するたびに横幅を `1/2` → `2/3` → `1/3` → `1/2` の順に切り替えます。
 
-`moveToSelectedArea` はディスプレイ UUID ごとに設定された候補だけを表示します。UUID は Hammerspoon Console で `hs.inspect(jinrai.window_mover.screenInfos())` を実行して確認できます。未設定ディスプレイは `behavior.selectedArea.default` があればそのキーマップを流用し、なければそのディスプレイ上に選択可能な UUID と設定テンプレートを表示します。default のキーマップが既に表示中の候補と衝突する場合も、未設定ディスプレイ側は UUID テンプレート表示に切り替えます。表示中は `escape`、候補外クリック、または同じホットキーで閉じます。候補クリックでは移動しません。
+`moveToSelectedArea` はディスプレイ UUID ごとに設定された候補だけを表示します。UUID は Hammerspoon Console で `hs.inspect(jinrai.window_mover.screenInfos())` を実行して確認できます。未設定ディスプレイは `selectedArea.defaultScreen` があればそのキーマップを流用し、なければそのディスプレイ上に選択可能な UUID と設定テンプレートを表示します。defaultScreen のキーマップが既に表示中の候補と衝突する場合も、未設定ディスプレイ側は UUID テンプレート表示に切り替えます。表示中は `escape`、候補外クリック、または同じホットキーで閉じます。候補クリックでは移動しません。
 
 エリア選択キーマップの例:
 
 ```lua
 selectedArea = {
-  default = "DISPLAY_UUID_A",
+  defaultScreen = "DISPLAY_UUID_A",
   screens = {
     ["DISPLAY_UUID_A"] = {
       full = "A",
