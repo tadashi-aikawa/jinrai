@@ -540,6 +540,48 @@ describe("window_mover", function()
 		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[3].frame)
 	end)
 
+	it("横方向の cycle は現在 frame が対象位置と比率に一致する場合に次の比率へ進む", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 0, y = 0, w = 600, h = 900 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.cycleLeft()
+		win._frame = { x = 0, y = 0, w = 400, h = 900 }
+		instance.cycleLeft()
+		win._frame = { x = 0, y = 0, w = 800, h = 900 }
+		instance.cycleLeft()
+
+		assert.are.same({ x = 0, y = 0, w = 400, h = 900 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 0, y = 0, w = 800, h = 900 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[3].frame)
+	end)
+
+	it("横方向の cycle は現在 frame の位置が異なる場合に 1/2 から開始する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 600, y = 0, w = 600, h = 900 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.cycleLeft()
+
+		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("縦方向の cycle は現在 frame が対象位置と比率に一致する場合に次の比率へ進む", function()
+		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 10, y = 20, w = 1200, h = 450 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.cycleTop()
+		win._frame = { x = 10, y = 20, w = 1200, h = 300 }
+		instance.cycleTop()
+		win._frame = { x = 10, y = 20, w = 1200, h = 600 }
+		instance.cycleTop()
+
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 300 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 600 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 450 }, win.setFrameCalls[3].frame)
+	end)
+
 	it("縦方向の cycle は実際の window frame が整数丸めされても次の比率へ進む", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 1000 })
 		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })

@@ -252,21 +252,6 @@ local function frameEquals(a, b)
 		and nearlyEqual(a.h, b.h)
 end
 
-local function windowIdentity(win)
-	if not win then
-		return nil
-	end
-	if win.id then
-		local ok, id = pcall(function()
-			return win:id()
-		end)
-		if ok and id ~= nil then
-			return id
-		end
-	end
-	return tostring(win)
-end
-
 local function markUniqueFrame(seen, frame)
 	local cloned = cloneFrame(frame)
 	if not cloned then
@@ -390,7 +375,6 @@ function M.new(options)
 	local areaKeyBlocker = nil
 	local areaMouseClickWatcher = nil
 	local areaChooserShowing = false
-	local cycleStateByPosition = {}
 
 	local function selectedAreaState(active)
 		local states = config.selectedAreaAppearance.state
@@ -1508,20 +1492,17 @@ button:active {
 		end
 
 		local ratios = { 1 / 2, 1 / 3, 2 / 3 }
-		local identity = windowIdentity(win)
-		local previous = cycleStateByPosition[position]
 		local nextIndex = 1
-		if previous and previous.windowIdentity == identity and frameEquals(currentFrame, previous.frame) then
-			nextIndex = (previous.index % #ratios) + 1
+		for index, ratio in ipairs(ratios) do
+			local candidateFrame = cycleFrameForPosition(screenFrame, direction, position, ratio)
+			if frameEquals(currentFrame, candidateFrame) then
+				nextIndex = (index % #ratios) + 1
+				break
+			end
 		end
 
 		local targetFrame = cycleFrameForPosition(screenFrame, direction, position, ratios[nextIndex])
 		win:setFrame(targetFrame, 0)
-		cycleStateByPosition[position] = {
-			windowIdentity = identity,
-			index = nextIndex,
-			frame = cloneFrame(targetFrame),
-		}
 		activateWindow(win)
 	end
 
