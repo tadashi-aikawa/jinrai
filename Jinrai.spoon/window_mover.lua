@@ -821,7 +821,7 @@ function M.new(options)
 			if areaInfoAtPoint(point) then
 				return false
 			end
-			if hasAreaCandidateAtPoint(point) then
+			if config.selectedAreaHintsShow and hasAreaCandidateAtPoint(point) then
 				return true
 			end
 			closeAreaChooser(true)
@@ -1353,7 +1353,9 @@ button:active {
 		end
 
 		areaChooserShowing = true
-		showAreaCandidates(areaCandidates)
+		if config.selectedAreaHintsShow then
+			showAreaCandidates(areaCandidates)
+		end
 		showAreaInfoScreens(screensWithoutCandidates)
 	end
 

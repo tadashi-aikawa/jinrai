@@ -77,6 +77,9 @@ local DEFAULT_CONFIG = {
 	selectedArea = {
 		defaultScreen = nil,
 		screens = {},
+		hints = {
+			show = true,
+		},
 		appearance = {
 			borderWidth = 2,
 			cornerRadius = 6,
@@ -307,6 +310,7 @@ function M.build(options)
 		centerCursor = merged.behavior.cursor.afterMove,
 		selectedAreaDefault = selectedAreaDefault,
 		selectedAreaScreens = selectedAreaScreens,
+		selectedAreaHintsShow = merged.selectedArea.hints.show,
 		selectedAreaAppearance = merged.selectedArea.appearance,
 	}
 end

@@ -84,6 +84,9 @@ describe("window_mover_config", function()
 						["1920x1080Center"] = "v",
 					},
 				},
+				hints = {
+					show = false,
+				},
 				appearance = {
 					borderWidth = 4,
 					cornerRadius = 10,
@@ -120,6 +123,7 @@ describe("window_mover_config", function()
 		assert.are.equal("l", built.cycleRightHotkeyKey)
 		assert.is_false(built.centerCursor)
 		assert.are.equal("uuid-a", built.selectedAreaDefault)
+		assert.is_false(built.selectedAreaHintsShow)
 		assert.are.same({
 			["uuid-a"] = {
 				full = "A",
@@ -170,6 +174,7 @@ describe("window_mover_config", function()
 		assert.is_true(built.centerCursor)
 		assert.is_nil(built.selectedAreaDefault)
 		assert.are.same({}, built.selectedAreaScreens)
+		assert.is_true(built.selectedAreaHintsShow)
 		assert.are.equal(2, built.selectedAreaAppearance.borderWidth)
 		assert.are.equal(6, built.selectedAreaAppearance.cornerRadius)
 		assert.are.same({ red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 }, built.selectedAreaAppearance.styles.full.color)

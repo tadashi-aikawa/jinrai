@@ -362,7 +362,8 @@ describe("window_mover", function()
 		return b.y + b.h + gap <= a.y
 	end
 
-	local function selectedAreaOptions(screens, defaultUuid)
+	local function selectedAreaOptions(screens, defaultUuid, selectedAreaOverrides)
+		selectedAreaOverrides = selectedAreaOverrides or {}
 		return {
 			behavior = {
 				cursor = { afterMove = false },
@@ -370,6 +371,7 @@ describe("window_mover", function()
 			selectedArea = {
 				defaultScreen = defaultUuid,
 				screens = screens,
+				hints = selectedAreaOverrides.hints,
 			},
 		}
 	end
@@ -731,6 +733,31 @@ describe("window_mover", function()
 		instance.moveToSelectedArea()
 
 		assert.are.same({ "A" }, canvasKeys(state))
+	end)
+
+	it("selectedArea.hints.show=false なら候補canvasを描画せずキー入力で移動する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, { hints = { show = false } }), win, { win })
+		state.screens = { screen }
+
+		instance.moveToSelectedArea()
+
+		assert.are.equal(0, #state.canvases)
+		assert.are.equal(0, #state.webviews)
+		assert.is_true(state.eventtaps[1].started)
+
+		assert.is_true(sendMouseDown(state, { x = 10, y = 10 }))
+		assert.is_true(state.eventtaps[1].stopped)
+
+		instance.moveToSelectedArea()
+		sendKey(state, "a")
+
+		assert.are.same({ x = 0, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
 	end)
 
 	it("UUID案内内のクリックは消費せず候補外クリックは閉じる", function()
