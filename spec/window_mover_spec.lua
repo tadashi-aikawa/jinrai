@@ -417,30 +417,74 @@ describe("window_mover", function()
 	it("新しい直接実行コマンドのホットキーを登録して解放する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
 		local win = newWindow(screen)
-		local state, instance = newWindowMoverWithMock({
-			commands = {
-				minimizeWindow = { hotkey = { modifiers = { "cmd" }, key = "m" } },
-				maximizeWindow = { hotkey = { modifiers = { "cmd" }, key = "f" } },
-				cycleLeft = { hotkey = { modifiers = { "ctrl", "alt" }, key = "h" } },
-				cycleHorizontalCenter = { hotkey = { modifiers = { "ctrl", "alt" }, key = "j" } },
-				cycleRight = { hotkey = { modifiers = { "ctrl", "alt" }, key = "l" } },
-				cycleTop = { hotkey = { modifiers = { "ctrl", "alt" }, key = "k" } },
-				cycleVerticalCenter = { hotkey = { modifiers = { "ctrl", "alt" }, key = "i" } },
-				cycleBottom = { hotkey = { modifiers = { "ctrl", "alt" }, key = "n" } },
-			},
-		}, win, { win })
+		local directAreaCommandNames = {
+			"halfLeft",
+			"halfHorizontalCenter",
+			"halfRight",
+			"halfTop",
+			"halfVerticalCenter",
+			"halfBottom",
+			"thirdLeft",
+			"thirdHorizontalCenter",
+			"thirdRight",
+			"thirdTop",
+			"thirdVerticalCenter",
+			"thirdBottom",
+			"quarterLeft",
+			"quarterHorizontalLeftCenter",
+			"quarterHorizontalRightCenter",
+			"quarterRight",
+			"quarterTop",
+			"quarterVerticalTopCenter",
+			"quarterVerticalBottomCenter",
+			"quarterBottom",
+		}
+		local directAreaKeys = {
+			"a",
+			"s",
+			"d",
+			"q",
+			"w",
+			"e",
+			"r",
+			"t",
+			"y",
+			"u",
+			"i",
+			"o",
+			"1",
+			"2",
+			"3",
+			"4",
+			"5",
+			"6",
+			"7",
+			"8",
+		}
+		local commands = {
+			minimizeWindow = { hotkey = { modifiers = { "cmd" }, key = "m" } },
+			maximizeWindow = { hotkey = { modifiers = { "cmd" }, key = "f" } },
+			cycleLeft = { hotkey = { modifiers = { "ctrl", "alt" }, key = "h" } },
+			cycleHorizontalCenter = { hotkey = { modifiers = { "ctrl", "alt" }, key = "j" } },
+			cycleRight = { hotkey = { modifiers = { "ctrl", "alt" }, key = "l" } },
+			cycleTop = { hotkey = { modifiers = { "ctrl", "alt" }, key = "k" } },
+			cycleVerticalCenter = { hotkey = { modifiers = { "ctrl", "alt" }, key = "i" } },
+			cycleBottom = { hotkey = { modifiers = { "ctrl", "alt" }, key = "n" } },
+		}
+		for index, commandName in ipairs(directAreaCommandNames) do
+			commands[commandName] = { hotkey = { modifiers = { "ctrl", "alt" }, key = directAreaKeys[index] } }
+		end
+		local state, instance = newWindowMoverWithMock({ commands = commands }, win, { win })
 
-		assert.are.equal(8, #state.hotkeys)
-		assert.are.same({ "m", "f", "h", "j", "l", "k", "i", "n" }, {
-			state.hotkeys[1].key,
-			state.hotkeys[2].key,
-			state.hotkeys[3].key,
-			state.hotkeys[4].key,
-			state.hotkeys[5].key,
-			state.hotkeys[6].key,
-			state.hotkeys[7].key,
-			state.hotkeys[8].key,
-		})
+		local expectedKeys = { "m", "f", "h", "j", "l", "k", "i", "n" }
+		for _, key in ipairs(directAreaKeys) do
+			table.insert(expectedKeys, key)
+		end
+		local actualKeys = {}
+		for _, hotkey in ipairs(state.hotkeys) do
+			table.insert(actualKeys, hotkey.key)
+		end
+		assert.are.same(expectedKeys, actualKeys)
 
 		instance.teardown()
 
@@ -497,6 +541,54 @@ describe("window_mover", function()
 		assert.are.same({ x = 400, y = 0, w = 400, h = 900 }, win.setFrameCalls[6].frame)
 		assert.are.same({ x = 600, y = 0, w = 600, h = 900 }, win.setFrameCalls[7].frame)
 		assert.are.same({ x = 800, y = 0, w = 400, h = 900 }, win.setFrameCalls[8].frame)
+	end)
+
+	it("直接配置コマンドは指定サイズでアクティブディスプレイの各ポジションへ移動する", function()
+		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+
+		instance.halfLeft()
+		instance.halfHorizontalCenter()
+		instance.halfRight()
+		instance.halfTop()
+		instance.halfVerticalCenter()
+		instance.halfBottom()
+		instance.thirdLeft()
+		instance.thirdHorizontalCenter()
+		instance.thirdRight()
+		instance.thirdTop()
+		instance.thirdVerticalCenter()
+		instance.thirdBottom()
+		instance.quarterLeft()
+		instance.quarterHorizontalLeftCenter()
+		instance.quarterHorizontalRightCenter()
+		instance.quarterRight()
+		instance.quarterTop()
+		instance.quarterVerticalTopCenter()
+		instance.quarterVerticalBottomCenter()
+		instance.quarterBottom()
+
+		assert.are.same({ x = 10, y = 20, w = 600, h = 900 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 310, y = 20, w = 600, h = 900 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 610, y = 20, w = 600, h = 900 }, win.setFrameCalls[3].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 450 }, win.setFrameCalls[4].frame)
+		assert.are.same({ x = 10, y = 245, w = 1200, h = 450 }, win.setFrameCalls[5].frame)
+		assert.are.same({ x = 10, y = 470, w = 1200, h = 450 }, win.setFrameCalls[6].frame)
+		assert.are.same({ x = 10, y = 20, w = 400, h = 900 }, win.setFrameCalls[7].frame)
+		assert.are.same({ x = 410, y = 20, w = 400, h = 900 }, win.setFrameCalls[8].frame)
+		assert.are.same({ x = 810, y = 20, w = 400, h = 900 }, win.setFrameCalls[9].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 300 }, win.setFrameCalls[10].frame)
+		assert.are.same({ x = 10, y = 320, w = 1200, h = 300 }, win.setFrameCalls[11].frame)
+		assert.are.same({ x = 10, y = 620, w = 1200, h = 300 }, win.setFrameCalls[12].frame)
+		assert.are.same({ x = 10, y = 20, w = 300, h = 900 }, win.setFrameCalls[13].frame)
+		assert.are.same({ x = 310, y = 20, w = 300, h = 900 }, win.setFrameCalls[14].frame)
+		assert.are.same({ x = 610, y = 20, w = 300, h = 900 }, win.setFrameCalls[15].frame)
+		assert.are.same({ x = 910, y = 20, w = 300, h = 900 }, win.setFrameCalls[16].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 225 }, win.setFrameCalls[17].frame)
+		assert.are.same({ x = 10, y = 245, w = 1200, h = 225 }, win.setFrameCalls[18].frame)
+		assert.are.same({ x = 10, y = 470, w = 1200, h = 225 }, win.setFrameCalls[19].frame)
+		assert.are.same({ x = 10, y = 695, w = 1200, h = 225 }, win.setFrameCalls[20].frame)
 	end)
 
 	it("縦方向の cycle は 1/2、1/3、2/3 の順で高さを切り替える", function()

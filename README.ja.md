@@ -655,6 +655,27 @@ window_mover = {
         key = nil,       -- ホットキー（nil で無効化）
       },
     },
+    -- 指定サイズでアクティブディスプレイ上の位置へ直接移動
+    halfLeft = { hotkey = { modifiers = nil, key = nil } },
+    halfHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+    halfRight = { hotkey = { modifiers = nil, key = nil } },
+    halfTop = { hotkey = { modifiers = nil, key = nil } },
+    halfVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+    halfBottom = { hotkey = { modifiers = nil, key = nil } },
+    thirdLeft = { hotkey = { modifiers = nil, key = nil } },
+    thirdHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+    thirdRight = { hotkey = { modifiers = nil, key = nil } },
+    thirdTop = { hotkey = { modifiers = nil, key = nil } },
+    thirdVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+    thirdBottom = { hotkey = { modifiers = nil, key = nil } },
+    quarterLeft = { hotkey = { modifiers = nil, key = nil } },
+    quarterHorizontalLeftCenter = { hotkey = { modifiers = nil, key = nil } },
+    quarterHorizontalRightCenter = { hotkey = { modifiers = nil, key = nil } },
+    quarterRight = { hotkey = { modifiers = nil, key = nil } },
+    quarterTop = { hotkey = { modifiers = nil, key = nil } },
+    quarterVerticalTopCenter = { hotkey = { modifiers = nil, key = nil } },
+    quarterVerticalBottomCenter = { hotkey = { modifiers = nil, key = nil } },
+    quarterBottom = { hotkey = { modifiers = nil, key = nil } },
   },
   behavior = {
     cursor = {
@@ -725,6 +746,12 @@ window_mover = {
 | `cycleTop` | アクティブウィンドウを上端へ移動し、高さを `1/2` → `1/3` → `2/3` → `1/2` の順に切り替えます。 |
 | `cycleVerticalCenter` | アクティブウィンドウを縦方向中央へ移動し、高さを同じ順序で切り替えます。 |
 | `cycleBottom` | アクティブウィンドウを下端へ移動し、高さを同じ順序で切り替えます。 |
+| `halfLeft` / `halfHorizontalCenter` / `halfRight` | アクティブウィンドウを横幅 `1/2`、高さ全体で左端・横方向中央・右端へ移動します。 |
+| `halfTop` / `halfVerticalCenter` / `halfBottom` | アクティブウィンドウを横幅全体、高さ `1/2` で上端・縦方向中央・下端へ移動します。 |
+| `thirdLeft` / `thirdHorizontalCenter` / `thirdRight` | アクティブウィンドウを横幅 `1/3`、高さ全体で左端・横方向中央・右端へ移動します。 |
+| `thirdTop` / `thirdVerticalCenter` / `thirdBottom` | アクティブウィンドウを横幅全体、高さ `1/3` で上端・縦方向中央・下端へ移動します。 |
+| `quarterLeft` / `quarterHorizontalLeftCenter` / `quarterHorizontalRightCenter` / `quarterRight` | アクティブウィンドウを横幅 `1/4`、高さ全体で左端・横方向左中央・横方向右中央・右端へ移動します。 |
+| `quarterTop` / `quarterVerticalTopCenter` / `quarterVerticalBottomCenter` / `quarterBottom` | アクティブウィンドウを横幅全体、高さ `1/4` で上端・縦方向上中央・縦方向下中央・下端へ移動します。 |
 
 ちらつきを抑えるため、JINRAI は移動先 frame を `setFrame(..., 0)` で一度だけ反映します。
 

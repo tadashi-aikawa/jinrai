@@ -52,6 +52,29 @@ local AREA_ORDER = {
 	"twoThirdsVerticalCenter",
 }
 
+local DIRECT_AREA_COMMAND_KEYS = {
+	"halfLeft",
+	"halfHorizontalCenter",
+	"halfRight",
+	"halfTop",
+	"halfVerticalCenter",
+	"halfBottom",
+	"thirdLeft",
+	"thirdHorizontalCenter",
+	"thirdRight",
+	"thirdTop",
+	"thirdVerticalCenter",
+	"thirdBottom",
+	"quarterLeft",
+	"quarterHorizontalLeftCenter",
+	"quarterHorizontalRightCenter",
+	"quarterRight",
+	"quarterTop",
+	"quarterVerticalTopCenter",
+	"quarterVerticalBottomCenter",
+	"quarterBottom",
+}
+
 local AREA_ORDER_LOOKUP = {}
 for _, areaName in ipairs(AREA_ORDER) do
 	AREA_ORDER_LOOKUP[areaName] = true
@@ -479,183 +502,188 @@ function M.new(options)
 		end
 	end
 
-	local function addConfiguredAreaCandidate(candidates, seenByScreen, screen, screenFrame, areaName, key)
-		if key == nil then
-			return
-		end
+	local function areaSpecForName(screenFrame, areaName)
 		if areaName == "full" then
-			addAreaCandidate(candidates, seenByScreen, screen, screenFrame, "full", {
+			return cloneFrame(screenFrame), "full", {
 				slots = 1,
 				index = 1,
 				axis = "horizontal",
-			}, key)
+			}
 		elseif areaName == "halfLeft" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w / 2,
 				h = screenFrame.h,
-			}, "half", { slots = 2, index = 1, axis = "horizontal" }, key)
+			}, "half", { slots = 2, index = 1, axis = "horizontal" }
 		elseif areaName == "halfHorizontalCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x + (screenFrame.w / 4),
 				y = screenFrame.y,
 				w = screenFrame.w / 2,
 				h = screenFrame.h,
-			}, "half", { slots = 4, index = 2, span = 2, axis = "horizontal" }, key)
+			}, "half", { slots = 4, index = 2, span = 2, axis = "horizontal" }
 		elseif areaName == "halfRight" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x + (screenFrame.w / 2),
 				y = screenFrame.y,
 				w = screenFrame.w / 2,
 				h = screenFrame.h,
-			}, "half", { slots = 2, index = 2, axis = "horizontal" }, key)
+			}, "half", { slots = 2, index = 2, axis = "horizontal" }
 		elseif areaName == "halfTop" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w,
 				h = screenFrame.h / 2,
-			}, "half", { slots = 2, index = 1, axis = "vertical" }, key)
+			}, "half", { slots = 2, index = 1, axis = "vertical" }
 		elseif areaName == "halfVerticalCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 4),
 				w = screenFrame.w,
 				h = screenFrame.h / 2,
-			}, "half", { slots = 4, index = 2, span = 2, axis = "vertical" }, key)
+			}, "half", { slots = 4, index = 2, span = 2, axis = "vertical" }
 		elseif areaName == "halfBottom" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 2),
 				w = screenFrame.w,
 				h = screenFrame.h / 2,
-			}, "half", { slots = 2, index = 2, axis = "vertical" }, key)
+			}, "half", { slots = 2, index = 2, axis = "vertical" }
 		elseif areaName == "thirdLeft" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w / 3,
 				h = screenFrame.h,
-			}, "third", { slots = 3, index = 1, axis = "horizontal" }, key)
+			}, "third", { slots = 3, index = 1, axis = "horizontal" }
 		elseif areaName == "thirdHorizontalCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x + (screenFrame.w / 3),
 				y = screenFrame.y,
 				w = screenFrame.w / 3,
 				h = screenFrame.h,
-			}, "third", { slots = 3, index = 2, axis = "horizontal" }, key)
+			}, "third", { slots = 3, index = 2, axis = "horizontal" }
 		elseif areaName == "thirdRight" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x + (screenFrame.w * 2 / 3),
 				y = screenFrame.y,
 				w = screenFrame.w / 3,
 				h = screenFrame.h,
-			}, "third", { slots = 3, index = 3, axis = "horizontal" }, key)
+			}, "third", { slots = 3, index = 3, axis = "horizontal" }
 		elseif areaName == "thirdTop" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w,
 				h = screenFrame.h / 3,
-			}, "third", { slots = 3, index = 1, axis = "vertical" }, key)
+			}, "third", { slots = 3, index = 1, axis = "vertical" }
 		elseif areaName == "thirdVerticalCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 3),
 				w = screenFrame.w,
 				h = screenFrame.h / 3,
-			}, "third", { slots = 3, index = 2, axis = "vertical" }, key)
+			}, "third", { slots = 3, index = 2, axis = "vertical" }
 		elseif areaName == "thirdBottom" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h * 2 / 3),
 				w = screenFrame.w,
 				h = screenFrame.h / 3,
-			}, "third", { slots = 3, index = 3, axis = "vertical" }, key)
+			}, "third", { slots = 3, index = 3, axis = "vertical" }
 		elseif areaName == "quarterLeft" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w / 4,
 				h = screenFrame.h,
-			}, "quarter", { slots = 4, index = 1, axis = "horizontal" }, key)
+			}, "quarter", { slots = 4, index = 1, axis = "horizontal" }
 		elseif areaName == "quarterHorizontalLeftCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x + (screenFrame.w / 4),
 				y = screenFrame.y,
 				w = screenFrame.w / 4,
 				h = screenFrame.h,
-			}, "quarter", { slots = 4, index = 2, axis = "horizontal" }, key)
+			}, "quarter", { slots = 4, index = 2, axis = "horizontal" }
 		elseif areaName == "quarterHorizontalRightCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x + (screenFrame.w / 2),
 				y = screenFrame.y,
 				w = screenFrame.w / 4,
 				h = screenFrame.h,
-			}, "quarter", { slots = 4, index = 3, axis = "horizontal" }, key)
+			}, "quarter", { slots = 4, index = 3, axis = "horizontal" }
 		elseif areaName == "quarterRight" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x + (screenFrame.w * 3 / 4),
 				y = screenFrame.y,
 				w = screenFrame.w / 4,
 				h = screenFrame.h,
-			}, "quarter", { slots = 4, index = 4, axis = "horizontal" }, key)
+			}, "quarter", { slots = 4, index = 4, axis = "horizontal" }
 		elseif areaName == "quarterTop" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w,
 				h = screenFrame.h / 4,
-			}, "quarter", { slots = 4, index = 1, axis = "vertical" }, key)
+			}, "quarter", { slots = 4, index = 1, axis = "vertical" }
 		elseif areaName == "quarterVerticalTopCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 4),
 				w = screenFrame.w,
 				h = screenFrame.h / 4,
-			}, "quarter", { slots = 4, index = 2, axis = "vertical" }, key)
+			}, "quarter", { slots = 4, index = 2, axis = "vertical" }
 		elseif areaName == "quarterVerticalBottomCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 2),
 				w = screenFrame.w,
 				h = screenFrame.h / 4,
-			}, "quarter", { slots = 4, index = 3, axis = "vertical" }, key)
+			}, "quarter", { slots = 4, index = 3, axis = "vertical" }
 		elseif areaName == "quarterBottom" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h * 3 / 4),
 				w = screenFrame.w,
 				h = screenFrame.h / 4,
-			}, "quarter", { slots = 4, index = 4, axis = "vertical" }, key)
+			}, "quarter", { slots = 4, index = 4, axis = "vertical" }
 		elseif areaName == "twoThirdsHorizontalCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x + (screenFrame.w / 6),
 				y = screenFrame.y,
 				w = screenFrame.w * 2 / 3,
 				h = screenFrame.h,
-			}, "twoThirds", { slots = 6, index = 2, span = 4, axis = "horizontal" }, key)
+			}, "twoThirds", { slots = 6, index = 2, span = 4, axis = "horizontal" }
 		elseif areaName == "twoThirdsVerticalCenter" then
-			addAreaCandidate(candidates, seenByScreen, screen, {
+			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 6),
 				w = screenFrame.w,
 				h = screenFrame.h * 2 / 3,
-			}, "twoThirds", { slots = 6, index = 2, span = 4, axis = "vertical" }, key)
+			}, "twoThirds", { slots = 6, index = 2, span = 4, axis = "vertical" }
 		else
 			local width, height = parseFixedSizeCenterArea(areaName)
 			if width and height then
 				width = math.min(width, screenFrame.w)
 				height = math.min(height, screenFrame.h)
-				addAreaCandidate(candidates, seenByScreen, screen, {
+				return {
 					x = screenFrame.x + ((screenFrame.w - width) / 2),
 					y = screenFrame.y + ((screenFrame.h - height) / 2),
 					w = width,
 					h = height,
-				}, "free", { free = true }, key, areaName:match("^(%d+x%d+)Center$"))
+				}, "free", { free = true }, areaName:match("^(%d+x%d+)Center$")
 			end
 		end
+	end
+
+	local function addConfiguredAreaCandidate(candidates, seenByScreen, screen, screenFrame, areaName, key)
+		if key == nil then
+			return
+		end
+		local frame, kind, icon, detailLabel = areaSpecForName(screenFrame, areaName)
+		addAreaCandidate(candidates, seenByScreen, screen, frame, kind, icon, key, detailLabel)
 	end
 
 	local function areaMapConflictsWithKeys(areaMap, usedKeys)
@@ -1603,6 +1631,37 @@ button:active {
 		cycleWindow("vertical", "bottom")
 	end
 
+	local function moveToAreaName(areaName)
+		if not hs or not hs.window or not hs.window.focusedWindow then
+			return
+		end
+		local win = hs.window.focusedWindow()
+		if not win or not win.setFrame then
+			return
+		end
+		local screen = screenOf(win)
+		if not screen or not screen.frame then
+			return
+		end
+		local screenFrame = cloneFrame(screen:frame())
+		if not screenFrame then
+			return
+		end
+		local targetFrame = areaSpecForName(screenFrame, areaName)
+		if not targetFrame then
+			return
+		end
+		win:setFrame(targetFrame, 0)
+		activateWindow(win)
+	end
+
+	local directAreaCommands = {}
+	for _, areaName in ipairs(DIRECT_AREA_COMMAND_KEYS) do
+		directAreaCommands[areaName] = function()
+			moveToAreaName(areaName)
+		end
+	end
+
 	local function screenInfos()
 		if not hs or not hs.screen or not hs.screen.allScreens then
 			return {}
@@ -1641,6 +1700,9 @@ button:active {
 	bindHotkey(config.cycleTopHotkeyModifiers, config.cycleTopHotkeyKey, cycleTop)
 	bindHotkey(config.cycleVerticalCenterHotkeyModifiers, config.cycleVerticalCenterHotkeyKey, cycleVerticalCenter)
 	bindHotkey(config.cycleBottomHotkeyModifiers, config.cycleBottomHotkeyKey, cycleBottom)
+	for _, areaName in ipairs(DIRECT_AREA_COMMAND_KEYS) do
+		bindHotkey(config[areaName .. "HotkeyModifiers"], config[areaName .. "HotkeyKey"], directAreaCommands[areaName])
+	end
 
 	local function teardown()
 		closeAreaChooser(true)
@@ -1650,7 +1712,7 @@ button:active {
 		hotkeys = {}
 	end
 
-	return {
+	local instance = {
 		moveToNextDisplay = moveToNextDisplay,
 		moveToActiveDisplayFreeArea = moveToActiveDisplayFreeArea,
 		moveToSelectedArea = moveToSelectedArea,
@@ -1665,6 +1727,10 @@ button:active {
 		screenInfos = screenInfos,
 		teardown = teardown,
 	}
+	for _, areaName in ipairs(DIRECT_AREA_COMMAND_KEYS) do
+		instance[areaName] = directAreaCommands[areaName]
+	end
+	return instance
 end
 
 return M

@@ -26,6 +26,29 @@ local AREA_KEYS = {
 	"twoThirdsVerticalCenter",
 }
 
+local DIRECT_AREA_COMMAND_KEYS = {
+	"halfLeft",
+	"halfHorizontalCenter",
+	"halfRight",
+	"halfTop",
+	"halfVerticalCenter",
+	"halfBottom",
+	"thirdLeft",
+	"thirdHorizontalCenter",
+	"thirdRight",
+	"thirdTop",
+	"thirdVerticalCenter",
+	"thirdBottom",
+	"quarterLeft",
+	"quarterHorizontalLeftCenter",
+	"quarterHorizontalRightCenter",
+	"quarterRight",
+	"quarterTop",
+	"quarterVerticalTopCenter",
+	"quarterVerticalBottomCenter",
+	"quarterBottom",
+}
+
 local DEFAULT_CONFIG = {
 	commands = {
 		moveToNextDisplay = {
@@ -149,6 +172,15 @@ local DEFAULT_CONFIG = {
 		},
 	},
 }
+
+for _, commandName in ipairs(DIRECT_AREA_COMMAND_KEYS) do
+	DEFAULT_CONFIG.commands[commandName] = {
+		hotkey = {
+			modifiers = nil,
+			key = nil,
+		},
+	}
+end
 
 local function isArrayTable(tbl)
 	if type(tbl) ~= "table" then
@@ -320,7 +352,7 @@ function M.build(options)
 	local selectedAreaScreens = normalizeSelectedAreaScreens(merged.selectedArea.screens)
 	local selectedAreaDefault = normalizeSelectedAreaDefault(merged.selectedArea.defaultScreen, selectedAreaScreens)
 
-	return {
+	local built = {
 		moveToNextDisplayHotkeyModifiers = merged.commands.moveToNextDisplay.hotkey.modifiers,
 		moveToNextDisplayHotkeyKey = merged.commands.moveToNextDisplay.hotkey.key,
 		moveToActiveDisplayFreeAreaHotkeyModifiers = merged.commands.moveToActiveDisplayFreeArea.hotkey.modifiers,
@@ -349,6 +381,11 @@ function M.build(options)
 		selectedAreaHintsShow = merged.selectedArea.hints.show,
 		selectedAreaAppearance = merged.selectedArea.appearance,
 	}
+	for _, commandName in ipairs(DIRECT_AREA_COMMAND_KEYS) do
+		built[commandName .. "HotkeyModifiers"] = merged.commands[commandName].hotkey.modifiers
+		built[commandName .. "HotkeyKey"] = merged.commands[commandName].hotkey.key
+	end
+	return built
 end
 
 return M

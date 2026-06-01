@@ -1,5 +1,27 @@
 describe("window_mover_config", function()
 	local mod
+	local directAreaCommandKeys = {
+		"halfLeft",
+		"halfHorizontalCenter",
+		"halfRight",
+		"halfTop",
+		"halfVerticalCenter",
+		"halfBottom",
+		"thirdLeft",
+		"thirdHorizontalCenter",
+		"thirdRight",
+		"thirdTop",
+		"thirdVerticalCenter",
+		"thirdBottom",
+		"quarterLeft",
+		"quarterHorizontalLeftCenter",
+		"quarterHorizontalRightCenter",
+		"quarterRight",
+		"quarterTop",
+		"quarterVerticalTopCenter",
+		"quarterVerticalBottomCenter",
+		"quarterBottom",
+	}
 
 	before_each(function()
 		mod = dofile("./Jinrai.spoon/window_mover_config.lua")
@@ -72,6 +94,24 @@ describe("window_mover_config", function()
 					hotkey = {
 						modifiers = { "ctrl", "alt" },
 						key = "m",
+					},
+				},
+				halfLeft = {
+					hotkey = {
+						modifiers = { "cmd", "alt" },
+						key = "1",
+					},
+				},
+				thirdHorizontalCenter = {
+					hotkey = {
+						modifiers = { "cmd", "alt" },
+						key = "2",
+					},
+				},
+				quarterBottom = {
+					hotkey = {
+						modifiers = { "cmd", "alt" },
+						key = "3",
 					},
 				},
 			},
@@ -153,6 +193,12 @@ describe("window_mover_config", function()
 		assert.are.equal("i", built.cycleVerticalCenterHotkeyKey)
 		assert.are.same({ "ctrl", "alt" }, built.cycleBottomHotkeyModifiers)
 		assert.are.equal("m", built.cycleBottomHotkeyKey)
+		assert.are.same({ "cmd", "alt" }, built.halfLeftHotkeyModifiers)
+		assert.are.equal("1", built.halfLeftHotkeyKey)
+		assert.are.same({ "cmd", "alt" }, built.thirdHorizontalCenterHotkeyModifiers)
+		assert.are.equal("2", built.thirdHorizontalCenterHotkeyKey)
+		assert.are.same({ "cmd", "alt" }, built.quarterBottomHotkeyModifiers)
+		assert.are.equal("3", built.quarterBottomHotkeyKey)
 		assert.is_false(built.centerCursor)
 		assert.are.equal("uuid-a", built.selectedAreaDefault)
 		assert.is_false(built.selectedAreaHintsShow)
@@ -218,6 +264,10 @@ describe("window_mover_config", function()
 		assert.are.equal(nil, built.cycleVerticalCenterHotkeyKey)
 		assert.are.equal(nil, built.cycleBottomHotkeyModifiers)
 		assert.are.equal(nil, built.cycleBottomHotkeyKey)
+		for _, commandName in ipairs(directAreaCommandKeys) do
+			assert.are.equal(nil, built[commandName .. "HotkeyModifiers"])
+			assert.are.equal(nil, built[commandName .. "HotkeyKey"])
+		end
 		assert.is_true(built.centerCursor)
 		assert.is_nil(built.selectedAreaDefault)
 		assert.are.same({}, built.selectedAreaScreens)

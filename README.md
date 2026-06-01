@@ -652,6 +652,27 @@ window_mover = {
         key = nil,       -- Hotkey (nil to disable)
       },
     },
+    -- Move directly to a position on the active display with a fixed size
+    halfLeft = { hotkey = { modifiers = nil, key = nil } },
+    halfHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+    halfRight = { hotkey = { modifiers = nil, key = nil } },
+    halfTop = { hotkey = { modifiers = nil, key = nil } },
+    halfVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+    halfBottom = { hotkey = { modifiers = nil, key = nil } },
+    thirdLeft = { hotkey = { modifiers = nil, key = nil } },
+    thirdHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+    thirdRight = { hotkey = { modifiers = nil, key = nil } },
+    thirdTop = { hotkey = { modifiers = nil, key = nil } },
+    thirdVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+    thirdBottom = { hotkey = { modifiers = nil, key = nil } },
+    quarterLeft = { hotkey = { modifiers = nil, key = nil } },
+    quarterHorizontalLeftCenter = { hotkey = { modifiers = nil, key = nil } },
+    quarterHorizontalRightCenter = { hotkey = { modifiers = nil, key = nil } },
+    quarterRight = { hotkey = { modifiers = nil, key = nil } },
+    quarterTop = { hotkey = { modifiers = nil, key = nil } },
+    quarterVerticalTopCenter = { hotkey = { modifiers = nil, key = nil } },
+    quarterVerticalBottomCenter = { hotkey = { modifiers = nil, key = nil } },
+    quarterBottom = { hotkey = { modifiers = nil, key = nil } },
   },
   behavior = {
     cursor = {
@@ -722,6 +743,12 @@ window_mover = {
 | `cycleTop` | Moves the active window to the top edge and cycles height through `1/2` → `1/3` → `2/3` → `1/2`. |
 | `cycleVerticalCenter` | Moves the active window to the vertical center and cycles height through the same sequence. |
 | `cycleBottom` | Moves the active window to the bottom edge and cycles height through the same sequence. |
+| `halfLeft` / `halfHorizontalCenter` / `halfRight` | Moves the active window to the left edge, horizontal center, or right edge with 1/2 width and full height. |
+| `halfTop` / `halfVerticalCenter` / `halfBottom` | Moves the active window to the top edge, vertical center, or bottom edge with full width and 1/2 height. |
+| `thirdLeft` / `thirdHorizontalCenter` / `thirdRight` | Moves the active window to the left edge, horizontal center, or right edge with 1/3 width and full height. |
+| `thirdTop` / `thirdVerticalCenter` / `thirdBottom` | Moves the active window to the top edge, vertical center, or bottom edge with full width and 1/3 height. |
+| `quarterLeft` / `quarterHorizontalLeftCenter` / `quarterHorizontalRightCenter` / `quarterRight` | Moves the active window to each horizontal quarter position with 1/4 width and full height. |
+| `quarterTop` / `quarterVerticalTopCenter` / `quarterVerticalBottomCenter` / `quarterBottom` | Moves the active window to each vertical quarter position with full width and 1/4 height. |
 
 To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
 
