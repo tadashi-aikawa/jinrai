@@ -187,6 +187,16 @@ describe("window_hints_config", function()
 				macosNativeTabs = {
 					apps = { "com.mitchellh.ghostty" },
 				},
+				jinraiMode = {
+					windowHints = {
+						key = "space",
+					},
+					logo = {
+						enabled = true,
+						size = 480,
+						alpha = 0.3,
+					},
+				},
 			},
 		})
 
@@ -248,6 +258,10 @@ describe("window_hints_config", function()
 		assert.are.equal("left", built.directionKeyLookup.h)
 		assert.are.same({ "cmd" }, built.directDirectionHotkeys.modifiers)
 		assert.are.equal("i", built.focusBackKey)
+		assert.are.equal("space", built.jinraiModeKey)
+		assert.is_true(built.jinraiModeLogo.enabled)
+		assert.are.equal(480, built.jinraiModeLogo.size)
+		assert.are.equal(0.3, built.jinraiModeLogo.alpha)
 		assert.are.same({ "shift" }, built.swapWindowFrameSelectModifiers)
 		assert.are.equal(300, built.cardinalOverlapTieThresholdPx)
 		assert.are.equal(0.15, built.maxPrimaryOverlapRatioForDetached)
@@ -307,6 +321,7 @@ describe("window_hints_config", function()
 		assert.are.equal(96, built.dockBottomMargin)
 		assert.are.equal(0.65, built.dockWindowXBlend)
 		assert.are.equal(1, built.dockWindowYBlend)
+		assert.are.equal(0.4, built.jinraiModeLogo.alpha)
 	end)
 
 	it("focusHistory が無いと focusBackKey は無効化される", function()
@@ -321,6 +336,59 @@ describe("window_hints_config", function()
 			},
 		})
 		assert.are.equal(nil, built.focusBackKey)
+	end)
+
+	it("jinraiModeKey はヒント文字から除外される", function()
+		local built = mod.build({
+			hint = {
+				chars = { "A", "S" },
+			},
+			internal = {
+				jinraiMode = {
+					logo = {
+						enabled = true,
+						size = 480,
+						alpha = 0.3,
+					},
+					windowHints = {
+					key = "a",
+					},
+				},
+			},
+		})
+
+		assert.are.equal("a", built.jinraiModeKey)
+		assert.are.same({ "S" }, built.hintChars)
+	end)
+
+	it("旧 navigation.jinraiMode 設定はエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				navigation = {
+					jinraiMode = {
+						key = "space",
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("top%-level 'jinrai_mode'"))
+	end)
+
+	it("旧 focusAndMove 設定はエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				navigation = {
+					focusAndMove = {
+						key = "space",
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("top%-level 'jinrai_mode'"))
 	end)
 
 	it("配列は deep merge でなく置換される", function()

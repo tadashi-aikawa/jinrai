@@ -402,6 +402,75 @@ describe("window_mover_config", function()
 		assert.is_truthy(tostring(err):match("removed key 'appearance%.selectedArea'"))
 	end)
 
+	it("jinrai_mode windowMover key は selectedArea 候補キーと衝突しなければ設定できる", function()
+		local built = mod.build({
+			selectedArea = {
+				screens = {
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+			},
+			internal = {
+				jinraiMode = {
+					windowMover = {
+						key = "space",
+					},
+				},
+			},
+		})
+
+		assert.are.equal("space", built.jinraiModeKey)
+	end)
+
+	it("jinrai_mode windowMover key は selectedArea 候補キーと衝突するとエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					screens = {
+						["uuid-a"] = {
+							halfLeft = "A",
+						},
+					},
+				},
+				internal = {
+					jinraiMode = {
+						windowMover = {
+							key = "a",
+						},
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("conflicts"))
+	end)
+
+	it("jinrai_mode windowMover key は selectedArea 候補キーの prefix と衝突するとエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					screens = {
+						["uuid-a"] = {
+							halfLeft = "KD",
+						},
+					},
+				},
+				internal = {
+					jinraiMode = {
+						windowMover = {
+							key = "k",
+						},
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("conflicts"))
+	end)
+
 	it("options が table でなければエラー", function()
 		local ok, err = pcall(function()
 			mod.build("invalid")

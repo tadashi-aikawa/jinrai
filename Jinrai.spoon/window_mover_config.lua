@@ -171,6 +171,16 @@ local DEFAULT_CONFIG = {
 			},
 		},
 	},
+	internal = {
+		jinraiMode = {
+			windowMover = {
+				key = nil,
+			},
+			onStart = nil,
+			onApply = nil,
+			onCancel = nil,
+		},
+	},
 }
 
 for _, commandName in ipairs(DIRECT_AREA_COMMAND_KEYS) do
@@ -342,6 +352,37 @@ local function normalizeSelectedAreaDefault(defaultUuid, screens)
 	return defaultUuid
 end
 
+local function normalizeJinraiModeKey(key)
+	if key == nil then
+		return nil
+	end
+	if type(key) ~= "string" or key == "" then
+		error("[jinrai.window_mover] jinrai_mode.triggers.windowMover.key must be a non-empty string")
+	end
+	return string.lower(key)
+end
+
+local function validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens)
+	if not jinraiModeKey then
+		return
+	end
+	for uuid, areaMap in pairs(selectedAreaScreens) do
+		for _, areaKey in pairs(areaMap) do
+			local normalizedAreaKey = string.lower(areaKey)
+			if normalizedAreaKey == jinraiModeKey or startsWith(normalizedAreaKey, jinraiModeKey) then
+				error(
+					string.format(
+						"[jinrai.window_mover] jinrai_mode.triggers.windowMover.key '%s' conflicts with selectedArea.screens['%s'] key '%s'",
+						jinraiModeKey,
+						uuid,
+						areaKey
+					)
+				)
+			end
+		end
+	end
+end
+
 function M.build(options)
 	options = options or {}
 	if type(options) ~= "table" then
@@ -351,6 +392,8 @@ function M.build(options)
 	local merged = deepMerge(DEFAULT_CONFIG, options)
 	local selectedAreaScreens = normalizeSelectedAreaScreens(merged.selectedArea.screens)
 	local selectedAreaDefault = normalizeSelectedAreaDefault(merged.selectedArea.defaultScreen, selectedAreaScreens)
+	local jinraiModeKey = normalizeJinraiModeKey(merged.internal.jinraiMode.windowMover.key)
+	validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens)
 
 	local built = {
 		moveToNextDisplayHotkeyModifiers = merged.commands.moveToNextDisplay.hotkey.modifiers,
@@ -380,6 +423,10 @@ function M.build(options)
 		selectedAreaScreens = selectedAreaScreens,
 		selectedAreaHintsShow = merged.selectedArea.hints.show,
 		selectedAreaAppearance = merged.selectedArea.appearance,
+		jinraiModeKey = jinraiModeKey,
+		onJinraiModeStart = merged.internal.jinraiMode.onStart,
+		onJinraiModeApply = merged.internal.jinraiMode.onApply,
+		onJinraiModeCancel = merged.internal.jinraiMode.onCancel,
 	}
 	for _, commandName in ipairs(DIRECT_AREA_COMMAND_KEYS) do
 		built[commandName .. "HotkeyModifiers"] = merged.commands[commandName].hotkey.modifiers

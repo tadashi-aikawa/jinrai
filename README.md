@@ -163,6 +163,9 @@ spoon.Jinrai:setup({
   focus_border = {
     -- See "Focus Border Options" below for the complete default schema and examples
   },
+  jinrai_mode = {
+    -- See "JinraiMode Options" below for the complete default schema and examples
+  },
   window_hints = {
     -- See "Window Hints Options" below for the complete default schema and examples
   },
@@ -174,6 +177,32 @@ spoon.Jinrai:setup({
   },
 })
 ```
+
+## JinraiMode Options
+
+JinraiMode chains Window Hints and Window Mover. You can start it from Window Hints while hints are shown, or from Window Mover while `moveToSelectedArea` is shown.
+
+```lua
+jinrai_mode = {
+  triggers = {
+    windowHints = {
+      key = nil, -- Key to start JinraiMode while Window Hints is shown
+    },
+    windowMover = {
+      key = nil, -- Key to start JinraiMode while moveToSelectedArea is shown
+    },
+  },
+  logo = {
+    enabled = true, -- Show the Jinrai logo while JinraiMode is active
+    size = 480,     -- Logo size (px)
+    alpha = 0.4,    -- Logo opacity
+  },
+}
+```
+
+In Window Hints, pressing `triggers.windowHints.key` starts JinraiMode, then window selection opens Window Mover `moveToSelectedArea`.
+In Window Mover, press `triggers.windowMover.key` after opening `moveToSelectedArea`; the selected area is applied first, then Window Hints opens. Canceling either chooser ends JinraiMode.
+`triggers.windowMover.key` must not conflict with configured selected-area keys; prefix conflicts such as `key = "k"` with area key `"KD"` are rejected.
 
 ## macOS Native Tabs Options
 
@@ -213,7 +242,7 @@ focus_border = {
     logo = nil, -- Logo shown at the center of the active window. nil/false disables it
     -- logo = {
     --   source = nil, -- Image path or URL. nil uses the bundled JINRAI logo
-    --   size = 160, -- Image display size (px)
+    --   size = 480, -- Image display size (px)
     --   alpha = 0.95, -- Image opacity
     -- },
   },

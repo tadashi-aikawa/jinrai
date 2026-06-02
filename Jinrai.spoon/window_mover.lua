@@ -406,6 +406,9 @@ function M.new(options)
 	local areaKeyBlocker = nil
 	local areaMouseClickWatcher = nil
 	local areaChooserShowing = false
+	local areaApplyCallback = nil
+	local areaCancelCallback = nil
+	local areaJinraiModeActive = false
 
 	local function selectedAreaState(active)
 		local states = config.selectedAreaAppearance.state
@@ -454,7 +457,10 @@ function M.new(options)
 		end
 	end
 
-	local function closeAreaChooser(stopWatchers)
+	local function closeAreaChooser(stopWatchers, opts)
+		opts = opts or {}
+		local onCancel = opts.cancel and areaCancelCallback or nil
+		local onJinraiModeCancel = opts.cancel and areaJinraiModeActive and config.onJinraiModeCancel or nil
 		if stopWatchers and areaKeyBlocker then
 			areaKeyBlocker:stop()
 		end
@@ -464,8 +470,17 @@ function M.new(options)
 		areaChooserShowing = false
 		areaCurrentInput = ""
 		areaCandidateByKey = {}
+		areaApplyCallback = nil
+		areaCancelCallback = nil
+		areaJinraiModeActive = false
 		clearAreaChooserCanvases()
 		areaCandidates = {}
+		if onCancel then
+			onCancel()
+		end
+		if onJinraiModeCancel then
+			onJinraiModeCancel()
+		end
 	end
 
 	local function applyAreaCandidate(candidate)
@@ -474,13 +489,21 @@ function M.new(options)
 		end
 		local win = hs.window.focusedWindow()
 		if not win then
-			closeAreaChooser(true)
+			closeAreaChooser(true, { cancel = true })
 			return
 		end
 		local targetFrame = cloneFrame(candidate.frame)
+		local onApply = areaApplyCallback
+		local onJinraiModeApply = areaJinraiModeActive and config.onJinraiModeApply or nil
 		closeAreaChooser(true)
 		win:setFrame(targetFrame, 0)
 		activateWindow(win)
+		if onApply then
+			onApply(win, candidate)
+		end
+		if onJinraiModeApply then
+			onJinraiModeApply(win, candidate)
+		end
 	end
 
 	local function addAreaCandidate(candidates, seenByScreen, screen, frame, kind, icon, key, detailLabel)
@@ -835,16 +858,26 @@ function M.new(options)
 			local key = hs.keycodes.map[keyCode]
 			local modifiers = collectInputModifiers(event:getFlags())
 
+			if config.jinraiModeKey and key == config.jinraiModeKey then
+				areaJinraiModeActive = true
+				areaCurrentInput = ""
+				if config.onJinraiModeStart then
+					config.onJinraiModeStart()
+				end
+				updateAreaCandidateActiveState()
+				return true
+			end
+
 			if
 				key == config.moveToSelectedAreaHotkeyKey
 				and modifierListKey(modifiers) == modifierListKey(config.moveToSelectedAreaHotkeyModifiers)
 			then
-				closeAreaChooser(true)
+				closeAreaChooser(true, { cancel = true })
 				return true
 			end
 
 			if key == "escape" then
-				closeAreaChooser(true)
+				closeAreaChooser(true, { cancel = true })
 				return true
 			end
 			if key == "delete" or key == "forwarddelete" then
@@ -904,7 +937,7 @@ function M.new(options)
 			if config.selectedAreaHintsShow and hasAreaCandidateAtPoint(point) then
 				return true
 			end
-			closeAreaChooser(true)
+			closeAreaChooser(true, { cancel = true })
 			return true
 		end)
 	end
@@ -1402,9 +1435,9 @@ button:active {
 		end
 	end
 
-	local function moveToSelectedArea()
+	local function moveToSelectedArea(options)
 		if areaChooserShowing then
-			closeAreaChooser(true)
+			closeAreaChooser(true, { cancel = true })
 			return
 		end
 		if
@@ -1423,6 +1456,10 @@ button:active {
 		if not win then
 			return
 		end
+		options = options or {}
+		areaApplyCallback = options.onApply
+		areaCancelCallback = options.onCancel
+		areaJinraiModeActive = false
 
 		ensureAreaKeyBlocker()
 		ensureAreaMouseClickWatcher()
@@ -1437,7 +1474,7 @@ button:active {
 			areaCandidateByKey[candidate.key] = candidate
 		end
 		if #areaCandidates == 0 and #screensWithoutCandidates == 0 then
-			closeAreaChooser(true)
+			closeAreaChooser(true, { cancel = true })
 			return
 		end
 

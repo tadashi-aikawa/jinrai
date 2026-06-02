@@ -238,6 +238,106 @@ describe("init", function()
 		assert.are.equal(nil, calls.new.window_hints.focusHistory)
 	end)
 
+	it("JinraiMode は Window Hints と Window Mover を接続する", function()
+		_G.__jinrai = nil
+		local init = dofile("./Jinrai.spoon/init.lua")
+		local calls = {
+			new = {},
+			moveToSelectedAreaOptions = nil,
+			startJinraiMode = 0,
+			showJinraiMode = 0,
+			stopJinraiMode = 0,
+		}
+
+		_G.dofile = function(path)
+			if path:match("window_hints.lua$") then
+				return {
+					new = function(options)
+						calls.new.window_hints = options
+						return {
+							startJinraiMode = function()
+								calls.startJinraiMode = calls.startJinraiMode + 1
+							end,
+							showJinraiMode = function()
+								calls.showJinraiMode = calls.showJinraiMode + 1
+							end,
+							stopJinraiMode = function()
+								calls.stopJinraiMode = calls.stopJinraiMode + 1
+							end,
+							teardown = function() end,
+						}
+					end,
+				}
+			end
+			if path:match("window_mover.lua$") then
+				return {
+					new = function(options)
+						calls.new.window_mover = options
+						return {
+							moveToSelectedArea = function(options)
+								calls.moveToSelectedAreaOptions = options
+							end,
+							teardown = function() end,
+						}
+					end,
+				}
+			end
+			if path:match("focus_border.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_back.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
+			if path:match("focus_history.lua$") then
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
+			end
+			return originalDofile(path)
+		end
+
+		init:setup({
+			jinrai_mode = {
+				triggers = {
+					windowHints = {
+						key = "space",
+					},
+					windowMover = {
+						key = "j",
+					},
+				},
+			},
+			window_hints = {},
+			window_mover = {},
+		})
+
+		assert.are.equal("space", calls.new.window_hints.internal.jinraiMode.windowHints.key)
+		assert.are.equal("j", calls.new.window_mover.internal.jinraiMode.windowMover.key)
+		assert.is_truthy(calls.new.window_hints.internal.onJinraiModeSelect)
+		calls.new.window_hints.internal.onJinraiModeSelect({})
+		assert.is_truthy(calls.moveToSelectedAreaOptions.onApply)
+		assert.is_truthy(calls.moveToSelectedAreaOptions.onCancel)
+		calls.moveToSelectedAreaOptions.onApply()
+		calls.moveToSelectedAreaOptions.onCancel()
+		calls.new.window_mover.internal.jinraiMode.onStart()
+		calls.new.window_mover.internal.jinraiMode.onApply()
+		calls.new.window_mover.internal.jinraiMode.onCancel()
+
+		assert.are.equal(1, calls.startJinraiMode)
+		assert.are.equal(2, calls.showJinraiMode)
+		assert.are.equal(2, calls.stopJinraiMode)
+	end)
+
 	it("macosNativeTabs 未指定時は組み込みのデフォルト設定を注入する", function()
 		_G.__jinrai = nil
 		local init = dofile("./Jinrai.spoon/init.lua")

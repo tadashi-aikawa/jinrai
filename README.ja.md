@@ -165,6 +165,9 @@ spoon.Jinrai:setup({
   focus_border = {
     -- 詳細は後続の「Focus Border オプション」の全設定例を参照
   },
+  jinrai_mode = {
+    -- 詳細は後続の「JinraiMode オプション」の全設定例を参照
+  },
   window_hints = {
     -- 詳細は後続の「Window Hints オプション」の全設定例を参照
   },
@@ -176,6 +179,31 @@ spoon.Jinrai:setup({
   },
 })
 ```
+
+## JinraiMode オプション
+
+JinraiMode は Window Hints と Window Mover を連続実行するモードです。Window Hints のヒント表示中、または Window Mover の `moveToSelectedArea` 表示中から開始できます。
+
+```lua
+jinrai_mode = {
+  triggers = {
+    windowHints = {
+      key = nil, -- Window Hints 表示中に JinraiMode を開始するキー
+    },
+    windowMover = {
+      key = nil, -- moveToSelectedArea 表示中に JinraiMode を開始するキー
+    },
+  },
+  logo = {
+    enabled = true, -- JinraiMode 中に Jinrai ロゴを表示するか
+    size = 480,     -- ロゴサイズ (px)
+    alpha = 0.4,    -- ロゴの透明度
+  },
+}
+```
+
+Window Hints では `triggers.windowHints.key` を押すと JinraiMode に入り、ウィンドウ選択後に Window Mover の `moveToSelectedArea` が開きます。Window Mover では `moveToSelectedArea` を開いた後に `triggers.windowMover.key` を押すと JinraiMode に入り、エリア適用後に Window Hints が開きます。どちらかでキャンセルすると JinraiMode は終了します。
+`triggers.windowMover.key` は設定済みの selected-area キーと衝突してはいけません。`key = "k"` とエリアキー `"KD"` のような prefix 衝突もエラーになります。
 
 ## macOS Native Tabs オプション
 
@@ -215,7 +243,7 @@ focus_border = {
     logo = nil, -- ウィンドウ中央に表示するロゴ。nil/false の場合は非表示
     -- logo = {
     --   source = nil, -- 画像パスまたはURL。nil の場合はJINRAI同梱ロゴ
-    --   size = 160, -- 画像の表示大きさ (px)
+    --   size = 480, -- 画像の表示大きさ (px)
     --   alpha = 0.95, -- 画像の透明度
     -- },
   },

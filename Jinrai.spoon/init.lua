@@ -27,6 +27,22 @@ local DEFAULT_MACOS_NATIVE_TABS = {
 	stateSyncInterval = 0.5,
 }
 
+local DEFAULT_JINRAI_MODE = {
+	triggers = {
+		windowHints = {
+			key = nil,
+		},
+		windowMover = {
+			key = nil,
+		},
+	},
+	logo = {
+		enabled = true,
+		size = 480,
+		alpha = 0.4,
+	},
+}
+
 local function resourcePath(fileName)
 	if not hs or not hs.spoons or not hs.spoons.resourcePath then
 		error("[jinrai] hs.spoons.resourcePath is not available")
@@ -47,6 +63,29 @@ local function mergeTable(defaults, overrides)
 	if overrides then
 		for k, v in pairs(overrides) do
 			merged[k] = v
+		end
+	end
+	return merged
+end
+
+local function deepMerge(defaults, overrides)
+	if type(defaults) ~= "table" then
+		if overrides ~= nil then
+			return overrides
+		end
+		return defaults
+	end
+	local merged = {}
+	for k, v in pairs(defaults) do
+		if type(v) == "table" then
+			merged[k] = deepMerge(v, nil)
+		else
+			merged[k] = v
+		end
+	end
+	if type(overrides) == "table" then
+		for k, v in pairs(overrides) do
+			merged[k] = deepMerge(defaults[k], v)
 		end
 	end
 	return merged
@@ -94,9 +133,22 @@ local function normalizeConfig(selfOrConfig, maybeConfig)
 	return selfOrConfig
 end
 
+local function normalizeJinraiMode(config)
+	return deepMerge(DEFAULT_JINRAI_MODE, config)
+end
+
+local function defer(callback)
+	if hs and hs.timer and hs.timer.doAfter then
+		hs.timer.doAfter(0, callback)
+		return
+	end
+	callback()
+end
+
 function obj:setup(config)
 	config = normalizeConfig(self, config)
 	local macosNativeTabs = normalizeMacosNativeTabs(config.macosNativeTabs)
+	local jinraiMode = normalizeJinraiMode(config.jinrai_mode)
 
 	obj:teardown()
 
@@ -121,7 +173,33 @@ function obj:setup(config)
 	end
 
 	if config.window_mover then
-		windowMover = windowMoverModule.new(config.window_mover)
+		local windowMoverConfig = config.window_mover
+		local internalConfig = mergeTable(windowMoverConfig.internal or {}, {
+			jinraiMode = {
+				windowMover = {
+					key = jinraiMode.triggers.windowMover.key,
+				},
+				onStart = function()
+					if windowHints and windowHints.startJinraiMode then
+						windowHints.startJinraiMode()
+					end
+				end,
+				onApply = function()
+					defer(function()
+						if windowHints and windowHints.showJinraiMode then
+							windowHints.showJinraiMode()
+						end
+					end)
+				end,
+				onCancel = function()
+					if windowHints and windowHints.stopJinraiMode then
+						windowHints.stopJinraiMode()
+					end
+				end,
+			},
+		})
+		windowMoverConfig = mergeTable(windowMoverConfig, { internal = internalConfig })
+		windowMover = windowMoverModule.new(windowMoverConfig)
 	end
 
 	if config.focus_back then
@@ -132,6 +210,39 @@ function obj:setup(config)
 
 	if config.window_hints then
 		local windowHintsConfig = config.window_hints
+		local jinraiModeInternalConfig = mergeTable(windowHintsConfig.internal or {}, {
+			jinraiMode = {
+				windowHints = {
+					key = jinraiMode.triggers.windowHints.key,
+				},
+				logo = jinraiMode.logo,
+			},
+		})
+		windowHintsConfig = mergeTable(windowHintsConfig, { internal = jinraiModeInternalConfig })
+		if windowMover then
+			local internalConfig = mergeTable(windowHintsConfig.internal or {}, {
+				onJinraiModeSelect = function()
+					if not windowMover or not windowMover.moveToSelectedArea then
+						return
+					end
+					windowMover.moveToSelectedArea({
+						onApply = function()
+							defer(function()
+								if windowHints and windowHints.showJinraiMode then
+									windowHints.showJinraiMode()
+								end
+							end)
+						end,
+						onCancel = function()
+							if windowHints and windowHints.stopJinraiMode then
+								windowHints.stopJinraiMode()
+							end
+						end,
+					})
+				end,
+			})
+			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })
+		end
 		if focusHistory then
 			local internalConfig = mergeTable(windowHintsConfig.internal or {}, { focusHistory = focusHistory })
 			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })

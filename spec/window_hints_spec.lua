@@ -1639,6 +1639,11 @@ describe("window_hints mouse selection", function()
 			return self
 		end
 
+		function canvasMethods:alpha(value)
+			self._alpha = value
+			return self
+		end
+
 		function canvasMethods:show()
 			self._shown = true
 			return self
@@ -1770,6 +1775,8 @@ describe("window_hints mouse selection", function()
 			keycodes = {
 				map = {
 					[42] = "f20",
+					[49] = "space",
+					[53] = "escape",
 				},
 			},
 			window = {
@@ -1787,6 +1794,9 @@ describe("window_hints mouse selection", function()
 			image = {
 				imageFromAppBundle = function()
 					return {}
+				end,
+				imageFromPath = function(path)
+					return { path = path }
 				end,
 			},
 			mouse = {
@@ -1911,6 +1921,279 @@ describe("window_hints mouse selection", function()
 
 		assert.are.equal(0, focusCounter.count)
 		assert.is_nil(hintCanvas._deleted)
+	end)
+
+	it("JinraiModeキー押下後の選択は内部コールバックへ通知する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local normalSelectCount = 0
+		local jinraiModeSelectCount = 0
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onSelect = function()
+						normalSelectCount = normalSelectCount + 1
+					end,
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					windowHints = {
+						key = "space",
+					},
+					logo = {
+						enabled = true,
+						size = 480,
+						alpha = 0.3,
+					},
+				},
+				onJinraiModeSelect = function(win)
+					assert.are.equal(targetWindow, win)
+					jinraiModeSelectCount = jinraiModeSelectCount + 1
+				end,
+			},
+		})
+		assert.is_true(instance.show())
+
+		assert.is_true(mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 49
+			end,
+			getFlags = function()
+				return {}
+			end,
+		}))
+
+		local hintCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas._mouseCallback then
+				hintCanvas = canvas
+				break
+			end
+		end
+		hintCanvas._mouseCallback(hintCanvas, "mouseUp")
+
+		assert.are.equal(1, focusCounter.count)
+		assert.are.equal(0, normalSelectCount)
+		assert.are.equal(1, jinraiModeSelectCount)
+		assert.is_false(mocks.keyBlocker.started)
+	end)
+
+	it("showJinraiMode は追加キーなしで内部コールバックへ通知する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local jinraiModeSelectCount = 0
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				onJinraiModeSelect = function()
+					jinraiModeSelectCount = jinraiModeSelectCount + 1
+				end,
+			},
+		})
+		assert.is_true(instance.showJinraiMode())
+
+		local hintCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas._mouseCallback then
+				hintCanvas = canvas
+				break
+			end
+		end
+		hintCanvas._mouseCallback(hintCanvas, "mouseUp")
+
+		assert.are.equal(1, jinraiModeSelectCount)
+	end)
+
+	it("JinraiMode 中はロゴをアクティブ画面中央に表示し選択後も維持する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					windowHints = {
+						key = "space",
+					},
+					logo = {
+						enabled = true,
+						size = 480,
+						alpha = 0.3,
+					},
+				},
+				onJinraiModeSelect = function() end,
+			},
+		})
+		assert.is_true(instance.show())
+
+		mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 49
+			end,
+			getFlags = function()
+				return {}
+			end,
+		})
+
+		local logoCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas[1] and canvas[1].image and canvas[1].image.path == "./Jinrai.spoon/jinrai.svg" then
+				logoCanvas = canvas
+				break
+			end
+		end
+		assert.is_truthy(logoCanvas)
+		assert.are.same({ x = 360, y = 160, w = 480, h = 480 }, logoCanvas._frame)
+		assert.are.equal(0, logoCanvas._alpha)
+		assert.are.equal(0.3, logoCanvas[1].imageAlpha)
+
+		local hintCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas._mouseCallback then
+				hintCanvas = canvas
+				break
+			end
+		end
+		hintCanvas._mouseCallback(hintCanvas, "mouseUp")
+
+		local activeLogoCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if
+				not canvas._deleted
+				and canvas[1]
+				and canvas[1].image
+				and canvas[1].image.path == "./Jinrai.spoon/jinrai.svg"
+			then
+				activeLogoCanvas = canvas
+				break
+			end
+		end
+		assert.is_truthy(activeLogoCanvas)
+		instance.stopJinraiMode()
+		assert.is_true(activeLogoCanvas._deleted)
+	end)
+
+	it("JinraiMode 中にキャンセルするとロゴを削除する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					windowHints = {
+						key = "space",
+					},
+					logo = {
+						enabled = true,
+						size = 480,
+						alpha = 0.3,
+					},
+				},
+				onJinraiModeSelect = function() end,
+			},
+		})
+		assert.is_true(instance.show())
+		mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 49
+			end,
+			getFlags = function()
+				return {}
+			end,
+		})
+
+		local logoCanvas
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas[1] and canvas[1].image and canvas[1].image.path == "./Jinrai.spoon/jinrai.svg" then
+				logoCanvas = canvas
+				break
+			end
+		end
+		assert.is_truthy(logoCanvas)
+
+		mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 53
+			end,
+			getFlags = function()
+				return {}
+			end,
+		})
+
+		assert.is_true(logoCanvas._deleted)
 	end)
 
 	it("ヒント表示中にヒント外を左クリックすると閉じる", function()

@@ -255,6 +255,17 @@ local DEFAULT_CONFIG = {
 	internal = {
 		focusHistory = nil,
 		macosNativeTabs = nil,
+		jinraiMode = {
+			windowHints = {
+				key = nil,
+			},
+			logo = {
+				enabled = true,
+				size = 480,
+				alpha = 0.4,
+			},
+		},
+		onJinraiModeSelect = nil,
 	},
 }
 
@@ -570,7 +581,14 @@ local function normalizeHintChars(rawHintChars)
 	return normalized
 end
 
-local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spaceKeys, prevSpaceKey, nextSpaceKey)
+local function buildReservedHintCharLookup(
+	directionKeyLookup,
+	focusBackKey,
+	jinraiModeKey,
+	spaceKeys,
+	prevSpaceKey,
+	nextSpaceKey
+)
 	local reserved = {}
 	local function addKey(key)
 		if key and #key == 1 then
@@ -581,6 +599,7 @@ local function buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spa
 		addKey(key)
 	end
 	addKey(focusBackKey)
+	addKey(jinraiModeKey)
 	addKey(prevSpaceKey)
 	addKey(nextSpaceKey)
 	if spaceKeys then
@@ -760,6 +779,12 @@ local function checkLegacyNestedKeys(options)
 		error("[jinrai.window_hints] legacy nested key 'hint.offSpaceBadge.*' is no longer supported; use 'hint.spaceBadge.*'")
 	end
 	if type(options.navigation) == "table" then
+		if options.navigation.jinraiMode ~= nil then
+			error("[jinrai.window_hints] removed key 'navigation.jinraiMode' is no longer supported; use top-level 'jinrai_mode'")
+		end
+		if options.navigation.focusAndMove ~= nil then
+			error("[jinrai.window_hints] removed key 'navigation.focusAndMove' is no longer supported; use top-level 'jinrai_mode'")
+		end
 		if options.navigation.focusBackKey ~= nil then
 			error("[jinrai.window_hints] legacy nested key 'navigation.focusBackKey' is no longer supported; use 'navigation.focusBack.key'")
 		end
@@ -830,11 +855,18 @@ function M.build(options)
 	if options.internal and type(options.internal) == "table" and options.internal.macosNativeTabs ~= nil then
 		merged.internal.macosNativeTabs = options.internal.macosNativeTabs
 	end
+	if options.internal and type(options.internal) == "table" and options.internal.jinraiMode ~= nil then
+		merged.internal.jinraiMode = deepMerge(merged.internal.jinraiMode, options.internal.jinraiMode)
+	end
 
 	local directionKeys = normalizeDirectionKeys(merged.navigation.direction.hints.keys, "navigation.direction.hints.keys")
 	local directionKeyLookup = buildDirectionKeyLookup(directionKeys, "navigation.direction.hints.keys")
 	local directDirectionHotkeys = normalizeDirectDirectionHotkeys(merged.navigation.direction.direct)
 	local focusBackKey = normalizeActionKey(merged.navigation.focusBack.key, "navigation.focusBack.key")
+	local jinraiMode = merged.internal.jinraiMode or {}
+	local jinraiModeWindowHints = jinraiMode.windowHints or {}
+	local jinraiModeLogoConfig = jinraiMode.logo or {}
+	local jinraiModeKey = normalizeActionKey(jinraiModeWindowHints.key, "jinrai_mode.triggers.windowHints.key")
 	local prevSpaceKey = normalizeActionKey(merged.navigation.spaces.prev.key, "navigation.spaces.prev.key")
 	local nextSpaceKey = normalizeActionKey(merged.navigation.spaces.next.key, "navigation.spaces.next.key")
 	local swapSelectModifiers = normalizeSelectModifiers(
@@ -849,7 +881,8 @@ function M.build(options)
 	local spaceKeys = merged.navigation.spaces.numbers and true or false
 
 	local hintChars = normalizeHintChars(merged.hint.chars or DEFAULT_HINT_CHARS)
-	local reservedHintCharLookup = buildReservedHintCharLookup(directionKeyLookup, focusBackKey, spaceKeys, prevSpaceKey, nextSpaceKey)
+	local reservedHintCharLookup =
+		buildReservedHintCharLookup(directionKeyLookup, focusBackKey, jinraiModeKey, spaceKeys, prevSpaceKey, nextSpaceKey)
 	hintChars = filterHintChars(hintChars, reservedHintCharLookup)
 	if #hintChars == 0 then
 		error("[jinrai.window_hints] no available hintChars after excluding reserved navigation keys")
@@ -879,6 +912,11 @@ function M.build(options)
 	local keyState = merged.hint.key.state
 	local titleState = merged.hint.title.state
 	local spaceBadgeState = merged.hint.spaceBadge.state
+	local jinraiModeLogo = {
+		enabled = jinraiModeLogoConfig.enabled,
+		size = normalizePositiveNumber(jinraiModeLogoConfig.size, "jinrai_mode.logo.size"),
+		alpha = normalizeUnitIntervalNumber(jinraiModeLogoConfig.alpha, "jinrai_mode.logo.alpha"),
+	}
 
 	return {
 		hotkeyModifiers = merged.hotkey.modifiers,
@@ -961,6 +999,9 @@ function M.build(options)
 		includeActiveWindow = merged.behavior.candidates.includeActiveWindow,
 		macosNativeTabs = merged.internal.macosNativeTabs,
 		focusBackKey = focusBackKey,
+		jinraiModeKey = jinraiModeKey,
+		jinraiModeLogo = jinraiModeLogo,
+		onJinraiModeSelect = merged.internal.onJinraiModeSelect,
 		directionKeys = directionKeys,
 		directionKeyLookup = directionKeyLookup,
 		directDirectionHotkeys = directDirectionHotkeys,

@@ -66,7 +66,7 @@ describe("focus_border_config", function()
 		})
 
 		assert.is_nil(built.logo.source)
-		assert.are.equal(160, built.logo.size)
+		assert.are.equal(480, built.logo.size)
 		assert.are.equal(0.95, built.logo.alpha)
 	end)
 

@@ -114,7 +114,7 @@ function M.build(options)
 	if merged.visual.logo then
 		logo = {
 			source = merged.visual.logo.source,
-			size = merged.visual.logo.size or 160,
+			size = merged.visual.logo.size or 480,
 			alpha = merged.visual.logo.alpha or 0.95,
 		}
 	end

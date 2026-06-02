@@ -2046,6 +2046,7 @@ function M.new(options)
 	local directionKeyLookup = config.directionKeyLookup or buildDirectionKeyLookup(directionKeys)
 	local directDirectionHotkeys = config.directDirectionHotkeys
 	local focusBackKey = config.focusBackKey
+	local jinraiModeKey = config.jinraiModeKey
 	local prevSpaceKey = config.prevSpaceKey
 	local nextSpaceKey = config.nextSpaceKey
 	local swapWindowFrameSelectModifiers = config.swapWindowFrameSelectModifiers
@@ -2061,6 +2062,10 @@ function M.new(options)
 	local currentInput = ""
 	local isShowing = false
 	local isPreparing = false
+	local isJinraiMode = false
+	local jinraiModeLogoCanvas = nil
+	local jinraiModeLogoImage = nil
+	local jinraiModeLogoFadeTimer = nil
 	local pendingKeys = {}
 	local activeOverlayCanvases = {}
 	local snapshotTimer = nil
@@ -2102,6 +2107,108 @@ function M.new(options)
 		openHints = {}
 		hintByKey = {}
 		currentInput = ""
+	end
+
+	local function clearJinraiModeLogo()
+		if jinraiModeLogoFadeTimer then
+			jinraiModeLogoFadeTimer:stop()
+			jinraiModeLogoFadeTimer = nil
+		end
+		if jinraiModeLogoCanvas then
+			releaseCanvasImages(jinraiModeLogoCanvas)
+			jinraiModeLogoCanvas:delete()
+			jinraiModeLogoCanvas = nil
+		end
+	end
+
+	local function loadJinraiModeLogoImage()
+		if jinraiModeLogoImage then
+			return jinraiModeLogoImage
+		end
+		if not hs or not hs.image or not hs.image.imageFromPath then
+			return nil
+		end
+		jinraiModeLogoImage = hs.image.imageFromPath(resourcePath("jinrai.svg"))
+		return jinraiModeLogoImage
+	end
+
+	local function activeScreenFrame()
+		local win = hs and hs.window and hs.window.focusedWindow and hs.window.focusedWindow() or nil
+		local screen = win and win.screen and win:screen() or nil
+		if not screen and hs and hs.screen and hs.screen.mainScreen then
+			screen = hs.screen.mainScreen()
+		end
+		return screen and screen.frame and screen:frame() or nil
+	end
+
+	local function showJinraiModeLogo()
+		local logo = config.jinraiModeLogo
+		if not isJinraiMode or not logo or not logo.enabled then
+			clearJinraiModeLogo()
+			return
+		end
+		if not hs or not hs.canvas then
+			return
+		end
+		local image = loadJinraiModeLogoImage()
+		local frame = activeScreenFrame()
+		if not image or not frame then
+			return
+		end
+		local size = logo.size
+		local logoFrame = {
+			x = frame.x + (frame.w - size) / 2,
+			y = frame.y + (frame.h - size) / 2,
+			w = size,
+			h = size,
+		}
+		clearJinraiModeLogo()
+		local canvas = hs.canvas.new(logoFrame)
+		canvas:level(hs.canvas.windowLevels.overlay)
+		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
+		canvas:appendElements({
+			type = "image",
+			image = image,
+			imageAlpha = logo.alpha,
+			frame = { x = 0, y = 0, w = size, h = size },
+		})
+		if canvas.alpha then
+			canvas:alpha(0)
+		end
+		canvas:show()
+		jinraiModeLogoCanvas = canvas
+		if canvas.alpha and hs.timer and hs.timer.doEvery then
+			local fadeSteps = 8
+			local currentStep = 0
+			jinraiModeLogoFadeTimer = hs.timer.doEvery(0.02, function()
+				currentStep = currentStep + 1
+				if not jinraiModeLogoCanvas then
+					if jinraiModeLogoFadeTimer then
+						jinraiModeLogoFadeTimer:stop()
+						jinraiModeLogoFadeTimer = nil
+					end
+					return
+				end
+				local nextAlpha = logo.alpha * math.min(1, currentStep / fadeSteps)
+				jinraiModeLogoCanvas:alpha(nextAlpha)
+				if currentStep >= fadeSteps then
+					jinraiModeLogoFadeTimer:stop()
+					jinraiModeLogoFadeTimer = nil
+				end
+			end)
+		elseif canvas.alpha then
+			canvas:alpha(logo.alpha)
+		end
+	end
+
+	local function stopJinraiMode()
+		isJinraiMode = false
+		clearJinraiModeLogo()
+	end
+
+	local function startJinraiMode()
+		isJinraiMode = true
+		showJinraiModeLogo()
 	end
 
 	local function pointInFrame(point, frame)
@@ -2223,7 +2330,8 @@ function M.new(options)
 		end
 	end
 
-	local function closeHints(stopKeyBlocker)
+	local function closeHints(stopKeyBlocker, opts)
+		opts = opts or {}
 		if (isShowing or isPreparing) and stopKeyBlocker and keyBlocker then
 			keyBlocker:stop()
 		end
@@ -2232,6 +2340,9 @@ function M.new(options)
 		end
 		isShowing = false
 		isPreparing = false
+		if not opts.keepJinraiMode then
+			stopJinraiMode()
+		end
 		pendingKeys = {}
 		if snapshotTimer then
 			snapshotTimer:stop()
@@ -2257,6 +2368,13 @@ function M.new(options)
 			local frame = win:frame()
 			hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
 		end
+		local onJinraiModeSelect = config.onJinraiModeSelect
+		if isJinraiMode and onJinraiModeSelect then
+			showJinraiModeLogo()
+			closeHints(true, { keepJinraiMode = true })
+			onJinraiModeSelect(win)
+			return
+		end
 		if config.onSelect then
 			config.onSelect(win)
 		end
@@ -2278,6 +2396,13 @@ function M.new(options)
 		if config.centerCursor then
 			local frame = win:frame()
 			hs.mouse.absolutePosition({ x = frame.x + frame.w / 2, y = frame.y + frame.h / 2 })
+		end
+		local onJinraiModeSelect = config.onJinraiModeSelect
+		if isJinraiMode and onJinraiModeSelect then
+			showJinraiModeLogo()
+			closeHints(true, { keepJinraiMode = true })
+			onJinraiModeSelect(win)
+			return true
 		end
 		if config.onSelect then
 			config.onSelect(win)
@@ -2394,6 +2519,13 @@ function M.new(options)
 			return
 		end
 		local swapWithFocused = shouldSwapWindowFrameOnSelect(swapWindowFrameSelectModifiers, inputModifiers)
+		if jinraiModeKey and key == jinraiModeKey then
+			isJinraiMode = true
+			currentInput = ""
+			showJinraiModeLogo()
+			refreshHighlights()
+			return
+		end
 		if focusBackKey and key == focusBackKey then
 			if runFocusBackAction(swapWithFocused) then
 				return
@@ -3093,9 +3225,14 @@ function M.new(options)
 		newOverlayCanvas({ x = frame.x + frame.w - bw, y = frame.y + bw, w = bw, h = frame.h - (bw * 2) })
 	end
 
-	local function showHints()
+	local function showHints(opts)
+		opts = opts or {}
 		-- Start key blocker early to capture keys pressed during rendering
 		isPreparing = true
+		if opts.jinraiMode then
+			isJinraiMode = true
+			showJinraiModeLogo()
+		end
 		pendingKeys = {}
 		ensureKeyBlocker()
 		ensureMouseClickWatcher()
@@ -3105,7 +3242,11 @@ function M.new(options)
 		local entries = collectEntries()
 		local hintEntries = buildHintEntries(entries)
 
-		closeHints(false)
+		closeHints(false, { keepJinraiMode = opts.jinraiMode == true })
+		if opts.jinraiMode then
+			isJinraiMode = true
+			showJinraiModeLogo()
+		end
 		showActiveOverlay()
 
 		if config.centerCursorOnStart then
@@ -3122,6 +3263,7 @@ function M.new(options)
 			keyBlocker:stop()
 			mouseClickWatcher:stop()
 			pendingKeys = {}
+			stopJinraiMode()
 			hs.timer.doAfter(0.5, function()
 				for _, canvas in ipairs(activeOverlayCanvases) do
 					canvas:delete()
@@ -3321,6 +3463,7 @@ function M.new(options)
 			mouseClickWatcher:stop()
 			pendingKeys = {}
 			clearHints()
+			stopJinraiMode()
 			return
 		end
 
@@ -3389,11 +3532,12 @@ function M.new(options)
 		end
 	end
 
-	local function invokeShowHints()
-		local ok, err = pcall(showHints)
+	local function invokeShowHints(opts)
+		local ok, err = pcall(showHints, opts)
 		if ok then
 			return true
 		end
+		stopJinraiMode()
 		if config.onError then
 			config.onError(err)
 		end
@@ -3441,6 +3585,11 @@ function M.new(options)
 
 	return {
 		show = invokeShowHints,
+		startJinraiMode = startJinraiMode,
+		showJinraiMode = function()
+			return invokeShowHints({ jinraiMode = true })
+		end,
+		stopJinraiMode = stopJinraiMode,
 		teardown = teardown,
 	}
 end

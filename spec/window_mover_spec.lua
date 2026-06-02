@@ -157,6 +157,7 @@ describe("window_mover", function()
 			x = 7,
 			c = 8,
 			v = 9,
+			space = 49,
 			f18 = 79,
 			f19 = 80,
 		}
@@ -735,6 +736,152 @@ describe("window_mover", function()
 		sendKey(state, "s")
 
 		assert.are.same({ x = 0, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("moveToSelectedArea の onApply は移動完了後に呼ばれる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local appliedFrame
+		local appliedCandidate
+		local cancelCount = 0
+
+		instance.moveToSelectedArea({
+			onApply = function(appliedWin, candidate)
+				appliedFrame = appliedWin:frame()
+				appliedCandidate = candidate
+			end,
+			onCancel = function()
+				cancelCount = cancelCount + 1
+			end,
+		})
+		sendKey(state, "a")
+
+		assert.are.same({ x = 0, y = 0, w = 600, h = 800 }, appliedFrame)
+		assert.are.equal("A", appliedCandidate.key)
+		assert.are.equal(0, cancelCount)
+	end)
+
+	it("moveToSelectedArea の onCancel はキャンセル時だけ呼ばれる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local applyCount = 0
+		local cancelCount = 0
+
+		instance.moveToSelectedArea({
+			onApply = function()
+				applyCount = applyCount + 1
+			end,
+			onCancel = function()
+				cancelCount = cancelCount + 1
+			end,
+		})
+		sendKey(state, "escape")
+
+		assert.are.equal(0, applyCount)
+		assert.are.equal(1, cancelCount)
+	end)
+
+	it("通常の moveToSelectedArea 適用では JinraiMode 継続コールバックを呼ばない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		})
+		local applyCount = 0
+		options.internal = {
+			jinraiMode = {
+				windowMover = {
+					key = "space",
+				},
+				onApply = function()
+					applyCount = applyCount + 1
+				end,
+			},
+		}
+		local state, instance = newWindowMoverWithMock(options, win, { win })
+		state.screens = { screen }
+
+		instance.moveToSelectedArea()
+		sendKey(state, "a")
+
+		assert.are.equal(0, applyCount)
+	end)
+
+	it("moveToSelectedArea 表示中に JinraiMode キーを押すとエリア適用後に継続コールバックを呼ぶ", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		})
+		local startCount = 0
+		local applyCount = 0
+		options.internal = {
+			jinraiMode = {
+				windowMover = {
+					key = "space",
+				},
+				onStart = function()
+					startCount = startCount + 1
+				end,
+				onApply = function()
+					applyCount = applyCount + 1
+				end,
+			},
+		}
+		local state, instance = newWindowMoverWithMock(options, win, { win })
+		state.screens = { screen }
+
+		instance.moveToSelectedArea()
+		sendKey(state, "space")
+		sendKey(state, "a")
+
+		assert.are.equal(1, startCount)
+		assert.are.equal(1, applyCount)
+	end)
+
+	it("moveToSelectedArea 表示中に JinraiMode キーを押した後のキャンセルで終了コールバックを呼ぶ", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		})
+		local cancelCount = 0
+		options.internal = {
+			jinraiMode = {
+				windowMover = {
+					key = "space",
+				},
+				onCancel = function()
+					cancelCount = cancelCount + 1
+				end,
+			},
+		}
+		local state, instance = newWindowMoverWithMock(options, win, { win })
+		state.screens = { screen }
+
+		instance.moveToSelectedArea()
+		sendKey(state, "space")
+		sendKey(state, "escape")
+
+		assert.are.equal(1, cancelCount)
 	end)
 
 	it("明示された上下方向の half エリアへ移動する", function()
