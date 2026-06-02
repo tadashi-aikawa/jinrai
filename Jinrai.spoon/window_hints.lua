@@ -2049,6 +2049,7 @@ function M.new(options)
 	local jinraiModeKey = config.jinraiModeKey
 	local prevSpaceKey = config.prevSpaceKey
 	local nextSpaceKey = config.nextSpaceKey
+	local moveToSelectedAreaKey = config.moveToSelectedAreaKey
 	local swapWindowFrameSelectModifiers = config.swapWindowFrameSelectModifiers
 	local hintChars = config.hintChars
 
@@ -2514,11 +2515,24 @@ function M.new(options)
 		refreshHighlights()
 	end
 
+	local function runMoveToSelectedAreaAction()
+		local onMoveToSelectedArea = config.onMoveToSelectedArea
+		if not onMoveToSelectedArea then
+			return
+		end
+		closeHints(true)
+		onMoveToSelectedArea()
+	end
+
 	local function handleInputKey(key, inputModifiers)
 		if not isShowing then
 			return
 		end
 		local swapWithFocused = shouldSwapWindowFrameOnSelect(swapWindowFrameSelectModifiers, inputModifiers)
+		if moveToSelectedAreaKey and key == moveToSelectedAreaKey then
+			runMoveToSelectedAreaAction()
+			return
+		end
 		if jinraiModeKey and key == jinraiModeKey then
 			isJinraiMode = true
 			currentInput = ""

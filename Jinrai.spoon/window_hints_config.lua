@@ -232,6 +232,11 @@ local DEFAULT_CONFIG = {
 				key = nil,
 			},
 		},
+		windowMover = {
+			moveToSelectedArea = {
+				key = nil,
+			},
+		},
 	},
 	behavior = {
 		selection = {
@@ -266,6 +271,7 @@ local DEFAULT_CONFIG = {
 			},
 		},
 		onJinraiModeSelect = nil,
+		onMoveToSelectedArea = nil,
 	},
 }
 
@@ -587,7 +593,8 @@ local function buildReservedHintCharLookup(
 	jinraiModeKey,
 	spaceKeys,
 	prevSpaceKey,
-	nextSpaceKey
+	nextSpaceKey,
+	moveToSelectedAreaKey
 )
 	local reserved = {}
 	local function addKey(key)
@@ -602,6 +609,7 @@ local function buildReservedHintCharLookup(
 	addKey(jinraiModeKey)
 	addKey(prevSpaceKey)
 	addKey(nextSpaceKey)
+	addKey(moveToSelectedAreaKey)
 	if spaceKeys then
 		for i = 1, 9 do
 			reserved[tostring(i)] = true
@@ -869,6 +877,10 @@ function M.build(options)
 	local jinraiModeKey = normalizeActionKey(jinraiModeWindowHints.key, "jinrai_mode.triggers.windowHints.key")
 	local prevSpaceKey = normalizeActionKey(merged.navigation.spaces.prev.key, "navigation.spaces.prev.key")
 	local nextSpaceKey = normalizeActionKey(merged.navigation.spaces.next.key, "navigation.spaces.next.key")
+	local moveToSelectedAreaKey = normalizeActionKey(
+		merged.navigation.windowMover.moveToSelectedArea.key,
+		"navigation.windowMover.moveToSelectedArea.key"
+	)
 	local swapSelectModifiers = normalizeSelectModifiers(
 		merged.behavior.selection.swapWindowFrame.modifiers,
 		"behavior.selection.swapWindowFrame.modifiers"
@@ -881,8 +893,15 @@ function M.build(options)
 	local spaceKeys = merged.navigation.spaces.numbers and true or false
 
 	local hintChars = normalizeHintChars(merged.hint.chars or DEFAULT_HINT_CHARS)
-	local reservedHintCharLookup =
-		buildReservedHintCharLookup(directionKeyLookup, focusBackKey, jinraiModeKey, spaceKeys, prevSpaceKey, nextSpaceKey)
+	local reservedHintCharLookup = buildReservedHintCharLookup(
+		directionKeyLookup,
+		focusBackKey,
+		jinraiModeKey,
+		spaceKeys,
+		prevSpaceKey,
+		nextSpaceKey,
+		moveToSelectedAreaKey
+	)
 	hintChars = filterHintChars(hintChars, reservedHintCharLookup)
 	if #hintChars == 0 then
 		error("[jinrai.window_hints] no available hintChars after excluding reserved navigation keys")
@@ -1002,6 +1021,7 @@ function M.build(options)
 		jinraiModeKey = jinraiModeKey,
 		jinraiModeLogo = jinraiModeLogo,
 		onJinraiModeSelect = merged.internal.onJinraiModeSelect,
+		onMoveToSelectedArea = merged.internal.onMoveToSelectedArea,
 		directionKeys = directionKeys,
 		directionKeyLookup = directionKeyLookup,
 		directDirectionHotkeys = directDirectionHotkeys,
@@ -1013,6 +1033,7 @@ function M.build(options)
 		spaceKeys = spaceKeys,
 		prevSpaceKey = prevSpaceKey,
 		nextSpaceKey = nextSpaceKey,
+		moveToSelectedAreaKey = moveToSelectedAreaKey,
 		swapWindowFrameSelectModifiers = swapSelectModifiers,
 		focusHistory = focusHistory,
 	}

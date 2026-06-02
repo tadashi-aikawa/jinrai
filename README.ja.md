@@ -445,6 +445,11 @@ window_hints = {
         key = nil, -- ヒント表示中に次の Space へ移動するキー
       },
     },
+    windowMover = {
+      moveToSelectedArea = {
+        key = nil, -- ヒントを閉じて moveToSelectedArea を開くキー
+      },
+    },
   },
   behavior = {
     selection = {
@@ -508,6 +513,7 @@ hint = {
 - ヒント表示中に Window Hints のホットキーをもう一度押すと、ヒントを閉じます
 - `navigation.focusBack.key` と `navigation.direction.hints.keys` はヒント表示中のみ有効です
 - `navigation.focusBack.key` は `focus_back` 設定が有効なときだけ動作します
+- `navigation.windowMover.moveToSelectedArea.key` は Window Hints を閉じ、アクティブウィンドウに対して Window Mover の `moveToSelectedArea` を開きます。ウィンドウ選択後に `moveToSelectedArea` を開く JinraiMode とは別機能です
 - これらのキーと `hint.chars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
 - ヒントをクリックすると、そのヒントキーを入力した場合と同じウィンドウを選択します
 - ヒント表示中にすべてのヒントの外側をクリックすると、ヒントを閉じます

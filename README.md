@@ -444,6 +444,11 @@ window_hints = {
         key = nil, -- Key to move to the next Space during hints
       },
     },
+    windowMover = {
+      moveToSelectedArea = {
+        key = nil, -- Key to close Window Hints and open moveToSelectedArea
+      },
+    },
   },
   behavior = {
     selection = {
@@ -506,6 +511,7 @@ For implementation defaults and internal options, see `DEFAULT_CONFIG` in `windo
 - Pressing the Window Hints hotkey again while hints are shown closes the hints
 - `navigation.focusBack.key` and `navigation.direction.hints.keys` are active only while hints are shown
 - `navigation.focusBack.key` works only when `focus_back` is enabled
+- `navigation.windowMover.moveToSelectedArea.key` closes Window Hints and opens Window Mover `moveToSelectedArea` for the active window. This is separate from JinraiMode, which opens `moveToSelectedArea` after selecting a window.
 - If these keys conflict with `hint.chars`, the conflicting hint chars are removed and navigation keys take priority
 - Clicking a hint selects the same window as entering its hint key
 - Clicking outside all hints while hints are shown closes the hints

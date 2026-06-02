@@ -244,6 +244,7 @@ describe("init", function()
 		local calls = {
 			new = {},
 			moveToSelectedAreaOptions = nil,
+			moveToSelectedAreaCount = 0,
 			startJinraiMode = 0,
 			showJinraiMode = 0,
 			stopJinraiMode = 0,
@@ -275,6 +276,7 @@ describe("init", function()
 						calls.new.window_mover = options
 						return {
 							moveToSelectedArea = function(options)
+								calls.moveToSelectedAreaCount = calls.moveToSelectedAreaCount + 1
 								calls.moveToSelectedAreaOptions = options
 							end,
 							teardown = function() end,
@@ -323,6 +325,9 @@ describe("init", function()
 
 		assert.are.equal("space", calls.new.window_hints.internal.jinraiMode.windowHints.key)
 		assert.are.equal("j", calls.new.window_mover.internal.jinraiMode.windowMover.key)
+		assert.is_truthy(calls.new.window_hints.internal.onMoveToSelectedArea)
+		calls.new.window_hints.internal.onMoveToSelectedArea()
+		assert.are.equal(1, calls.moveToSelectedAreaCount)
 		assert.is_truthy(calls.new.window_hints.internal.onJinraiModeSelect)
 		calls.new.window_hints.internal.onJinraiModeSelect({})
 		assert.is_truthy(calls.moveToSelectedAreaOptions.onApply)
@@ -336,6 +341,7 @@ describe("init", function()
 		assert.are.equal(1, calls.startJinraiMode)
 		assert.are.equal(2, calls.showJinraiMode)
 		assert.are.equal(2, calls.stopJinraiMode)
+		assert.are.equal(2, calls.moveToSelectedAreaCount)
 	end)
 
 	it("macosNativeTabs 未指定時は組み込みのデフォルト設定を注入する", function()

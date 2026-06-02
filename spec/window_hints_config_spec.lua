@@ -156,6 +156,11 @@ describe("window_hints_config", function()
 						key = nil,
 					},
 				},
+				windowMover = {
+					moveToSelectedArea = {
+						key = "m",
+					},
+				},
 			},
 			dock = {
 				windowBlend = {
@@ -259,6 +264,7 @@ describe("window_hints_config", function()
 		assert.are.same({ "cmd" }, built.directDirectionHotkeys.modifiers)
 		assert.are.equal("i", built.focusBackKey)
 		assert.are.equal("space", built.jinraiModeKey)
+		assert.are.equal("m", built.moveToSelectedAreaKey)
 		assert.is_true(built.jinraiModeLogo.enabled)
 		assert.are.equal(480, built.jinraiModeLogo.size)
 		assert.are.equal(0.3, built.jinraiModeLogo.alpha)
@@ -359,6 +365,41 @@ describe("window_hints_config", function()
 
 		assert.are.equal("a", built.jinraiModeKey)
 		assert.are.same({ "S" }, built.hintChars)
+	end)
+
+	it("moveToSelectedAreaKey はヒント文字から除外される", function()
+		local built = mod.build({
+			hint = {
+				chars = { "A", "S" },
+			},
+			navigation = {
+				windowMover = {
+					moveToSelectedArea = {
+						key = "a",
+					},
+				},
+			},
+		})
+
+		assert.are.equal("a", built.moveToSelectedAreaKey)
+		assert.are.same({ "S" }, built.hintChars)
+	end)
+
+	it("moveToSelectedAreaKey が空文字ならエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				navigation = {
+					windowMover = {
+						moveToSelectedArea = {
+							key = "",
+						},
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("navigation%.windowMover%.moveToSelectedArea%.key must not be empty"))
 	end)
 
 	it("旧 navigation.jinraiMode 設定はエラー", function()
