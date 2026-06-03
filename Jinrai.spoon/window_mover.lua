@@ -313,6 +313,15 @@ local function frameEquals(a, b)
 		and nearlyEqual(a.h, b.h)
 end
 
+local function frameNear(a, b, tolerance)
+	return validFrame(a)
+		and validFrame(b)
+		and math.abs(a.x - b.x) <= tolerance
+		and math.abs(a.y - b.y) <= tolerance
+		and math.abs(a.w - b.w) <= tolerance
+		and math.abs(a.h - b.h) <= tolerance
+end
+
 local function markUniqueFrame(seen, frame)
 	local cloned = cloneFrame(frame)
 	if not cloned then
@@ -439,6 +448,7 @@ function M.new(options)
 	local areaApplyCallback = nil
 	local areaCancelCallback = nil
 	local areaJinraiModeActive = false
+	local lastCycleState = nil
 
 	local function selectedAreaState(active)
 		local states = config.selectedAreaAppearance.state
@@ -1774,18 +1784,43 @@ button:active {
 			return
 		end
 
-		local ratios = { 1 / 2, 1 / 3, 2 / 3 }
+		local ratios = direction == "vertical" and config.cycleVerticalRatios or config.cycleHorizontalRatios
 		local nextIndex = 1
+		local matched = false
 		for index, ratio in ipairs(ratios) do
 			local candidateFrame = cycleFrameForPosition(screenFrame, direction, position, ratio)
 			if frameEquals(currentFrame, candidateFrame) then
 				nextIndex = (index % #ratios) + 1
+				matched = true
 				break
 			end
+		end
+		if
+			not matched
+			and lastCycleState
+			and sameWindow(win, lastCycleState.window)
+			and sameScreen(screen, lastCycleState.screen)
+			and direction == lastCycleState.direction
+			and position == lastCycleState.position
+			and frameNear(currentFrame, lastCycleState.appliedFrame, 16)
+			and lastCycleState.ratioIndex <= #ratios
+			and ratios[lastCycleState.ratioIndex] == lastCycleState.ratio
+		then
+			nextIndex = (lastCycleState.ratioIndex % #ratios) + 1
 		end
 
 		local targetFrame = cycleFrameForPosition(screenFrame, direction, position, ratios[nextIndex])
 		win:setFrame(targetFrame, 0)
+		local appliedFrame = cloneFrame(frameOf(win)) or cloneFrame(targetFrame)
+		lastCycleState = {
+			window = win,
+			screen = screen,
+			direction = direction,
+			position = position,
+			ratioIndex = nextIndex,
+			ratio = ratios[nextIndex],
+			appliedFrame = appliedFrame,
+		}
 		activateWindow(win)
 	end
 

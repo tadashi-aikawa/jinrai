@@ -147,6 +147,10 @@ describe("window_mover_config", function()
 				cursor = {
 					afterMove = false,
 				},
+				cycle = {
+					horizontalRatios = { 1 / 3, 1 / 2 },
+					verticalRatios = { 2 / 3, 1 / 2 },
+				},
 			},
 			selectedArea = {
 				defaultScreen = "uuid-a",
@@ -299,6 +303,8 @@ describe("window_mover_config", function()
 		assert.are.same({ red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 }, built.selectedAreaAppearance.styles.quarter.color)
 		assert.are.same({ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 }, built.selectedAreaAppearance.styles.sixth.color)
 		assert.are.same({ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 }, built.selectedAreaAppearance.styles.twoThirds.color)
+		assert.are.same({ 1 / 3, 1 / 2 }, built.cycleHorizontalRatios)
+		assert.are.same({ 2 / 3, 1 / 2 }, built.cycleVerticalRatios)
 	end)
 
 	it("未指定時はホットキーなし、カーソル移動あり、選択エリア候補なし", function()
@@ -339,6 +345,52 @@ describe("window_mover_config", function()
 		assert.are.same({ red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 }, built.selectedAreaAppearance.styles.full.color)
 		assert.are.same({ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 }, built.selectedAreaAppearance.styles.sixth.color)
 		assert.are.same({ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 }, built.selectedAreaAppearance.styles.twoThirds.color)
+		assert.are.same({ 1 / 2, 1 / 3, 2 / 3 }, built.cycleHorizontalRatios)
+		assert.are.same({ 1 / 2, 1 / 3, 2 / 3 }, built.cycleVerticalRatios)
+	end)
+
+	it("cycle ratio が不正ならエラー", function()
+		local cases = {
+			{
+				ratios = {},
+				message = "must be a non%-empty array",
+			},
+			{
+				ratios = { "1/2" },
+				message = "must be a number greater than 0 and at most 1",
+			},
+			{
+				ratios = { 0 },
+				message = "must be a number greater than 0 and at most 1",
+			},
+			{
+				ratios = { -0.5 },
+				message = "must be a number greater than 0 and at most 1",
+			},
+			{
+				ratios = { 1.1 },
+				message = "must be a number greater than 0 and at most 1",
+			},
+			{
+				ratios = { 1 / 2, 1 / 2 },
+				message = "duplicate ratios",
+			},
+		}
+
+		for _, case in ipairs(cases) do
+			local ok, err = pcall(function()
+				mod.build({
+					behavior = {
+						cycle = {
+							horizontalRatios = case.ratios,
+						},
+					},
+				})
+			end)
+
+			assert.is_false(ok)
+			assert.is_truthy(tostring(err):match(case.message))
+		end
 	end)
 
 	it("selectedArea.defaultScreen の参照先がなければエラー", function()

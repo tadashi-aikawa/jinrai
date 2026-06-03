@@ -152,6 +152,10 @@ local DEFAULT_CONFIG = {
 		cursor = {
 			afterMove = true,
 		},
+		cycle = {
+			horizontalRatios = { 1 / 2, 1 / 3, 2 / 3 },
+			verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },
+		},
 	},
 	selectedArea = {
 		defaultScreen = nil,
@@ -396,6 +400,26 @@ local function normalizeJinraiModeKey(key)
 	return string.lower(key)
 end
 
+local function normalizeCycleRatios(ratios, path)
+	if type(ratios) ~= "table" or not isArrayTable(ratios) then
+		error("[jinrai.window_mover] " .. path .. " must be a non-empty array")
+	end
+
+	local normalized = {}
+	local seen = {}
+	for index, ratio in ipairs(ratios) do
+		if type(ratio) ~= "number" or ratio <= 0 or ratio > 1 then
+			error("[jinrai.window_mover] " .. path .. "[" .. index .. "] must be a number greater than 0 and at most 1")
+		end
+		if seen[ratio] then
+			error("[jinrai.window_mover] " .. path .. " must not contain duplicate ratios")
+		end
+		seen[ratio] = true
+		table.insert(normalized, ratio)
+	end
+	return normalized
+end
+
 local function validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens)
 	if not jinraiModeKey then
 		return
@@ -427,6 +451,8 @@ function M.build(options)
 	local selectedAreaScreens = normalizeSelectedAreaScreens(merged.selectedArea.screens)
 	local selectedAreaDefault = normalizeSelectedAreaDefault(merged.selectedArea.defaultScreen, selectedAreaScreens)
 	local jinraiModeKey = normalizeJinraiModeKey(merged.internal.jinraiMode.windowMover.key)
+	local cycleHorizontalRatios = normalizeCycleRatios(merged.behavior.cycle.horizontalRatios, "behavior.cycle.horizontalRatios")
+	local cycleVerticalRatios = normalizeCycleRatios(merged.behavior.cycle.verticalRatios, "behavior.cycle.verticalRatios")
 	validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens)
 
 	local built = {
@@ -453,6 +479,8 @@ function M.build(options)
 		cycleBottomHotkeyModifiers = merged.commands.cycleBottom.hotkey.modifiers,
 		cycleBottomHotkeyKey = merged.commands.cycleBottom.hotkey.key,
 		centerCursor = merged.behavior.cursor.afterMove,
+		cycleHorizontalRatios = cycleHorizontalRatios,
+		cycleVerticalRatios = cycleVerticalRatios,
 		selectedAreaDefault = selectedAreaDefault,
 		selectedAreaScreens = selectedAreaScreens,
 		selectedAreaHintsShow = merged.selectedArea.hints.show,

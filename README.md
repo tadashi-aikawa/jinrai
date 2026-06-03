@@ -733,6 +733,10 @@ window_mover = {
     cursor = {
       afterMove = true, -- Move cursor to window center after moving
     },
+    cycle = {
+      horizontalRatios = { 1 / 2, 1 / 3, 2 / 3 }, -- Width ratio rotation for horizontal cycle commands
+      verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },   -- Height ratio rotation for vertical cycle commands
+    },
   },
   selectedArea = {
     defaultScreen = nil, -- UUID whose keymap is reused for unconfigured displays
@@ -796,10 +800,10 @@ window_mover = {
 | `moveToSelectedArea` | Opens the selected-area chooser for configured screen UUIDs. |
 | `maximizeWindow` | Moves and resizes the active window to the current display's `frame()` without using macOS fullscreen. |
 | `minimizeWindow` | Minimizes the active window. |
-| `cycleLeft` | Moves the active window to the left edge and cycles width through `1/2` → `1/3` → `2/3` → `1/2`. |
+| `cycleLeft` | Moves the active window to the left edge and cycles width through `behavior.cycle.horizontalRatios` (`1/2` → `1/3` → `2/3` by default). |
 | `cycleHorizontalCenter` | Moves the active window to the horizontal center and cycles width through the same sequence. |
 | `cycleRight` | Moves the active window to the right edge and cycles width through the same sequence. |
-| `cycleTop` | Moves the active window to the top edge and cycles height through `1/2` → `1/3` → `2/3` → `1/2`. |
+| `cycleTop` | Moves the active window to the top edge and cycles height through `behavior.cycle.verticalRatios` (`1/2` → `1/3` → `2/3` by default). |
 | `cycleVerticalCenter` | Moves the active window to the vertical center and cycles height through the same sequence. |
 | `cycleBottom` | Moves the active window to the bottom edge and cycles height through the same sequence. |
 | `halfLeft` / `halfHorizontalCenter` / `halfRight` | Moves the active window to the left edge, horizontal center, or right edge with 1/2 width and full height. |

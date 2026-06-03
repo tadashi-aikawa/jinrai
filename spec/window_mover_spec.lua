@@ -576,6 +576,96 @@ describe("window_mover", function()
 		assert.are.same({ x = 800, y = 0, w = 400, h = 900 }, win.setFrameCalls[8].frame)
 	end)
 
+	it("横方向の cycle は設定した順で幅を切り替える", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		local _, instance = newWindowMoverWithMock({
+			behavior = {
+				cursor = { afterMove = false },
+				cycle = {
+					horizontalRatios = { 1 / 3, 1 / 2, 1 },
+					verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },
+				},
+			},
+		}, win, { win })
+
+		instance.cycleLeft()
+		instance.cycleLeft()
+		instance.cycleLeft()
+		instance.cycleHorizontalCenter()
+		instance.cycleHorizontalCenter()
+
+		assert.are.same({ x = 0, y = 0, w = 400, h = 900 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 0, y = 0, w = 1200, h = 900 }, win.setFrameCalls[3].frame)
+		assert.are.same({ x = 400, y = 0, w = 400, h = 900 }, win.setFrameCalls[4].frame)
+		assert.are.same({ x = 300, y = 0, w = 600, h = 900 }, win.setFrameCalls[5].frame)
+	end)
+
+	it("横方向の cycle は前回適用後の実 frame が target とずれても次の比率へ進む", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		function win:setFrame(nextFrame, duration)
+			table.insert(self.setFrameCalls, { frame = nextFrame, duration = duration })
+			if nextFrame.w < 360 then
+				self._frame = { x = nextFrame.x, y = nextFrame.y, w = 360, h = nextFrame.h }
+			else
+				self._frame = nextFrame
+			end
+		end
+		local _, instance = newWindowMoverWithMock({
+			behavior = {
+				cursor = { afterMove = false },
+				cycle = {
+					horizontalRatios = { 1 / 2, 1 / 3, 1 / 4, 2 / 3, 3 / 4 },
+					verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },
+				},
+			},
+		}, win, { win })
+
+		instance.cycleLeft()
+		instance.cycleLeft()
+		instance.cycleLeft()
+		instance.cycleLeft()
+		instance.cycleLeft()
+
+		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 0, y = 0, w = 400, h = 900 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 0, y = 0, w = 300, h = 900 }, win.setFrameCalls[3].frame)
+		assert.are.same({ x = 0, y = 0, w = 800, h = 900 }, win.setFrameCalls[4].frame)
+		assert.are.same({ x = 0, y = 0, w = 900, h = 900 }, win.setFrameCalls[5].frame)
+	end)
+
+	it("横方向の cycle は手動変更後に前回状態を使わず先頭から再開する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		function win:setFrame(nextFrame, duration)
+			table.insert(self.setFrameCalls, { frame = nextFrame, duration = duration })
+			if nextFrame.w < 360 then
+				self._frame = { x = nextFrame.x, y = nextFrame.y, w = 360, h = nextFrame.h }
+			else
+				self._frame = nextFrame
+			end
+		end
+		local _, instance = newWindowMoverWithMock({
+			behavior = {
+				cursor = { afterMove = false },
+				cycle = {
+					horizontalRatios = { 1 / 2, 1 / 3, 1 / 4, 2 / 3 },
+					verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },
+				},
+			},
+		}, win, { win })
+
+		instance.cycleLeft()
+		instance.cycleLeft()
+		instance.cycleLeft()
+		win._frame = { x = 0, y = 0, w = 500, h = 900 }
+		instance.cycleLeft()
+
+		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[4].frame)
+	end)
+
 	it("直接配置コマンドは指定サイズでアクティブディスプレイの各ポジションへ移動する", function()
 		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
 		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
@@ -682,6 +772,32 @@ describe("window_mover", function()
 		assert.are.same({ x = 10, y = 470, w = 1200, h = 450 }, win.setFrameCalls[8].frame)
 		assert.are.same({ x = 10, y = 620, w = 1200, h = 300 }, win.setFrameCalls[9].frame)
 		assert.are.same({ x = 10, y = 320, w = 1200, h = 600 }, win.setFrameCalls[10].frame)
+	end)
+
+	it("縦方向の cycle は設定した順で高さを切り替える", function()
+		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
+		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+		local _, instance = newWindowMoverWithMock({
+			behavior = {
+				cursor = { afterMove = false },
+				cycle = {
+					horizontalRatios = { 1 / 2, 1 / 3, 2 / 3 },
+					verticalRatios = { 1, 2 / 3, 1 / 3 },
+				},
+			},
+		}, win, { win })
+
+		instance.cycleTop()
+		instance.cycleTop()
+		instance.cycleTop()
+		instance.cycleVerticalCenter()
+		instance.cycleVerticalCenter()
+
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 900 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 600 }, win.setFrameCalls[2].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 300 }, win.setFrameCalls[3].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 900 }, win.setFrameCalls[4].frame)
+		assert.are.same({ x = 10, y = 170, w = 1200, h = 600 }, win.setFrameCalls[5].frame)
 	end)
 
 	it("cycle は手動リサイズ後に 1/2 から再開する", function()

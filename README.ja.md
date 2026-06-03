@@ -735,6 +735,10 @@ window_mover = {
     cursor = {
       afterMove = true, -- 移動後にカーソルをウィンドウ中央に移動
     },
+    cycle = {
+      horizontalRatios = { 1 / 2, 1 / 3, 2 / 3 }, -- 横方向 cycle コマンドの横幅比率ローテーション
+      verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },   -- 縦方向 cycle コマンドの高さ比率ローテーション
+    },
   },
   selectedArea = {
     defaultScreen = nil, -- 未設定ディスプレイに流用するキーマップの UUID
@@ -798,10 +802,10 @@ window_mover = {
 | `moveToSelectedArea` | ディスプレイ UUID ごとに設定した領域を選ぶ chooser を開きます。 |
 | `maximizeWindow` | macOS のフルスクリーン化ではなく、アクティブウィンドウを現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。 |
 | `minimizeWindow` | アクティブウィンドウを最小化します。 |
-| `cycleLeft` | アクティブウィンドウを左端へ移動し、横幅を `1/2` → `1/3` → `2/3` → `1/2` の順に切り替えます。 |
+| `cycleLeft` | アクティブウィンドウを左端へ移動し、横幅を `behavior.cycle.horizontalRatios` の順序で切り替えます（デフォルトは `1/2` → `1/3` → `2/3`）。 |
 | `cycleHorizontalCenter` | アクティブウィンドウを横方向中央へ移動し、横幅を同じ順序で切り替えます。 |
 | `cycleRight` | アクティブウィンドウを右端へ移動し、横幅を同じ順序で切り替えます。 |
-| `cycleTop` | アクティブウィンドウを上端へ移動し、高さを `1/2` → `1/3` → `2/3` → `1/2` の順に切り替えます。 |
+| `cycleTop` | アクティブウィンドウを上端へ移動し、高さを `behavior.cycle.verticalRatios` の順序で切り替えます（デフォルトは `1/2` → `1/3` → `2/3`）。 |
 | `cycleVerticalCenter` | アクティブウィンドウを縦方向中央へ移動し、高さを同じ順序で切り替えます。 |
 | `cycleBottom` | アクティブウィンドウを下端へ移動し、高さを同じ順序で切り替えます。 |
 | `halfLeft` / `halfHorizontalCenter` / `halfRight` | アクティブウィンドウを横幅 `1/2`、高さ全体で左端・横方向中央・右端へ移動します。 |
