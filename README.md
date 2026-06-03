@@ -722,6 +722,12 @@ window_mover = {
     sixthBottomLeft = { hotkey = { modifiers = nil, key = nil } },
     sixthBottomCenter = { hotkey = { modifiers = nil, key = nil } },
     sixthBottomRight = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsLeft = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsRight = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsTop = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsBottom = { hotkey = { modifiers = nil, key = nil } },
   },
   behavior = {
     cursor = {
@@ -804,6 +810,8 @@ window_mover = {
 | `quarterTop` / `quarterVerticalTopCenter` / `quarterVerticalBottomCenter` / `quarterBottom` | Moves the active window to each vertical quarter position with full width and 1/4 height. |
 | `quarterTopLeft` / `quarterTopRight` / `quarterBottomLeft` / `quarterBottomRight` | Moves the active window to a 2x2 quarter grid position with 1/2 width and 1/2 height. |
 | `sixthTopLeft` / `sixthTopCenter` / `sixthTopRight` / `sixthBottomLeft` / `sixthBottomCenter` / `sixthBottomRight` | Moves the active window to a 3x2 sixth grid position with 1/3 width and 1/2 height. |
+| `twoThirdsLeft` / `twoThirdsHorizontalCenter` / `twoThirdsRight` | Moves the active window to the left edge, horizontal center, or right edge with 2/3 width and full height. |
+| `twoThirdsTop` / `twoThirdsVerticalCenter` / `twoThirdsBottom` | Moves the active window to the top edge, vertical center, or bottom edge with full width and 2/3 height. |
 
 Direct area commands use the names listed in [Available areas](#available-areas).
 
@@ -854,7 +862,12 @@ selectedArea = {
       sixthBottomLeft = "B6",
       sixthBottomCenter = "B7",
       sixthBottomRight = "B8",
-      twoThirdsHorizontalCenter = "R",
+      twoThirdsLeft = "R1",
+      twoThirdsHorizontalCenter = "R2",
+      twoThirdsRight = "R3",
+      twoThirdsTop = "T1",
+      twoThirdsVerticalCenter = "T2",
+      twoThirdsBottom = "T3",
       ["1920x1080Center"] = "M",
     },
   },
@@ -896,8 +909,12 @@ selectedArea = {
 | <img src="./docs/assets/window-mover/areas/sixthBottomLeft.svg" alt="sixthBottomLeft" width="48"> | `sixthBottomLeft` | Bottom left | 1/3 width, 1/2 height |
 | <img src="./docs/assets/window-mover/areas/sixthBottomCenter.svg" alt="sixthBottomCenter" width="48"> | `sixthBottomCenter` | Bottom center | 1/3 width, 1/2 height |
 | <img src="./docs/assets/window-mover/areas/sixthBottomRight.svg" alt="sixthBottomRight" width="48"> | `sixthBottomRight` | Bottom right | 1/3 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/twoThirdsLeft.svg" alt="twoThirdsLeft" width="48"> | `twoThirdsLeft` | Left edge | 2/3 width, full height |
 | <img src="./docs/assets/window-mover/areas/twoThirdsHorizontalCenter.svg" alt="twoThirdsHorizontalCenter" width="48"> | `twoThirdsHorizontalCenter` | Horizontal center | 2/3 width, full height |
+| <img src="./docs/assets/window-mover/areas/twoThirdsRight.svg" alt="twoThirdsRight" width="48"> | `twoThirdsRight` | Right edge | 2/3 width, full height |
+| <img src="./docs/assets/window-mover/areas/twoThirdsTop.svg" alt="twoThirdsTop" width="48"> | `twoThirdsTop` | Top edge | Full width, 2/3 height |
 | <img src="./docs/assets/window-mover/areas/twoThirdsVerticalCenter.svg" alt="twoThirdsVerticalCenter" width="48"> | `twoThirdsVerticalCenter` | Vertical center | Full width, 2/3 height |
+| <img src="./docs/assets/window-mover/areas/twoThirdsBottom.svg" alt="twoThirdsBottom" width="48"> | `twoThirdsBottom` | Bottom edge | Full width, 2/3 height |
 | <img src="./docs/assets/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | Display center | Fixed size, clamped to the display frame |
 
 Area names use explicit directions and never change based on display orientation. Keys must be 1-2 characters and cannot duplicate or prefix-conflict within the same screen keymap.

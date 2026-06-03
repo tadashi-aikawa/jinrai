@@ -58,8 +58,12 @@ local AREA_ORDER = {
 	"sixthBottomLeft",
 	"sixthBottomCenter",
 	"sixthBottomRight",
+	"twoThirdsLeft",
 	"twoThirdsHorizontalCenter",
+	"twoThirdsRight",
+	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
+	"twoThirdsBottom",
 }
 
 local DIRECT_AREA_COMMAND_KEYS = {
@@ -93,6 +97,12 @@ local DIRECT_AREA_COMMAND_KEYS = {
 	"sixthBottomLeft",
 	"sixthBottomCenter",
 	"sixthBottomRight",
+	"twoThirdsLeft",
+	"twoThirdsHorizontalCenter",
+	"twoThirdsRight",
+	"twoThirdsTop",
+	"twoThirdsVerticalCenter",
+	"twoThirdsBottom",
 }
 
 local AREA_ORDER_LOOKUP = {}
@@ -762,6 +772,13 @@ function M.new(options)
 				w = screenFrame.w / 3,
 				h = screenFrame.h / 2,
 			}, "sixth", { cols = 3, rows = 2, col = 3, row = 2 }
+		elseif areaName == "twoThirdsLeft" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y,
+				w = screenFrame.w * 2 / 3,
+				h = screenFrame.h,
+			}, "twoThirds", { slots = 3, index = 1, span = 2, axis = "horizontal" }
 		elseif areaName == "twoThirdsHorizontalCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 6),
@@ -769,6 +786,20 @@ function M.new(options)
 				w = screenFrame.w * 2 / 3,
 				h = screenFrame.h,
 			}, "twoThirds", { slots = 6, index = 2, span = 4, axis = "horizontal" }
+		elseif areaName == "twoThirdsRight" then
+			return {
+				x = screenFrame.x + (screenFrame.w / 3),
+				y = screenFrame.y,
+				w = screenFrame.w * 2 / 3,
+				h = screenFrame.h,
+			}, "twoThirds", { slots = 3, index = 2, span = 2, axis = "horizontal" }
+		elseif areaName == "twoThirdsTop" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y,
+				w = screenFrame.w,
+				h = screenFrame.h * 2 / 3,
+			}, "twoThirds", { slots = 3, index = 1, span = 2, axis = "vertical" }
 		elseif areaName == "twoThirdsVerticalCenter" then
 			return {
 				x = screenFrame.x,
@@ -776,6 +807,13 @@ function M.new(options)
 				w = screenFrame.w,
 				h = screenFrame.h * 2 / 3,
 			}, "twoThirds", { slots = 6, index = 2, span = 4, axis = "vertical" }
+		elseif areaName == "twoThirdsBottom" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y + (screenFrame.h / 3),
+				w = screenFrame.w,
+				h = screenFrame.h * 2 / 3,
+			}, "twoThirds", { slots = 3, index = 2, span = 2, axis = "vertical" }
 		else
 			local width, height = parseFixedSizeCenterArea(areaName)
 			if width and height then
@@ -1384,8 +1422,12 @@ function M.new(options)
 			'  quarterVerticalTopCenter = "6",',
 			'  quarterVerticalBottomCenter = "7",',
 			'  quarterBottom = "8",',
-			'  twoThirdsHorizontalCenter = "R",',
-			'  twoThirdsVerticalCenter = "T",',
+			'  twoThirdsLeft = "R1",',
+			'  twoThirdsHorizontalCenter = "R2",',
+			'  twoThirdsRight = "R3",',
+			'  twoThirdsTop = "T1",',
+			'  twoThirdsVerticalCenter = "T2",',
+			'  twoThirdsBottom = "T3",',
 			'  ["1920x1080Center"] = "M",',
 			"},",
 		}

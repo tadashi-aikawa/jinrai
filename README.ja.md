@@ -724,6 +724,12 @@ window_mover = {
     sixthBottomLeft = { hotkey = { modifiers = nil, key = nil } },
     sixthBottomCenter = { hotkey = { modifiers = nil, key = nil } },
     sixthBottomRight = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsLeft = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsRight = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsTop = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+    twoThirdsBottom = { hotkey = { modifiers = nil, key = nil } },
   },
   behavior = {
     cursor = {
@@ -806,6 +812,8 @@ window_mover = {
 | `quarterTop` / `quarterVerticalTopCenter` / `quarterVerticalBottomCenter` / `quarterBottom` | アクティブウィンドウを横幅全体、高さ `1/4` で上端・縦方向上中央・縦方向下中央・下端へ移動します。 |
 | `quarterTopLeft` / `quarterTopRight` / `quarterBottomLeft` / `quarterBottomRight` | アクティブウィンドウを横幅 `1/2`、高さ `1/2` の4分割領域へ移動します。 |
 | `sixthTopLeft` / `sixthTopCenter` / `sixthTopRight` / `sixthBottomLeft` / `sixthBottomCenter` / `sixthBottomRight` | アクティブウィンドウを横幅 `1/3`、高さ `1/2` の6分割領域へ移動します。 |
+| `twoThirdsLeft` / `twoThirdsHorizontalCenter` / `twoThirdsRight` | アクティブウィンドウを横幅 `2/3`、高さ全体で左端・横方向中央・右端へ移動します。 |
+| `twoThirdsTop` / `twoThirdsVerticalCenter` / `twoThirdsBottom` | アクティブウィンドウを横幅全体、高さ `2/3` で上端・縦方向中央・下端へ移動します。 |
 
 直接エリア移動コマンドでは、[利用可能なエリア](#available-areas) に記載された名前を使います。
 
@@ -856,7 +864,12 @@ selectedArea = {
       sixthBottomLeft = "B6",
       sixthBottomCenter = "B7",
       sixthBottomRight = "B8",
-      twoThirdsHorizontalCenter = "R",
+      twoThirdsLeft = "R1",
+      twoThirdsHorizontalCenter = "R2",
+      twoThirdsRight = "R3",
+      twoThirdsTop = "T1",
+      twoThirdsVerticalCenter = "T2",
+      twoThirdsBottom = "T3",
       ["1920x1080Center"] = "M",
     },
   },
@@ -900,8 +913,12 @@ selectedArea = {
 | <img src="./docs/assets/window-mover/areas/sixthBottomLeft.svg" alt="sixthBottomLeft" width="48"> | `sixthBottomLeft` | 左下 | 横幅 1/3、高さ 1/2 |
 | <img src="./docs/assets/window-mover/areas/sixthBottomCenter.svg" alt="sixthBottomCenter" width="48"> | `sixthBottomCenter` | 中央下 | 横幅 1/3、高さ 1/2 |
 | <img src="./docs/assets/window-mover/areas/sixthBottomRight.svg" alt="sixthBottomRight" width="48"> | `sixthBottomRight` | 右下 | 横幅 1/3、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsLeft.svg" alt="twoThirdsLeft" width="48"> | `twoThirdsLeft` | 左端 | 横幅 2/3、高さ全体 |
 | <img src="./docs/assets/window-mover/areas/twoThirdsHorizontalCenter.svg" alt="twoThirdsHorizontalCenter" width="48"> | `twoThirdsHorizontalCenter` | 横方向中央 | 横幅 2/3、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsRight.svg" alt="twoThirdsRight" width="48"> | `twoThirdsRight` | 右端 | 横幅 2/3、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsTop.svg" alt="twoThirdsTop" width="48"> | `twoThirdsTop` | 上端 | 横幅全体、高さ 2/3 |
 | <img src="./docs/assets/window-mover/areas/twoThirdsVerticalCenter.svg" alt="twoThirdsVerticalCenter" width="48"> | `twoThirdsVerticalCenter` | 縦方向中央 | 横幅全体、高さ 2/3 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsBottom.svg" alt="twoThirdsBottom" width="48"> | `twoThirdsBottom` | 下端 | 横幅全体、高さ 2/3 |
 | <img src="./docs/assets/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイの frame に収まるように上限調整 |
 
 エリア名は明示的な方角を使い、ディスプレイの向きによって意味は変わりません。キーは1〜2文字で、同じディスプレイのキーマップ内で重複または prefix 衝突してはいけません。

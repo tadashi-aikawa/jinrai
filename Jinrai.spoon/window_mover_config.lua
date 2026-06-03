@@ -32,8 +32,12 @@ local AREA_KEYS = {
 	"sixthBottomLeft",
 	"sixthBottomCenter",
 	"sixthBottomRight",
+	"twoThirdsLeft",
 	"twoThirdsHorizontalCenter",
+	"twoThirdsRight",
+	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
+	"twoThirdsBottom",
 }
 
 local DIRECT_AREA_COMMAND_KEYS = {
@@ -67,6 +71,12 @@ local DIRECT_AREA_COMMAND_KEYS = {
 	"sixthBottomLeft",
 	"sixthBottomCenter",
 	"sixthBottomRight",
+	"twoThirdsLeft",
+	"twoThirdsHorizontalCenter",
+	"twoThirdsRight",
+	"twoThirdsTop",
+	"twoThirdsVerticalCenter",
+	"twoThirdsBottom",
 }
 
 local DEFAULT_CONFIG = {

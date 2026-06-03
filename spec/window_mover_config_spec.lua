@@ -31,6 +31,12 @@ describe("window_mover_config", function()
 		"sixthBottomLeft",
 		"sixthBottomCenter",
 		"sixthBottomRight",
+		"twoThirdsLeft",
+		"twoThirdsHorizontalCenter",
+		"twoThirdsRight",
+		"twoThirdsTop",
+		"twoThirdsVerticalCenter",
+		"twoThirdsBottom",
 	}
 
 	before_each(function()
@@ -130,6 +136,12 @@ describe("window_mover_config", function()
 						key = "4",
 					},
 				},
+				twoThirdsRight = {
+					hotkey = {
+						modifiers = { "cmd", "alt" },
+						key = "5",
+					},
+				},
 			},
 			behavior = {
 				cursor = {
@@ -171,8 +183,12 @@ describe("window_mover_config", function()
 						sixthBottomLeft = "bf",
 						sixthBottomCenter = "bg",
 						sixthBottomRight = "bh",
-						twoThirdsHorizontalCenter = "x",
-						twoThirdsVerticalCenter = "c",
+						twoThirdsLeft = "ca",
+						twoThirdsHorizontalCenter = "cb",
+						twoThirdsRight = "cc",
+						twoThirdsTop = "cd",
+						twoThirdsVerticalCenter = "ce",
+						twoThirdsBottom = "cf",
 						["1920x1080Center"] = "v",
 					},
 				},
@@ -227,6 +243,8 @@ describe("window_mover_config", function()
 		assert.are.equal("3", built.quarterBottomHotkeyKey)
 		assert.are.same({ "cmd", "alt" }, built.sixthTopCenterHotkeyModifiers)
 		assert.are.equal("4", built.sixthTopCenterHotkeyKey)
+		assert.are.same({ "cmd", "alt" }, built.twoThirdsRightHotkeyModifiers)
+		assert.are.equal("5", built.twoThirdsRightHotkeyKey)
 		assert.is_false(built.centerCursor)
 		assert.are.equal("uuid-a", built.selectedAreaDefault)
 		assert.is_false(built.selectedAreaHintsShow)
@@ -263,8 +281,12 @@ describe("window_mover_config", function()
 				sixthBottomLeft = "BF",
 				sixthBottomCenter = "BG",
 				sixthBottomRight = "BH",
-				twoThirdsHorizontalCenter = "X",
-				twoThirdsVerticalCenter = "C",
+				twoThirdsLeft = "CA",
+				twoThirdsHorizontalCenter = "CB",
+				twoThirdsRight = "CC",
+				twoThirdsTop = "CD",
+				twoThirdsVerticalCenter = "CE",
+				twoThirdsBottom = "CF",
 				["1920x1080Center"] = "V",
 			},
 		}, built.selectedAreaScreens)
