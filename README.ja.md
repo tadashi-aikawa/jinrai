@@ -710,6 +710,16 @@ window_mover = {
     quarterVerticalTopCenter = { hotkey = { modifiers = nil, key = nil } },
     quarterVerticalBottomCenter = { hotkey = { modifiers = nil, key = nil } },
     quarterBottom = { hotkey = { modifiers = nil, key = nil } },
+    quarterTopLeft = { hotkey = { modifiers = nil, key = nil } },
+    quarterTopRight = { hotkey = { modifiers = nil, key = nil } },
+    quarterBottomLeft = { hotkey = { modifiers = nil, key = nil } },
+    quarterBottomRight = { hotkey = { modifiers = nil, key = nil } },
+    sixthTopLeft = { hotkey = { modifiers = nil, key = nil } },
+    sixthTopCenter = { hotkey = { modifiers = nil, key = nil } },
+    sixthTopRight = { hotkey = { modifiers = nil, key = nil } },
+    sixthBottomLeft = { hotkey = { modifiers = nil, key = nil } },
+    sixthBottomCenter = { hotkey = { modifiers = nil, key = nil } },
+    sixthBottomRight = { hotkey = { modifiers = nil, key = nil } },
   },
   behavior = {
     cursor = {
@@ -741,21 +751,25 @@ window_mover = {
           color = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 },
           dimmedColor = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.22 },
         },
+        twoThirds = {
+          color = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 },
+          dimmedColor = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.22 },
+        },
         half = {
-          color = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
-          dimmedColor = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 },
+          color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
+          dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
         },
         third = {
           color = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.92 },
           dimmedColor = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.22 },
         },
         quarter = {
-          color = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.92 },
-          dimmedColor = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.22 },
+          color = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
+          dimmedColor = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 },
         },
-        twoThirds = {
-          color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
-          dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
+        sixth = {
+          color = { red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 },
+          dimmedColor = { red = 0.75, green = 0.15, blue = 0.25, alpha = 0.22 },
         },
         free = {
           color = { red = 0.58, green = 0.64, blue = 0.70, alpha = 0.95 },
@@ -786,6 +800,8 @@ window_mover = {
 | `thirdTop` / `thirdVerticalCenter` / `thirdBottom` | アクティブウィンドウを横幅全体、高さ `1/3` で上端・縦方向中央・下端へ移動します。 |
 | `quarterLeft` / `quarterHorizontalLeftCenter` / `quarterHorizontalRightCenter` / `quarterRight` | アクティブウィンドウを横幅 `1/4`、高さ全体で左端・横方向左中央・横方向右中央・右端へ移動します。 |
 | `quarterTop` / `quarterVerticalTopCenter` / `quarterVerticalBottomCenter` / `quarterBottom` | アクティブウィンドウを横幅全体、高さ `1/4` で上端・縦方向上中央・縦方向下中央・下端へ移動します。 |
+| `quarterTopLeft` / `quarterTopRight` / `quarterBottomLeft` / `quarterBottomRight` | アクティブウィンドウを横幅 `1/2`、高さ `1/2` の4分割領域へ移動します。 |
+| `sixthTopLeft` / `sixthTopCenter` / `sixthTopRight` / `sixthBottomLeft` / `sixthBottomCenter` / `sixthBottomRight` | アクティブウィンドウを横幅 `1/3`、高さ `1/2` の6分割領域へ移動します。 |
 
 ちらつきを抑えるため、JINRAI は移動先 frame を `setFrame(..., 0)` で一度だけ反映します。
 
@@ -822,6 +838,16 @@ selectedArea = {
       quarterVerticalTopCenter = "6",
       quarterVerticalBottomCenter = "7",
       quarterBottom = "8",
+      quarterTopLeft = "9",
+      quarterTopRight = "0",
+      quarterBottomLeft = "B1",
+      quarterBottomRight = "B2",
+      sixthTopLeft = "B3",
+      sixthTopCenter = "B4",
+      sixthTopRight = "B5",
+      sixthBottomLeft = "B6",
+      sixthBottomCenter = "B7",
+      sixthBottomRight = "B8",
       twoThirdsHorizontalCenter = "R",
       ["1920x1080Center"] = "M",
     },
@@ -852,6 +878,16 @@ selectedArea = {
 | `quarterVerticalTopCenter` | 縦方向上中央 | 横幅全体、高さ 1/4 |
 | `quarterVerticalBottomCenter` | 縦方向下中央 | 横幅全体、高さ 1/4 |
 | `quarterBottom` | 下端 | 横幅全体、高さ 1/4 |
+| `quarterTopLeft` | 左上 | 横幅 1/2、高さ 1/2 |
+| `quarterTopRight` | 右上 | 横幅 1/2、高さ 1/2 |
+| `quarterBottomLeft` | 左下 | 横幅 1/2、高さ 1/2 |
+| `quarterBottomRight` | 右下 | 横幅 1/2、高さ 1/2 |
+| `sixthTopLeft` | 左上 | 横幅 1/3、高さ 1/2 |
+| `sixthTopCenter` | 中央上 | 横幅 1/3、高さ 1/2 |
+| `sixthTopRight` | 右上 | 横幅 1/3、高さ 1/2 |
+| `sixthBottomLeft` | 左下 | 横幅 1/3、高さ 1/2 |
+| `sixthBottomCenter` | 中央下 | 横幅 1/3、高さ 1/2 |
+| `sixthBottomRight` | 右下 | 横幅 1/3、高さ 1/2 |
 | `twoThirdsHorizontalCenter` | 横方向中央 | 横幅 2/3、高さ全体 |
 | `twoThirdsVerticalCenter` | 縦方向中央 | 横幅全体、高さ 2/3 |
 | `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイの frame に収まるように上限調整 |

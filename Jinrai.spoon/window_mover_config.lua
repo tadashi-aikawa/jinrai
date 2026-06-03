@@ -22,6 +22,16 @@ local AREA_KEYS = {
 	"quarterVerticalTopCenter",
 	"quarterVerticalBottomCenter",
 	"quarterBottom",
+	"quarterTopLeft",
+	"quarterTopRight",
+	"quarterBottomLeft",
+	"quarterBottomRight",
+	"sixthTopLeft",
+	"sixthTopCenter",
+	"sixthTopRight",
+	"sixthBottomLeft",
+	"sixthBottomCenter",
+	"sixthBottomRight",
 	"twoThirdsHorizontalCenter",
 	"twoThirdsVerticalCenter",
 }
@@ -47,6 +57,16 @@ local DIRECT_AREA_COMMAND_KEYS = {
 	"quarterVerticalTopCenter",
 	"quarterVerticalBottomCenter",
 	"quarterBottom",
+	"quarterTopLeft",
+	"quarterTopRight",
+	"quarterBottomLeft",
+	"quarterBottomRight",
+	"sixthTopLeft",
+	"sixthTopCenter",
+	"sixthTopRight",
+	"sixthBottomLeft",
+	"sixthBottomCenter",
+	"sixthBottomRight",
 }
 
 local DEFAULT_CONFIG = {
@@ -148,21 +168,25 @@ local DEFAULT_CONFIG = {
 					color = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 },
 					dimmedColor = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.22 },
 				},
+				twoThirds = {
+					color = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 },
+					dimmedColor = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.22 },
+				},
 				half = {
-					color = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
-					dimmedColor = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 },
+					color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
+					dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
 				},
 				third = {
 					color = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.92 },
 					dimmedColor = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.22 },
 				},
 				quarter = {
-					color = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.92 },
-					dimmedColor = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.22 },
+					color = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
+					dimmedColor = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 },
 				},
-				twoThirds = {
-					color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
-					dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
+				sixth = {
+					color = { red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 },
+					dimmedColor = { red = 0.75, green = 0.15, blue = 0.25, alpha = 0.22 },
 				},
 				free = {
 					color = { red = 0.58, green = 0.64, blue = 0.70, alpha = 0.95 },

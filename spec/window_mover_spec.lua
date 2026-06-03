@@ -439,6 +439,16 @@ describe("window_mover", function()
 			"quarterVerticalTopCenter",
 			"quarterVerticalBottomCenter",
 			"quarterBottom",
+			"quarterTopLeft",
+			"quarterTopRight",
+			"quarterBottomLeft",
+			"quarterBottomRight",
+			"sixthTopLeft",
+			"sixthTopCenter",
+			"sixthTopRight",
+			"sixthBottomLeft",
+			"sixthBottomCenter",
+			"sixthBottomRight",
 		}
 		local directAreaKeys = {
 			"a",
@@ -461,6 +471,16 @@ describe("window_mover", function()
 			"6",
 			"7",
 			"8",
+			"9",
+			"0",
+			"b",
+			"c",
+			"v",
+			"x",
+			"z",
+			"g",
+			"p",
+			"o",
 		}
 		local commands = {
 			minimizeWindow = { hotkey = { modifiers = { "cmd" }, key = "m" } },
@@ -569,6 +589,16 @@ describe("window_mover", function()
 		instance.quarterVerticalTopCenter()
 		instance.quarterVerticalBottomCenter()
 		instance.quarterBottom()
+		instance.quarterTopLeft()
+		instance.quarterTopRight()
+		instance.quarterBottomLeft()
+		instance.quarterBottomRight()
+		instance.sixthTopLeft()
+		instance.sixthTopCenter()
+		instance.sixthTopRight()
+		instance.sixthBottomLeft()
+		instance.sixthBottomCenter()
+		instance.sixthBottomRight()
 
 		assert.are.same({ x = 10, y = 20, w = 600, h = 900 }, win.setFrameCalls[1].frame)
 		assert.are.same({ x = 310, y = 20, w = 600, h = 900 }, win.setFrameCalls[2].frame)
@@ -590,6 +620,16 @@ describe("window_mover", function()
 		assert.are.same({ x = 10, y = 245, w = 1200, h = 225 }, win.setFrameCalls[18].frame)
 		assert.are.same({ x = 10, y = 470, w = 1200, h = 225 }, win.setFrameCalls[19].frame)
 		assert.are.same({ x = 10, y = 695, w = 1200, h = 225 }, win.setFrameCalls[20].frame)
+		assert.are.same({ x = 10, y = 20, w = 600, h = 450 }, win.setFrameCalls[21].frame)
+		assert.are.same({ x = 610, y = 20, w = 600, h = 450 }, win.setFrameCalls[22].frame)
+		assert.are.same({ x = 10, y = 470, w = 600, h = 450 }, win.setFrameCalls[23].frame)
+		assert.are.same({ x = 610, y = 470, w = 600, h = 450 }, win.setFrameCalls[24].frame)
+		assert.are.same({ x = 10, y = 20, w = 400, h = 450 }, win.setFrameCalls[25].frame)
+		assert.are.same({ x = 410, y = 20, w = 400, h = 450 }, win.setFrameCalls[26].frame)
+		assert.are.same({ x = 810, y = 20, w = 400, h = 450 }, win.setFrameCalls[27].frame)
+		assert.are.same({ x = 10, y = 470, w = 400, h = 450 }, win.setFrameCalls[28].frame)
+		assert.are.same({ x = 410, y = 470, w = 400, h = 450 }, win.setFrameCalls[29].frame)
+		assert.are.same({ x = 810, y = 470, w = 400, h = 450 }, win.setFrameCalls[30].frame)
 	end)
 
 	it("縦方向の cycle は 1/2、1/3、2/3 の順で高さを切り替える", function()
@@ -723,6 +763,8 @@ describe("window_mover", function()
 				thirdLeft = "Q",
 				thirdHorizontalCenter = "W",
 				thirdRight = "E",
+				quarterTopLeft = "T",
+				sixthBottomRight = "Z",
 				twoThirdsHorizontalCenter = "R",
 			},
 		}), win, { win })
@@ -730,12 +772,12 @@ describe("window_mover", function()
 
 		instance.moveToSelectedArea()
 
-		assert.are.same({ "A", "S", "D", "F", "Q", "W", "E", "R" }, canvasKeys(state))
+		assert.are.same({ "A", "S", "D", "F", "Q", "W", "E", "T", "Z", "R" }, canvasKeys(state))
 		assert.are.equal(0, #state.webviews)
 
-		sendKey(state, "s")
+		sendKey(state, "z")
 
-		assert.are.same({ x = 0, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 800, y = 400, w = 400, h = 400 }, win.setFrameCalls[1].frame)
 	end)
 
 	it("moveToSelectedArea の onApply は移動完了後に呼ばれる", function()

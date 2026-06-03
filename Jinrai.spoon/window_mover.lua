@@ -48,6 +48,16 @@ local AREA_ORDER = {
 	"quarterVerticalTopCenter",
 	"quarterVerticalBottomCenter",
 	"quarterBottom",
+	"quarterTopLeft",
+	"quarterTopRight",
+	"quarterBottomLeft",
+	"quarterBottomRight",
+	"sixthTopLeft",
+	"sixthTopCenter",
+	"sixthTopRight",
+	"sixthBottomLeft",
+	"sixthBottomCenter",
+	"sixthBottomRight",
 	"twoThirdsHorizontalCenter",
 	"twoThirdsVerticalCenter",
 }
@@ -73,6 +83,16 @@ local DIRECT_AREA_COMMAND_KEYS = {
 	"quarterVerticalTopCenter",
 	"quarterVerticalBottomCenter",
 	"quarterBottom",
+	"quarterTopLeft",
+	"quarterTopRight",
+	"quarterBottomLeft",
+	"quarterBottomRight",
+	"sixthTopLeft",
+	"sixthTopCenter",
+	"sixthTopRight",
+	"sixthBottomLeft",
+	"sixthBottomCenter",
+	"sixthBottomRight",
 }
 
 local AREA_ORDER_LOOKUP = {}
@@ -672,6 +692,76 @@ function M.new(options)
 				w = screenFrame.w,
 				h = screenFrame.h / 4,
 			}, "quarter", { slots = 4, index = 4, axis = "vertical" }
+		elseif areaName == "quarterTopLeft" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y,
+				w = screenFrame.w / 2,
+				h = screenFrame.h / 2,
+			}, "quarter", { cols = 2, rows = 2, col = 1, row = 1 }
+		elseif areaName == "quarterTopRight" then
+			return {
+				x = screenFrame.x + (screenFrame.w / 2),
+				y = screenFrame.y,
+				w = screenFrame.w / 2,
+				h = screenFrame.h / 2,
+			}, "quarter", { cols = 2, rows = 2, col = 2, row = 1 }
+		elseif areaName == "quarterBottomLeft" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y + (screenFrame.h / 2),
+				w = screenFrame.w / 2,
+				h = screenFrame.h / 2,
+			}, "quarter", { cols = 2, rows = 2, col = 1, row = 2 }
+		elseif areaName == "quarterBottomRight" then
+			return {
+				x = screenFrame.x + (screenFrame.w / 2),
+				y = screenFrame.y + (screenFrame.h / 2),
+				w = screenFrame.w / 2,
+				h = screenFrame.h / 2,
+			}, "quarter", { cols = 2, rows = 2, col = 2, row = 2 }
+		elseif areaName == "sixthTopLeft" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y,
+				w = screenFrame.w / 3,
+				h = screenFrame.h / 2,
+			}, "sixth", { cols = 3, rows = 2, col = 1, row = 1 }
+		elseif areaName == "sixthTopCenter" then
+			return {
+				x = screenFrame.x + (screenFrame.w / 3),
+				y = screenFrame.y,
+				w = screenFrame.w / 3,
+				h = screenFrame.h / 2,
+			}, "sixth", { cols = 3, rows = 2, col = 2, row = 1 }
+		elseif areaName == "sixthTopRight" then
+			return {
+				x = screenFrame.x + (screenFrame.w * 2 / 3),
+				y = screenFrame.y,
+				w = screenFrame.w / 3,
+				h = screenFrame.h / 2,
+			}, "sixth", { cols = 3, rows = 2, col = 3, row = 1 }
+		elseif areaName == "sixthBottomLeft" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y + (screenFrame.h / 2),
+				w = screenFrame.w / 3,
+				h = screenFrame.h / 2,
+			}, "sixth", { cols = 3, rows = 2, col = 1, row = 2 }
+		elseif areaName == "sixthBottomCenter" then
+			return {
+				x = screenFrame.x + (screenFrame.w / 3),
+				y = screenFrame.y + (screenFrame.h / 2),
+				w = screenFrame.w / 3,
+				h = screenFrame.h / 2,
+			}, "sixth", { cols = 3, rows = 2, col = 2, row = 2 }
+		elseif areaName == "sixthBottomRight" then
+			return {
+				x = screenFrame.x + (screenFrame.w * 2 / 3),
+				y = screenFrame.y + (screenFrame.h / 2),
+				w = screenFrame.w / 3,
+				h = screenFrame.h / 2,
+			}, "sixth", { cols = 3, rows = 2, col = 3, row = 2 }
 		elseif areaName == "twoThirdsHorizontalCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 6),
@@ -993,7 +1083,16 @@ function M.new(options)
 			h = outlineFrame.h - 10,
 		}
 		local fillFrame
-		if icon.axis == "vertical" then
+		if icon.cols and icon.rows and icon.col and icon.row then
+			local slotW = (inner.w - (gap * (icon.cols - 1))) / icon.cols
+			local slotH = (inner.h - (gap * (icon.rows - 1))) / icon.rows
+			fillFrame = {
+				x = inner.x + ((slotW + gap) * (icon.col - 1)),
+				y = inner.y + ((slotH + gap) * (icon.row - 1)),
+				w = slotW,
+				h = slotH,
+			}
+		elseif icon.axis == "vertical" then
 			local slotH = (inner.h - (gap * (slots - 1))) / slots
 			local fillH = (slotH * span) + (gap * (span - 1))
 			fillFrame = {
@@ -1039,7 +1138,10 @@ function M.new(options)
 		local labelH = candidate.detailLabel and 66 or AREA_LABEL_HEIGHT
 		local icon = candidate.icon or {}
 		local labelY
-		if icon.axis == "vertical" and icon.slots and icon.index then
+		if icon.rows and icon.row then
+			local areaCenter = (icon.row - 0.5) / icon.rows
+			labelY = (frame.h - labelH) * areaCenter
+		elseif icon.axis == "vertical" and icon.slots and icon.index then
 			local slotCenter = (icon.index - 0.5) / icon.slots
 			local areaCenter = slotCenter
 			if icon.span and icon.span > 1 then
@@ -1052,6 +1154,7 @@ function M.new(options)
 				half = -28,
 				third = 28,
 				quarter = 52,
+				sixth = 64,
 				free = 72,
 			}
 			labelY = ((frame.h - labelH) / 2) + (labelOffsetYByKind[candidate.kind] or 0)

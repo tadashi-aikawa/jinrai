@@ -21,6 +21,16 @@ describe("window_mover_config", function()
 		"quarterVerticalTopCenter",
 		"quarterVerticalBottomCenter",
 		"quarterBottom",
+		"quarterTopLeft",
+		"quarterTopRight",
+		"quarterBottomLeft",
+		"quarterBottomRight",
+		"sixthTopLeft",
+		"sixthTopCenter",
+		"sixthTopRight",
+		"sixthBottomLeft",
+		"sixthBottomCenter",
+		"sixthBottomRight",
 	}
 
 	before_each(function()
@@ -114,6 +124,12 @@ describe("window_mover_config", function()
 						key = "3",
 					},
 				},
+				sixthTopCenter = {
+					hotkey = {
+						modifiers = { "cmd", "alt" },
+						key = "4",
+					},
+				},
 			},
 			behavior = {
 				cursor = {
@@ -145,6 +161,16 @@ describe("window_mover_config", function()
 						quarterVerticalTopCenter = "6",
 						quarterVerticalBottomCenter = "7",
 						quarterBottom = "8",
+						quarterTopLeft = "9",
+						quarterTopRight = "0",
+						quarterBottomLeft = "ba",
+						quarterBottomRight = "bb",
+						sixthTopLeft = "bc",
+						sixthTopCenter = "bd",
+						sixthTopRight = "be",
+						sixthBottomLeft = "bf",
+						sixthBottomCenter = "bg",
+						sixthBottomRight = "bh",
 						twoThirdsHorizontalCenter = "x",
 						twoThirdsVerticalCenter = "c",
 						["1920x1080Center"] = "v",
@@ -199,6 +225,8 @@ describe("window_mover_config", function()
 		assert.are.equal("2", built.thirdHorizontalCenterHotkeyKey)
 		assert.are.same({ "cmd", "alt" }, built.quarterBottomHotkeyModifiers)
 		assert.are.equal("3", built.quarterBottomHotkeyKey)
+		assert.are.same({ "cmd", "alt" }, built.sixthTopCenterHotkeyModifiers)
+		assert.are.equal("4", built.sixthTopCenterHotkeyKey)
 		assert.is_false(built.centerCursor)
 		assert.are.equal("uuid-a", built.selectedAreaDefault)
 		assert.is_false(built.selectedAreaHintsShow)
@@ -225,6 +253,16 @@ describe("window_mover_config", function()
 				quarterVerticalTopCenter = "6",
 				quarterVerticalBottomCenter = "7",
 				quarterBottom = "8",
+				quarterTopLeft = "9",
+				quarterTopRight = "0",
+				quarterBottomLeft = "BA",
+				quarterBottomRight = "BB",
+				sixthTopLeft = "BC",
+				sixthTopCenter = "BD",
+				sixthTopRight = "BE",
+				sixthBottomLeft = "BF",
+				sixthBottomCenter = "BG",
+				sixthBottomRight = "BH",
 				twoThirdsHorizontalCenter = "X",
 				twoThirdsVerticalCenter = "C",
 				["1920x1080Center"] = "V",
@@ -235,8 +273,10 @@ describe("window_mover_config", function()
 		assert.are.same({ red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 }, built.selectedAreaAppearance.state.normal.bgColor)
 		assert.are.same({ red = 0.9, green = 0.8, blue = 0.7, alpha = 0.6 }, built.selectedAreaAppearance.state.normal.textColor)
 		assert.are.same({ red = 0.2, green = 0.4, blue = 0.6, alpha = 0.8 }, built.selectedAreaAppearance.styles.half.color)
-		assert.are.same({ red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 }, built.selectedAreaAppearance.styles.half.dimmedColor)
-		assert.are.same({ red = 0.34, green = 0.78, blue = 0.68, alpha = 0.92 }, built.selectedAreaAppearance.styles.quarter.color)
+		assert.are.same({ red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 }, built.selectedAreaAppearance.styles.half.dimmedColor)
+		assert.are.same({ red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 }, built.selectedAreaAppearance.styles.quarter.color)
+		assert.are.same({ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 }, built.selectedAreaAppearance.styles.sixth.color)
+		assert.are.same({ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 }, built.selectedAreaAppearance.styles.twoThirds.color)
 	end)
 
 	it("未指定時はホットキーなし、カーソル移動あり、選択エリア候補なし", function()
@@ -275,6 +315,8 @@ describe("window_mover_config", function()
 		assert.are.equal(2, built.selectedAreaAppearance.borderWidth)
 		assert.are.equal(6, built.selectedAreaAppearance.cornerRadius)
 		assert.are.same({ red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 }, built.selectedAreaAppearance.styles.full.color)
+		assert.are.same({ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 }, built.selectedAreaAppearance.styles.sixth.color)
+		assert.are.same({ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 }, built.selectedAreaAppearance.styles.twoThirds.color)
 	end)
 
 	it("selectedArea.defaultScreen の参照先がなければエラー", function()

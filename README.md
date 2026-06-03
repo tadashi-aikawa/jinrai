@@ -708,6 +708,16 @@ window_mover = {
     quarterVerticalTopCenter = { hotkey = { modifiers = nil, key = nil } },
     quarterVerticalBottomCenter = { hotkey = { modifiers = nil, key = nil } },
     quarterBottom = { hotkey = { modifiers = nil, key = nil } },
+    quarterTopLeft = { hotkey = { modifiers = nil, key = nil } },
+    quarterTopRight = { hotkey = { modifiers = nil, key = nil } },
+    quarterBottomLeft = { hotkey = { modifiers = nil, key = nil } },
+    quarterBottomRight = { hotkey = { modifiers = nil, key = nil } },
+    sixthTopLeft = { hotkey = { modifiers = nil, key = nil } },
+    sixthTopCenter = { hotkey = { modifiers = nil, key = nil } },
+    sixthTopRight = { hotkey = { modifiers = nil, key = nil } },
+    sixthBottomLeft = { hotkey = { modifiers = nil, key = nil } },
+    sixthBottomCenter = { hotkey = { modifiers = nil, key = nil } },
+    sixthBottomRight = { hotkey = { modifiers = nil, key = nil } },
   },
   behavior = {
     cursor = {
@@ -739,21 +749,25 @@ window_mover = {
           color = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 },
           dimmedColor = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.22 },
         },
+        twoThirds = {
+          color = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 },
+          dimmedColor = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.22 },
+        },
         half = {
-          color = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
-          dimmedColor = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 },
+          color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
+          dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
         },
         third = {
           color = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.92 },
           dimmedColor = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.22 },
         },
         quarter = {
-          color = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.92 },
-          dimmedColor = { red = 0.34, green = 0.78, blue = 0.68, alpha = 0.22 },
+          color = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
+          dimmedColor = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 },
         },
-        twoThirds = {
-          color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
-          dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
+        sixth = {
+          color = { red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 },
+          dimmedColor = { red = 0.75, green = 0.15, blue = 0.25, alpha = 0.22 },
         },
         free = {
           color = { red = 0.58, green = 0.64, blue = 0.70, alpha = 0.95 },
@@ -784,6 +798,8 @@ window_mover = {
 | `thirdTop` / `thirdVerticalCenter` / `thirdBottom` | Moves the active window to the top edge, vertical center, or bottom edge with full width and 1/3 height. |
 | `quarterLeft` / `quarterHorizontalLeftCenter` / `quarterHorizontalRightCenter` / `quarterRight` | Moves the active window to each horizontal quarter position with 1/4 width and full height. |
 | `quarterTop` / `quarterVerticalTopCenter` / `quarterVerticalBottomCenter` / `quarterBottom` | Moves the active window to each vertical quarter position with full width and 1/4 height. |
+| `quarterTopLeft` / `quarterTopRight` / `quarterBottomLeft` / `quarterBottomRight` | Moves the active window to a 2x2 quarter grid position with 1/2 width and 1/2 height. |
+| `sixthTopLeft` / `sixthTopCenter` / `sixthTopRight` / `sixthBottomLeft` / `sixthBottomCenter` / `sixthBottomRight` | Moves the active window to a 3x2 sixth grid position with 1/3 width and 1/2 height. |
 
 To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
 
@@ -820,6 +836,16 @@ selectedArea = {
       quarterVerticalTopCenter = "6",
       quarterVerticalBottomCenter = "7",
       quarterBottom = "8",
+      quarterTopLeft = "9",
+      quarterTopRight = "0",
+      quarterBottomLeft = "B1",
+      quarterBottomRight = "B2",
+      sixthTopLeft = "B3",
+      sixthTopCenter = "B4",
+      sixthTopRight = "B5",
+      sixthBottomLeft = "B6",
+      sixthBottomCenter = "B7",
+      sixthBottomRight = "B8",
       twoThirdsHorizontalCenter = "R",
       ["1920x1080Center"] = "M",
     },
@@ -850,6 +876,16 @@ selectedArea = {
 | `quarterVerticalTopCenter` | Vertical top-center | Full width, 1/4 height |
 | `quarterVerticalBottomCenter` | Vertical bottom-center | Full width, 1/4 height |
 | `quarterBottom` | Bottom edge | Full width, 1/4 height |
+| `quarterTopLeft` | Top left | 1/2 width, 1/2 height |
+| `quarterTopRight` | Top right | 1/2 width, 1/2 height |
+| `quarterBottomLeft` | Bottom left | 1/2 width, 1/2 height |
+| `quarterBottomRight` | Bottom right | 1/2 width, 1/2 height |
+| `sixthTopLeft` | Top left | 1/3 width, 1/2 height |
+| `sixthTopCenter` | Top center | 1/3 width, 1/2 height |
+| `sixthTopRight` | Top right | 1/3 width, 1/2 height |
+| `sixthBottomLeft` | Bottom left | 1/3 width, 1/2 height |
+| `sixthBottomCenter` | Bottom center | 1/3 width, 1/2 height |
+| `sixthBottomRight` | Bottom right | 1/3 width, 1/2 height |
 | `twoThirdsHorizontalCenter` | Horizontal center | 2/3 width, full height |
 | `twoThirdsVerticalCenter` | Vertical center | Full width, 2/3 height |
 | `<width>x<height>Center` | Display center | Fixed size, clamped to the display frame |
