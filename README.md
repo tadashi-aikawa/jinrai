@@ -805,6 +805,8 @@ window_mover = {
 | `quarterTopLeft` / `quarterTopRight` / `quarterBottomLeft` / `quarterBottomRight` | Moves the active window to a 2x2 quarter grid position with 1/2 width and 1/2 height. |
 | `sixthTopLeft` / `sixthTopCenter` / `sixthTopRight` / `sixthBottomLeft` / `sixthBottomCenter` / `sixthBottomRight` | Moves the active window to a 3x2 sixth grid position with 1/3 width and 1/2 height. |
 
+Direct area commands use the names listed in [Available areas](#available-areas).
+
 To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
 
 ### moveToSelectedArea
@@ -814,6 +816,8 @@ To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
 Unconfigured displays reuse `selectedArea.defaultScreen` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the defaultScreen keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
 
 Set `selectedArea.hints.show = false` to skip canvas rendering for configured candidates and move by key input only. UUID template guidance for unconfigured displays is still shown.
+
+Use the names listed in [Available areas](#available-areas) as keys in `selectedArea.screens`.
 
 Example selected-area keymap:
 
@@ -857,42 +861,44 @@ selectedArea = {
 }
 ```
 
-| Area | Position | Size |
-| --- | --- | --- |
-| `full` | Full display | Full display |
-| `halfLeft` | Left edge | 1/2 width, full height |
-| `halfHorizontalCenter` | Horizontal center | 1/2 width, full height |
-| `halfRight` | Right edge | 1/2 width, full height |
-| `halfTop` | Top edge | Full width, 1/2 height |
-| `halfVerticalCenter` | Vertical center | Full width, 1/2 height |
-| `halfBottom` | Bottom edge | Full width, 1/2 height |
-| `thirdLeft` | Left edge | 1/3 width, full height |
-| `thirdHorizontalCenter` | Horizontal center | 1/3 width, full height |
-| `thirdRight` | Right edge | 1/3 width, full height |
-| `thirdTop` | Top edge | Full width, 1/3 height |
-| `thirdVerticalCenter` | Vertical center | Full width, 1/3 height |
-| `thirdBottom` | Bottom edge | Full width, 1/3 height |
-| `quarterLeft` | Left edge | 1/4 width, full height |
-| `quarterHorizontalLeftCenter` | Horizontal left-center | 1/4 width, full height |
-| `quarterHorizontalRightCenter` | Horizontal right-center | 1/4 width, full height |
-| `quarterRight` | Right edge | 1/4 width, full height |
-| `quarterTop` | Top edge | Full width, 1/4 height |
-| `quarterVerticalTopCenter` | Vertical top-center | Full width, 1/4 height |
-| `quarterVerticalBottomCenter` | Vertical bottom-center | Full width, 1/4 height |
-| `quarterBottom` | Bottom edge | Full width, 1/4 height |
-| `quarterTopLeft` | Top left | 1/2 width, 1/2 height |
-| `quarterTopRight` | Top right | 1/2 width, 1/2 height |
-| `quarterBottomLeft` | Bottom left | 1/2 width, 1/2 height |
-| `quarterBottomRight` | Bottom right | 1/2 width, 1/2 height |
-| `sixthTopLeft` | Top left | 1/3 width, 1/2 height |
-| `sixthTopCenter` | Top center | 1/3 width, 1/2 height |
-| `sixthTopRight` | Top right | 1/3 width, 1/2 height |
-| `sixthBottomLeft` | Bottom left | 1/3 width, 1/2 height |
-| `sixthBottomCenter` | Bottom center | 1/3 width, 1/2 height |
-| `sixthBottomRight` | Bottom right | 1/3 width, 1/2 height |
-| `twoThirdsHorizontalCenter` | Horizontal center | 2/3 width, full height |
-| `twoThirdsVerticalCenter` | Vertical center | Full width, 2/3 height |
-| `<width>x<height>Center` | Display center | Fixed size, clamped to the display frame |
+### Available areas
+
+| Icon | Area | Position | Size |
+| --- | --- | --- | --- |
+| <img src="./docs/assets/window-mover/areas/full.svg" alt="full" width="48"> | `full` | Full display | Full display |
+| <img src="./docs/assets/window-mover/areas/halfLeft.svg" alt="halfLeft" width="48"> | `halfLeft` | Left edge | 1/2 width, full height |
+| <img src="./docs/assets/window-mover/areas/halfHorizontalCenter.svg" alt="halfHorizontalCenter" width="48"> | `halfHorizontalCenter` | Horizontal center | 1/2 width, full height |
+| <img src="./docs/assets/window-mover/areas/halfRight.svg" alt="halfRight" width="48"> | `halfRight` | Right edge | 1/2 width, full height |
+| <img src="./docs/assets/window-mover/areas/halfTop.svg" alt="halfTop" width="48"> | `halfTop` | Top edge | Full width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/halfVerticalCenter.svg" alt="halfVerticalCenter" width="48"> | `halfVerticalCenter` | Vertical center | Full width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/halfBottom.svg" alt="halfBottom" width="48"> | `halfBottom` | Bottom edge | Full width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/thirdLeft.svg" alt="thirdLeft" width="48"> | `thirdLeft` | Left edge | 1/3 width, full height |
+| <img src="./docs/assets/window-mover/areas/thirdHorizontalCenter.svg" alt="thirdHorizontalCenter" width="48"> | `thirdHorizontalCenter` | Horizontal center | 1/3 width, full height |
+| <img src="./docs/assets/window-mover/areas/thirdRight.svg" alt="thirdRight" width="48"> | `thirdRight` | Right edge | 1/3 width, full height |
+| <img src="./docs/assets/window-mover/areas/thirdTop.svg" alt="thirdTop" width="48"> | `thirdTop` | Top edge | Full width, 1/3 height |
+| <img src="./docs/assets/window-mover/areas/thirdVerticalCenter.svg" alt="thirdVerticalCenter" width="48"> | `thirdVerticalCenter` | Vertical center | Full width, 1/3 height |
+| <img src="./docs/assets/window-mover/areas/thirdBottom.svg" alt="thirdBottom" width="48"> | `thirdBottom` | Bottom edge | Full width, 1/3 height |
+| <img src="./docs/assets/window-mover/areas/quarterLeft.svg" alt="quarterLeft" width="48"> | `quarterLeft` | Left edge | 1/4 width, full height |
+| <img src="./docs/assets/window-mover/areas/quarterHorizontalLeftCenter.svg" alt="quarterHorizontalLeftCenter" width="48"> | `quarterHorizontalLeftCenter` | Horizontal left-center | 1/4 width, full height |
+| <img src="./docs/assets/window-mover/areas/quarterHorizontalRightCenter.svg" alt="quarterHorizontalRightCenter" width="48"> | `quarterHorizontalRightCenter` | Horizontal right-center | 1/4 width, full height |
+| <img src="./docs/assets/window-mover/areas/quarterRight.svg" alt="quarterRight" width="48"> | `quarterRight` | Right edge | 1/4 width, full height |
+| <img src="./docs/assets/window-mover/areas/quarterTop.svg" alt="quarterTop" width="48"> | `quarterTop` | Top edge | Full width, 1/4 height |
+| <img src="./docs/assets/window-mover/areas/quarterVerticalTopCenter.svg" alt="quarterVerticalTopCenter" width="48"> | `quarterVerticalTopCenter` | Vertical top-center | Full width, 1/4 height |
+| <img src="./docs/assets/window-mover/areas/quarterVerticalBottomCenter.svg" alt="quarterVerticalBottomCenter" width="48"> | `quarterVerticalBottomCenter` | Vertical bottom-center | Full width, 1/4 height |
+| <img src="./docs/assets/window-mover/areas/quarterBottom.svg" alt="quarterBottom" width="48"> | `quarterBottom` | Bottom edge | Full width, 1/4 height |
+| <img src="./docs/assets/window-mover/areas/quarterTopLeft.svg" alt="quarterTopLeft" width="48"> | `quarterTopLeft` | Top left | 1/2 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/quarterTopRight.svg" alt="quarterTopRight" width="48"> | `quarterTopRight` | Top right | 1/2 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/quarterBottomLeft.svg" alt="quarterBottomLeft" width="48"> | `quarterBottomLeft` | Bottom left | 1/2 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/quarterBottomRight.svg" alt="quarterBottomRight" width="48"> | `quarterBottomRight` | Bottom right | 1/2 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/sixthTopLeft.svg" alt="sixthTopLeft" width="48"> | `sixthTopLeft` | Top left | 1/3 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/sixthTopCenter.svg" alt="sixthTopCenter" width="48"> | `sixthTopCenter` | Top center | 1/3 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/sixthTopRight.svg" alt="sixthTopRight" width="48"> | `sixthTopRight` | Top right | 1/3 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/sixthBottomLeft.svg" alt="sixthBottomLeft" width="48"> | `sixthBottomLeft` | Bottom left | 1/3 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/sixthBottomCenter.svg" alt="sixthBottomCenter" width="48"> | `sixthBottomCenter` | Bottom center | 1/3 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/sixthBottomRight.svg" alt="sixthBottomRight" width="48"> | `sixthBottomRight` | Bottom right | 1/3 width, 1/2 height |
+| <img src="./docs/assets/window-mover/areas/twoThirdsHorizontalCenter.svg" alt="twoThirdsHorizontalCenter" width="48"> | `twoThirdsHorizontalCenter` | Horizontal center | 2/3 width, full height |
+| <img src="./docs/assets/window-mover/areas/twoThirdsVerticalCenter.svg" alt="twoThirdsVerticalCenter" width="48"> | `twoThirdsVerticalCenter` | Vertical center | Full width, 2/3 height |
+| <img src="./docs/assets/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | Display center | Fixed size, clamped to the display frame |
 
 Area names use explicit directions and never change based on display orientation. Keys must be 1-2 characters and cannot duplicate or prefix-conflict within the same screen keymap.
 
