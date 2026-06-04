@@ -58,7 +58,7 @@ describe("window_mover_config", function()
 						key = "f19",
 					},
 				},
-				moveToSelectedArea = {
+				openWindowActionChooser = {
 					hotkey = {
 						modifiers = { "cmd", "alt" },
 						key = "f18",
@@ -196,6 +196,9 @@ describe("window_mover_config", function()
 						["1920x1080Center"] = "v",
 					},
 				},
+				actions = {
+					closeWindow = "x",
+				},
 				hints = {
 					show = false,
 				},
@@ -221,8 +224,8 @@ describe("window_mover_config", function()
 		assert.are.equal("f18", built.moveToNextDisplayHotkeyKey)
 		assert.are.same({ "ctrl", "alt" }, built.moveToActiveDisplayFreeAreaHotkeyModifiers)
 		assert.are.equal("f19", built.moveToActiveDisplayFreeAreaHotkeyKey)
-		assert.are.same({ "cmd", "alt" }, built.moveToSelectedAreaHotkeyModifiers)
-		assert.are.equal("f18", built.moveToSelectedAreaHotkeyKey)
+		assert.are.same({ "cmd", "alt" }, built.openWindowActionChooserHotkeyModifiers)
+		assert.are.equal("f18", built.openWindowActionChooserHotkeyKey)
 		assert.are.same({ "cmd" }, built.minimizeWindowHotkeyModifiers)
 		assert.are.equal("m", built.minimizeWindowHotkeyKey)
 		assert.are.same({ "cmd" }, built.maximizeWindowHotkeyModifiers)
@@ -294,6 +297,9 @@ describe("window_mover_config", function()
 				["1920x1080Center"] = "V",
 			},
 		}, built.selectedAreaScreens)
+		assert.are.same({
+			closeWindow = "X",
+		}, built.selectedAreaActions)
 		assert.are.equal(4, built.selectedAreaAppearance.borderWidth)
 		assert.are.equal(10, built.selectedAreaAppearance.cornerRadius)
 		assert.are.same({ red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 }, built.selectedAreaAppearance.state.normal.bgColor)
@@ -314,8 +320,8 @@ describe("window_mover_config", function()
 		assert.are.equal(nil, built.moveToNextDisplayHotkeyKey)
 		assert.are.equal(nil, built.moveToActiveDisplayFreeAreaHotkeyModifiers)
 		assert.are.equal(nil, built.moveToActiveDisplayFreeAreaHotkeyKey)
-		assert.are.equal(nil, built.moveToSelectedAreaHotkeyModifiers)
-		assert.are.equal(nil, built.moveToSelectedAreaHotkeyKey)
+		assert.are.equal(nil, built.openWindowActionChooserHotkeyModifiers)
+		assert.are.equal(nil, built.openWindowActionChooserHotkeyKey)
 		assert.are.equal(nil, built.minimizeWindowHotkeyModifiers)
 		assert.are.equal(nil, built.minimizeWindowHotkeyKey)
 		assert.are.equal(nil, built.maximizeWindowHotkeyModifiers)
@@ -339,6 +345,7 @@ describe("window_mover_config", function()
 		assert.is_true(built.centerCursor)
 		assert.is_nil(built.selectedAreaDefault)
 		assert.are.same({}, built.selectedAreaScreens)
+		assert.are.same({}, built.selectedAreaActions)
 		assert.is_true(built.selectedAreaHintsShow)
 		assert.are.equal(2, built.selectedAreaAppearance.borderWidth)
 		assert.are.equal(6, built.selectedAreaAppearance.cornerRadius)
@@ -460,6 +467,73 @@ describe("window_mover_config", function()
 		assert.is_truthy(tostring(err):match("prefix%-conflicting key"))
 	end)
 
+	it("selectedArea.actions.closeWindow を設定できる", function()
+		local built = mod.build({
+			selectedArea = {
+				actions = {
+					closeWindow = "x",
+				},
+			},
+		})
+
+		assert.are.same({ closeWindow = "X" }, built.selectedAreaActions)
+	end)
+
+	it("selectedArea.actions の未対応 action はエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					actions = {
+						quitApp = "Q",
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("unsupported selectedArea action 'quitApp'"))
+	end)
+
+	it("selectedArea.actions と selectedArea.screens の重複キーはエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					screens = {
+						["uuid-a"] = {
+							full = "A",
+						},
+					},
+					actions = {
+						closeWindow = "a",
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("selectedArea%.actions%.closeWindow key 'A' conflicts"))
+	end)
+
+	it("selectedArea.actions と selectedArea.screens の prefix 衝突キーはエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					screens = {
+						["uuid-a"] = {
+							full = "AX",
+						},
+					},
+					actions = {
+						closeWindow = "A",
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("selectedArea%.actions%.closeWindow key 'A' conflicts"))
+	end)
+
 	it("旧 Start/End 系 area はエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
@@ -487,6 +561,24 @@ describe("window_mover_config", function()
 		end)
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("removed key 'hotkey'"))
+	end)
+
+	it("旧 commands.moveToSelectedArea はエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				commands = {
+					moveToSelectedArea = {
+						hotkey = {
+							modifiers = { "cmd" },
+							key = "m",
+						},
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("removed key 'commands%.moveToSelectedArea'"))
 	end)
 
 	it("旧 behavior.selectedArea はエラー", function()
@@ -561,6 +653,50 @@ describe("window_mover_config", function()
 
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("conflicts"))
+	end)
+
+	it("jinrai_mode windowMover key は selectedArea action キーと衝突するとエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					actions = {
+						closeWindow = "A",
+					},
+				},
+				internal = {
+					jinraiMode = {
+						windowMover = {
+							key = "a",
+						},
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("selectedArea%.actions%.closeWindow"))
+	end)
+
+	it("jinrai_mode windowMover key は selectedArea action キーの prefix と衝突するとエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					actions = {
+						closeWindow = "AX",
+					},
+				},
+				internal = {
+					jinraiMode = {
+						windowMover = {
+							key = "a",
+						},
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("selectedArea%.actions%.closeWindow"))
 	end)
 
 	it("jinrai_mode windowMover key は selectedArea 候補キーの prefix と衝突するとエラー", function()

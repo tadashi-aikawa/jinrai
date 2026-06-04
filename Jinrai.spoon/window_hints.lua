@@ -2049,7 +2049,7 @@ function M.new(options)
 	local jinraiModeKey = config.jinraiModeKey
 	local prevSpaceKey = config.prevSpaceKey
 	local nextSpaceKey = config.nextSpaceKey
-	local moveToSelectedAreaKey = config.moveToSelectedAreaKey
+	local openWindowActionChooserKey = config.openWindowActionChooserKey
 	local swapWindowFrameSelectModifiers = config.swapWindowFrameSelectModifiers
 	local hintChars = config.hintChars
 
@@ -2515,13 +2515,13 @@ function M.new(options)
 		refreshHighlights()
 	end
 
-	local function runMoveToSelectedAreaAction()
-		local onMoveToSelectedArea = config.onMoveToSelectedArea
-		if not onMoveToSelectedArea then
+	local function runOpenWindowActionChooserAction()
+		local onOpenWindowActionChooser = config.onOpenWindowActionChooser
+		if not onOpenWindowActionChooser then
 			return
 		end
 		closeHints(true)
-		onMoveToSelectedArea()
+		onOpenWindowActionChooser()
 	end
 
 	local function handleInputKey(key, inputModifiers)
@@ -2529,8 +2529,8 @@ function M.new(options)
 			return
 		end
 		local swapWithFocused = shouldSwapWindowFrameOnSelect(swapWindowFrameSelectModifiers, inputModifiers)
-		if moveToSelectedAreaKey and key == moveToSelectedAreaKey then
-			runMoveToSelectedAreaAction()
+		if openWindowActionChooserKey and key == openWindowActionChooserKey then
+			runOpenWindowActionChooserAction()
 			return
 		end
 		if jinraiModeKey and key == jinraiModeKey then

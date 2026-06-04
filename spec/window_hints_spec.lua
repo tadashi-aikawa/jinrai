@@ -1995,13 +1995,13 @@ describe("window_hints mouse selection", function()
 		assert.is_false(mocks.keyBlocker.started)
 	end)
 
-	it("ヒント表示中にmoveToSelectedAreaキーを押すと内部コールバックへ通知する", function()
+	it("ヒント表示中にopenWindowActionChooserキーを押すと内部コールバックへ通知する", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
 		local targetWindow = makeWindow(1, "Target", focusCounter)
 		local mocks = installHsMock(targetWindow, createdCanvases)
 		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
-		local moveToSelectedAreaCount = 0
+		local openWindowActionChooserCount = 0
 
 		local instance = windowHints.new({
 			hint = {
@@ -2011,7 +2011,7 @@ describe("window_hints mouse selection", function()
 			},
 			navigation = {
 				windowMover = {
-					moveToSelectedArea = {
+					openWindowActionChooser = {
 						key = "space",
 					},
 				},
@@ -2028,8 +2028,8 @@ describe("window_hints mouse selection", function()
 				},
 			},
 			internal = {
-				onMoveToSelectedArea = function()
-					moveToSelectedAreaCount = moveToSelectedAreaCount + 1
+				onOpenWindowActionChooser = function()
+					openWindowActionChooserCount = openWindowActionChooserCount + 1
 				end,
 			},
 		})
@@ -2054,7 +2054,7 @@ describe("window_hints mouse selection", function()
 		}))
 
 		assert.are.equal(0, focusCounter.count)
-		assert.are.equal(1, moveToSelectedAreaCount)
+		assert.are.equal(1, openWindowActionChooserCount)
 		assert.is_true(hintCanvas._deleted)
 		assert.is_false(mocks.keyBlocker.started)
 	end)

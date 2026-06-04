@@ -93,7 +93,7 @@ local DEFAULT_CONFIG = {
 				key = nil,
 			},
 		},
-		moveToSelectedArea = {
+		openWindowActionChooser = {
 			hotkey = {
 				modifiers = nil,
 				key = nil,
@@ -160,6 +160,9 @@ local DEFAULT_CONFIG = {
 	selectedArea = {
 		defaultScreen = nil,
 		screens = {},
+		actions = {
+			closeWindow = nil,
+		},
 		hints = {
 			show = true,
 		},
@@ -295,6 +298,11 @@ local function checkRemovedKeys(options)
 	if options.hotkey ~= nil then
 		error("[jinrai.window_mover] removed key 'hotkey' is no longer supported; use 'commands.moveToNextDisplay.hotkey'")
 	end
+	if type(options.commands) == "table" and options.commands.moveToSelectedArea ~= nil then
+		error(
+			"[jinrai.window_mover] removed key 'commands.moveToSelectedArea' is no longer supported; use 'commands.openWindowActionChooser'"
+		)
+	end
 	if type(options.behavior) == "table" and options.behavior.selectedArea ~= nil then
 		error("[jinrai.window_mover] removed key 'behavior.selectedArea' is no longer supported; use 'selectedArea'")
 	end
@@ -377,6 +385,24 @@ local function normalizeSelectedAreaScreens(screens)
 	return normalized
 end
 
+local function normalizeSelectedAreaActions(actions)
+	if type(actions) ~= "table" or isArrayTable(actions) then
+		error("[jinrai.window_mover] selectedArea.actions must be a table keyed by action name")
+	end
+
+	local normalized = {}
+	for actionName, key in pairs(actions) do
+		if actionName ~= "closeWindow" then
+			error("[jinrai.window_mover] unsupported selectedArea action '" .. tostring(actionName) .. "'")
+		end
+		if key ~= nil then
+			normalized[actionName] = normalizeSelectedAreaKey(key, "selectedArea.actions." .. actionName)
+		end
+	end
+	validateSelectedAreaKeys(normalized, "selectedArea.actions")
+	return normalized
+end
+
 local function normalizeSelectedAreaDefault(defaultUuid, screens)
 	if defaultUuid == nil then
 		return nil
@@ -420,9 +446,52 @@ local function normalizeCycleRatios(ratios, path)
 	return normalized
 end
 
-local function validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens)
+local function validateSelectedAreaActionKeysDoNotConflict(selectedAreaActions, selectedAreaScreens)
+	for actionName, actionKey in pairs(selectedAreaActions) do
+		local normalizedActionKey = string.lower(actionKey)
+		for uuid, areaMap in pairs(selectedAreaScreens) do
+			for _, areaKey in pairs(areaMap) do
+				local normalizedAreaKey = string.lower(areaKey)
+				if startsWith(normalizedAreaKey, normalizedActionKey) or startsWith(normalizedActionKey, normalizedAreaKey) then
+					error(
+						string.format(
+							"[jinrai.window_mover] selectedArea.actions.%s key '%s' conflicts with selectedArea.screens['%s'] key '%s'",
+							actionName,
+							actionKey,
+							uuid,
+							areaKey
+						)
+					)
+				end
+			end
+		end
+	end
+end
+
+local function actionKeyConflictsWithJinraiMode(jinraiModeKey, selectedAreaActions)
+	for actionName, actionKey in pairs(selectedAreaActions) do
+		local normalizedActionKey = string.lower(actionKey)
+		if normalizedActionKey == jinraiModeKey or startsWith(normalizedActionKey, jinraiModeKey) then
+			return actionName, actionKey
+		end
+	end
+	return nil, nil
+end
+
+local function validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens, selectedAreaActions)
 	if not jinraiModeKey then
 		return
+	end
+	local actionName, actionKey = actionKeyConflictsWithJinraiMode(jinraiModeKey, selectedAreaActions)
+	if actionName then
+		error(
+			string.format(
+				"[jinrai.window_mover] jinrai_mode.triggers.windowMover.key '%s' conflicts with selectedArea.actions.%s key '%s'",
+				jinraiModeKey,
+				actionName,
+				actionKey
+			)
+		)
 	end
 	for uuid, areaMap in pairs(selectedAreaScreens) do
 		for _, areaKey in pairs(areaMap) do
@@ -449,19 +518,21 @@ function M.build(options)
 	checkRemovedKeys(options)
 	local merged = deepMerge(DEFAULT_CONFIG, options)
 	local selectedAreaScreens = normalizeSelectedAreaScreens(merged.selectedArea.screens)
+	local selectedAreaActions = normalizeSelectedAreaActions(merged.selectedArea.actions)
 	local selectedAreaDefault = normalizeSelectedAreaDefault(merged.selectedArea.defaultScreen, selectedAreaScreens)
 	local jinraiModeKey = normalizeJinraiModeKey(merged.internal.jinraiMode.windowMover.key)
 	local cycleHorizontalRatios = normalizeCycleRatios(merged.behavior.cycle.horizontalRatios, "behavior.cycle.horizontalRatios")
 	local cycleVerticalRatios = normalizeCycleRatios(merged.behavior.cycle.verticalRatios, "behavior.cycle.verticalRatios")
-	validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens)
+	validateSelectedAreaActionKeysDoNotConflict(selectedAreaActions, selectedAreaScreens)
+	validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens, selectedAreaActions)
 
 	local built = {
 		moveToNextDisplayHotkeyModifiers = merged.commands.moveToNextDisplay.hotkey.modifiers,
 		moveToNextDisplayHotkeyKey = merged.commands.moveToNextDisplay.hotkey.key,
 		moveToActiveDisplayFreeAreaHotkeyModifiers = merged.commands.moveToActiveDisplayFreeArea.hotkey.modifiers,
 		moveToActiveDisplayFreeAreaHotkeyKey = merged.commands.moveToActiveDisplayFreeArea.hotkey.key,
-		moveToSelectedAreaHotkeyModifiers = merged.commands.moveToSelectedArea.hotkey.modifiers,
-		moveToSelectedAreaHotkeyKey = merged.commands.moveToSelectedArea.hotkey.key,
+		openWindowActionChooserHotkeyModifiers = merged.commands.openWindowActionChooser.hotkey.modifiers,
+		openWindowActionChooserHotkeyKey = merged.commands.openWindowActionChooser.hotkey.key,
 		minimizeWindowHotkeyModifiers = merged.commands.minimizeWindow.hotkey.modifiers,
 		minimizeWindowHotkeyKey = merged.commands.minimizeWindow.hotkey.key,
 		maximizeWindowHotkeyModifiers = merged.commands.maximizeWindow.hotkey.modifiers,
@@ -483,6 +554,7 @@ function M.build(options)
 		cycleVerticalRatios = cycleVerticalRatios,
 		selectedAreaDefault = selectedAreaDefault,
 		selectedAreaScreens = selectedAreaScreens,
+		selectedAreaActions = selectedAreaActions,
 		selectedAreaHintsShow = merged.selectedArea.hints.show,
 		selectedAreaAppearance = merged.selectedArea.appearance,
 		jinraiModeKey = jinraiModeKey,

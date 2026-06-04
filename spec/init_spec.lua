@@ -243,8 +243,8 @@ describe("init", function()
 		local init = dofile("./Jinrai.spoon/init.lua")
 		local calls = {
 			new = {},
-			moveToSelectedAreaOptions = nil,
-			moveToSelectedAreaCount = 0,
+			openWindowActionChooserOptions = nil,
+			openWindowActionChooserCount = 0,
 			startJinraiMode = 0,
 			showJinraiMode = 0,
 			stopJinraiMode = 0,
@@ -275,9 +275,9 @@ describe("init", function()
 					new = function(options)
 						calls.new.window_mover = options
 						return {
-							moveToSelectedArea = function(options)
-								calls.moveToSelectedAreaCount = calls.moveToSelectedAreaCount + 1
-								calls.moveToSelectedAreaOptions = options
+							openWindowActionChooser = function(options)
+								calls.openWindowActionChooserCount = calls.openWindowActionChooserCount + 1
+								calls.openWindowActionChooserOptions = options
 							end,
 							teardown = function() end,
 						}
@@ -325,15 +325,15 @@ describe("init", function()
 
 		assert.are.equal("space", calls.new.window_hints.internal.jinraiMode.windowHints.key)
 		assert.are.equal("j", calls.new.window_mover.internal.jinraiMode.windowMover.key)
-		assert.is_truthy(calls.new.window_hints.internal.onMoveToSelectedArea)
-		calls.new.window_hints.internal.onMoveToSelectedArea()
-		assert.are.equal(1, calls.moveToSelectedAreaCount)
+		assert.is_truthy(calls.new.window_hints.internal.onOpenWindowActionChooser)
+		calls.new.window_hints.internal.onOpenWindowActionChooser()
+		assert.are.equal(1, calls.openWindowActionChooserCount)
 		assert.is_truthy(calls.new.window_hints.internal.onJinraiModeSelect)
 		calls.new.window_hints.internal.onJinraiModeSelect({})
-		assert.is_truthy(calls.moveToSelectedAreaOptions.onApply)
-		assert.is_truthy(calls.moveToSelectedAreaOptions.onCancel)
-		calls.moveToSelectedAreaOptions.onApply()
-		calls.moveToSelectedAreaOptions.onCancel()
+		assert.is_truthy(calls.openWindowActionChooserOptions.onApply)
+		assert.is_truthy(calls.openWindowActionChooserOptions.onCancel)
+		calls.openWindowActionChooserOptions.onApply()
+		calls.openWindowActionChooserOptions.onCancel()
 		calls.new.window_mover.internal.jinraiMode.onStart()
 		calls.new.window_mover.internal.jinraiMode.onApply()
 		calls.new.window_mover.internal.jinraiMode.onCancel()
@@ -341,7 +341,7 @@ describe("init", function()
 		assert.are.equal(1, calls.startJinraiMode)
 		assert.are.equal(2, calls.showJinraiMode)
 		assert.are.equal(2, calls.stopJinraiMode)
-		assert.are.equal(2, calls.moveToSelectedAreaCount)
+		assert.are.equal(2, calls.openWindowActionChooserCount)
 	end)
 
 	it("macosNativeTabs 未指定時は組み込みのデフォルト設定を注入する", function()

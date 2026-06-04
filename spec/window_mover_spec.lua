@@ -45,6 +45,7 @@ describe("window_mover", function()
 			moveToScreenCalls = {},
 			maximizeCalls = {},
 			minimizeCalls = 0,
+			closeCalls = 0,
 			raiseCalls = 0,
 			focusCalls = 0,
 		}
@@ -72,6 +73,10 @@ describe("window_mover", function()
 		end
 		function win:minimize()
 			self.minimizeCalls = self.minimizeCalls + 1
+		end
+		function win:close()
+			self.closeCalls = self.closeCalls + 1
+			return true
 		end
 		function win:raise()
 			self.raiseCalls = self.raiseCalls + 1
@@ -381,6 +386,7 @@ describe("window_mover", function()
 			selectedArea = {
 				defaultScreen = defaultUuid,
 				screens = screens,
+				actions = selectedAreaOverrides.actions,
 				hints = selectedAreaOverrides.hints,
 			},
 		}
@@ -915,7 +921,7 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		assert.are.same({ "A", "S", "D", "F", "Q", "W", "E", "T", "Z", "R", "Y", "U", "I", "O", "P" }, canvasKeys(state))
 		assert.are.equal(0, #state.webviews)
@@ -925,7 +931,7 @@ describe("window_mover", function()
 		assert.are.same({ x = 800, y = 400, w = 400, h = 400 }, win.setFrameCalls[1].frame)
 	end)
 
-	it("moveToSelectedArea の onApply は移動完了後に呼ばれる", function()
+	it("openWindowActionChooser の onApply は移動完了後に呼ばれる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
@@ -938,7 +944,7 @@ describe("window_mover", function()
 		local appliedCandidate
 		local cancelCount = 0
 
-		instance.moveToSelectedArea({
+		instance.openWindowActionChooser({
 			onApply = function(appliedWin, candidate)
 				appliedFrame = appliedWin:frame()
 				appliedCandidate = candidate
@@ -954,7 +960,43 @@ describe("window_mover", function()
 		assert.are.equal(0, cancelCount)
 	end)
 
-	it("moveToSelectedArea の onCancel はキャンセル時だけ呼ばれる", function()
+	it("openWindowActionChooser で closeWindow action を実行できる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				closeWindow = "X",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local appliedCandidate
+		local cancelCount = 0
+
+		instance.openWindowActionChooser({
+			onApply = function(_, candidate)
+				appliedCandidate = candidate
+			end,
+			onCancel = function()
+				cancelCount = cancelCount + 1
+			end,
+		})
+		assert.is_false(canvasHasText(state, "Close"))
+		assert.are.same({ "A" }, canvasKeys(state))
+		sendKey(state, "x")
+
+		assert.are.equal(1, win.closeCalls)
+		assert.are.equal(0, #win.setFrameCalls)
+		assert.are.equal("action", appliedCandidate.kind)
+		assert.are.equal("closeWindow", appliedCandidate.action)
+		assert.are.equal("X", appliedCandidate.key)
+		assert.are.equal(0, cancelCount)
+	end)
+
+	it("openWindowActionChooser の onCancel はキャンセル時だけ呼ばれる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
@@ -966,7 +1008,7 @@ describe("window_mover", function()
 		local applyCount = 0
 		local cancelCount = 0
 
-		instance.moveToSelectedArea({
+		instance.openWindowActionChooser({
 			onApply = function()
 				applyCount = applyCount + 1
 			end,
@@ -980,7 +1022,7 @@ describe("window_mover", function()
 		assert.are.equal(1, cancelCount)
 	end)
 
-	it("通常の moveToSelectedArea 適用では JinraiMode 継続コールバックを呼ばない", function()
+	it("通常の openWindowActionChooser 適用では JinraiMode 継続コールバックを呼ばない", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local options = selectedAreaOptions({
@@ -1002,13 +1044,13 @@ describe("window_mover", function()
 		local state, instance = newWindowMoverWithMock(options, win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "a")
 
 		assert.are.equal(0, applyCount)
 	end)
 
-	it("moveToSelectedArea 表示中に JinraiMode キーを押すとエリア適用後に継続コールバックを呼ぶ", function()
+	it("openWindowActionChooser 表示中に JinraiMode キーを押すとエリア適用後に継続コールバックを呼ぶ", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local options = selectedAreaOptions({
@@ -1034,7 +1076,7 @@ describe("window_mover", function()
 		local state, instance = newWindowMoverWithMock(options, win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "space")
 		sendKey(state, "a")
 
@@ -1042,7 +1084,7 @@ describe("window_mover", function()
 		assert.are.equal(1, applyCount)
 	end)
 
-	it("moveToSelectedArea 表示中に JinraiMode キーを押した後のキャンセルで終了コールバックを呼ぶ", function()
+	it("openWindowActionChooser 表示中に JinraiMode キーを押した後のキャンセルで終了コールバックを呼ぶ", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local options = selectedAreaOptions({
@@ -1064,7 +1106,7 @@ describe("window_mover", function()
 		local state, instance = newWindowMoverWithMock(options, win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "space")
 		sendKey(state, "escape")
 
@@ -1083,7 +1125,7 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "d")
 
 		assert.are.same({ x = 0, y = 450, w = 600, h = 450 }, win.setFrameCalls[1].frame)
@@ -1100,7 +1142,7 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "f")
 
 		assert.are.same({ x = 300, y = 0, w = 300, h = 900 }, win.setFrameCalls[1].frame)
@@ -1117,12 +1159,12 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		assert.is_true(canvasHasText(state, "800x600"))
 		sendKey(state, "v")
 		assert.are.same({ x = 0, y = 150, w = 1200, h = 600 }, win.setFrameCalls[1].frame)
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "m")
 		assert.are.same({ x = 200, y = 150, w = 800, h = 600 }, win.setFrameCalls[2].frame)
 	end)
@@ -1142,17 +1184,17 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "a")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "s")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "d")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "q")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "w")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "e")
 
 		assert.are.same({ x = 0, y = 0, w = 800, h = 900 }, win.setFrameCalls[1].frame)
@@ -1173,7 +1215,7 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "m")
 
 		assert.are.same({ x = 10, y = 20, w = 1200, h = 900 }, win.setFrameCalls[1].frame)
@@ -1192,13 +1234,13 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "a")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "s")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "d")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "f")
 
 		assert.are.same({ x = 0, y = 0, w = 300, h = 800 }, win.setFrameCalls[1].frame)
@@ -1220,13 +1262,13 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "a")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "s")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "d")
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "f")
 
 		assert.are.same({ x = 0, y = 0, w = 1200, h = 200 }, win.setFrameCalls[1].frame)
@@ -1251,7 +1293,7 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		local framesByKey = canvasFramesByKey(state)
 		assert.are.equal(framesByKey.KH.y, framesByKey.KL.y)
@@ -1275,7 +1317,7 @@ describe("window_mover", function()
 		}, "uuid-a"), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		assert.are.same({ "A", "F" }, canvasKeys(state))
 		assert.are.equal(0, #state.webviews)
@@ -1287,7 +1329,7 @@ describe("window_mover", function()
 		local state, instance = newWindowMoverWithMock(selectedAreaOptions({}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		assert.are.equal(0, #state.canvases)
 		assert.are.equal(1, #state.webviews)
@@ -1323,7 +1365,7 @@ describe("window_mover", function()
 		local state, instance = newWindowMoverWithMock(selectedAreaOptions({}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		assert.are.equal("jinraiCopyTemplate", state.webviews[1]._usercontent._name)
 		state.webviews[1]._usercontent._callback([[
@@ -1344,7 +1386,7 @@ describe("window_mover", function()
 		local state, instance = newWindowMoverWithMock(selectedAreaOptions({}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		assert.are.equal(480, state.webviews[1]._frame.h)
 	end)
@@ -1361,7 +1403,7 @@ describe("window_mover", function()
 		}, "uuid-a"), win, { win })
 		state.screens = { configured, unknown }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		assert.are.same({ "A", "S" }, canvasKeys(state))
 		assert.are.equal(1, #state.webviews)
@@ -1381,7 +1423,7 @@ describe("window_mover", function()
 			error("visibleWindows should not be called")
 		end
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		assert.are.same({ "A" }, canvasKeys(state))
 	end)
@@ -1393,10 +1435,15 @@ describe("window_mover", function()
 			["uuid-a"] = {
 				halfLeft = "A",
 			},
-		}, nil, { hints = { show = false } }), win, { win })
+		}, nil, {
+			actions = {
+				closeWindow = "X",
+			},
+			hints = { show = false },
+		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		assert.are.equal(0, #state.canvases)
 		assert.are.equal(0, #state.webviews)
@@ -1405,10 +1452,15 @@ describe("window_mover", function()
 		assert.is_true(sendMouseDown(state, { x = 10, y = 10 }))
 		assert.is_true(state.eventtaps[1].stopped)
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "a")
 
 		assert.are.same({ x = 0, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
+
+		instance.openWindowActionChooser()
+		sendKey(state, "x")
+
+		assert.are.equal(1, win.closeCalls)
 	end)
 
 	it("UUID案内内のクリックは消費せず候補外クリックは閉じる", function()
@@ -1417,7 +1469,7 @@ describe("window_mover", function()
 		local state, instance = newWindowMoverWithMock(selectedAreaOptions({}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		local infoFrame = state.webviews[1]._frame
 
 		assert.is_false(sendMouseDown(state, { x = infoFrame.x + 10, y = infoFrame.y + 10 }))
@@ -1437,7 +1489,7 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { screen }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 
 		assert.is_true(sendMouseDown(state, { x = 10, y = 10 }))
 		assert.are.equal(0, #win.setFrameCalls)
@@ -1455,14 +1507,14 @@ describe("window_mover", function()
 		}), win, { win })
 		state.screens = { configured, unknown }
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		sendKey(state, "escape")
 
 		assert.is_true(state.canvases[1]._deleted)
 		assert.is_true(state.webviews[1]._deleted)
 		assert.is_true(state.eventtaps[1].stopped)
 
-		instance.moveToSelectedArea()
+		instance.openWindowActionChooser()
 		local canvas = state.canvases[2]
 		local webview = state.webviews[2]
 		instance.teardown()

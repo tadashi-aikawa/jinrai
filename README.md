@@ -184,7 +184,7 @@ spoon.Jinrai:setup({
 
 ## JinraiMode Options
 
-JinraiMode chains Window Hints and Window Mover. You can start it from Window Hints while hints are shown, or from Window Mover while `moveToSelectedArea` is shown.
+JinraiMode chains Window Hints and Window Mover. You can start it from Window Hints while hints are shown, or from Window Mover while `openWindowActionChooser` is shown.
 
 ```lua
 jinrai_mode = {
@@ -193,7 +193,7 @@ jinrai_mode = {
       key = nil, -- Key to start JinraiMode while Window Hints is shown
     },
     windowMover = {
-      key = nil, -- Key to start JinraiMode while moveToSelectedArea is shown
+      key = nil, -- Key to start JinraiMode while openWindowActionChooser is shown
     },
   },
   logo = {
@@ -204,9 +204,9 @@ jinrai_mode = {
 }
 ```
 
-In Window Hints, pressing `triggers.windowHints.key` starts JinraiMode, then window selection opens Window Mover `moveToSelectedArea`.
-In Window Mover, press `triggers.windowMover.key` after opening `moveToSelectedArea`; the selected area is applied first, then Window Hints opens. Canceling either chooser ends JinraiMode.
-`triggers.windowMover.key` must not conflict with configured selected-area keys; prefix conflicts such as `key = "k"` with area key `"KD"` are rejected.
+In Window Hints, pressing `triggers.windowHints.key` starts JinraiMode, then window selection opens Window Mover `openWindowActionChooser`.
+In Window Mover, press `triggers.windowMover.key` after opening `openWindowActionChooser`; the selected area or action is applied first, then Window Hints opens. Canceling either chooser ends JinraiMode.
+`triggers.windowMover.key` must not conflict with configured selected-area/action keys; prefix conflicts such as `key = "k"` with area key `"KD"` are rejected.
 
 ## macOS Native Tabs Options
 
@@ -449,8 +449,8 @@ window_hints = {
       },
     },
     windowMover = {
-      moveToSelectedArea = {
-        key = nil, -- Key to close Window Hints and open moveToSelectedArea
+      openWindowActionChooser = {
+        key = nil, -- Key to close Window Hints and open openWindowActionChooser
       },
     },
   },
@@ -515,7 +515,7 @@ For implementation defaults and internal options, see `DEFAULT_CONFIG` in `windo
 - Pressing the Window Hints hotkey again while hints are shown closes the hints
 - `navigation.focusBack.key` and `navigation.direction.hints.keys` are active only while hints are shown
 - `navigation.focusBack.key` works only when `focus_back` is enabled
-- `navigation.windowMover.moveToSelectedArea.key` closes Window Hints and opens Window Mover `moveToSelectedArea` for the active window. This is separate from JinraiMode, which opens `moveToSelectedArea` after selecting a window.
+- `navigation.windowMover.openWindowActionChooser.key` closes Window Hints and opens Window Mover `openWindowActionChooser` for the active window. This is separate from JinraiMode, which opens `openWindowActionChooser` after selecting a window.
 - If these keys conflict with `hint.chars`, the conflicting hint chars are removed and navigation keys take priority
 - Clicking a hint selects the same window as entering its hint key
 - Clicking outside all hints while hints are shown closes the hints
@@ -634,7 +634,7 @@ window_mover = {
         key = nil,       -- Hotkey (nil to disable)
       },
     },
-    moveToSelectedArea = {
+    openWindowActionChooser = {
       hotkey = {
         modifiers = nil, -- Hotkey modifiers (nil to disable)
         key = nil,       -- Hotkey (nil to disable)
@@ -741,6 +741,9 @@ window_mover = {
   selectedArea = {
     defaultScreen = nil, -- UUID whose keymap is reused for unconfigured displays
     screens = {},        -- Map screen UUIDs to area keymaps
+    actions = {
+      closeWindow = nil, -- Window close action key (nil disables it)
+    },
     hints = {
       show = true, -- Render candidate hints with canvas; false keeps key input only
     },
@@ -797,7 +800,7 @@ window_mover = {
 | --- | --- |
 | `moveToNextDisplay` | Moves the active window to `screen:next()` from the current display and maximizes it there. |
 | `moveToActiveDisplayFreeArea` | Moves the active window to the largest rectangle inside the current display's `frame()` that does not overlap other visible windows. Ties prefer the area closest to the active window. |
-| `moveToSelectedArea` | Opens the selected-area chooser for configured screen UUIDs. |
+| `openWindowActionChooser` | Opens the chooser for configured screen areas and `selectedArea.actions` window actions. |
 | `maximizeWindow` | Moves and resizes the active window to the current display's `frame()` without using macOS fullscreen. |
 | `minimizeWindow` | Minimizes the active window. |
 | `cycleLeft` | Moves the active window to the left edge and cycles width through `behavior.cycle.horizontalRatios` (`1/2` → `1/3` → `2/3` by default). |
@@ -821,15 +824,15 @@ Direct area commands use the names listed in [Available areas](#available-areas)
 
 To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
 
-### moveToSelectedArea
+### openWindowActionChooser
 
-`moveToSelectedArea` shows only the area hints configured for each screen UUID. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`.
+`openWindowActionChooser` shows the area hints configured for each screen UUID and the window actions configured in `selectedArea.actions`. `moveToSelectedArea` is the removed old name. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`.
 
 Unconfigured displays reuse `selectedArea.defaultScreen` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the defaultScreen keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
 
-Set `selectedArea.hints.show = false` to skip canvas rendering for configured candidates and move by key input only. UUID template guidance for unconfigured displays is still shown.
+Set `selectedArea.hints.show = false` to skip canvas rendering for configured candidates and move or run actions by key input only. UUID template guidance for unconfigured displays is still shown.
 
-Use the names listed in [Available areas](#available-areas) as keys in `selectedArea.screens`.
+Use the names listed in [Available areas](#available-areas) as keys in `selectedArea.screens`. Set `selectedArea.actions.closeWindow` to close the active window from the chooser. Action keys must not duplicate or prefix-conflict with area keys.
 
 Example selected-area keymap:
 
@@ -874,6 +877,9 @@ selectedArea = {
       twoThirdsBottom = "T3",
       ["1920x1080Center"] = "M",
     },
+  },
+  actions = {
+    closeWindow = "X",
   },
 }
 ```

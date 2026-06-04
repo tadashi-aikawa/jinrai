@@ -233,7 +233,7 @@ local DEFAULT_CONFIG = {
 			},
 		},
 		windowMover = {
-			moveToSelectedArea = {
+			openWindowActionChooser = {
 				key = nil,
 			},
 		},
@@ -271,7 +271,7 @@ local DEFAULT_CONFIG = {
 			},
 		},
 		onJinraiModeSelect = nil,
-		onMoveToSelectedArea = nil,
+		onOpenWindowActionChooser = nil,
 	},
 }
 
@@ -594,7 +594,7 @@ local function buildReservedHintCharLookup(
 	spaceKeys,
 	prevSpaceKey,
 	nextSpaceKey,
-	moveToSelectedAreaKey
+	openWindowActionChooserKey
 )
 	local reserved = {}
 	local function addKey(key)
@@ -609,7 +609,7 @@ local function buildReservedHintCharLookup(
 	addKey(jinraiModeKey)
 	addKey(prevSpaceKey)
 	addKey(nextSpaceKey)
-	addKey(moveToSelectedAreaKey)
+	addKey(openWindowActionChooserKey)
 	if spaceKeys then
 		for i = 1, 9 do
 			reserved[tostring(i)] = true
@@ -877,9 +877,9 @@ function M.build(options)
 	local jinraiModeKey = normalizeActionKey(jinraiModeWindowHints.key, "jinrai_mode.triggers.windowHints.key")
 	local prevSpaceKey = normalizeActionKey(merged.navigation.spaces.prev.key, "navigation.spaces.prev.key")
 	local nextSpaceKey = normalizeActionKey(merged.navigation.spaces.next.key, "navigation.spaces.next.key")
-	local moveToSelectedAreaKey = normalizeActionKey(
-		merged.navigation.windowMover.moveToSelectedArea.key,
-		"navigation.windowMover.moveToSelectedArea.key"
+	local openWindowActionChooserKey = normalizeActionKey(
+		merged.navigation.windowMover.openWindowActionChooser.key,
+		"navigation.windowMover.openWindowActionChooser.key"
 	)
 	local swapSelectModifiers = normalizeSelectModifiers(
 		merged.behavior.selection.swapWindowFrame.modifiers,
@@ -900,7 +900,7 @@ function M.build(options)
 		spaceKeys,
 		prevSpaceKey,
 		nextSpaceKey,
-		moveToSelectedAreaKey
+		openWindowActionChooserKey
 	)
 	hintChars = filterHintChars(hintChars, reservedHintCharLookup)
 	if #hintChars == 0 then
@@ -1021,7 +1021,7 @@ function M.build(options)
 		jinraiModeKey = jinraiModeKey,
 		jinraiModeLogo = jinraiModeLogo,
 		onJinraiModeSelect = merged.internal.onJinraiModeSelect,
-		onMoveToSelectedArea = merged.internal.onMoveToSelectedArea,
+		onOpenWindowActionChooser = merged.internal.onOpenWindowActionChooser,
 		directionKeys = directionKeys,
 		directionKeyLookup = directionKeyLookup,
 		directDirectionHotkeys = directDirectionHotkeys,
@@ -1033,7 +1033,7 @@ function M.build(options)
 		spaceKeys = spaceKeys,
 		prevSpaceKey = prevSpaceKey,
 		nextSpaceKey = nextSpaceKey,
-		moveToSelectedAreaKey = moveToSelectedAreaKey,
+		openWindowActionChooserKey = openWindowActionChooserKey,
 		swapWindowFrameSelectModifiers = swapSelectModifiers,
 		focusHistory = focusHistory,
 	}

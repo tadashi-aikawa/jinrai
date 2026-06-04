@@ -221,17 +221,17 @@ function obj:setup(config)
 		windowHintsConfig = mergeTable(windowHintsConfig, { internal = jinraiModeInternalConfig })
 		if windowMover then
 			local internalConfig = mergeTable(windowHintsConfig.internal or {}, {
-				onMoveToSelectedArea = function()
-					if not windowMover or not windowMover.moveToSelectedArea then
+				onOpenWindowActionChooser = function()
+					if not windowMover or not windowMover.openWindowActionChooser then
 						return
 					end
-					windowMover.moveToSelectedArea()
+					windowMover.openWindowActionChooser()
 				end,
 				onJinraiModeSelect = function()
-					if not windowMover or not windowMover.moveToSelectedArea then
+					if not windowMover or not windowMover.openWindowActionChooser then
 						return
 					end
-					windowMover.moveToSelectedArea({
+					windowMover.openWindowActionChooser({
 						onApply = function()
 							defer(function()
 								if windowHints and windowHints.showJinraiMode then

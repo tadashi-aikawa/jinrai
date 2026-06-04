@@ -546,6 +546,34 @@ function M.new(options)
 		end
 	end
 
+	local function applyActionCandidate(candidate)
+		if not candidate or not candidate.action or not hs or not hs.window or not hs.window.focusedWindow then
+			return
+		end
+		local win = hs.window.focusedWindow()
+		if not win then
+			closeAreaChooser(true, { cancel = true })
+			return
+		end
+		local onApply = areaApplyCallback
+		local onJinraiModeApply = areaJinraiModeActive and config.onJinraiModeApply or nil
+		closeAreaChooser(true)
+		if candidate.action == "closeWindow" and win.close then
+			local ok = win:close()
+			if not ok then
+				return
+			end
+		else
+			return
+		end
+		if onApply then
+			onApply(win, candidate)
+		end
+		if onJinraiModeApply then
+			onJinraiModeApply(win, candidate)
+		end
+	end
+
 	local function addAreaCandidate(candidates, seenByScreen, screen, frame, kind, icon, key, detailLabel)
 		if not screen or not frame then
 			return
@@ -563,6 +591,33 @@ function M.new(options)
 				detailLabel = detailLabel,
 			})
 		end
+	end
+
+	local function addActionCandidate(candidates, screen, screenFrame, actionName, key)
+		if key == nil or not screen or not screenFrame then
+			return
+		end
+		local actionFrameWidth = math.min(240, screenFrame.w)
+		local actionFrameHeight = 140
+		local actionFrame = {
+			x = screenFrame.x + ((screenFrame.w - actionFrameWidth) / 2),
+			y = screenFrame.y + AREA_LABEL_MIN_MARGIN,
+			w = actionFrameWidth,
+			h = math.min(actionFrameHeight, screenFrame.h),
+		}
+		local detailLabels = {
+			closeWindow = "Close",
+		}
+		table.insert(candidates, {
+			screen = screen,
+			screenId = tostring(screen:id()),
+			frame = actionFrame,
+			kind = "action",
+			hiddenHint = true,
+			key = key,
+			detailLabel = detailLabels[actionName] or actionName,
+			action = actionName,
+		})
 	end
 
 	local function areaSpecForName(screenFrame, areaName)
@@ -911,6 +966,18 @@ function M.new(options)
 			end
 		end
 
+		local activeScreen = nil
+		local activeWindow = hs.window and hs.window.focusedWindow and hs.window.focusedWindow() or nil
+		if activeWindow then
+			activeScreen = screenOf(activeWindow)
+		end
+		if activeScreen and activeScreen.frame then
+			local activeScreenFrame = cloneFrame(activeScreen:frame())
+			for actionName, key in pairs(config.selectedAreaActions or {}) do
+				addActionCandidate(candidates, activeScreen, activeScreenFrame, actionName, key)
+			end
+		end
+
 		return candidates, screensWithoutCandidates
 	end
 
@@ -1007,8 +1074,8 @@ function M.new(options)
 			end
 
 			if
-				key == config.moveToSelectedAreaHotkeyKey
-				and modifierListKey(modifiers) == modifierListKey(config.moveToSelectedAreaHotkeyModifiers)
+				key == config.openWindowActionChooserHotkeyKey
+				and modifierListKey(modifiers) == modifierListKey(config.openWindowActionChooserHotkeyModifiers)
 			then
 				closeAreaChooser(true, { cancel = true })
 				return true
@@ -1034,7 +1101,11 @@ function M.new(options)
 			areaCurrentInput = areaCurrentInput .. hintChar
 			local exact = areaCandidateByKey[areaCurrentInput]
 			if exact then
-				applyAreaCandidate(exact)
+				if exact.action then
+					applyActionCandidate(exact)
+				else
+					applyAreaCandidate(exact)
+				end
 				return true
 			end
 
@@ -1052,7 +1123,12 @@ function M.new(options)
 
 			areaCurrentInput = hintChar
 			if areaCandidateByKey[areaCurrentInput] then
-				applyAreaCandidate(areaCandidateByKey[areaCurrentInput])
+				local candidate = areaCandidateByKey[areaCurrentInput]
+				if candidate.action then
+					applyActionCandidate(candidate)
+				else
+					applyAreaCandidate(candidate)
+				end
 				return true
 			end
 			updateAreaCandidateActiveState()
@@ -1327,8 +1403,14 @@ function M.new(options)
 	end
 
 	local function showAreaCandidates(candidates)
-		resolveAreaLabelFrames(candidates)
+		local visibleCandidates = {}
 		for _, candidate in ipairs(candidates) do
+			if not candidate.hiddenHint then
+				table.insert(visibleCandidates, candidate)
+			end
+		end
+		resolveAreaLabelFrames(visibleCandidates)
+		for _, candidate in ipairs(visibleCandidates) do
 			local frame = candidate.frame
 			local labelFrame = candidate.labelFrame
 			local appearance = config.selectedAreaAppearance
@@ -1590,7 +1672,7 @@ button:active {
 		end
 	end
 
-	local function moveToSelectedArea(options)
+	local function openWindowActionChooser(options)
 		if areaChooserShowing then
 			closeAreaChooser(true, { cancel = true })
 			return
@@ -1908,7 +1990,11 @@ button:active {
 		config.moveToActiveDisplayFreeAreaHotkeyKey,
 		moveToActiveDisplayFreeArea
 	)
-	bindHotkey(config.moveToSelectedAreaHotkeyModifiers, config.moveToSelectedAreaHotkeyKey, moveToSelectedArea)
+	bindHotkey(
+		config.openWindowActionChooserHotkeyModifiers,
+		config.openWindowActionChooserHotkeyKey,
+		openWindowActionChooser
+	)
 	bindHotkey(config.minimizeWindowHotkeyModifiers, config.minimizeWindowHotkeyKey, minimizeWindow)
 	bindHotkey(config.maximizeWindowHotkeyModifiers, config.maximizeWindowHotkeyKey, maximizeWindow)
 	bindHotkey(config.cycleLeftHotkeyModifiers, config.cycleLeftHotkeyKey, cycleLeft)
@@ -1932,7 +2018,7 @@ button:active {
 	local instance = {
 		moveToNextDisplay = moveToNextDisplay,
 		moveToActiveDisplayFreeArea = moveToActiveDisplayFreeArea,
-		moveToSelectedArea = moveToSelectedArea,
+		openWindowActionChooser = openWindowActionChooser,
 		minimizeWindow = minimizeWindow,
 		maximizeWindow = maximizeWindow,
 		cycleLeft = cycleLeft,

@@ -157,7 +157,7 @@ describe("window_hints_config", function()
 					},
 				},
 				windowMover = {
-					moveToSelectedArea = {
+					openWindowActionChooser = {
 						key = "m",
 					},
 				},
@@ -264,7 +264,7 @@ describe("window_hints_config", function()
 		assert.are.same({ "cmd" }, built.directDirectionHotkeys.modifiers)
 		assert.are.equal("i", built.focusBackKey)
 		assert.are.equal("space", built.jinraiModeKey)
-		assert.are.equal("m", built.moveToSelectedAreaKey)
+		assert.are.equal("m", built.openWindowActionChooserKey)
 		assert.is_true(built.jinraiModeLogo.enabled)
 		assert.are.equal(480, built.jinraiModeLogo.size)
 		assert.are.equal(0.3, built.jinraiModeLogo.alpha)
@@ -367,30 +367,30 @@ describe("window_hints_config", function()
 		assert.are.same({ "S" }, built.hintChars)
 	end)
 
-	it("moveToSelectedAreaKey はヒント文字から除外される", function()
+	it("openWindowActionChooserKey はヒント文字から除外される", function()
 		local built = mod.build({
 			hint = {
 				chars = { "A", "S" },
 			},
 			navigation = {
 				windowMover = {
-					moveToSelectedArea = {
+					openWindowActionChooser = {
 						key = "a",
 					},
 				},
 			},
 		})
 
-		assert.are.equal("a", built.moveToSelectedAreaKey)
+		assert.are.equal("a", built.openWindowActionChooserKey)
 		assert.are.same({ "S" }, built.hintChars)
 	end)
 
-	it("moveToSelectedAreaKey が空文字ならエラー", function()
+	it("openWindowActionChooserKey が空文字ならエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
 				navigation = {
-					windowMover = {
-						moveToSelectedArea = {
+				windowMover = {
+						openWindowActionChooser = {
 							key = "",
 						},
 					},
@@ -399,7 +399,7 @@ describe("window_hints_config", function()
 		end)
 
 		assert.is_false(ok)
-		assert.is_truthy(tostring(err):match("navigation%.windowMover%.moveToSelectedArea%.key must not be empty"))
+		assert.is_truthy(tostring(err):match("navigation%.windowMover%.openWindowActionChooser%.key must not be empty"))
 	end)
 
 	it("旧 navigation.jinraiMode 設定はエラー", function()
