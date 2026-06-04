@@ -246,6 +246,7 @@ describe("init", function()
 			openWindowActionChooserOptions = nil,
 			openWindowActionChooserCount = 0,
 			startJinraiMode = 0,
+			show = 0,
 			showJinraiMode = 0,
 			stopJinraiMode = 0,
 		}
@@ -258,6 +259,9 @@ describe("init", function()
 						return {
 							startJinraiMode = function()
 								calls.startJinraiMode = calls.startJinraiMode + 1
+							end,
+							show = function()
+								calls.show = calls.show + 1
 							end,
 							showJinraiMode = function()
 								calls.showJinraiMode = calls.showJinraiMode + 1
@@ -330,6 +334,7 @@ describe("init", function()
 		assert.are.equal(1, calls.openWindowActionChooserCount)
 		assert.is_truthy(calls.new.window_hints.internal.onJinraiModeSelect)
 		calls.new.window_hints.internal.onJinraiModeSelect({})
+		assert.is_true(calls.openWindowActionChooserOptions.jinraiMode)
 		assert.is_truthy(calls.openWindowActionChooserOptions.onApply)
 		assert.is_truthy(calls.openWindowActionChooserOptions.onCancel)
 		calls.openWindowActionChooserOptions.onApply()
@@ -337,9 +342,12 @@ describe("init", function()
 		calls.new.window_mover.internal.jinraiMode.onStart()
 		calls.new.window_mover.internal.jinraiMode.onApply()
 		calls.new.window_mover.internal.jinraiMode.onCancel()
+		calls.new.window_mover.internal.jinraiMode.onOpenWindowHints({ jinraiMode = false })
+		calls.new.window_mover.internal.jinraiMode.onOpenWindowHints({ jinraiMode = true })
 
 		assert.are.equal(1, calls.startJinraiMode)
-		assert.are.equal(2, calls.showJinraiMode)
+		assert.are.equal(1, calls.show)
+		assert.are.equal(3, calls.showJinraiMode)
 		assert.are.equal(2, calls.stopJinraiMode)
 		assert.are.equal(2, calls.openWindowActionChooserCount)
 	end)

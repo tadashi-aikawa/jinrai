@@ -206,6 +206,7 @@ jinrai_mode = {
 
 In Window Hints, pressing `triggers.windowHints.key` starts JinraiMode, then window selection opens Window Mover `openWindowActionChooser`.
 In Window Mover, press `triggers.windowMover.key` after opening `openWindowActionChooser`; the selected area or action is applied first, then Window Hints opens. Canceling either chooser ends JinraiMode.
+Set `window_mover.selectedArea.windowHints.key` to switch back to Window Hints immediately from `openWindowActionChooser` when you want to reselect the active window. During a JinraiMode chain, it reopens Window Hints in JinraiMode so the chain continues.
 `triggers.windowMover.key` must not conflict with configured selected-area/action keys; prefix conflicts such as `key = "k"` with area key `"KD"` are rejected.
 
 ## macOS Native Tabs Options
@@ -744,6 +745,9 @@ window_mover = {
     actions = {
       closeWindow = nil, -- Window close action key (nil disables it)
     },
+    windowHints = {
+      key = nil, -- Switch back to Window Hints JinraiMode (nil disables it)
+    },
     hints = {
       show = true, -- Render candidate hints with canvas; false keeps key input only
     },
@@ -832,7 +836,7 @@ Unconfigured displays reuse `selectedArea.defaultScreen` when set; otherwise JIN
 
 Set `selectedArea.hints.show = false` to skip canvas rendering for configured candidates and move or run actions by key input only. UUID template guidance for unconfigured displays is still shown.
 
-Use the names listed in [Available areas](#available-areas) as keys in `selectedArea.screens`. Set `selectedArea.actions.closeWindow` to close the active window from the chooser. Action keys must not duplicate or prefix-conflict with area keys.
+Use the names listed in [Available areas](#available-areas) as keys in `selectedArea.screens`. Set `selectedArea.actions.closeWindow` to close the active window from the chooser. Set `selectedArea.windowHints.key` to close the chooser and switch back to Window Hints; during a JinraiMode chain, the chain continues. Action keys must not duplicate or prefix-conflict with area keys.
 
 Example selected-area keymap:
 
@@ -880,6 +884,9 @@ selectedArea = {
   },
   actions = {
     closeWindow = "X",
+  },
+  windowHints = {
+    key = "space",
   },
 }
 ```

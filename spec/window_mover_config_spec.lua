@@ -467,7 +467,7 @@ describe("window_mover_config", function()
 		assert.is_truthy(tostring(err):match("prefix%-conflicting key"))
 	end)
 
-	it("selectedArea.actions.closeWindow を設定できる", function()
+	it("selectedArea.actions を設定できる", function()
 		local built = mod.build({
 			selectedArea = {
 				actions = {
@@ -479,19 +479,31 @@ describe("window_mover_config", function()
 		assert.are.same({ closeWindow = "X" }, built.selectedAreaActions)
 	end)
 
+	it("selectedArea.windowHints.key を設定できる", function()
+		local built = mod.build({
+			selectedArea = {
+				windowHints = {
+					key = "space",
+				},
+			},
+		})
+
+		assert.are.equal("space", built.selectedAreaWindowHintsKey)
+	end)
+
 	it("selectedArea.actions の未対応 action はエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
 				selectedArea = {
 					actions = {
-						quitApp = "Q",
+						windowHints = "Q",
 					},
 				},
 			})
 		end)
 
 		assert.is_false(ok)
-		assert.is_truthy(tostring(err):match("unsupported selectedArea action 'quitApp'"))
+		assert.is_truthy(tostring(err):match("unsupported selectedArea action 'windowHints'"))
 	end)
 
 	it("selectedArea.actions と selectedArea.screens の重複キーはエラー", function()
@@ -532,6 +544,34 @@ describe("window_mover_config", function()
 
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("selectedArea%.actions%.closeWindow key 'A' conflicts"))
+	end)
+
+	it("selectedArea.windowHints.key が不正ならエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					windowHints = {
+						key = "",
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("selectedArea%.windowHints%.key must be a non%-empty string"))
+	end)
+
+	it("selectedArea.windowHints が table でなければエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					windowHints = false,
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("selectedArea%.windowHints must be a table"))
 	end)
 
 	it("旧 Start/End 系 area はエラー", function()

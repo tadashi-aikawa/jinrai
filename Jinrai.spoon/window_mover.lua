@@ -448,6 +448,7 @@ function M.new(options)
 	local areaApplyCallback = nil
 	local areaCancelCallback = nil
 	local areaJinraiModeActive = false
+	local areaJinraiModeContext = false
 	local lastCycleState = nil
 
 	local function selectedAreaState(active)
@@ -513,6 +514,7 @@ function M.new(options)
 		areaApplyCallback = nil
 		areaCancelCallback = nil
 		areaJinraiModeActive = false
+		areaJinraiModeContext = false
 		clearAreaChooserCanvases()
 		areaCandidates = {}
 		if onCancel then
@@ -1063,8 +1065,19 @@ function M.new(options)
 			local key = hs.keycodes.map[keyCode]
 			local modifiers = collectInputModifiers(event:getFlags())
 
+			if config.selectedAreaWindowHintsKey and key == config.selectedAreaWindowHintsKey then
+				local onOpenWindowHints = config.onOpenWindowHints
+				local jinraiMode = areaJinraiModeContext or areaJinraiModeActive
+				closeAreaChooser(true)
+				if onOpenWindowHints then
+					onOpenWindowHints({ jinraiMode = jinraiMode })
+				end
+				return true
+			end
+
 			if config.jinraiModeKey and key == config.jinraiModeKey then
 				areaJinraiModeActive = true
+				areaJinraiModeContext = true
 				areaCurrentInput = ""
 				if config.onJinraiModeStart then
 					config.onJinraiModeStart()
@@ -1697,6 +1710,7 @@ button:active {
 		areaApplyCallback = options.onApply
 		areaCancelCallback = options.onCancel
 		areaJinraiModeActive = false
+		areaJinraiModeContext = options.jinraiMode == true
 
 		ensureAreaKeyBlocker()
 		ensureAreaMouseClickWatcher()

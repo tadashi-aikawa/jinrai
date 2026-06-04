@@ -207,6 +207,7 @@ jinrai_mode = {
 ```
 
 Window Hints では `triggers.windowHints.key` を押すと JinraiMode に入り、ウィンドウ選択後に Window Mover の `openWindowActionChooser` が開きます。Window Mover では `openWindowActionChooser` を開いた後に `triggers.windowMover.key` を押すと JinraiMode に入り、エリアまたは action 適用後に Window Hints が開きます。どちらかでキャンセルすると JinraiMode は終了します。
+`window_mover.selectedArea.windowHints.key` を設定すると、アクティブウィンドウを選び直したいときに `openWindowActionChooser` から Window Hints へ即時に戻れます。JinraiMode の連鎖中は Window Hints を JinraiMode として開き直し、連鎖を継続します。
 `triggers.windowMover.key` は設定済みの selected-area/action キーと衝突してはいけません。`key = "k"` とエリアキー `"KD"` のような prefix 衝突もエラーになります。
 
 ## macOS Native Tabs オプション
@@ -746,6 +747,9 @@ window_mover = {
     actions = {
       closeWindow = nil, -- ウィンドウを閉じる action キー（nil で無効化）
     },
+    windowHints = {
+      key = nil, -- Window Hints の JinraiMode 表示へ戻るキー（nil で無効化）
+    },
     hints = {
       show = true, -- 候補ヒントを canvas で描画する。false でキー入力のみ
     },
@@ -834,7 +838,7 @@ window_mover = {
 
 `selectedArea.hints.show = false` にすると、設定済み候補のヒント canvas を描画せず、キー入力だけで移動や action 実行を行います。未設定ディスプレイ向けの UUID テンプレート案内は引き続き表示されます。
 
-`selectedArea.screens` のキーには、[利用可能なエリア](#available-areas) に記載された名前を使います。`selectedArea.actions.closeWindow` を設定すると、chooser 内でアクティブウィンドウを閉じられます。action キーはエリアキーと重複または prefix 衝突してはいけません。
+`selectedArea.screens` のキーには、[利用可能なエリア](#available-areas) に記載された名前を使います。`selectedArea.actions.closeWindow` を設定すると、chooser 内でアクティブウィンドウを閉じられます。`selectedArea.windowHints.key` を設定すると、chooser を閉じて Window Hints へ戻ります。JinraiMode の連鎖中は連鎖を継続します。action キーはエリアキーと重複または prefix 衝突してはいけません。
 
 エリア選択キーマップの例:
 
@@ -882,6 +886,9 @@ selectedArea = {
   },
   actions = {
     closeWindow = "X",
+  },
+  windowHints = {
+    key = "space",
   },
 }
 ```

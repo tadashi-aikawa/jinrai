@@ -163,6 +163,9 @@ local DEFAULT_CONFIG = {
 		actions = {
 			closeWindow = nil,
 		},
+		windowHints = {
+			key = nil,
+		},
 		hints = {
 			show = true,
 		},
@@ -403,6 +406,20 @@ local function normalizeSelectedAreaActions(actions)
 	return normalized
 end
 
+local function normalizeSelectedAreaWindowHintsKey(windowHints)
+	if type(windowHints) ~= "table" or isArrayTable(windowHints) then
+		error("[jinrai.window_mover] selectedArea.windowHints must be a table")
+	end
+	local key = windowHints.key
+	if key == nil then
+		return nil
+	end
+	if type(key) ~= "string" or key == "" then
+		error("[jinrai.window_mover] selectedArea.windowHints.key must be a non-empty string")
+	end
+	return string.lower(key)
+end
+
 local function normalizeSelectedAreaDefault(defaultUuid, screens)
 	if defaultUuid == nil then
 		return nil
@@ -520,6 +537,7 @@ function M.build(options)
 	local selectedAreaScreens = normalizeSelectedAreaScreens(merged.selectedArea.screens)
 	local selectedAreaActions = normalizeSelectedAreaActions(merged.selectedArea.actions)
 	local selectedAreaDefault = normalizeSelectedAreaDefault(merged.selectedArea.defaultScreen, selectedAreaScreens)
+	local selectedAreaWindowHintsKey = normalizeSelectedAreaWindowHintsKey(merged.selectedArea.windowHints)
 	local jinraiModeKey = normalizeJinraiModeKey(merged.internal.jinraiMode.windowMover.key)
 	local cycleHorizontalRatios = normalizeCycleRatios(merged.behavior.cycle.horizontalRatios, "behavior.cycle.horizontalRatios")
 	local cycleVerticalRatios = normalizeCycleRatios(merged.behavior.cycle.verticalRatios, "behavior.cycle.verticalRatios")
@@ -555,12 +573,14 @@ function M.build(options)
 		selectedAreaDefault = selectedAreaDefault,
 		selectedAreaScreens = selectedAreaScreens,
 		selectedAreaActions = selectedAreaActions,
+		selectedAreaWindowHintsKey = selectedAreaWindowHintsKey,
 		selectedAreaHintsShow = merged.selectedArea.hints.show,
 		selectedAreaAppearance = merged.selectedArea.appearance,
 		jinraiModeKey = jinraiModeKey,
 		onJinraiModeStart = merged.internal.jinraiMode.onStart,
 		onJinraiModeApply = merged.internal.jinraiMode.onApply,
 		onJinraiModeCancel = merged.internal.jinraiMode.onCancel,
+		onOpenWindowHints = merged.internal.jinraiMode.onOpenWindowHints,
 	}
 	for _, commandName in ipairs(DIRECT_AREA_COMMAND_KEYS) do
 		built[commandName .. "HotkeyModifiers"] = merged.commands[commandName].hotkey.modifiers

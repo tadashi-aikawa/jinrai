@@ -196,6 +196,18 @@ function obj:setup(config)
 						windowHints.stopJinraiMode()
 					end
 				end,
+				onOpenWindowHints = function(ctx)
+					defer(function()
+						if not windowHints then
+							return
+						end
+						if ctx and ctx.jinraiMode and windowHints.showJinraiMode then
+							windowHints.showJinraiMode()
+						elseif windowHints.show then
+							windowHints.show()
+						end
+					end)
+				end,
 			},
 		})
 		windowMoverConfig = mergeTable(windowMoverConfig, { internal = internalConfig })
@@ -232,6 +244,7 @@ function obj:setup(config)
 						return
 					end
 					windowMover.openWindowActionChooser({
+						jinraiMode = true,
 						onApply = function()
 							defer(function()
 								if windowHints and windowHints.showJinraiMode then

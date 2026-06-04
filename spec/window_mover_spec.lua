@@ -996,6 +996,153 @@ describe("window_mover", function()
 		assert.are.equal(0, cancelCount)
 	end)
 
+	it("openWindowActionChooser で selectedArea.windowHints.key を実行できる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		})
+		options.selectedArea.windowHints = {
+			key = "space",
+		}
+		local openWindowHintsCount = 0
+		local openWindowHintsContext
+		local applyCount = 0
+		local cancelCount = 0
+		options.internal = {
+			jinraiMode = {
+				onOpenWindowHints = function(ctx)
+					openWindowHintsContext = ctx
+					openWindowHintsCount = openWindowHintsCount + 1
+				end,
+			},
+		}
+		local state, instance = newWindowMoverWithMock(options, win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser({
+			onApply = function()
+				applyCount = applyCount + 1
+			end,
+			onCancel = function()
+				cancelCount = cancelCount + 1
+			end,
+		})
+		assert.are.same({ "A" }, canvasKeys(state))
+		sendKey(state, "space")
+
+		assert.are.equal(1, openWindowHintsCount)
+		assert.is_false(openWindowHintsContext.jinraiMode)
+		assert.are.equal(0, #win.setFrameCalls)
+		assert.are.equal(0, win.closeCalls)
+		assert.are.equal(0, applyCount)
+		assert.are.equal(0, cancelCount)
+	end)
+
+	it("JinraiMode 文脈の openWindowActionChooser では selectedArea.windowHints.key が JinraiMode 継続を通知する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		})
+		options.selectedArea.windowHints = {
+			key = "space",
+		}
+		local openWindowHintsContext
+		options.internal = {
+			jinraiMode = {
+				onOpenWindowHints = function(ctx)
+					openWindowHintsContext = ctx
+				end,
+			},
+		}
+		local state, instance = newWindowMoverWithMock(options, win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser({ jinraiMode = true })
+		sendKey(state, "space")
+
+		assert.is_true(openWindowHintsContext.jinraiMode)
+	end)
+
+	it("openWindowActionChooser 表示中に JinraiMode キーを押した後の selectedArea.windowHints.key は JinraiMode 継続を通知する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		})
+		options.selectedArea.windowHints = {
+			key = "space",
+		}
+		local startCount = 0
+		local openWindowHintsContext
+		options.internal = {
+			jinraiMode = {
+				windowMover = {
+					key = "j",
+				},
+				onStart = function()
+					startCount = startCount + 1
+				end,
+				onOpenWindowHints = function(ctx)
+					openWindowHintsContext = ctx
+				end,
+			},
+		}
+		local state, instance = newWindowMoverWithMock(options, win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+		sendKey(state, "j")
+		sendKey(state, "space")
+
+		assert.are.equal(1, startCount)
+		assert.is_true(openWindowHintsContext.jinraiMode)
+	end)
+
+	it("selectedArea.hints.show=false でも selectedArea.windowHints.key を実行できる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			hints = {
+				show = false,
+			},
+		})
+		options.selectedArea.windowHints = {
+			key = "space",
+		}
+		local openWindowHintsCount = 0
+		local openWindowHintsContext
+		options.internal = {
+			jinraiMode = {
+				onOpenWindowHints = function(ctx)
+					openWindowHintsContext = ctx
+					openWindowHintsCount = openWindowHintsCount + 1
+				end,
+			},
+		}
+		local state, instance = newWindowMoverWithMock(options, win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+		assert.are.equal(0, #state.canvases)
+		sendKey(state, "space")
+
+		assert.are.equal(1, openWindowHintsCount)
+		assert.is_false(openWindowHintsContext.jinraiMode)
+		assert.are.equal(0, #win.setFrameCalls)
+	end)
+
 	it("openWindowActionChooser の onCancel はキャンセル時だけ呼ばれる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
