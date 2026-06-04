@@ -233,7 +233,7 @@ local DEFAULT_CONFIG = {
 			},
 		},
 		windowMover = {
-			openWindowActionChooser = {
+			moveToSelectedArea = {
 				key = nil,
 			},
 		},
@@ -793,6 +793,11 @@ local function checkLegacyNestedKeys(options)
 		if options.navigation.focusAndMove ~= nil then
 			error("[jinrai.window_hints] removed key 'navigation.focusAndMove' is no longer supported; use top-level 'jinrai_mode'")
 		end
+		if type(options.navigation.windowMover) == "table" and options.navigation.windowMover.openWindowActionChooser ~= nil then
+			error(
+				"[jinrai.window_hints] removed key 'navigation.windowMover.openWindowActionChooser' is no longer supported; use 'navigation.windowMover.moveToSelectedArea'"
+			)
+		end
 		if options.navigation.focusBackKey ~= nil then
 			error("[jinrai.window_hints] legacy nested key 'navigation.focusBackKey' is no longer supported; use 'navigation.focusBack.key'")
 		end
@@ -878,8 +883,8 @@ function M.build(options)
 	local prevSpaceKey = normalizeActionKey(merged.navigation.spaces.prev.key, "navigation.spaces.prev.key")
 	local nextSpaceKey = normalizeActionKey(merged.navigation.spaces.next.key, "navigation.spaces.next.key")
 	local openWindowActionChooserKey = normalizeActionKey(
-		merged.navigation.windowMover.openWindowActionChooser.key,
-		"navigation.windowMover.openWindowActionChooser.key"
+		merged.navigation.windowMover.moveToSelectedArea.key,
+		"navigation.windowMover.moveToSelectedArea.key"
 	)
 	local swapSelectModifiers = normalizeSelectModifiers(
 		merged.behavior.selection.swapWindowFrame.modifiers,

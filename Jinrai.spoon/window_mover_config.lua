@@ -93,7 +93,7 @@ local DEFAULT_CONFIG = {
 				key = nil,
 			},
 		},
-		openWindowActionChooser = {
+		moveToSelectedArea = {
 			hotkey = {
 				modifiers = nil,
 				key = nil,
@@ -301,9 +301,9 @@ local function checkRemovedKeys(options)
 	if options.hotkey ~= nil then
 		error("[jinrai.window_mover] removed key 'hotkey' is no longer supported; use 'commands.moveToNextDisplay.hotkey'")
 	end
-	if type(options.commands) == "table" and options.commands.moveToSelectedArea ~= nil then
+	if type(options.commands) == "table" and options.commands.openWindowActionChooser ~= nil then
 		error(
-			"[jinrai.window_mover] removed key 'commands.moveToSelectedArea' is no longer supported; use 'commands.openWindowActionChooser'"
+			"[jinrai.window_mover] removed key 'commands.openWindowActionChooser' is no longer supported; use 'commands.moveToSelectedArea'"
 		)
 	end
 	if type(options.behavior) == "table" and options.behavior.selectedArea ~= nil then
@@ -549,8 +549,8 @@ function M.build(options)
 		moveToNextDisplayHotkeyKey = merged.commands.moveToNextDisplay.hotkey.key,
 		moveToActiveDisplayFreeAreaHotkeyModifiers = merged.commands.moveToActiveDisplayFreeArea.hotkey.modifiers,
 		moveToActiveDisplayFreeAreaHotkeyKey = merged.commands.moveToActiveDisplayFreeArea.hotkey.key,
-		openWindowActionChooserHotkeyModifiers = merged.commands.openWindowActionChooser.hotkey.modifiers,
-		openWindowActionChooserHotkeyKey = merged.commands.openWindowActionChooser.hotkey.key,
+		openWindowActionChooserHotkeyModifiers = merged.commands.moveToSelectedArea.hotkey.modifiers,
+		openWindowActionChooserHotkeyKey = merged.commands.moveToSelectedArea.hotkey.key,
 		minimizeWindowHotkeyModifiers = merged.commands.minimizeWindow.hotkey.modifiers,
 		minimizeWindowHotkeyKey = merged.commands.minimizeWindow.hotkey.key,
 		maximizeWindowHotkeyModifiers = merged.commands.maximizeWindow.hotkey.modifiers,

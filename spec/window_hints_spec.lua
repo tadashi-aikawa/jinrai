@@ -1995,7 +1995,7 @@ describe("window_hints mouse selection", function()
 		assert.is_false(mocks.keyBlocker.started)
 	end)
 
-	it("ヒント表示中にopenWindowActionChooserキーを押すと内部コールバックへ通知する", function()
+	it("ヒント表示中にmoveToSelectedAreaキーを押すと内部コールバックへ通知する", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
 		local targetWindow = makeWindow(1, "Target", focusCounter)
@@ -2011,7 +2011,7 @@ describe("window_hints mouse selection", function()
 			},
 			navigation = {
 				windowMover = {
-					openWindowActionChooser = {
+					moveToSelectedArea = {
 						key = "space",
 					},
 				},

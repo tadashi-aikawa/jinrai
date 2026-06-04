@@ -186,7 +186,7 @@ spoon.Jinrai:setup({
 
 ## JinraiMode オプション
 
-JinraiMode は Window Hints と Window Mover を連続実行するモードです。Window Hints のヒント表示中、または Window Mover の `openWindowActionChooser` 表示中から開始できます。
+JinraiMode は Window Hints と Window Mover を連続実行するモードです。Window Hints のヒント表示中、または Window Mover の `moveToSelectedArea` chooser 表示中から開始できます。
 
 ```lua
 jinrai_mode = {
@@ -195,7 +195,7 @@ jinrai_mode = {
       key = nil, -- Window Hints 表示中に JinraiMode を開始するキー
     },
     windowMover = {
-      key = nil, -- openWindowActionChooser 表示中に JinraiMode を開始するキー
+      key = nil, -- moveToSelectedArea chooser 表示中に JinraiMode を開始するキー
     },
   },
   logo = {
@@ -206,8 +206,8 @@ jinrai_mode = {
 }
 ```
 
-Window Hints では `triggers.windowHints.key` を押すと JinraiMode に入り、ウィンドウ選択後に Window Mover の `openWindowActionChooser` が開きます。Window Mover では `openWindowActionChooser` を開いた後に `triggers.windowMover.key` を押すと JinraiMode に入り、エリアまたは action 適用後に Window Hints が開きます。どちらかでキャンセルすると JinraiMode は終了します。
-`window_mover.selectedArea.windowHints.key` を設定すると、アクティブウィンドウを選び直したいときに `openWindowActionChooser` から Window Hints へ即時に戻れます。JinraiMode の連鎖中は Window Hints を JinraiMode として開き直し、連鎖を継続します。
+Window Hints では `triggers.windowHints.key` を押すと JinraiMode に入り、ウィンドウ選択後に Window Mover の `moveToSelectedArea` chooser が開きます。Window Mover では `moveToSelectedArea` chooser を開いた後に `triggers.windowMover.key` を押すと JinraiMode に入り、エリアまたは action 適用後に Window Hints が開きます。どちらかでキャンセルすると JinraiMode は終了します。
+`window_mover.selectedArea.windowHints.key` を設定すると、アクティブウィンドウを選び直したいときに `moveToSelectedArea` chooser から Window Hints へ即時に戻れます。JinraiMode の連鎖中は Window Hints を JinraiMode として開き直し、連鎖を継続します。
 `triggers.windowMover.key` は設定済みの selected-area/action キーと衝突してはいけません。`key = "k"` とエリアキー `"KD"` のような prefix 衝突もエラーになります。
 
 ## macOS Native Tabs オプション
@@ -451,8 +451,8 @@ window_hints = {
       },
     },
     windowMover = {
-      openWindowActionChooser = {
-        key = nil, -- ヒントを閉じて openWindowActionChooser を開くキー
+      moveToSelectedArea = {
+        key = nil, -- ヒントを閉じて moveToSelectedArea chooser を開くキー
       },
     },
   },
@@ -518,7 +518,7 @@ hint = {
 - ヒント表示中に Window Hints のホットキーをもう一度押すと、ヒントを閉じます
 - `navigation.focusBack.key` と `navigation.direction.hints.keys` はヒント表示中のみ有効です
 - `navigation.focusBack.key` は `focus_back` 設定が有効なときだけ動作します
-- `navigation.windowMover.openWindowActionChooser.key` は Window Hints を閉じ、アクティブウィンドウに対して Window Mover の `openWindowActionChooser` を開きます。ウィンドウ選択後に `openWindowActionChooser` を開く JinraiMode とは別機能です
+- `navigation.windowMover.moveToSelectedArea.key` は Window Hints を閉じ、アクティブウィンドウに対して Window Mover の `moveToSelectedArea` chooser を開きます。ウィンドウ選択後に chooser を開く JinraiMode とは別機能です
 - これらのキーと `hint.chars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
 - ヒントをクリックすると、そのヒントキーを入力した場合と同じウィンドウを選択します
 - ヒント表示中にすべてのヒントの外側をクリックすると、ヒントを閉じます
@@ -637,7 +637,7 @@ window_mover = {
         key = nil,       -- ホットキー（nil で無効化）
       },
     },
-    openWindowActionChooser = {
+    moveToSelectedArea = {
       hotkey = {
         modifiers = nil, -- ホットキー修飾キー（nil で無効化）
         key = nil,       -- ホットキー（nil で無効化）
@@ -806,7 +806,7 @@ window_mover = {
 | --- | --- |
 | `moveToNextDisplay` | アクティブウィンドウを現在のディスプレイの `screen:next()` へ移動し、移動先で最大化します。 |
 | `moveToActiveDisplayFreeArea` | 現在ディスプレイの `frame()` 内で、他の可視ウィンドウと重ならない最大の矩形へ移動します。同面積の場合はアクティブウィンドウに近い領域を優先します。 |
-| `openWindowActionChooser` | ディスプレイ UUID ごとに設定した領域、または `selectedArea.actions` の window action を選ぶ chooser を開きます。 |
+| `moveToSelectedArea` | ディスプレイ UUID ごとに設定した領域、または `selectedArea.actions` の window action を選ぶ chooser を開きます。 |
 | `maximizeWindow` | macOS のフルスクリーン化ではなく、アクティブウィンドウを現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。 |
 | `minimizeWindow` | アクティブウィンドウを最小化します。 |
 | `cycleLeft` | アクティブウィンドウを左端へ移動し、横幅を `behavior.cycle.horizontalRatios` の順序で切り替えます（デフォルトは `1/2` → `1/3` → `2/3`）。 |
@@ -830,9 +830,9 @@ window_mover = {
 
 ちらつきを抑えるため、JINRAI は移動先 frame を `setFrame(..., 0)` で一度だけ反映します。
 
-### openWindowActionChooser
+### moveToSelectedArea
 
-`openWindowActionChooser` はディスプレイ UUID ごとに設定されたエリア候補と、`selectedArea.actions` の window action 候補を表示します。`moveToSelectedArea` は削除済みの旧名です。UUID は Hammerspoon Console で `hs.inspect(jinrai.window_mover.screenInfos())` を実行して確認できます。
+`moveToSelectedArea` はディスプレイ UUID ごとに設定されたエリア候補と、`selectedArea.actions` の window action 候補を表示します。`openWindowActionChooser` は削除済みの旧名です。UUID は Hammerspoon Console で `hs.inspect(jinrai.window_mover.screenInfos())` を実行して確認できます。
 
 未設定ディスプレイは `selectedArea.defaultScreen` があればそのキーマップを流用し、なければそのディスプレイ上に選択可能な UUID と設定テンプレートを表示します。defaultScreen のキーマップが既に表示中の候補と衝突する場合も、未設定ディスプレイ側は UUID テンプレート表示に切り替えます。表示中は `escape`、候補外クリック、または同じホットキーで閉じます。候補クリックでは移動しません。
 

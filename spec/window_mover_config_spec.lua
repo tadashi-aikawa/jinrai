@@ -58,7 +58,7 @@ describe("window_mover_config", function()
 						key = "f19",
 					},
 				},
-				openWindowActionChooser = {
+				moveToSelectedArea = {
 					hotkey = {
 						modifiers = { "cmd", "alt" },
 						key = "f18",
@@ -603,11 +603,11 @@ describe("window_mover_config", function()
 		assert.is_truthy(tostring(err):match("removed key 'hotkey'"))
 	end)
 
-	it("旧 commands.moveToSelectedArea はエラー", function()
+	it("旧 commands.openWindowActionChooser はエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
 				commands = {
-					moveToSelectedArea = {
+					openWindowActionChooser = {
 						hotkey = {
 							modifiers = { "cmd" },
 							key = "m",
@@ -618,7 +618,7 @@ describe("window_mover_config", function()
 		end)
 
 		assert.is_false(ok)
-		assert.is_truthy(tostring(err):match("removed key 'commands%.moveToSelectedArea'"))
+		assert.is_truthy(tostring(err):match("removed key 'commands%.openWindowActionChooser'"))
 	end)
 
 	it("旧 behavior.selectedArea はエラー", function()

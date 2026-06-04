@@ -157,7 +157,7 @@ describe("window_hints_config", function()
 					},
 				},
 				windowMover = {
-					openWindowActionChooser = {
+					moveToSelectedArea = {
 						key = "m",
 					},
 				},
@@ -367,14 +367,14 @@ describe("window_hints_config", function()
 		assert.are.same({ "S" }, built.hintChars)
 	end)
 
-	it("openWindowActionChooserKey はヒント文字から除外される", function()
+	it("moveToSelectedAreaKey はヒント文字から除外される", function()
 		local built = mod.build({
 			hint = {
 				chars = { "A", "S" },
 			},
 			navigation = {
 				windowMover = {
-					openWindowActionChooser = {
+					moveToSelectedArea = {
 						key = "a",
 					},
 				},
@@ -385,12 +385,12 @@ describe("window_hints_config", function()
 		assert.are.same({ "S" }, built.hintChars)
 	end)
 
-	it("openWindowActionChooserKey が空文字ならエラー", function()
+	it("moveToSelectedAreaKey が空文字ならエラー", function()
 		local ok, err = pcall(function()
 			mod.build({
 				navigation = {
-				windowMover = {
-						openWindowActionChooser = {
+					windowMover = {
+						moveToSelectedArea = {
 							key = "",
 						},
 					},
@@ -399,7 +399,24 @@ describe("window_hints_config", function()
 		end)
 
 		assert.is_false(ok)
-		assert.is_truthy(tostring(err):match("navigation%.windowMover%.openWindowActionChooser%.key must not be empty"))
+		assert.is_truthy(tostring(err):match("navigation%.windowMover%.moveToSelectedArea%.key must not be empty"))
+	end)
+
+	it("旧 navigation.windowMover.openWindowActionChooser はエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				navigation = {
+					windowMover = {
+						openWindowActionChooser = {
+							key = "a",
+						},
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("removed key 'navigation%.windowMover%.openWindowActionChooser'"))
 	end)
 
 	it("旧 navigation.jinraiMode 設定はエラー", function()

@@ -184,7 +184,7 @@ spoon.Jinrai:setup({
 
 ## JinraiMode Options
 
-JinraiMode chains Window Hints and Window Mover. You can start it from Window Hints while hints are shown, or from Window Mover while `openWindowActionChooser` is shown.
+JinraiMode chains Window Hints and Window Mover. You can start it from Window Hints while hints are shown, or from Window Mover while the `moveToSelectedArea` chooser is shown.
 
 ```lua
 jinrai_mode = {
@@ -193,7 +193,7 @@ jinrai_mode = {
       key = nil, -- Key to start JinraiMode while Window Hints is shown
     },
     windowMover = {
-      key = nil, -- Key to start JinraiMode while openWindowActionChooser is shown
+      key = nil, -- Key to start JinraiMode while the moveToSelectedArea chooser is shown
     },
   },
   logo = {
@@ -204,9 +204,9 @@ jinrai_mode = {
 }
 ```
 
-In Window Hints, pressing `triggers.windowHints.key` starts JinraiMode, then window selection opens Window Mover `openWindowActionChooser`.
-In Window Mover, press `triggers.windowMover.key` after opening `openWindowActionChooser`; the selected area or action is applied first, then Window Hints opens. Canceling either chooser ends JinraiMode.
-Set `window_mover.selectedArea.windowHints.key` to switch back to Window Hints immediately from `openWindowActionChooser` when you want to reselect the active window. During a JinraiMode chain, it reopens Window Hints in JinraiMode so the chain continues.
+In Window Hints, pressing `triggers.windowHints.key` starts JinraiMode, then window selection opens the Window Mover `moveToSelectedArea` chooser.
+In Window Mover, press `triggers.windowMover.key` after opening the `moveToSelectedArea` chooser; the selected area or action is applied first, then Window Hints opens. Canceling either chooser ends JinraiMode.
+Set `window_mover.selectedArea.windowHints.key` to switch back to Window Hints immediately from the `moveToSelectedArea` chooser when you want to reselect the active window. During a JinraiMode chain, it reopens Window Hints in JinraiMode so the chain continues.
 `triggers.windowMover.key` must not conflict with configured selected-area/action keys; prefix conflicts such as `key = "k"` with area key `"KD"` are rejected.
 
 ## macOS Native Tabs Options
@@ -450,8 +450,8 @@ window_hints = {
       },
     },
     windowMover = {
-      openWindowActionChooser = {
-        key = nil, -- Key to close Window Hints and open openWindowActionChooser
+      moveToSelectedArea = {
+        key = nil, -- Key to close Window Hints and open the moveToSelectedArea chooser
       },
     },
   },
@@ -516,7 +516,7 @@ For implementation defaults and internal options, see `DEFAULT_CONFIG` in `windo
 - Pressing the Window Hints hotkey again while hints are shown closes the hints
 - `navigation.focusBack.key` and `navigation.direction.hints.keys` are active only while hints are shown
 - `navigation.focusBack.key` works only when `focus_back` is enabled
-- `navigation.windowMover.openWindowActionChooser.key` closes Window Hints and opens Window Mover `openWindowActionChooser` for the active window. This is separate from JinraiMode, which opens `openWindowActionChooser` after selecting a window.
+- `navigation.windowMover.moveToSelectedArea.key` closes Window Hints and opens the Window Mover `moveToSelectedArea` chooser for the active window. This is separate from JinraiMode, which opens the chooser after selecting a window.
 - If these keys conflict with `hint.chars`, the conflicting hint chars are removed and navigation keys take priority
 - Clicking a hint selects the same window as entering its hint key
 - Clicking outside all hints while hints are shown closes the hints
@@ -635,7 +635,7 @@ window_mover = {
         key = nil,       -- Hotkey (nil to disable)
       },
     },
-    openWindowActionChooser = {
+    moveToSelectedArea = {
       hotkey = {
         modifiers = nil, -- Hotkey modifiers (nil to disable)
         key = nil,       -- Hotkey (nil to disable)
@@ -804,7 +804,7 @@ window_mover = {
 | --- | --- |
 | `moveToNextDisplay` | Moves the active window to `screen:next()` from the current display and maximizes it there. |
 | `moveToActiveDisplayFreeArea` | Moves the active window to the largest rectangle inside the current display's `frame()` that does not overlap other visible windows. Ties prefer the area closest to the active window. |
-| `openWindowActionChooser` | Opens the chooser for configured screen areas and `selectedArea.actions` window actions. |
+| `moveToSelectedArea` | Opens the chooser for configured screen areas and `selectedArea.actions` window actions. |
 | `maximizeWindow` | Moves and resizes the active window to the current display's `frame()` without using macOS fullscreen. |
 | `minimizeWindow` | Minimizes the active window. |
 | `cycleLeft` | Moves the active window to the left edge and cycles width through `behavior.cycle.horizontalRatios` (`1/2` → `1/3` → `2/3` by default). |
@@ -828,9 +828,9 @@ Direct area commands use the names listed in [Available areas](#available-areas)
 
 To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
 
-### openWindowActionChooser
+### moveToSelectedArea
 
-`openWindowActionChooser` shows the area hints configured for each screen UUID and the window actions configured in `selectedArea.actions`. `moveToSelectedArea` is the removed old name. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`.
+`moveToSelectedArea` shows the area hints configured for each screen UUID and the window actions configured in `selectedArea.actions`. `openWindowActionChooser` is the removed old name. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`.
 
 Unconfigured displays reuse `selectedArea.defaultScreen` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the defaultScreen keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
 
