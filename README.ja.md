@@ -72,51 +72,52 @@ unzip -o /tmp/SpoonInstall.spoon.zip -d ~/.hammerspoon/Spoons
 
 ### SpoonInstall でインストール（推奨）
 
-`~/.hammerspoon/init.lua` に以下を追加:
+Hammerspoon Console で以下を1回だけ実行:
 
 ```lua
 hs.loadSpoon("SpoonInstall")
-
-spoon.SpoonInstall.repos.jinrai = {
-  url = "https://github.com/tadashi-aikawa/jinrai",
-  desc = "JINRAI Spoon repository",
-  branch = "spoons",
-}
-
-spoon.SpoonInstall:andUse("Jinrai", {
-  repo = "jinrai",
-  fn = function(jinrai)
-    jinrai:setup({
-      focus_border = {},
-      window_hints = {},
-      focus_back = {},
-      window_mover = {
-        commands = {
-          moveToNextDisplay = {
-            hotkey = {
-              modifiers = { "ctrl", "alt" },
-              key = "m",
-            },
-          },
-        },
-      },
-    })
-  end,
-})
+spoon.SpoonInstall:installSpoonFromZipURL(
+  "https://github.com/tadashi-aikawa/jinrai/releases/latest/download/Jinrai.spoon.zip"
+)
+hs.reload()
 ```
 
-`focus_border` や `window_hints`、`focus_back`、`window_mover` のキーを省略するとそのモジュールは無効になります。
+続いて `~/.hammerspoon/init.lua` に以下を追加:
+
+```lua
+hs.loadSpoon("Jinrai")
+
+spoon.Jinrai:setup({
+  focus_border = {},
+  window_hints = {},
+  focus_back = {},
+  window_mover = {
+    commands = {
+      moveToNextDisplay = {
+        hotkey = {
+          modifiers = { "ctrl", "alt" },
+          key = "m",
+        },
+      },
+    },
+  },
+})
+```
 
 インストール済みの Spoon を更新する場合（Hammerspoon Console で1回だけ実行）:
 
 ```lua
-spoon.SpoonInstall:updateRepo("jinrai")
-spoon.SpoonInstall:installSpoonFromRepo("Jinrai", "jinrai")
+hs.loadSpoon("SpoonInstall")
+spoon.SpoonInstall:installSpoonFromZipURL(
+  "https://github.com/tadashi-aikawa/jinrai/releases/latest/download/Jinrai.spoon.zip"
+)
 hs.reload()
 ```
 
 > [!WARNING]
-> この3行を `~/.hammerspoon/init.lua` に置くと、`hs.reload()` によって再読込のたびに再実行されてループします。`init.lua` には常駐設定のみを書き、更新時だけ Console から手動実行してください。
+> インストール・更新コマンドを `~/.hammerspoon/init.lua` に置くと、`hs.reload()` によって再読込のたびに再実行されてループします。`init.lua` には常駐設定のみを書き、インストール・更新時だけ Console から手動実行してください。
+
+`focus_border` や `window_hints`、`focus_back`、`window_mover` のキーを省略するとそのモジュールは無効になります。
 
 ### ソースからインストール（開発向け）
 

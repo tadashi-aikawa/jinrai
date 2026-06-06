@@ -53,22 +53,8 @@ busted spec/init_spec.lua
 
 ## リリース方法
 
-リリースはリポジトリルートで以下を実行します。
+GitHub Actions の `Release` workflow を `main` ブランチから手動実行します。
 
-```bash
-scripts/release.sh <バージョン>
-```
+semantic-release が前回のタグ以降の Conventional Commits から次のバージョンを決定し、`v<バージョン>` タグ、リリースノート、`Jinrai.spoon.zip` を含む GitHub Release を作成します。リリース対象となるコミットがなければ何も公開しません。
 
-例:
-
-```bash
-scripts/release.sh 0.13.0
-```
-
-スクリプトは `Jinrai.spoon/init.lua` のバージョン更新、テスト、配布物のbuild/validate、`chore: v<バージョン>` コミット、`v<バージョン>` タグ作成、`main` とタグのpushまで実行します。タグpush後、GitHub Actionsが `spoons` ブランチへ配布物を公開します。
-
-Codex CLIが使えない環境やBluesky投稿文生成を省略したい場合は `--skip-codex` を指定します。
-
-```bash
-scripts/release.sh --skip-codex 0.13.0
-```
+`Jinrai.spoon/init.lua` の追跡中のバージョンは `0.0.0-development` のまま維持し、リリースバージョンは配布 ZIP 内にだけ埋め込みます。

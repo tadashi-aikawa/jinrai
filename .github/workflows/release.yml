@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify release branch
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "Releases must run from the main branch." >&2
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install pnpm
+        run: npm install --global pnpm@11.5.2
+
+      - name: Release
+        run: |
+          pnpm dlx \
+            --package semantic-release@25.0.2 \
+            --package conventional-changelog-conventionalcommits \
+            --package @semantic-release/exec \
+            semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

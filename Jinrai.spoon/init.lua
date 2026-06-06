@@ -1,6 +1,6 @@
 local obj = {
 	name = "Jinrai",
-	version = "0.27.0",
+	version = "0.0.0-development",
 	author = "tadashi-aikawa",
 	license = "MIT - https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE",
 	homepage = "https://github.com/tadashi-aikawa/jinrai",
