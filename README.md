@@ -3,10 +3,10 @@
     <img src="./jinrai.svg" width="256" />
     <p>
     <h3>迅雷</h3>
-    <div>A Hammerspoon script for switching and recognizing windows at the speed of thought.</div>
+    <div>思考の速度で素早くウィンドウの切り替えや認識を行うためのhammerspoonスクリプト</div>
     </p>
     <p>
-        English | <a href="./README.ja.md">日本語</a>
+        <a href="./README.en.md">English</a> | 日本語
     </p>
     <p>
         <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml">
@@ -21,25 +21,25 @@
 ---
 
 - 🔠 **Window Hints**
-    - Switch windows with app icons + key hints
-        - Automatically assigns the first letter of each app name as the hint prefix
-        - If multiple windows share the same prefix, narrow them down with additional key input
-        - You can also click a hint to activate its window
-    - Windows completely hidden by others (sampling-based approximation) are shown at the bottom in a dock-style layout with previews
-        - Dock hints try to avoid overlapping front-window hints when possible
-    - Highlights the active window with an overlay
+    - アプリアイコン＋キーヒントによるウィンドウ切り替え
+        - アプリ名の頭文字をキーヒントのプレフィックスに自動割り当て
+        - 同一プレフィックスのウィンドウが複数ある場合は複数キー入力で絞り込み
+        - ヒントをクリックして該当ウィンドウをアクティブ化することも可能
+    - 他のウィンドウに完全に隠れた(サンプリング近似)ウィンドウは画面下部にドック形式＋プレビュー付きで表示
+        - 可能な範囲で前面ウィンドウのヒントと重ならない位置へ調整
+    - アクティブウィンドウをオーバーレイでハイライト表示
 - 🔳 **Focus Border**
-    - Briefly highlights the border of the newly focused window
+    - フォーカスが移動したウィンドウの枠を一瞬だけハイライト表示
 - ↩️ **Focus Back**
-    - Hotkey to jump back to the previously active window
+    - ホットキーで直前にアクティブだったウィンドウに戻る
 - 🪟 **Window Mover**
-    - Move the active window to the next display and maximize it there
-    - Move and resize the active window to the largest free area on the active display
-    - Minimize or maximize the active window with hotkeys
-    - Move the active window to the left edge, center, or right edge while cycling its width through 1/2, 1/3, and 2/3
-    - Select a configured display area with key hints and move the active window there
+    - アクティブウィンドウを次のディスプレイへ移動し、移動先で最大化する
+    - アクティブウィンドウをアクティブディスプレイ上の最大空き領域へ移動・リサイズする
+    - アクティブウィンドウの最小化と最大化をホットキーで実行する
+    - 左端・中央・右端へ移動し、実行のたびに横幅を 1/2・1/3・2/3 で切り替える
+    - キーヒントで設定済みエリアを選択し、アクティブウィンドウをそこへ移動する
 
-## Demo Video
+## デモ動画
 
 [![JINRAI Demo](https://img.youtube.com/vi/clwLqNw0kXw/hqdefault.jpg)](https://youtu.be/clwLqNw0kXw?si=gdetaK7lY0Eovjpp)
 
@@ -47,22 +47,22 @@
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tadashi-aikawa/jinrai)
 
-## Developer Blog Post (Japanese)
+## 開発者ブログ記事（日本語）
 
 [📘至高のウィンドウ切り替えを目指して『JINRAI(迅雷)』をつくった - Minerva](https://minerva.mamansoft.net/2026-03-01-jinrai-ultimate-window-switching)
 
-## Setup
+## セットアップ
 
-### Prerequisites
+### 前提準備
 
-If you do not have Hammerspoon yet:
+まだ Hammerspoon をインストールしていない場合:
 
 ```bash
 brew install --cask hammerspoon
 open -a Hammerspoon
 ```
 
-Then install SpoonInstall:
+続いて SpoonInstall をインストール:
 
 ```bash
 mkdir -p ~/.hammerspoon/Spoons
@@ -70,9 +70,9 @@ curl -L https://github.com/Hammerspoon/Spoons/raw/master/Spoons/SpoonInstall.spo
 unzip -o /tmp/SpoonInstall.spoon.zip -d ~/.hammerspoon/Spoons
 ```
 
-### Install via SpoonInstall (Recommended)
+### SpoonInstall でインストール（推奨）
 
-Run this once in the Hammerspoon Console:
+Hammerspoon Console で以下を1回だけ実行:
 
 ```lua
 hs.loadSpoon("SpoonInstall")
@@ -82,7 +82,7 @@ spoon.SpoonInstall:installSpoonFromZipURL(
 hs.reload()
 ```
 
-Then add this to `~/.hammerspoon/init.lua`:
+続いて `~/.hammerspoon/init.lua` に以下を追加:
 
 ```lua
 hs.loadSpoon("Jinrai")
@@ -105,26 +105,28 @@ spoon.Jinrai:setup({
 ```
 
 > [!WARNING]
-> Do not put the initial installation command in `~/.hammerspoon/init.lua`. `hs.reload()` would run it again after every reload and cause a loop. Run it from the Hammerspoon Console only when installing Jinrai.
+> 初回インストールコマンドを `~/.hammerspoon/init.lua` に置くと、`hs.reload()` によって再読込のたびに再実行されてループします。インストール時だけHammerspoon Consoleから実行してください。
 
-If you omit `focus_border`, `window_hints`, `focus_back`, or `window_mover`, that module is disabled.
+`focus_border` や `window_hints`、`focus_back`、`window_mover` のキーを省略するとそのモジュールは無効になります。
 
-### Updates
+### アップデート
 
-When Jinrai is loaded, a monochrome lightning icon appears in the macOS menu bar. Click it to see the currently installed version.
+Jinraiを読み込むと、macOSのメニューバーにモノクロの稲妻アイコンが追加されます。クリックすると、現在のバージョンを確認できます。
 
-Choose `Check for Updates...` to check the latest GitHub Release. When an update is available, click `Update to vX.Y.Z...` in the menu or click the notification to install it with SpoonInstall and reload Hammerspoon.
+`Check for Updates...` を選ぶとGitHub Releasesの最新版を確認します。更新がある場合は、メニューの `Update to vX.Y.Z...` または表示された通知をクリックすると、SpoonInstallで更新してHammerspoonを再読み込みします。
 
-Development versions installed from source are not updated automatically. Use `git pull` to update a source installation.
+ソースからインストールした開発版は自動更新の対象外です。開発版の更新には `git pull` を使用してください。
 
-### Install from source (for development)
+### ソースからインストール（開発向け）
+
+Git + symlink でインストールします:
 
 ```bash
 git clone https://github.com/tadashi-aikawa/jinrai /path/to/jinrai
 ln -sfn /path/to/jinrai/Jinrai.spoon ~/.hammerspoon/Spoons/Jinrai.spoon
 ```
 
-Add this to `~/.hammerspoon/init.lua`:
+`~/.hammerspoon/init.lua` に以下を追加:
 
 ```lua
 hs.loadSpoon("Jinrai")
@@ -146,243 +148,242 @@ spoon.Jinrai:setup({
 })
 ```
 
-If you omit `focus_border`, `window_hints`, `focus_back`, or `window_mover`, that module is disabled.
+`focus_border` や `window_hints`、`focus_back`、`window_mover` のキーを省略するとそのモジュールは無効になります。
 
-To update:
+更新する場合:
 
 ```bash
 git -C /path/to/jinrai pull
 ```
 
-## Configuration Example
+## 設定例
 
 ```lua
 hs.loadSpoon("Jinrai")
 
 spoon.Jinrai:setup({
   macosNativeTabs = {
-    -- See "macOS Native Tabs Options" below for the complete default schema and examples
+    -- 詳細は後続の「macOS Native Tabs オプション」の全設定例を参照
   },
   focus_border = {
-    -- See "Focus Border Options" below for the complete default schema and examples
+    -- 詳細は後続の「Focus Border オプション」の全設定例を参照
   },
   jinrai_mode = {
-    -- See "JinraiMode Options" below for the complete default schema and examples
+    -- 詳細は後続の「JinraiMode オプション」の全設定例を参照
   },
   window_hints = {
-    -- See "Window Hints Options" below for the complete default schema and examples
+    -- 詳細は後続の「Window Hints オプション」の全設定例を参照
   },
   focus_back = {
-    -- See "Focus Back Options" below for the complete default schema and examples
+    -- 詳細は後続の「Focus Back オプション」の全設定例を参照
   },
   window_mover = {
-    -- See "Window Mover Options" below for the complete default schema and examples
+    -- 詳細は後続の「Window Mover オプション」の全設定例を参照
   },
 })
 ```
 
-## JinraiMode Options
+## JinraiMode オプション
 
-JinraiMode chains Window Hints and Window Mover. You can start it from Window Hints while hints are shown, or from Window Mover while the `moveToSelectedArea` chooser is shown.
+JinraiMode は Window Hints と Window Mover を連続実行するモードです。Window Hints のヒント表示中、または Window Mover の `moveToSelectedArea` chooser 表示中から開始できます。
 
 ```lua
 jinrai_mode = {
   triggers = {
     windowHints = {
-      key = nil, -- Key to start JinraiMode while Window Hints is shown
+      key = nil, -- Window Hints 表示中に JinraiMode を開始するキー
     },
     windowMover = {
-      key = nil, -- Key to start JinraiMode while the moveToSelectedArea chooser is shown
+      key = nil, -- moveToSelectedArea chooser 表示中に JinraiMode を開始するキー
     },
   },
   logo = {
-    enabled = true, -- Show the Jinrai logo while JinraiMode is active
-    size = 480,     -- Logo size (px)
-    alpha = 0.4,    -- Logo opacity
+    enabled = true, -- JinraiMode 中に Jinrai ロゴを表示するか
+    size = 480,     -- ロゴサイズ (px)
+    alpha = 0.4,    -- ロゴの透明度
   },
 }
 ```
 
-In Window Hints, pressing `triggers.windowHints.key` starts JinraiMode, then window selection opens the Window Mover `moveToSelectedArea` chooser.
-In Window Mover, press `triggers.windowMover.key` after opening the `moveToSelectedArea` chooser; the selected area or action is applied first, then Window Hints opens. Canceling either chooser ends JinraiMode.
-Set `window_mover.selectedArea.windowHints.key` to switch back to Window Hints immediately from the `moveToSelectedArea` chooser when you want to reselect the active window. During a JinraiMode chain, it reopens Window Hints in JinraiMode so the chain continues.
-`triggers.windowMover.key` must not conflict with configured selected-area/action keys; prefix conflicts such as `key = "k"` with area key `"KD"` are rejected.
+Window Hints では `triggers.windowHints.key` を押すと JinraiMode に入り、ウィンドウ選択後に Window Mover の `moveToSelectedArea` chooser が開きます。Window Mover では `moveToSelectedArea` chooser を開いた後に `triggers.windowMover.key` を押すと JinraiMode に入り、エリアまたは action 適用後に Window Hints が開きます。どちらかでキャンセルすると JinraiMode は終了します。
+`window_mover.selectedArea.windowHints.key` を設定すると、アクティブウィンドウを選び直したいときに `moveToSelectedArea` chooser から Window Hints へ即時に戻れます。JinraiMode の連鎖中は Window Hints を JinraiMode として開き直し、連鎖を継続します。
+`triggers.windowMover.key` は設定済みの selected-area/action キーと衝突してはいけません。`key = "k"` とエリアキー `"KD"` のような prefix 衝突もエラーになります。
 
-## macOS Native Tabs Options
+## macOS Native Tabs オプション
 
-`macosNativeTabs` configures compensation for apps that use macOS native tabs.
+`macosNativeTabs` は、macOSネイティブタブを使うアプリ向けの補正設定です。
 
-For target apps, each tab can have a different window ID. JINRAI hides tab-like candidates whose Space cannot be resolved in Window Hints and excludes tab moves within the same app from Focus Back history updates.
+対象アプリではタブごとに異なるウィンドウIDが割り当てられるため、Window HintsではSpaceを解決できないタブ状候補を非表示にし、Focus Backでは同一アプリ内のタブ移動を履歴更新対象から外します。
 
 ```lua
 macosNativeTabs = {
-  apps = { "com.example.terminal" }, -- Additional app names or bundle IDs
-  stateSyncInterval = 0.5,           -- Focus Back state sync interval (default: 0.5)
+  apps = { "com.example.terminal" }, -- 追加アプリ名またはbundle IDの配列
+  stateSyncInterval = 0.5,           -- Focus Back用の状態同期間隔（秒、未指定時は0.5）
 }
 ```
 
-Apps listed in `apps` are added to the built-in defaults. Set `macosNativeTabs = false` to disable this compensation entirely.
+`apps` に指定したアプリは組み込みのデフォルト設定へ追加されます。補正を完全に無効化する場合は `macosNativeTabs = false` を指定します。
 
-Default configuration:
+デフォルト設定:
 
 - `com.mitchellh.ghostty`
 - `com.apple.finder`
 
-## Focus Border Options
+## Focus Border オプション
 
-Complete sample including all options (default values):
+全設定を含むサンプル（デフォルト値）:
 
 ```lua
 focus_border = {
   visual = {
     border = {
-      width = 10, -- Main border width (px)
-      color = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }, -- Main border color
+      width = 10, -- メインボーダーの太さ (px)
+      color = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }, -- メインボーダーの色
     },
     outline = {
-      width = 2, -- Outer outline width (px)
-      color = { red = 0, green = 0, blue = 0, alpha = 0.70 }, -- Outer outline color
+      width = 2, -- 外側アウトラインの太さ (px)
+      color = { red = 0, green = 0, blue = 0, alpha = 0.70 }, -- 外側アウトラインの色
     },
-    logo = nil, -- Logo shown at the center of the active window. nil/false disables it
+    logo = nil, -- ウィンドウ中央に表示するロゴ。nil/false の場合は非表示
     -- logo = {
-    --   source = nil, -- Image path or URL. nil uses the bundled JINRAI logo
-    --   size = 480, -- Image display size (px)
-    --   alpha = 0.95, -- Image opacity
+    --   source = nil, -- 画像パスまたはURL。nil の場合はJINRAI同梱ロゴ
+    --   size = 480, -- 画像の表示大きさ (px)
+    --   alpha = 0.95, -- 画像の透明度
     -- },
   },
   animation = {
-    duration = 0.5, -- Fade-out duration (seconds)
-    fadeSteps = 18, -- Number of fade-out steps
-    spaceSwitchDelay = 0.30, -- Extra delay only when focus moved to another Space (seconds)
+    duration = 0.5, -- フェードアウト時間 (秒)
+    fadeSteps = 18, -- フェードアウトのステップ数
+    spaceSwitchDelay = 0.30, -- 別 Space へ移動したときだけ追加で待つ時間 (秒)
   },
   window = {
-    minSize = 480, -- Minimum window size to display (px)
+    minSize = 480, -- 表示する最小ウィンドウサイズ (px)
   },
 }
 ```
 
-`spaceSwitchDelay` is applied only when focus moves to a window in a different macOS Space than the previously focused window. Focus changes within the same Space still render immediately.
+`spaceSwitchDelay` は、直前にフォーカスしていたウィンドウと別の macOS Space にあるウィンドウがアクティブになったときだけ適用されます。同じ Space 内のフォーカス移動では従来通り即時表示です。
 
-Set `visual.logo` to show an image at the center of the active window. `source` can be a local image path or URL. Omit it or set it to `false` to keep the logo hidden.
+`visual.logo` を指定すると、アクティブになったウィンドウの中央に画像を表示します。`source` にはローカル画像パスまたはURLを指定できます。未指定または `false` の場合は表示しません。
 
-## Window Hints Options
+## Window Hints オプション
 
-Note: this schema is breaking. Legacy keys such as `hint.keyBox`, `hint.text`, `hint.badge`, `hint.offSpaceBadge`, `hint.overlay`, `hint.onActiveWindow`, `activeWindow`, `navigation.focusBackKey`, `navigation.directionKeys`, `navigation.directHotkeys`, `navigation.spaceKeys`, and `behavior.centerCursor` are no longer supported.
+注: このスキーマは破壊的変更です。`hint.keyBox`、`hint.text`、`hint.badge`、`hint.offSpaceBadge`、`hint.overlay`、`hint.onActiveWindow`、`activeWindow`、`navigation.focusBackKey`、`navigation.directionKeys`、`navigation.directHotkeys`、`navigation.spaceKeys`、`behavior.centerCursor` などの旧キーは使えません。
 
-Complete sample including all options (default values):
+全設定を含むサンプル（デフォルト値）:
 
 ```lua
 window_hints = {
   hotkey = {
-    modifiers = { "alt" }, -- Hotkey modifiers to show hints
-    key = "f20",            -- Hotkey key to show hints
+    modifiers = { "alt" }, -- ヒント表示ホットキー修飾キー
+    key = "f20",            -- ヒント表示ホットキー
   },
   hint = {
-    chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" }, -- Hint character set
-    prefixOverrides = nil, -- Prefix override rule array
-    padding = 12, -- Hint card inner padding (px)
-    collisionOffset = 90, -- Offset distance for overlapping hints (px)
-    cornerRadius = 12, -- Hint card corner radius (px)
-    occludedScale = 0.85, -- Scale factor for occluded hints
+    chars = { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M" }, -- ヒント文字配列
+    prefixOverrides = nil, -- prefix 上書きルール配列
+    padding = 12, -- ヒント本体の内側余白 (px)
+    collisionOffset = 90, -- ヒント重なり時のずらし量 (px)
+    cornerRadius = 12, -- ヒント本体の角丸半径 (px)
+    occludedScale = 0.85, -- 遮蔽ヒント縮小率
     highlight = {
-      borderWidth = 6, -- Border width for hint highlight (px)
+      borderWidth = 6, -- ヒント本体ハイライトのボーダー幅 (px)
     },
     state = {
       normal = {
-        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 }, -- Hint card background
+        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 }, -- ヒント本体背景色
         highlight = {
-          fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 }, -- Hint card highlight fill
-          borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }, -- Hint card highlight border
+          fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 }, -- 通常ヒントの塗り色
+          borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 }, -- 通常ヒントのボーダー色
         },
       },
       dimmed = {
-        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.14 }, -- Hint card background for dimmed hints
+        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.14 }, -- dimmed 時ヒント本体背景色
         highlight = {
-          borderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 }, -- Hint card border for dimmed hints
+          borderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 }, -- dimmed 時ヒント本体ボーダー色
         },
       },
       occluded = {
-        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.70 }, -- Hint card background for occluded hints
+        bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.70 }, -- 遮蔽ヒント本体背景色
       },
       active = {
-        bgColor = { red = 0.08, green = 0.05, blue = 0.03, alpha = 0.88 }, -- Hint card background on the active window
+        bgColor = { red = 0.08, green = 0.05, blue = 0.03, alpha = 0.88 }, -- アクティブウィンドウ上ヒントの背景色
         highlight = {
-          fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, -- Hint card highlight fill on the active window
-          borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- Hint card highlight border on the active window
+          fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, -- アクティブウィンドウ上ヒントの塗り色
+          borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- アクティブウィンドウ上ヒントのボーダー色
         },
       },
     },
     icon = {
-      size = 72, -- Icon size (px)
+      size = 72, -- アイコンサイズ (px)
       state = {
-        normal = { alpha = 0.95 }, -- Icon opacity
-        dimmed = { alpha = 0.30 }, -- Icon opacity for dimmed hints
-        occluded = { alpha = 0.46 }, -- Icon opacity for occluded hints
-        active = { alpha = 1.0 }, -- Icon opacity on the active window
+        normal = { alpha = 0.95 }, -- アイコン不透明度
+        dimmed = { alpha = 0.30 }, -- dimmed 時アイコン不透明度
+        occluded = { alpha = 0.46 }, -- 遮蔽ヒントアイコン不透明度
+        active = { alpha = 1.0 }, -- アクティブウィンドウ上ヒントのアイコン不透明度
       },
     },
     key = {
-      size = 72, -- Key box height (px)
-      minWidth = 72, -- Key box minimum width (px)
-      horizontalPadding = 10, -- Key box left/right padding (px)
-      gap = 0, -- Gap between icon and key box (px)
-      fontName = nil, -- Key font name (nil for system default)
-      fontSize = 48, -- Key font size
-      keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }, -- Highlight color for typed prefix
+      size = 72, -- キー表示ボックス高さ (px)
+      minWidth = 72, -- キー表示ボックス最小幅 (px)
+      horizontalPadding = 10, -- キー表示ボックス左右パディング (px)
+      gap = 0, -- アイコンとキー表示ボックスの間隔 (px)
+      fontName = nil, -- キー文字フォント名（nil でシステムデフォルト）
+      fontSize = 48, -- キー文字フォントサイズ
+      keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 }, -- 入力済みプレフィックス色
       state = {
         normal = {
-          color = { red = 1, green = 1, blue = 1, alpha = 1 }, -- Key text color
+          color = { red = 1, green = 1, blue = 1, alpha = 1 }, -- キー文字色
         },
         dimmed = {
-          color = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 }, -- Key text color for dimmed hints
+          color = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 }, -- dimmed 時キー文字色
         },
         occluded = {},
         active = {
-          color = { red = 1.00, green = 0.93, blue = 0.86, alpha = 1.00 }, -- Key text color on the active window
+          color = { red = 1.00, green = 0.93, blue = 0.86, alpha = 1.00 }, -- アクティブウィンドウ上ヒントのキー文字色
         },
       },
     },
     title = {
-      fontName = nil, -- Title font name (nil falls back to key.fontName)
-      fontSize = 16, -- Title font size
-      rowGap = 8, -- Gap between icon row and title row (px)
-      maxSize = 72, -- Max title length
-      show = true, -- Whether title row is shown
+      fontName = nil, -- タイトル文字フォント名（nil の場合は key.fontName にフォールバック）
+      fontSize = 16, -- タイトル文字フォントサイズ
+      rowGap = 8, -- アイコン行とタイトル行の間隔 (px)
+      maxSize = 72, -- タイトル最大表示文字数
+      show = true, -- タイトル行表示
       state = {
         normal = {
-          color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 }, -- Title text color
+          color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 }, -- タイトル文字色
         },
         dimmed = {
-          color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 }, -- Title text color for dimmed hints
+          color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 }, -- dimmed 時タイトル文字色
         },
         occluded = {},
         active = {
-          color = { red = 0.99, green = 0.90, blue = 0.78, alpha = 1.00 }, -- Title text color on the active window
+          color = { red = 0.99, green = 0.90, blue = 0.78, alpha = 1.00 }, -- アクティブウィンドウ上ヒントのタイトル文字色
         },
       },
     },
     spaceBadge = {
-      enabled = true, -- Whether the Space badge is shown on other-Space candidates
-      size = 32, -- Top-right badge diameter (px)
+      enabled = true, -- 別 Space 候補に Space バッジを表示するか
+      size = 32, -- 右上バッジ直径 (px)
       state = {
         normal = {
-          fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- Space badge fill (default/fallback)
-          strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- Space badge stroke (default/fallback)
-          textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, -- Space badge text (default/fallback)
+          fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 }, -- Space バッジ塗り色（デフォルト/フォールバック）
+          strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 }, -- Space バッジ枠線色（デフォルト/フォールバック）
+          textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 }, -- Space バッジ文字色（デフォルト/フォールバック）
         },
         dimmed = {
-          fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.28 }, -- Fill color for dimmed hints
-          strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.40 }, -- Stroke color for dimmed hints
-          textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.35 }, -- Text color for dimmed hints
+          fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.28 }, -- dimmed 時の塗り色
+          strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.40 }, -- dimmed 時の枠線色
+          textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.35 }, -- dimmed 時の文字色
         },
         occluded = {},
         active = {
-          fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, -- Badge fill on the active window
-          strokeColor = { red = 1.00, green = 0.90, blue = 0.78, alpha = 0.72 }, -- Badge stroke on the active window
-          textColor = { red = 1.0, green = 0.98, blue = 0.94, alpha = 0.92 }, -- Badge text on the active window
+          fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 }, -- アクティブウィンドウ上ヒントの Space バッジ塗り色
+          strokeColor = { red = 1.00, green = 0.90, blue = 0.78, alpha = 0.72 }, -- アクティブウィンドウ上ヒントの Space バッジ枠線色
+          textColor = { red = 1.0, green = 0.98, blue = 0.94, alpha = 0.92 }, -- アクティブウィンドウ上ヒントの Space バッジ文字色
         },
       },
-      spaceColors = { -- Per-Space color overrides (indexed by Space number). Omitted fields fall back to state.normal
+      spaceColors = { -- Space 番号ごとの色上書き（番号をインデックスに使用）。省略したフィールドは state.normal にフォールバック
         { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 1
         { fillColor = { ... }, strokeColor = { ... }, textColor = { ... } }, -- Space 2
         -- ...
@@ -390,152 +391,153 @@ window_hints = {
     },
   },
   focusedWindowHighlight = {
-    borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- Focused window overlay border
-    borderWidth = 13, -- Focused window overlay border width (px)
+    borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 }, -- フォーカス中ウィンドウのボーダー色
+    borderWidth = 13, -- フォーカス中ウィンドウのボーダー幅 (px)
   },
   occlusion = {
     sampling = {
-      enabled = true,    -- Whether occlusion sampling is dynamic
-      baseWidth = 1920,  -- Base width for sampling scale (px)
-      baseHeight = 1080, -- Base height for sampling scale (px)
-      minCols = 4,       -- Minimum sampling columns
-      minRows = 4,       -- Minimum sampling rows
-      maxCols = 8,       -- Maximum sampling columns
-      maxRows = 8,       -- Maximum sampling rows
+      enabled = true,   -- 遮蔽サンプリングを動的化するか
+      baseWidth = 1920, -- サンプリング基準ウィンドウ幅 (px)
+      baseHeight = 1080, -- サンプリング基準ウィンドウ高さ (px)
+      minCols = 4,      -- サンプリング列数の最小値
+      minRows = 4,      -- サンプリング行数の最小値
+      maxCols = 8,      -- サンプリング列数の最大値
+      maxRows = 8,      -- サンプリング行数の最大値
     },
     preview = {
-      enabled = true,        -- Whether previews are shown for occluded windows
-      mode = "background",   -- Preview display mode ("background": full hint background / "below": below title)
-      width = 140,           -- Preview width (px). In background mode, this is the thumbnail height for a full-screen-height window
-      padding = 6,           -- Preview top padding (px, below mode only)
-      alpha = 0.64,          -- Preview opacity
+      enabled = true,        -- 遮蔽ウィンドウのプレビューを表示するか
+      mode = "background",   -- プレビュー表示モード ("background": ヒント背景に全面表示 / "below": タイトル下に表示)
+      width = 140,           -- プレビュー幅 (px)。backgroundモードでは画面高さいっぱいのウィンドウの縮小後の高さ
+      padding = 6,           -- プレビュー上余白 (px, belowモードのみ)
+      alpha = 0.64,          -- プレビュー不透明度
     },
   },
   dock = {
-    bottomMargin = 96, -- Bottom margin for occluded-hint dock (px)
-    itemGap = 12,      -- Item gap in occluded-hint dock (px)
+    bottomMargin = 96, -- 遮蔽ヒントドックの下端マージン (px)
+    itemGap = 12,      -- ドック内アイテム間隔 (px)
     windowBlend = {
-      x = 0.65, -- Blend ratio to shift dock x toward each target window
-      y = 1, -- Blend ratio to shift dock y toward each target window
+      x = 0.65, -- ドックXを対象ウィンドウへ寄せる割合
+      y = 1, -- ドックYを対象ウィンドウへ寄せる割合
     },
   },
   navigation = {
     focusBack = {
-      key = nil, -- Focus Back-equivalent key while hints are shown
+      key = nil, -- Hints表示中に Focus Back 相当を実行するキー
     },
     direction = {
       hints = {
-        keys = nil, -- Directional navigation keys while hints are shown
+        keys = nil, -- Hints表示中の方向移動キー
       },
       direct = {
-        modifiers = nil, -- Directional hotkey modifiers without opening hints
-        keys = nil, -- Directional hotkeys without opening hints
+        modifiers = nil, -- Hintsを表示せず方向移動するホットキー修飾キー
+        keys = nil, -- Hintsを表示せず方向移動するホットキー
       },
       scoring = {
-        cardinalOverlapTieThresholdPx = 720, -- Tie threshold for cardinal direction scoring (px)
-        maxPrimaryOverlapRatioForDetached = 0.2, -- Main-axis overlap ratio treated as detached
-        minOrthogonalOverlapRatio = 0.5, -- Required orthogonal overlap ratio for non-detached cardinal candidates
-        preferredVisibleRatio = 0.4, -- Prefer candidates at or above this sampled visible ratio
-        debug = false, -- Emit directional scoring debug logs
+        cardinalOverlapTieThresholdPx = 720, -- 上下左右方向移動で同点扱いにする閾値 (px)
+        maxPrimaryOverlapRatioForDetached = 0.2, -- 主軸の重なり率がこの値以下なら離れた候補として扱う
+        minOrthogonalOverlapRatio = 0.5, -- 離れた候補ではない場合に必要な副軸重なり率
+        preferredVisibleRatio = 0.4, -- サンプリング上の可視率がこの値以上の候補を優先
+        debug = false, -- 方向移動の候補スコアログを出すか
       },
     },
     spaces = {
-      numbers = true, -- Press 1-9 during hints to switch Space
+      numbers = true, -- ヒント表示中に 1-9 キーで Space を切り替え
       prev = {
-        key = nil, -- Key to move to the previous Space during hints
+        key = nil, -- ヒント表示中に前の Space へ移動するキー
       },
       next = {
-        key = nil, -- Key to move to the next Space during hints
+        key = nil, -- ヒント表示中に次の Space へ移動するキー
       },
     },
     windowMover = {
       moveToSelectedArea = {
-        key = nil, -- Key to close Window Hints and open the moveToSelectedArea chooser
+        key = nil, -- ヒントを閉じて moveToSelectedArea chooser を開くキー
       },
     },
   },
   behavior = {
     selection = {
       swapWindowFrame = {
-        modifiers = nil, -- Modifiers to swap window frames when selecting
+        modifiers = nil, -- 確定時にウィンドウフレーム入れ替えする修飾キー
       },
     },
     cursor = {
-      onSelect = true, -- Move cursor to selected window center
-      onStart = true, -- Move cursor to active window center when hints start
+      onSelect = true, -- 選択後にカーソルをウィンドウ中央へ移動
+      onStart = true, -- 起動時にアクティブウィンドウ中央へカーソル移動
     },
     candidates = {
-      includeOtherSpaces = true, -- Include visible windows from other Spaces as candidates
-      includeActiveWindow = true, -- Also show a hint on the currently active window
+      includeOtherSpaces = true, -- 他の Space の可視ウィンドウも候補に含める
+      includeActiveWindow = true, -- アクティブウィンドウにもヒントを表示する
     },
     callbacks = {
-      onSelect = nil, -- Callback on window selection
-      onError = nil,  -- Callback on errors
+      onSelect = nil, -- ウィンドウ選択時コールバック
+      onError = nil,  -- エラー時コールバック
     },
   },
 }
 ```
 
-Occlusion is determined by approximation using sample points inside each target window.
-When `occlusion.sampling.enabled=true`, the sampling grid is dynamically adjusted within the range from `occlusion.sampling.min*` to `occlusion.sampling.max*`, based on `occlusion.sampling.baseWidth/baseHeight`.
+遮蔽判定は対象ウィンドウ内のサンプル点で行う近似判定です。
+`occlusion.sampling.enabled=true` の場合、`occlusion.sampling.baseWidth/baseHeight` を基準に
+`occlusion.sampling.min*` から `occlusion.sampling.max*` の範囲でサンプリンググリッドを動的に調整します。
 
 ### hint.prefixOverrides
 
-`hint.prefixOverrides` lets you override the leading hint prefix per window.
-Rules are evaluated from top to bottom, and the first matching rule is applied.
+`hint.prefixOverrides` は、ウィンドウごとのヒントキー先頭文字（prefix）を上書きするための設定です。
+ルールは上から順に評価され、最初に一致したルールが適用されます。
 
-#### hint.prefixOverrides Definition
+#### hint.prefixOverrides の定義
 
 ```lua
 hint = {
   prefixOverrides = {
     {
       match = {
-        bundleID = "md.obsidian",   -- optional
-        titleGlob = "Minerva*",     -- optional (`window:title()` target, supports `*` and `?`)
+        bundleID = "md.obsidian",   -- 任意
+        titleGlob = "Minerva*",     -- 任意 (`window:title()` 対象、`*` と `?` をサポート)
       },
-      prefix = "M",                 -- 1 or 2 chars. Each char must be included in hint.chars
+      prefix = "M",                 -- 1文字または2文字。各文字は hint.chars に含まれている必要あり
     },
   },
 }
 ```
 
-#### hint.prefixOverrides Behavior
+#### hint.prefixOverrides の動作
 
-- Either `match.bundleID` or `match.titleGlob` is required
-- `titleGlob` is case-sensitive
-- Display key sets are automatically adjusted to stay prefix-free (for example, if `G` and `GC` conflict, they become `GA` and `GC`)
-- If no rule matches, characters in the app name are checked from left to right and the first available one in `hint.chars` is used (if already used, the next candidate is tried); if none match, it falls back to `hint.chars[1]`
-- Invalid `prefix` values (characters not in `hint.chars`, 3+ chars, etc.) raise errors
+- `match.bundleID` と `match.titleGlob` はどちらか必須
+- `titleGlob` は大文字小文字を区別
+- 表示キー集合は prefix-free になるよう自動調整（例: `G` と `GC` が競合した場合は `GA` と `GC`）
+- どのルールにも一致しない場合は、アプリ名の文字を先頭から見て `hint.chars` に含まれる文字を選ぶ（同じ文字が使用済みなら次候補へ）。候補がなければ `hint.chars[1]` にフォールバック
+- `prefix` が不正（`hint.chars` 外の文字、3文字以上など）の場合はエラー
 
-For implementation defaults and internal options, see `DEFAULT_CONFIG` in `window_hints_config.lua`.
+実装上のデフォルト値や内部向け設定は、`window_hints_config.lua` 内の `DEFAULT_CONFIG` を参照してください。
 
-### Navigation During Window Hints
+### Window Hints 内ナビゲーション
 
-- Pressing the Window Hints hotkey again while hints are shown closes the hints
-- `navigation.focusBack.key` and `navigation.direction.hints.keys` are active only while hints are shown
-- `navigation.focusBack.key` works only when `focus_back` is enabled
-- `navigation.windowMover.moveToSelectedArea.key` closes Window Hints and opens the Window Mover `moveToSelectedArea` chooser for the active window. This is separate from JinraiMode, which opens the chooser after selecting a window.
-- If these keys conflict with `hint.chars`, the conflicting hint chars are removed and navigation keys take priority
-- Clicking a hint selects the same window as entering its hint key
-- Clicking outside all hints while hints are shown closes the hints
-- Fully occluded windows are excluded from directional navigation candidates
-- For cardinal directions, a candidate must extend past the current window's edge in that direction; a shorter window whose center is only slightly offset is not treated as a right/left/up/down target
-- Cardinal candidates whose main-axis overlap ratio is at most `navigation.direction.scoring.maxPrimaryOverlapRatioForDetached` are treated as detached in the movement direction and are not rejected by orthogonal overlap. More overlapped candidates must have at least `navigation.direction.scoring.minOrthogonalOverlapRatio` orthogonal overlap.
-- Cardinal directions prefer larger orthogonal overlap first; when the overlap difference is within `navigation.direction.scoring.cardinalOverlapTieThresholdPx`, it is treated as a tie and falls through to primary-axis edge gap, frontmost order, orthogonal offset, and finally the previously active window
-- `navigation.direction.scoring.preferredVisibleRatio` prefers cardinal-direction candidates whose sampled visible ratio is at least that value over heavily occluded candidates. If all directional candidates are below the threshold, the best below-threshold candidate is still selected, preferring the higher sampled visible ratio first. Set it to `0` to disable this preference.
-- Diagonal directions prefer the smallest sum of two axis edge gaps, then frontmost order, center distance, and finally the previously active window
+- ヒント表示中に Window Hints のホットキーをもう一度押すと、ヒントを閉じます
+- `navigation.focusBack.key` と `navigation.direction.hints.keys` はヒント表示中のみ有効です
+- `navigation.focusBack.key` は `focus_back` 設定が有効なときだけ動作します
+- `navigation.windowMover.moveToSelectedArea.key` は Window Hints を閉じ、アクティブウィンドウに対して Window Mover の `moveToSelectedArea` chooser を開きます。ウィンドウ選択後に chooser を開く JinraiMode とは別機能です
+- これらのキーと `hint.chars` が競合する場合、競合文字はヒント側から除外され、ナビゲーションキーが優先されます
+- ヒントをクリックすると、そのヒントキーを入力した場合と同じウィンドウを選択します
+- ヒント表示中にすべてのヒントの外側をクリックすると、ヒントを閉じます
+- 完全に背面に遮蔽されているウィンドウは方向移動の候補から除外されます
+- 上下左右では、候補ウィンドウの方向側エッジが現在ウィンドウの方向側エッジを越えている必要があります。現在ウィンドウより短く、中心が少しだけ右/左/上/下にズレているだけのウィンドウは方向候補にしません
+- 上下左右では、主軸の重なり率が `navigation.direction.scoring.maxPrimaryOverlapRatioForDetached` 以下なら移動方向に離れた候補として扱い、副軸重なり率では除外しません。主軸の重なり率がそれを超える候補は、副軸重なり率が `navigation.direction.scoring.minOrthogonalOverlapRatio` 以上の場合だけ候補にします
+- 上下左右は基本的に「副軸の重なり量が大きい」候補を優先し、重なり差が `navigation.direction.scoring.cardinalOverlapTieThresholdPx` 以内なら同点扱いとして次に主軸エッジ距離、前面順、副軸ずれ、直前アクティブウィンドウの順で決定します
+- `navigation.direction.scoring.preferredVisibleRatio` は、上下左右でサンプリング上の可視率がその値以上の候補を、大きく隠れた候補より優先します。方向候補がすべてしきい値未満の場合は、しきい値未満の候補も選択対象に残し、その中では可視率が高い候補を先に見ます。`0` にするとこの優先を無効化できます
+- 斜め方向は2軸のエッジ距離合計が小さい候補を優先し、同率時は前面順、中心距離、直前アクティブウィンドウの順で決定します
 
-### Direct Direction Hotkeys
+### 直接方向移動ホットキー
 
-`navigation.direction.direct` lets you bind directional movement without showing hints.
+`navigation.direction.direct` は、Window Hints を出さずに方向移動を直接実行する設定です。
 
 ```lua
 navigation = {
   direction = {
     direct = {
-      modifiers = { "ctrl", "alt" }, -- required
-      keys = {                       -- optional; only specified directions are enabled
+      modifiers = { "ctrl", "alt" }, -- 必須
+      keys = {                       -- 任意。指定した方向だけ有効
         left = "h",
         down = "j",
         up = "k",
@@ -550,148 +552,148 @@ navigation = {
 }
 ```
 
-- Uses the same target selection rules as `navigation.direction.hints.keys` (occlusion filtering and tie-break logic included)
-- Moves focus immediately; Window Hints UI is not shown
-- If `keys` is omitted or empty, direct-direction hotkeys are disabled
-- In `modifiers`, `option` is accepted as an alias for `alt`
+- 移動先の判定は `navigation.direction.hints.keys` と同じ（遮蔽除外・同点時の優先順位を含む）
+- キー押下で即フォーカス移動し、Window Hints UI は表示しない
+- `keys` を省略した場合は直接方向移動ホットキーを無効化
+- `modifiers` では `alt` の別名として `option` も指定可能
 
 ### navigation.spaces.numbers
 
-When `navigation.spaces.numbers = true` (default), pressing `1`–`9` while hints are shown switches to the corresponding Space using `hs.spaces.gotoSpace()`. If the Space number does not exist, the key is consumed but nothing happens. Set to `false` to disable.
+`navigation.spaces.numbers = true`（デフォルト）にすると、ヒント表示中に `1`〜`9` キーで `hs.spaces.gotoSpace()` を使って対応する Space に切り替えます。存在しない番号を押した場合はキーが消費されるだけで何も起こりません。`false` で無効化できます。
 
 ### navigation.spaces.prev.key / navigation.spaces.next.key
 
-`navigation.spaces.prev.key` and `navigation.spaces.next.key` let you move to the previous or next Space while hints are shown. Setting either to a single character key (e.g. `","` / `"."`) closes hints first, then triggers the Space switch. The default is `nil` (disabled).
+`navigation.spaces.prev.key` と `navigation.spaces.next.key` は、ヒント表示中に前後の Space へ移動するためのキーです。1文字のキー（例: `","` / `"."`）を指定すると、ヒントを閉じてから Space を切り替えます。デフォルトは `nil`（無効）です。
 
 ### behavior.candidates.includeOtherSpaces
 
-If `behavior.candidates.includeOtherSpaces = true`, Window Hints include visible windows from other Spaces, not just the
-current one. The default is `true`.
+`behavior.candidates.includeOtherSpaces = true` にすると、現在の Space だけでなく他の Space にある可視ウィンドウも
+Window Hints の候補表示に含めます。デフォルトは `true` です。
 
-- Other-Space candidates are rendered in the same dock-style lane as occluded hints
-- They are marked with a round badge in the top-right corner showing the Space number
-- Badge colors change per Space number via `hint.spaceBadge.spaceColors` (5 preset colors included; out-of-range numbers fall back to default)
-- Set `hint.spaceBadge.enabled = false` to hide the badge entirely
-- You can customize the badge colors and size via `hint.spaceBadge`
-- Selecting one calls `focus()` directly and lets macOS handle the Space switch
-- Directional navigation during hints and `navigation.direction.direct` still target current-Space candidates only
+- 別 Space の候補は前面オーバーレイではなく、遮蔽ヒントと同じドック系レーンに表示されます
+- 右上の丸バッジに Space 番号が表示され、番号ごとに異なる色で識別できます
+- バッジの色は `hint.spaceBadge.spaceColors` で Space 番号ごとに設定可能（プリセット5色付き。範囲外の番号はデフォルト色にフォールバック）
+- `hint.spaceBadge.enabled = false` でバッジ自体を非表示にできます
+- バッジの色やサイズは `hint.spaceBadge` で変更できます
+- 選択するとそのまま対象ウィンドウへ `focus()` し、Space 切り替えは macOS 側の挙動に従います
+- Hints 中の方向移動と `navigation.direction.direct` は常に current Space の候補だけを対象にします
 
 ### behavior.candidates.includeActiveWindow
 
-If `behavior.candidates.includeActiveWindow = true`, Window Hints also show a hint on the currently focused window. The default is `true`.
+`behavior.candidates.includeActiveWindow = true` にすると、現在フォーカスしているアクティブウィンドウにもヒントを表示します。デフォルトは `true` です。
 
-- This keeps hint assignment more consistent when multiple windows of the same app are open
-- Selecting the active window still runs `behavior.cursor.onSelect` if enabled
-- The focused-window outline from `focusedWindowHighlight` remains visible
-- You can override the active-window hint appearance via `hint.state.active`, `hint.icon.state.active`, `hint.key.state.active`, `hint.title.state.active`, and `hint.spaceBadge.state.active`
-- Omitted fields in those `active` states fall back to each element's `normal` state
+- 同一アプリの複数ウィンドウがある場合、アクティブウィンドウも含めてヒントキーが割り当てられるため、キーの一貫性が向上します
+- アクティブウィンドウを選択すると、`behavior.cursor.onSelect` が有効であればカーソルをウィンドウ中央に移動します
+- アクティブウィンドウの枠線（アクティブオーバーレイ）は引き続き表示されるため、どのウィンドウが現在フォーカスされているか視覚的に判別できます
+- `hint.state.active`、`hint.icon.state.active`、`hint.key.state.active`、`hint.title.state.active`、`hint.spaceBadge.state.active` で、アクティブウィンドウ上ヒントの見た目全体を上書きできます
+- それぞれの `active` で省略したフィールドは対応する `normal` にフォールバックします
 
-## Focus Back Options
+## Focus Back オプション
 
-Complete sample including all options (default values):
+全設定を含むサンプル（デフォルト値）:
 
 ```lua
 focus_back = {
   hotkey = {
-    modifiers = { "option" }, -- Hotkey modifiers
-    key = "w",                -- Hotkey (nil to disable)
+    modifiers = { "option" }, -- ホットキー修飾キー
+    key = "w",                -- ホットキー（nil で無効化）
   },
   urlEvent = {
-    name = nil, -- URL scheme name (trigger via hammerspoon://<name>)
+    name = nil, -- URL scheme名（hammerspoon://<名前> で発火）
   },
   behavior = {
     cursor = {
-      onSelect = true, -- Move cursor to window center after switching
+      onSelect = true, -- 切り替え後にカーソルをウィンドウ中央に移動
     },
   },
   internal = {
-    focusHistory = nil, -- Internal injection only (normally do not set)
+    focusHistory = nil, -- 内部注入専用（通常は設定しない）
   },
 }
 ```
 
-Pressing repeatedly lets you toggle between two windows.
+連続で押すと2つのウィンドウ間をトグルで行き来できます。
 
-## Window Mover Options
+## Window Mover オプション
 
-Moves and resizes the active window to the next display, to the largest free area on the active display, or to a selected area on any display.
+アクティブウィンドウを次のディスプレイ、アクティブディスプレイ上の最大空き領域、または候補から選んだ任意のディスプレイ領域へ移動・リサイズします。
 
-Complete sample including all options (default values):
+全設定を含むサンプル（デフォルト値）:
 
 ```lua
 window_mover = {
   commands = {
-    -- Move to another display or computed/configured area
+    -- 別ディスプレイや算出・設定済み領域へ移動
     moveToNextDisplay = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
     moveToActiveDisplayFreeArea = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
     moveToSelectedArea = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
-    -- Change the active window state or size
+    -- アクティブウィンドウの状態やサイズを変更
     maximizeWindow = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
     minimizeWindow = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
-    -- Cycle horizontal placement and width
+    -- 横方向の配置と幅を切り替え
     cycleLeft = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
     cycleHorizontalCenter = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
     cycleRight = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
-    -- Cycle vertical placement and height
+    -- 縦方向の配置と高さを切り替え
     cycleTop = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
     cycleVerticalCenter = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
     cycleBottom = {
       hotkey = {
-        modifiers = nil, -- Hotkey modifiers (nil to disable)
-        key = nil,       -- Hotkey (nil to disable)
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
       },
     },
-    -- Move directly to a position on the active display with a fixed size
+    -- 指定サイズでアクティブディスプレイ上の位置へ直接移動
     halfLeft = { hotkey = { modifiers = nil, key = nil } },
     halfHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
     halfRight = { hotkey = { modifiers = nil, key = nil } },
@@ -731,28 +733,28 @@ window_mover = {
   },
   behavior = {
     cursor = {
-      afterMove = true, -- Move cursor to window center after moving
+      afterMove = true, -- 移動後にカーソルをウィンドウ中央に移動
     },
     cycle = {
-      horizontalRatios = { 1 / 2, 1 / 3, 2 / 3 }, -- Width ratio rotation for horizontal cycle commands
-      verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },   -- Height ratio rotation for vertical cycle commands
+      horizontalRatios = { 1 / 2, 1 / 3, 2 / 3 }, -- 横方向 cycle コマンドの横幅比率ローテーション
+      verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },   -- 縦方向 cycle コマンドの高さ比率ローテーション
     },
   },
   selectedArea = {
-    defaultScreen = nil, -- UUID whose keymap is reused for unconfigured displays
-    screens = {},        -- Map screen UUIDs to area keymaps, including freeArea
+    defaultScreen = nil, -- 未設定ディスプレイに流用するキーマップの UUID
+    screens = {},        -- ディスプレイ UUID ごとのエリアキーマップ（freeArea を含む）
     actions = {
-      closeWindow = nil, -- Window close action key (nil disables it)
+      closeWindow = nil, -- ウィンドウを閉じる action キー（nil で無効化）
     },
     windowHints = {
-      key = nil, -- Switch back to Window Hints JinraiMode (nil disables it)
+      key = nil, -- Window Hints の JinraiMode 表示へ戻るキー（nil で無効化）
     },
     hints = {
-      show = true, -- Render candidate hints with canvas; false keeps key input only
+      show = true, -- 候補ヒントを canvas で描画する。false でキー入力のみ
     },
     appearance = {
-      borderWidth = 2, -- Hint border width (px)
-      cornerRadius = 6, -- Hint corner radius (px)
+      borderWidth = 2, -- ヒント枠線の太さ (px)
+      cornerRadius = 6, -- ヒント角丸の半径 (px)
       state = {
         normal = {
           bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.88 },
@@ -799,47 +801,47 @@ window_mover = {
 }
 ```
 
-| Command | Description |
+| コマンド | 説明 |
 | --- | --- |
-| `moveToNextDisplay` | Moves the active window to `screen:next()` from the current display and maximizes it there. |
-| `moveToActiveDisplayFreeArea` | Moves the active window to the largest rectangle inside the current display's `frame()` that does not overlap other visible windows. Ties prefer the area closest to the active window. |
-| `moveToSelectedArea` | Opens the chooser for configured screen areas and `selectedArea.actions` window actions. |
-| `maximizeWindow` | Moves and resizes the active window to the current display's `frame()` without using macOS fullscreen. |
-| `minimizeWindow` | Minimizes the active window. |
-| `cycleLeft` | Moves the active window to the left edge and cycles width through `behavior.cycle.horizontalRatios` (`1/2` → `1/3` → `2/3` by default). |
-| `cycleHorizontalCenter` | Moves the active window to the horizontal center and cycles width through the same sequence. |
-| `cycleRight` | Moves the active window to the right edge and cycles width through the same sequence. |
-| `cycleTop` | Moves the active window to the top edge and cycles height through `behavior.cycle.verticalRatios` (`1/2` → `1/3` → `2/3` by default). |
-| `cycleVerticalCenter` | Moves the active window to the vertical center and cycles height through the same sequence. |
-| `cycleBottom` | Moves the active window to the bottom edge and cycles height through the same sequence. |
-| `halfLeft` / `halfHorizontalCenter` / `halfRight` | Moves the active window to the left edge, horizontal center, or right edge with 1/2 width and full height. |
-| `halfTop` / `halfVerticalCenter` / `halfBottom` | Moves the active window to the top edge, vertical center, or bottom edge with full width and 1/2 height. |
-| `thirdLeft` / `thirdHorizontalCenter` / `thirdRight` | Moves the active window to the left edge, horizontal center, or right edge with 1/3 width and full height. |
-| `thirdTop` / `thirdVerticalCenter` / `thirdBottom` | Moves the active window to the top edge, vertical center, or bottom edge with full width and 1/3 height. |
-| `quarterLeft` / `quarterHorizontalLeftCenter` / `quarterHorizontalRightCenter` / `quarterRight` | Moves the active window to each horizontal quarter position with 1/4 width and full height. |
-| `quarterTop` / `quarterVerticalTopCenter` / `quarterVerticalBottomCenter` / `quarterBottom` | Moves the active window to each vertical quarter position with full width and 1/4 height. |
-| `quarterTopLeft` / `quarterTopRight` / `quarterBottomLeft` / `quarterBottomRight` | Moves the active window to a 2x2 quarter grid position with 1/2 width and 1/2 height. |
-| `sixthTopLeft` / `sixthTopCenter` / `sixthTopRight` / `sixthBottomLeft` / `sixthBottomCenter` / `sixthBottomRight` | Moves the active window to a 3x2 sixth grid position with 1/3 width and 1/2 height. |
-| `twoThirdsLeft` / `twoThirdsHorizontalCenter` / `twoThirdsRight` | Moves the active window to the left edge, horizontal center, or right edge with 2/3 width and full height. |
-| `twoThirdsTop` / `twoThirdsVerticalCenter` / `twoThirdsBottom` | Moves the active window to the top edge, vertical center, or bottom edge with full width and 2/3 height. |
+| `moveToNextDisplay` | アクティブウィンドウを現在のディスプレイの `screen:next()` へ移動し、移動先で最大化します。 |
+| `moveToActiveDisplayFreeArea` | 現在ディスプレイの `frame()` 内で、他の可視ウィンドウと重ならない最大の矩形へ移動します。同面積の場合はアクティブウィンドウに近い領域を優先します。 |
+| `moveToSelectedArea` | ディスプレイ UUID ごとに設定した領域、または `selectedArea.actions` の window action を選ぶ chooser を開きます。 |
+| `maximizeWindow` | macOS のフルスクリーン化ではなく、アクティブウィンドウを現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。 |
+| `minimizeWindow` | アクティブウィンドウを最小化します。 |
+| `cycleLeft` | アクティブウィンドウを左端へ移動し、横幅を `behavior.cycle.horizontalRatios` の順序で切り替えます（デフォルトは `1/2` → `1/3` → `2/3`）。 |
+| `cycleHorizontalCenter` | アクティブウィンドウを横方向中央へ移動し、横幅を同じ順序で切り替えます。 |
+| `cycleRight` | アクティブウィンドウを右端へ移動し、横幅を同じ順序で切り替えます。 |
+| `cycleTop` | アクティブウィンドウを上端へ移動し、高さを `behavior.cycle.verticalRatios` の順序で切り替えます（デフォルトは `1/2` → `1/3` → `2/3`）。 |
+| `cycleVerticalCenter` | アクティブウィンドウを縦方向中央へ移動し、高さを同じ順序で切り替えます。 |
+| `cycleBottom` | アクティブウィンドウを下端へ移動し、高さを同じ順序で切り替えます。 |
+| `halfLeft` / `halfHorizontalCenter` / `halfRight` | アクティブウィンドウを横幅 `1/2`、高さ全体で左端・横方向中央・右端へ移動します。 |
+| `halfTop` / `halfVerticalCenter` / `halfBottom` | アクティブウィンドウを横幅全体、高さ `1/2` で上端・縦方向中央・下端へ移動します。 |
+| `thirdLeft` / `thirdHorizontalCenter` / `thirdRight` | アクティブウィンドウを横幅 `1/3`、高さ全体で左端・横方向中央・右端へ移動します。 |
+| `thirdTop` / `thirdVerticalCenter` / `thirdBottom` | アクティブウィンドウを横幅全体、高さ `1/3` で上端・縦方向中央・下端へ移動します。 |
+| `quarterLeft` / `quarterHorizontalLeftCenter` / `quarterHorizontalRightCenter` / `quarterRight` | アクティブウィンドウを横幅 `1/4`、高さ全体で左端・横方向左中央・横方向右中央・右端へ移動します。 |
+| `quarterTop` / `quarterVerticalTopCenter` / `quarterVerticalBottomCenter` / `quarterBottom` | アクティブウィンドウを横幅全体、高さ `1/4` で上端・縦方向上中央・縦方向下中央・下端へ移動します。 |
+| `quarterTopLeft` / `quarterTopRight` / `quarterBottomLeft` / `quarterBottomRight` | アクティブウィンドウを横幅 `1/2`、高さ `1/2` の4分割領域へ移動します。 |
+| `sixthTopLeft` / `sixthTopCenter` / `sixthTopRight` / `sixthBottomLeft` / `sixthBottomCenter` / `sixthBottomRight` | アクティブウィンドウを横幅 `1/3`、高さ `1/2` の6分割領域へ移動します。 |
+| `twoThirdsLeft` / `twoThirdsHorizontalCenter` / `twoThirdsRight` | アクティブウィンドウを横幅 `2/3`、高さ全体で左端・横方向中央・右端へ移動します。 |
+| `twoThirdsTop` / `twoThirdsVerticalCenter` / `twoThirdsBottom` | アクティブウィンドウを横幅全体、高さ `2/3` で上端・縦方向中央・下端へ移動します。 |
 
-Direct area commands use the names listed in [Available areas](#available-areas).
+直接エリア移動コマンドでは、[利用可能なエリア](#available-areas) に記載された名前を使います。
 
-To reduce flicker, JINRAI applies the target frame once with `setFrame(..., 0)`.
+ちらつきを抑えるため、JINRAI は移動先 frame を `setFrame(..., 0)` で一度だけ反映します。
 
 ### moveToSelectedArea
 
-`moveToSelectedArea` shows the area hints configured for each screen UUID and the window actions configured in `selectedArea.actions`. `openWindowActionChooser` is the removed old name. Get UUIDs from Hammerspoon Console with `hs.inspect(jinrai.window_mover.screenInfos())`.
+`moveToSelectedArea` はディスプレイ UUID ごとに設定されたエリア候補と、`selectedArea.actions` の window action 候補を表示します。`openWindowActionChooser` は削除済みの旧名です。UUID は Hammerspoon Console で `hs.inspect(jinrai.window_mover.screenInfos())` を実行して確認できます。
 
-Unconfigured displays reuse `selectedArea.defaultScreen` when set; otherwise JINRAI shows a selectable UUID/keymap template on that display. If the defaultScreen keymap would conflict with already visible hints, the unconfigured display shows the UUID template instead. Press `escape`, click outside candidates, or press the same hotkey again to close the chooser. Clicking a candidate does not move the window.
+未設定ディスプレイは `selectedArea.defaultScreen` があればそのキーマップを流用し、なければそのディスプレイ上に選択可能な UUID と設定テンプレートを表示します。defaultScreen のキーマップが既に表示中の候補と衝突する場合も、未設定ディスプレイ側は UUID テンプレート表示に切り替えます。表示中は `escape`、候補外クリック、または同じホットキーで閉じます。候補クリックでは移動しません。
 
-Set `selectedArea.hints.show = false` to skip canvas rendering for configured candidates and move or run actions by key input only. UUID template guidance for unconfigured displays is still shown.
+`selectedArea.hints.show = false` にすると、設定済み候補のヒント canvas を描画せず、キー入力だけで移動や action 実行を行います。未設定ディスプレイ向けの UUID テンプレート案内は引き続き表示されます。
 
-Use the names listed in [Available areas](#available-areas) as keys in `selectedArea.screens`. Set `selectedArea.actions.closeWindow` to close the active window from the chooser. Set `selectedArea.windowHints.key` to close the chooser and switch back to Window Hints; during a JinraiMode chain, the chain continues. Action keys must not duplicate or prefix-conflict with area keys.
+`selectedArea.screens` のキーには、[利用可能なエリア](#available-areas) に記載された名前を使います。`selectedArea.actions.closeWindow` を設定すると、chooser 内でアクティブウィンドウを閉じられます。`selectedArea.windowHints.key` を設定すると、chooser を閉じて Window Hints へ戻ります。JinraiMode の連鎖中は連鎖を継続します。action キーはエリアキーと重複または prefix 衝突してはいけません。
 
-Set `freeArea` to show one fixed hint in the top-right corner of that display. On selection, JINRAI recalculates the largest free rectangle from the currently visible standard windows and moves the active window to that rectangle on the target display. If no free rectangle exists, the window is not moved and the chooser remains open.
+`freeArea` を設定すると、そのディスプレイの右上に固定ヒントを1つ表示します。選択時点の可視な標準ウィンドウから最大の空き領域を再計算し、アクティブウィンドウを対象ディスプレイの空き領域へ移動します。空き領域がない場合は移動せず、chooser を維持します。
 
-Example selected-area keymap:
+エリア選択キーマップの例:
 
 ```lua
 selectedArea = {
@@ -893,75 +895,77 @@ selectedArea = {
 }
 ```
 
-### Available areas
+<a id="available-areas"></a>
 
-| Icon | Area | Position | Size |
+### 利用可能なエリア
+
+| アイコン | エリア | 位置 | サイズ |
 | --- | --- | --- | --- |
-| - | `freeArea` | Largest free rectangle on the selected display | Largest size that does not overlap other visible standard windows |
-| <img src="./docs/assets/window-mover/areas/full.svg" alt="full" width="48"> | `full` | Full display | Full display |
-| <img src="./docs/assets/window-mover/areas/halfLeft.svg" alt="halfLeft" width="48"> | `halfLeft` | Left edge | 1/2 width, full height |
-| <img src="./docs/assets/window-mover/areas/halfHorizontalCenter.svg" alt="halfHorizontalCenter" width="48"> | `halfHorizontalCenter` | Horizontal center | 1/2 width, full height |
-| <img src="./docs/assets/window-mover/areas/halfRight.svg" alt="halfRight" width="48"> | `halfRight` | Right edge | 1/2 width, full height |
-| <img src="./docs/assets/window-mover/areas/halfTop.svg" alt="halfTop" width="48"> | `halfTop` | Top edge | Full width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/halfVerticalCenter.svg" alt="halfVerticalCenter" width="48"> | `halfVerticalCenter` | Vertical center | Full width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/halfBottom.svg" alt="halfBottom" width="48"> | `halfBottom` | Bottom edge | Full width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/thirdLeft.svg" alt="thirdLeft" width="48"> | `thirdLeft` | Left edge | 1/3 width, full height |
-| <img src="./docs/assets/window-mover/areas/thirdHorizontalCenter.svg" alt="thirdHorizontalCenter" width="48"> | `thirdHorizontalCenter` | Horizontal center | 1/3 width, full height |
-| <img src="./docs/assets/window-mover/areas/thirdRight.svg" alt="thirdRight" width="48"> | `thirdRight` | Right edge | 1/3 width, full height |
-| <img src="./docs/assets/window-mover/areas/thirdTop.svg" alt="thirdTop" width="48"> | `thirdTop` | Top edge | Full width, 1/3 height |
-| <img src="./docs/assets/window-mover/areas/thirdVerticalCenter.svg" alt="thirdVerticalCenter" width="48"> | `thirdVerticalCenter` | Vertical center | Full width, 1/3 height |
-| <img src="./docs/assets/window-mover/areas/thirdBottom.svg" alt="thirdBottom" width="48"> | `thirdBottom` | Bottom edge | Full width, 1/3 height |
-| <img src="./docs/assets/window-mover/areas/quarterLeft.svg" alt="quarterLeft" width="48"> | `quarterLeft` | Left edge | 1/4 width, full height |
-| <img src="./docs/assets/window-mover/areas/quarterHorizontalLeftCenter.svg" alt="quarterHorizontalLeftCenter" width="48"> | `quarterHorizontalLeftCenter` | Horizontal left-center | 1/4 width, full height |
-| <img src="./docs/assets/window-mover/areas/quarterHorizontalRightCenter.svg" alt="quarterHorizontalRightCenter" width="48"> | `quarterHorizontalRightCenter` | Horizontal right-center | 1/4 width, full height |
-| <img src="./docs/assets/window-mover/areas/quarterRight.svg" alt="quarterRight" width="48"> | `quarterRight` | Right edge | 1/4 width, full height |
-| <img src="./docs/assets/window-mover/areas/quarterTop.svg" alt="quarterTop" width="48"> | `quarterTop` | Top edge | Full width, 1/4 height |
-| <img src="./docs/assets/window-mover/areas/quarterVerticalTopCenter.svg" alt="quarterVerticalTopCenter" width="48"> | `quarterVerticalTopCenter` | Vertical top-center | Full width, 1/4 height |
-| <img src="./docs/assets/window-mover/areas/quarterVerticalBottomCenter.svg" alt="quarterVerticalBottomCenter" width="48"> | `quarterVerticalBottomCenter` | Vertical bottom-center | Full width, 1/4 height |
-| <img src="./docs/assets/window-mover/areas/quarterBottom.svg" alt="quarterBottom" width="48"> | `quarterBottom` | Bottom edge | Full width, 1/4 height |
-| <img src="./docs/assets/window-mover/areas/quarterTopLeft.svg" alt="quarterTopLeft" width="48"> | `quarterTopLeft` | Top left | 1/2 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/quarterTopRight.svg" alt="quarterTopRight" width="48"> | `quarterTopRight` | Top right | 1/2 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/quarterBottomLeft.svg" alt="quarterBottomLeft" width="48"> | `quarterBottomLeft` | Bottom left | 1/2 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/quarterBottomRight.svg" alt="quarterBottomRight" width="48"> | `quarterBottomRight` | Bottom right | 1/2 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/sixthTopLeft.svg" alt="sixthTopLeft" width="48"> | `sixthTopLeft` | Top left | 1/3 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/sixthTopCenter.svg" alt="sixthTopCenter" width="48"> | `sixthTopCenter` | Top center | 1/3 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/sixthTopRight.svg" alt="sixthTopRight" width="48"> | `sixthTopRight` | Top right | 1/3 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/sixthBottomLeft.svg" alt="sixthBottomLeft" width="48"> | `sixthBottomLeft` | Bottom left | 1/3 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/sixthBottomCenter.svg" alt="sixthBottomCenter" width="48"> | `sixthBottomCenter` | Bottom center | 1/3 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/sixthBottomRight.svg" alt="sixthBottomRight" width="48"> | `sixthBottomRight` | Bottom right | 1/3 width, 1/2 height |
-| <img src="./docs/assets/window-mover/areas/twoThirdsLeft.svg" alt="twoThirdsLeft" width="48"> | `twoThirdsLeft` | Left edge | 2/3 width, full height |
-| <img src="./docs/assets/window-mover/areas/twoThirdsHorizontalCenter.svg" alt="twoThirdsHorizontalCenter" width="48"> | `twoThirdsHorizontalCenter` | Horizontal center | 2/3 width, full height |
-| <img src="./docs/assets/window-mover/areas/twoThirdsRight.svg" alt="twoThirdsRight" width="48"> | `twoThirdsRight` | Right edge | 2/3 width, full height |
-| <img src="./docs/assets/window-mover/areas/twoThirdsTop.svg" alt="twoThirdsTop" width="48"> | `twoThirdsTop` | Top edge | Full width, 2/3 height |
-| <img src="./docs/assets/window-mover/areas/twoThirdsVerticalCenter.svg" alt="twoThirdsVerticalCenter" width="48"> | `twoThirdsVerticalCenter` | Vertical center | Full width, 2/3 height |
-| <img src="./docs/assets/window-mover/areas/twoThirdsBottom.svg" alt="twoThirdsBottom" width="48"> | `twoThirdsBottom` | Bottom edge | Full width, 2/3 height |
-| <img src="./docs/assets/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | Display center | Fixed size, clamped to the display frame |
+| - | `freeArea` | 選択したディスプレイの最大空き領域 | 他の可視な標準ウィンドウと重ならない最大サイズ |
+| <img src="./docs/assets/window-mover/areas/full.svg" alt="full" width="48"> | `full` | ディスプレイ全体 | ディスプレイ全体 |
+| <img src="./docs/assets/window-mover/areas/halfLeft.svg" alt="halfLeft" width="48"> | `halfLeft` | 左端 | 横幅 1/2、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/halfHorizontalCenter.svg" alt="halfHorizontalCenter" width="48"> | `halfHorizontalCenter` | 横方向中央 | 横幅 1/2、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/halfRight.svg" alt="halfRight" width="48"> | `halfRight` | 右端 | 横幅 1/2、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/halfTop.svg" alt="halfTop" width="48"> | `halfTop` | 上端 | 横幅全体、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/halfVerticalCenter.svg" alt="halfVerticalCenter" width="48"> | `halfVerticalCenter` | 縦方向中央 | 横幅全体、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/halfBottom.svg" alt="halfBottom" width="48"> | `halfBottom` | 下端 | 横幅全体、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/thirdLeft.svg" alt="thirdLeft" width="48"> | `thirdLeft` | 左端 | 横幅 1/3、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/thirdHorizontalCenter.svg" alt="thirdHorizontalCenter" width="48"> | `thirdHorizontalCenter` | 横方向中央 | 横幅 1/3、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/thirdRight.svg" alt="thirdRight" width="48"> | `thirdRight` | 右端 | 横幅 1/3、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/thirdTop.svg" alt="thirdTop" width="48"> | `thirdTop` | 上端 | 横幅全体、高さ 1/3 |
+| <img src="./docs/assets/window-mover/areas/thirdVerticalCenter.svg" alt="thirdVerticalCenter" width="48"> | `thirdVerticalCenter` | 縦方向中央 | 横幅全体、高さ 1/3 |
+| <img src="./docs/assets/window-mover/areas/thirdBottom.svg" alt="thirdBottom" width="48"> | `thirdBottom` | 下端 | 横幅全体、高さ 1/3 |
+| <img src="./docs/assets/window-mover/areas/quarterLeft.svg" alt="quarterLeft" width="48"> | `quarterLeft` | 左端 | 横幅 1/4、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/quarterHorizontalLeftCenter.svg" alt="quarterHorizontalLeftCenter" width="48"> | `quarterHorizontalLeftCenter` | 横方向左中央 | 横幅 1/4、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/quarterHorizontalRightCenter.svg" alt="quarterHorizontalRightCenter" width="48"> | `quarterHorizontalRightCenter` | 横方向右中央 | 横幅 1/4、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/quarterRight.svg" alt="quarterRight" width="48"> | `quarterRight` | 右端 | 横幅 1/4、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/quarterTop.svg" alt="quarterTop" width="48"> | `quarterTop` | 上端 | 横幅全体、高さ 1/4 |
+| <img src="./docs/assets/window-mover/areas/quarterVerticalTopCenter.svg" alt="quarterVerticalTopCenter" width="48"> | `quarterVerticalTopCenter` | 縦方向上中央 | 横幅全体、高さ 1/4 |
+| <img src="./docs/assets/window-mover/areas/quarterVerticalBottomCenter.svg" alt="quarterVerticalBottomCenter" width="48"> | `quarterVerticalBottomCenter` | 縦方向下中央 | 横幅全体、高さ 1/4 |
+| <img src="./docs/assets/window-mover/areas/quarterBottom.svg" alt="quarterBottom" width="48"> | `quarterBottom` | 下端 | 横幅全体、高さ 1/4 |
+| <img src="./docs/assets/window-mover/areas/quarterTopLeft.svg" alt="quarterTopLeft" width="48"> | `quarterTopLeft` | 左上 | 横幅 1/2、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/quarterTopRight.svg" alt="quarterTopRight" width="48"> | `quarterTopRight` | 右上 | 横幅 1/2、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/quarterBottomLeft.svg" alt="quarterBottomLeft" width="48"> | `quarterBottomLeft` | 左下 | 横幅 1/2、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/quarterBottomRight.svg" alt="quarterBottomRight" width="48"> | `quarterBottomRight` | 右下 | 横幅 1/2、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/sixthTopLeft.svg" alt="sixthTopLeft" width="48"> | `sixthTopLeft` | 左上 | 横幅 1/3、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/sixthTopCenter.svg" alt="sixthTopCenter" width="48"> | `sixthTopCenter` | 中央上 | 横幅 1/3、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/sixthTopRight.svg" alt="sixthTopRight" width="48"> | `sixthTopRight` | 右上 | 横幅 1/3、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/sixthBottomLeft.svg" alt="sixthBottomLeft" width="48"> | `sixthBottomLeft` | 左下 | 横幅 1/3、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/sixthBottomCenter.svg" alt="sixthBottomCenter" width="48"> | `sixthBottomCenter` | 中央下 | 横幅 1/3、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/sixthBottomRight.svg" alt="sixthBottomRight" width="48"> | `sixthBottomRight` | 右下 | 横幅 1/3、高さ 1/2 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsLeft.svg" alt="twoThirdsLeft" width="48"> | `twoThirdsLeft` | 左端 | 横幅 2/3、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsHorizontalCenter.svg" alt="twoThirdsHorizontalCenter" width="48"> | `twoThirdsHorizontalCenter` | 横方向中央 | 横幅 2/3、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsRight.svg" alt="twoThirdsRight" width="48"> | `twoThirdsRight` | 右端 | 横幅 2/3、高さ全体 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsTop.svg" alt="twoThirdsTop" width="48"> | `twoThirdsTop` | 上端 | 横幅全体、高さ 2/3 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsVerticalCenter.svg" alt="twoThirdsVerticalCenter" width="48"> | `twoThirdsVerticalCenter` | 縦方向中央 | 横幅全体、高さ 2/3 |
+| <img src="./docs/assets/window-mover/areas/twoThirdsBottom.svg" alt="twoThirdsBottom" width="48"> | `twoThirdsBottom` | 下端 | 横幅全体、高さ 2/3 |
+| <img src="./docs/assets/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイの frame に収まるように上限調整 |
 
-Area names use explicit directions and never change based on display orientation. Keys must be 1-2 characters and cannot duplicate or prefix-conflict within the same screen keymap.
+エリア名は明示的な方角を使い、ディスプレイの向きによって意味は変わりません。キーは1〜2文字で、同じディスプレイのキーマップ内で重複または prefix 衝突してはいけません。
 
-## Development
+## 開発
 
-If you install from source with symlink, editing files under `Jinrai.spoon/` and running `Reload Config` in Hammerspoon reflects changes immediately.
+ソースから symlink で導入しておくと、`Jinrai.spoon/` 配下の変更を Hammerspoon の `Reload Config` ですぐ確認できます。
 
-## Test
+## テスト
 
-Run unit tests with `busted`.
+ユニットテストは `busted` で実行します。
 
 ```bash
 busted
 ```
 
-If you want to run specific tests:
+特定のテストだけ実行したい場合:
 
 ```bash
 busted spec/focus_back_spec.lua
 busted spec/init_spec.lua
 ```
 
-## Release
+## リリース
 
 https://github.com/tadashi-aikawa/jinrai/actions/workflows/release.yml
 
-## License
+## ライセンス
 
 MIT
