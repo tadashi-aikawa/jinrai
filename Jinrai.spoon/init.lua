@@ -243,9 +243,30 @@ function obj:setup(config)
 		})
 		windowHintsConfig = mergeTable(windowHintsConfig, { internal = jinraiModeInternalConfig })
 		if windowMover then
+			local function openJinraiModeWindowActionChooser()
+				windowMover.openWindowActionChooser({
+					jinraiMode = true,
+					onApply = function()
+						defer(function()
+							if windowHints and windowHints.showJinraiMode then
+								windowHints.showJinraiMode()
+							end
+						end)
+					end,
+					onCancel = function()
+						if windowHints and windowHints.stopJinraiMode then
+							windowHints.stopJinraiMode()
+						end
+					end,
+				})
+			end
 			local internalConfig = mergeTable(windowHintsConfig.internal or {}, {
-				onOpenWindowActionChooser = function()
+				onOpenWindowActionChooser = function(ctx)
 					if not windowMover or not windowMover.openWindowActionChooser then
+						return
+					end
+					if ctx and ctx.jinraiMode then
+						openJinraiModeWindowActionChooser()
 						return
 					end
 					windowMover.openWindowActionChooser()
@@ -254,21 +275,7 @@ function obj:setup(config)
 					if not windowMover or not windowMover.openWindowActionChooser then
 						return
 					end
-					windowMover.openWindowActionChooser({
-						jinraiMode = true,
-						onApply = function()
-							defer(function()
-								if windowHints and windowHints.showJinraiMode then
-									windowHints.showJinraiMode()
-								end
-							end)
-						end,
-						onCancel = function()
-							if windowHints and windowHints.stopJinraiMode then
-								windowHints.stopJinraiMode()
-							end
-						end,
-					})
+					openJinraiModeWindowActionChooser()
 				end,
 			})
 			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })

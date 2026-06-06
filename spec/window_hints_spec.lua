@@ -2002,6 +2002,7 @@ describe("window_hints mouse selection", function()
 		local mocks = installHsMock(targetWindow, createdCanvases)
 		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
 		local openWindowActionChooserCount = 0
+		local openWindowActionChooserContext
 
 		local instance = windowHints.new({
 			hint = {
@@ -2028,8 +2029,9 @@ describe("window_hints mouse selection", function()
 				},
 			},
 			internal = {
-				onOpenWindowActionChooser = function()
+				onOpenWindowActionChooser = function(ctx)
 					openWindowActionChooserCount = openWindowActionChooserCount + 1
+					openWindowActionChooserContext = ctx
 				end,
 			},
 		})
@@ -2055,7 +2057,74 @@ describe("window_hints mouse selection", function()
 
 		assert.are.equal(0, focusCounter.count)
 		assert.are.equal(1, openWindowActionChooserCount)
+		assert.is_false(openWindowActionChooserContext.jinraiMode)
 		assert.is_true(hintCanvas._deleted)
+		assert.is_false(mocks.keyBlocker.started)
+	end)
+
+	it("JinraiMode中にmoveToSelectedAreaキーを押すとJinraiMode継続を通知する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local openWindowActionChooserContext
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			navigation = {
+				windowMover = {
+					moveToSelectedArea = {
+						key = "space",
+					},
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					windowHints = {
+						key = "f20",
+					},
+				},
+				onOpenWindowActionChooser = function(ctx)
+					openWindowActionChooserContext = ctx
+				end,
+			},
+		})
+		assert.is_true(instance.show())
+
+		assert.is_true(mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 42
+			end,
+			getFlags = function()
+				return {}
+			end,
+		}))
+		assert.is_true(mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 49
+			end,
+			getFlags = function()
+				return {}
+			end,
+		}))
+
+		assert.is_true(openWindowActionChooserContext.jinraiMode)
 		assert.is_false(mocks.keyBlocker.started)
 	end)
 

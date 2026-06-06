@@ -2520,8 +2520,9 @@ function M.new(options)
 		if not onOpenWindowActionChooser then
 			return
 		end
-		closeHints(true)
-		onOpenWindowActionChooser()
+		local jinraiMode = isJinraiMode
+		closeHints(true, { keepJinraiMode = jinraiMode })
+		onOpenWindowActionChooser({ jinraiMode = jinraiMode })
 	end
 
 	local function handleInputKey(key, inputModifiers)
