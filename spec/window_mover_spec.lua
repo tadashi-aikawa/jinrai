@@ -92,6 +92,7 @@ describe("window_mover", function()
 			hotkeys = {},
 			mousePositions = {},
 			visibleWindows = {},
+			orderedWindows = {},
 			screens = {},
 			canvases = {},
 			eventtaps = {},
@@ -200,6 +201,9 @@ describe("window_mover", function()
 				end,
 				visibleWindows = function()
 					return state.visibleWindows
+				end,
+				orderedWindows = function()
+					return state.orderedWindows
 				end,
 			},
 			hotkey = {
@@ -318,9 +322,10 @@ describe("window_mover", function()
 		return state.eventtaps[2].callback(event)
 	end
 
-	local function newWindowMoverWithMock(options, focusedWindow, visibleWindows)
+	local function newWindowMoverWithMock(options, focusedWindow, visibleWindows, orderedWindows)
 		local state = installHsMock(focusedWindow)
 		state.visibleWindows = visibleWindows or (focusedWindow and { focusedWindow } or {})
+		state.orderedWindows = orderedWindows or state.visibleWindows
 		local module = dofile("./Jinrai.spoon/window_mover.lua")
 		return state, module.new(options or {})
 	end
@@ -420,6 +425,59 @@ describe("window_mover", function()
 		instance.moveToActiveDisplayFreeArea()
 
 		assert.are.same({ x = 300, y = 0, w = 700, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("前面ウィンドウと重なる背面ウィンドウを除外して最大空き領域へ移動する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local front = newWindow(screen, { x = 0, y = 0, w = 800, h = 800 })
+		local backLeft = newWindow(screen, { x = 0, y = 0, w = 600, h = 800 })
+		local backRight = newWindow(screen, { x = 600, y = 0, w = 600, h = 800 })
+		local _, instance = newWindowMoverWithMock(
+			{ behavior = { cursor = { afterMove = false } } },
+			win,
+			{ win, front, backLeft, backRight },
+			{ win, front, backLeft, backRight }
+		)
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 800, y = 0, w = 400, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("アクティブウィンドウは背面ウィンドウの除外判定でも無視する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
+		local win = newWindow(screen, { x = 0, y = 0, w = 800, h = 800 })
+		local backLeft = newWindow(screen, { x = 0, y = 0, w = 600, h = 800 })
+		local backRight = newWindow(screen, { x = 600, y = 0, w = 600, h = 800 })
+		local _, instance = newWindowMoverWithMock(
+			{ behavior = { cursor = { afterMove = false } } },
+			win,
+			{ win, backLeft, backRight },
+			{ win, backLeft, backRight }
+		)
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.equal(0, #win.setFrameCalls)
+	end)
+
+	it("障害物から除外されたウィンドウもさらに背面の重なり判定に使う", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local front = newWindow(screen, { x = 0, y = 0, w = 400, h = 800 })
+		local middle = newWindow(screen, { x = 300, y = 0, w = 400, h = 800 })
+		local back = newWindow(screen, { x = 600, y = 0, w = 400, h = 800 })
+		local _, instance = newWindowMoverWithMock(
+			{ behavior = { cursor = { afterMove = false } } },
+			win,
+			{ win, front, middle, back },
+			{ win, front, middle, back }
+		)
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 400, y = 0, w = 800, h = 800 }, win.setFrameCalls[1].frame)
 	end)
 
 	it("新しい直接実行コマンドのホットキーを登録して解放する", function()

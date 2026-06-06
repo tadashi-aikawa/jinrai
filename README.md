@@ -804,7 +804,7 @@ window_mover = {
 | コマンド | 説明 |
 | --- | --- |
 | `moveToNextDisplay` | アクティブウィンドウを現在のディスプレイの `screen:next()` へ移動し、移動先で最大化します。 |
-| `moveToActiveDisplayFreeArea` | 現在ディスプレイの `frame()` 内で、他の可視ウィンドウと重ならない最大の矩形へ移動します。同面積の場合はアクティブウィンドウに近い領域を優先します。 |
+| `moveToActiveDisplayFreeArea` | 現在ディスプレイの `frame()` 内で、前面にある標準ウィンドウと重ならない最大の矩形へ移動します。アクティブウィンドウと、前面ウィンドウに重なる背面ウィンドウは計算から除外します。同面積の場合はアクティブウィンドウに近い領域を優先します。 |
 | `moveToSelectedArea` | ディスプレイ UUID ごとに設定した領域、または `selectedArea.actions` の window action を選ぶ chooser を開きます。 |
 | `maximizeWindow` | macOS のフルスクリーン化ではなく、アクティブウィンドウを現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。 |
 | `minimizeWindow` | アクティブウィンドウを最小化します。 |
@@ -839,7 +839,7 @@ window_mover = {
 
 `selectedArea.screens` のキーには、[利用可能なエリア](#available-areas) に記載された名前を使います。`selectedArea.actions.closeWindow` を設定すると、chooser 内でアクティブウィンドウを閉じられます。`selectedArea.windowHints.key` を設定すると、chooser を閉じて Window Hints へ戻ります。JinraiMode の連鎖中は連鎖を継続します。action キーはエリアキーと重複または prefix 衝突してはいけません。
 
-`freeArea` を設定すると、そのディスプレイの右上に固定ヒントを1つ表示します。選択時点の可視な標準ウィンドウから最大の空き領域を再計算し、アクティブウィンドウを対象ディスプレイの空き領域へ移動します。空き領域がない場合は移動せず、chooser を維持します。
+`freeArea` を設定すると、そのディスプレイの右上に固定ヒントを1つ表示します。選択時点の前面にある標準ウィンドウから最大の空き領域を再計算し、アクティブウィンドウを対象ディスプレイの空き領域へ移動します。アクティブウィンドウと、より前面の対象ウィンドウに重なる背面ウィンドウは計算から除外します。空き領域がない場合は移動せず、chooser を維持します。
 
 エリア選択キーマップの例:
 

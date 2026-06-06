@@ -485,7 +485,7 @@ function M.new(options)
 	end
 
 	local function freeAreaFrameForWindow(win, screen)
-		if not win or not screen or not screen.frame or not hs or not hs.window or not hs.window.visibleWindows then
+		if not win or not screen or not screen.frame or not hs or not hs.window or not hs.window.orderedWindows then
 			return nil
 		end
 		local screenFrame = cloneFrame(screen:frame())
@@ -494,13 +494,24 @@ function M.new(options)
 		end
 		local currentFrame = cloneFrame(frameOf(win))
 		local occupiedFrames = {}
-		for _, otherWin in ipairs(hs.window.visibleWindows()) do
+		local frontFrames = {}
+		for _, otherWin in ipairs(hs.window.orderedWindows()) do
 			if otherWin and not sameWindow(win, otherWin) and isStandardWindow(otherWin) then
 				local otherScreen = screenOf(otherWin)
 				if sameScreen(screen, otherScreen) then
 					local occupiedFrame = intersectFrame(screenFrame, frameOf(otherWin))
 					if occupiedFrame then
-						table.insert(occupiedFrames, occupiedFrame)
+						local overlapsFrontWindow = false
+						for _, frontFrame in ipairs(frontFrames) do
+							if intersectFrame(occupiedFrame, frontFrame) then
+								overlapsFrontWindow = true
+								break
+							end
+						end
+						if not overlapsFrontWindow then
+							table.insert(occupiedFrames, occupiedFrame)
+						end
+						table.insert(frontFrames, occupiedFrame)
 					end
 				end
 			end
@@ -1823,7 +1834,7 @@ button:active {
 	end
 
 	local function moveToActiveDisplayFreeArea()
-		if not hs or not hs.window or not hs.window.focusedWindow or not hs.window.visibleWindows then
+		if not hs or not hs.window or not hs.window.focusedWindow or not hs.window.orderedWindows then
 			return
 		end
 		local win = hs.window.focusedWindow()

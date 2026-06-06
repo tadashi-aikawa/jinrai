@@ -802,7 +802,7 @@ window_mover = {
 | Command | Description |
 | --- | --- |
 | `moveToNextDisplay` | Moves the active window to `screen:next()` from the current display and maximizes it there. |
-| `moveToActiveDisplayFreeArea` | Moves the active window to the largest rectangle inside the current display's `frame()` that does not overlap other visible windows. Ties prefer the area closest to the active window. |
+| `moveToActiveDisplayFreeArea` | Moves the active window to the largest rectangle inside the current display's `frame()` that does not overlap frontmost standard windows. The active window and background windows overlapping a front window are excluded. Ties prefer the area closest to the active window. |
 | `moveToSelectedArea` | Opens the chooser for configured screen areas and `selectedArea.actions` window actions. |
 | `maximizeWindow` | Moves and resizes the active window to the current display's `frame()` without using macOS fullscreen. |
 | `minimizeWindow` | Minimizes the active window. |
@@ -837,7 +837,7 @@ Set `selectedArea.hints.show = false` to skip canvas rendering for configured ca
 
 Use the names listed in [Available areas](#available-areas) as keys in `selectedArea.screens`. Set `selectedArea.actions.closeWindow` to close the active window from the chooser. Set `selectedArea.windowHints.key` to close the chooser and switch back to Window Hints; during a JinraiMode chain, the chain continues. Action keys must not duplicate or prefix-conflict with area keys.
 
-Set `freeArea` to show one fixed hint in the top-right corner of that display. On selection, JINRAI recalculates the largest free rectangle from the currently visible standard windows and moves the active window to that rectangle on the target display. If no free rectangle exists, the window is not moved and the chooser remains open.
+Set `freeArea` to show one fixed hint in the top-right corner of that display. On selection, JINRAI recalculates the largest free rectangle from the frontmost standard windows and moves the active window to that rectangle on the target display. The active window and background windows overlapping a window in front of them are excluded from the calculation. If no free rectangle exists, the window is not moved and the chooser remains open.
 
 Example selected-area keymap:
 
