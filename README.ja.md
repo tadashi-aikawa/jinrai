@@ -962,6 +962,10 @@ busted spec/focus_back_spec.lua
 busted spec/init_spec.lua
 ```
 
+## リリース
+
+https://github.com/tadashi-aikawa/jinrai/actions/workflows/release.yml
+
 ## ライセンス
 
 MIT
