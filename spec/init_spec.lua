@@ -621,4 +621,41 @@ describe("init", function()
 
 		assert.are.same({ "window_mover", "focus_back", "window_hints", "focus_history", "focus_border" }, order)
 	end)
+
+	it("setup で updater を開始し teardown で破棄する", function()
+		_G.__jinrai = nil
+		local init = dofile("./Jinrai.spoon/init.lua")
+		local calls = {
+			options = nil,
+			start = 0,
+			teardown = 0,
+		}
+
+		_G.dofile = function(path)
+			if path:match("updater.lua$") then
+				return {
+					new = function(options)
+						calls.options = options
+						return {
+							start = function()
+								calls.start = calls.start + 1
+							end,
+							teardown = function()
+								calls.teardown = calls.teardown + 1
+							end,
+						}
+					end,
+				}
+			end
+			return originalDofile(path)
+		end
+
+		init:setup({})
+		assert.are.equal("0.0.0-development", calls.options.currentVersion)
+		assert.is_truthy(calls.options.iconPath:match("menubar.svg$"))
+		assert.are.equal(1, calls.start)
+
+		init:teardown()
+		assert.are.equal(1, calls.teardown)
+	end)
 end)

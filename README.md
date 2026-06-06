@@ -104,20 +104,18 @@ spoon.Jinrai:setup({
 })
 ```
 
-To update an already installed Spoon (run once in Hammerspoon Console):
-
-```lua
-hs.loadSpoon("SpoonInstall")
-spoon.SpoonInstall:installSpoonFromZipURL(
-  "https://github.com/tadashi-aikawa/jinrai/releases/latest/download/Jinrai.spoon.zip"
-)
-hs.reload()
-```
-
 > [!WARNING]
-> Do not put the install or update commands in `~/.hammerspoon/init.lua`. `hs.reload()` will rerun them on each reload and cause a loop. Keep only persistent setup in `init.lua`, and run installation or updates manually from the Console.
+> Do not put the initial installation command in `~/.hammerspoon/init.lua`. `hs.reload()` would run it again after every reload and cause a loop. Run it from the Hammerspoon Console only when installing Jinrai.
 
 If you omit `focus_border`, `window_hints`, `focus_back`, or `window_mover`, that module is disabled.
+
+### Updates
+
+When Jinrai is loaded, a monochrome lightning icon appears in the macOS menu bar. Click it to see the currently installed version.
+
+Choose `Check for Updates...` to check the latest GitHub Release. When an update is available, click `Update to vX.Y.Z...` in the menu or click the notification to install it with SpoonInstall and reload Hammerspoon.
+
+Development versions installed from source are not updated automatically. Use `git pull` to update a source installation.
 
 ### Install from source (for development)
 

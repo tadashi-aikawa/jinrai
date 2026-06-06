@@ -104,20 +104,18 @@ spoon.Jinrai:setup({
 })
 ```
 
-インストール済みの Spoon を更新する場合（Hammerspoon Console で1回だけ実行）:
-
-```lua
-hs.loadSpoon("SpoonInstall")
-spoon.SpoonInstall:installSpoonFromZipURL(
-  "https://github.com/tadashi-aikawa/jinrai/releases/latest/download/Jinrai.spoon.zip"
-)
-hs.reload()
-```
-
 > [!WARNING]
-> インストール・更新コマンドを `~/.hammerspoon/init.lua` に置くと、`hs.reload()` によって再読込のたびに再実行されてループします。`init.lua` には常駐設定のみを書き、インストール・更新時だけ Console から手動実行してください。
+> 初回インストールコマンドを `~/.hammerspoon/init.lua` に置くと、`hs.reload()` によって再読込のたびに再実行されてループします。インストール時だけHammerspoon Consoleから実行してください。
 
 `focus_border` や `window_hints`、`focus_back`、`window_mover` のキーを省略するとそのモジュールは無効になります。
+
+### アップデート
+
+Jinraiを読み込むと、macOSのメニューバーにモノクロの稲妻アイコンが追加されます。クリックすると、現在のバージョンを確認できます。
+
+`Check for Updates...` を選ぶとGitHub Releasesの最新版を確認します。更新がある場合は、メニューの `Update to vX.Y.Z...` または表示された通知をクリックすると、SpoonInstallで更新してHammerspoonを再読み込みします。
+
+ソースからインストールした開発版は自動更新の対象外です。開発版の更新には `git pull` を使用してください。
 
 ### ソースからインストール（開発向け）
 

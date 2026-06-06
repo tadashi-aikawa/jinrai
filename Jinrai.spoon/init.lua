@@ -16,11 +16,13 @@ local windowHintsModule = nil
 local focusBackModule = nil
 local focusHistoryModule = nil
 local windowMoverModule = nil
+local updaterModule = nil
 local focusBorder = nil
 local windowHints = nil
 local focusBack = nil
 local focusHistory = nil
 local windowMover = nil
+local updater = nil
 
 local DEFAULT_MACOS_NATIVE_TABS = {
 	apps = { "com.mitchellh.ghostty", "com.apple.finder" },
@@ -167,6 +169,15 @@ function obj:setup(config)
 	if windowMoverModule == nil then
 		windowMoverModule = dofile(resourcePath("window_mover.lua"))
 	end
+	if updaterModule == nil then
+		updaterModule = dofile(resourcePath("updater.lua"))
+	end
+
+	updater = updaterModule.new({
+		currentVersion = obj.version,
+		iconPath = resourcePath("menubar.svg"),
+	})
+	updater:start()
 
 	if config.focus_border then
 		focusBorder = focusBorderModule.new(config.focus_border)
@@ -284,6 +295,9 @@ function obj:setup(config)
 end
 
 function obj:teardown()
+	if updater and updater.teardown then
+		updater:teardown()
+	end
 	if windowMover and windowMover.teardown then
 		windowMover.teardown()
 	end
@@ -304,6 +318,7 @@ function obj:teardown()
 	focusHistory = nil
 	focusBorder = nil
 	windowMover = nil
+	updater = nil
 
 	return obj
 end
