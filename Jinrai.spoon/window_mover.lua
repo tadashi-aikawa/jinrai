@@ -27,6 +27,7 @@ local AREA_DETAIL_TEXT_SIZE = 13
 local AREA_INFO_WIDTH = 420
 local AREA_INFO_HEIGHT = 480
 local AREA_ORDER = {
+	"freeArea",
 	"full",
 	"halfLeft",
 	"halfHorizontalCenter",
@@ -483,6 +484,30 @@ function M.new(options)
 		centerCursorOnWindow(win)
 	end
 
+	local function freeAreaFrameForWindow(win, screen)
+		if not win or not screen or not screen.frame or not hs or not hs.window or not hs.window.visibleWindows then
+			return nil
+		end
+		local screenFrame = cloneFrame(screen:frame())
+		if not screenFrame then
+			return nil
+		end
+		local currentFrame = cloneFrame(frameOf(win))
+		local occupiedFrames = {}
+		for _, otherWin in ipairs(hs.window.visibleWindows()) do
+			if otherWin and not sameWindow(win, otherWin) and isStandardWindow(otherWin) then
+				local otherScreen = screenOf(otherWin)
+				if sameScreen(screen, otherScreen) then
+					local occupiedFrame = intersectFrame(screenFrame, frameOf(otherWin))
+					if occupiedFrame then
+						table.insert(occupiedFrames, occupiedFrame)
+					end
+				end
+			end
+		end
+		return bestFreeFrame(screenFrame, occupiedFrames, currentFrame)
+	end
+
 	local function clearAreaChooserCanvases()
 		for _, canvas in ipairs(areaCanvases) do
 			canvas:delete()
@@ -534,7 +559,15 @@ function M.new(options)
 			closeAreaChooser(true, { cancel = true })
 			return
 		end
-		local targetFrame = cloneFrame(candidate.frame)
+		local targetFrame
+		if candidate.dynamicArea == "freeArea" then
+			targetFrame = freeAreaFrameForWindow(win, candidate.screen)
+		else
+			targetFrame = cloneFrame(candidate.frame)
+		end
+		if not targetFrame then
+			return
+		end
 		local onApply = areaApplyCallback
 		local onJinraiModeApply = areaJinraiModeActive and config.onJinraiModeApply or nil
 		closeAreaChooser(true)
@@ -900,6 +933,20 @@ function M.new(options)
 		if key == nil then
 			return
 		end
+		if areaName == "freeArea" then
+			table.insert(candidates, {
+				screen = screen,
+				screenId = tostring(screen:id()),
+				frame = cloneFrame(screenFrame),
+				kind = "free",
+				icon = { free = true },
+				key = key,
+				detailLabel = "Free",
+				dynamicArea = "freeArea",
+				fixedHintPosition = "topRight",
+			})
+			return
+		end
 		local frame, kind, icon, detailLabel = areaSpecForName(screenFrame, areaName)
 		addAreaCandidate(candidates, seenByScreen, screen, frame, kind, icon, key, detailLabel)
 	end
@@ -1028,7 +1075,8 @@ function M.new(options)
 
 	local function hasAreaCandidateAtPoint(point)
 		for _, candidate in ipairs(areaCandidates) do
-			if pointInFrame(point, candidate.frame) then
+			local hitFrame = candidate.fixedHintPosition and candidate.labelAbsoluteFrame or candidate.frame
+			if pointInFrame(point, hitFrame) then
 				return true
 			end
 		end
@@ -1273,6 +1321,14 @@ function M.new(options)
 			labelW = math.max(labelW, areaDetailTextWidth(candidate.detailLabel) + 12)
 		end
 		local labelH = candidate.detailLabel and 66 or AREA_LABEL_HEIGHT
+		if candidate.fixedHintPosition == "topRight" then
+			return {
+				x = frame.w - labelW - AREA_LABEL_MIN_MARGIN,
+				y = AREA_LABEL_MIN_MARGIN,
+				w = labelW,
+				h = labelH,
+			}
+		end
 		local icon = candidate.icon or {}
 		local labelY
 		if icon.rows and icon.row then
@@ -1341,6 +1397,9 @@ function M.new(options)
 
 	local function sortAreaLabelGroup(group)
 		table.sort(group, function(a, b)
+			if a.fixedHintPosition ~= b.fixedHintPosition then
+				return a.fixedHintPosition ~= nil
+			end
 			if a.labelAbsoluteFrame.y ~= b.labelAbsoluteFrame.y then
 				return a.labelAbsoluteFrame.y < b.labelAbsoluteFrame.y
 			end
@@ -1358,16 +1417,17 @@ function M.new(options)
 			local maxBottom = screenFrame.y + screenFrame.h - AREA_LABEL_MIN_MARGIN
 			local nextY = minY
 			for _, candidate in ipairs(group) do
-				local y = math.max(candidate.labelAbsoluteFrame.y, nextY)
-				candidate.labelAbsoluteFrame.y = y
-				nextY = y + candidate.labelAbsoluteFrame.h + AREA_LABEL_GAP
+				if not candidate.fixedHintPosition then
+					candidate.labelAbsoluteFrame.y = math.max(candidate.labelAbsoluteFrame.y, nextY)
+				end
+				nextY = candidate.labelAbsoluteFrame.y + candidate.labelAbsoluteFrame.h + AREA_LABEL_GAP
 			end
 
 			local top = group[1].labelAbsoluteFrame.y
 			local bottom = group[#group].labelAbsoluteFrame.y + group[#group].labelAbsoluteFrame.h
 			local shift = math.max(0, bottom - maxBottom)
 			shift = math.min(shift, math.max(0, top - minY))
-			if shift > 0 then
+			if shift > 0 and not group[1].fixedHintPosition then
 				for _, candidate in ipairs(group) do
 					candidate.labelAbsoluteFrame.y = candidate.labelAbsoluteFrame.y - shift
 				end
@@ -1506,6 +1566,7 @@ function M.new(options)
 				.. ", h="
 				.. tostring(frame.h),
 			'["' .. tostring(uuid or "") .. '"] = {',
+			'  freeArea = "V",',
 			'  full = "A",',
 			'  halfLeft = "S",',
 			'  halfHorizontalCenter = "D",',
@@ -1773,25 +1834,7 @@ button:active {
 		if not screen or not screen.frame then
 			return
 		end
-		local screenFrame = cloneFrame(screen:frame())
-		if not screenFrame then
-			return
-		end
-		local currentFrame = cloneFrame(frameOf(win))
-		local occupiedFrames = {}
-		for _, otherWin in ipairs(hs.window.visibleWindows()) do
-			if otherWin and not sameWindow(win, otherWin) and isStandardWindow(otherWin) then
-				local otherScreen = screenOf(otherWin)
-				if sameScreen(screen, otherScreen) then
-					local occupiedFrame = intersectFrame(screenFrame, frameOf(otherWin))
-					if occupiedFrame then
-						table.insert(occupiedFrames, occupiedFrame)
-					end
-				end
-			end
-		end
-
-		local targetFrame = bestFreeFrame(screenFrame, occupiedFrames, currentFrame)
+		local targetFrame = freeAreaFrameForWindow(win, screen)
 		if not targetFrame then
 			return
 		end

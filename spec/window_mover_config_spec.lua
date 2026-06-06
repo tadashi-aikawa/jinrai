@@ -433,6 +433,20 @@ describe("window_mover_config", function()
 		assert.is_truthy(tostring(err):match("must be a 1%-2 character string"))
 	end)
 
+	it("selectedArea.screens に freeArea を設定できる", function()
+		local built = mod.build({
+			selectedArea = {
+				screens = {
+					["uuid-a"] = {
+						freeArea = "v",
+					},
+				},
+			},
+		})
+
+		assert.are.same({ ["uuid-a"] = { freeArea = "V" } }, built.selectedAreaScreens)
+	end)
+
 	it("selectedArea の重複キーはエラー", function()
 		local ok, err = pcall(function()
 			mod.build({

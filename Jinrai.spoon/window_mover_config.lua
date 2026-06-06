@@ -1,6 +1,7 @@
 local M = {}
 
 local AREA_KEYS = {
+	"freeArea",
 	"full",
 	"halfLeft",
 	"halfHorizontalCenter",

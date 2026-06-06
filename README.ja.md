@@ -744,7 +744,7 @@ window_mover = {
   },
   selectedArea = {
     defaultScreen = nil, -- 未設定ディスプレイに流用するキーマップの UUID
-    screens = {},        -- ディスプレイ UUID ごとのエリアキーマップ
+    screens = {},        -- ディスプレイ UUID ごとのエリアキーマップ（freeArea を含む）
     actions = {
       closeWindow = nil, -- ウィンドウを閉じる action キー（nil で無効化）
     },
@@ -841,6 +841,8 @@ window_mover = {
 
 `selectedArea.screens` のキーには、[利用可能なエリア](#available-areas) に記載された名前を使います。`selectedArea.actions.closeWindow` を設定すると、chooser 内でアクティブウィンドウを閉じられます。`selectedArea.windowHints.key` を設定すると、chooser を閉じて Window Hints へ戻ります。JinraiMode の連鎖中は連鎖を継続します。action キーはエリアキーと重複または prefix 衝突してはいけません。
 
+`freeArea` を設定すると、そのディスプレイの右上に固定ヒントを1つ表示します。選択時点の可視な標準ウィンドウから最大の空き領域を再計算し、アクティブウィンドウを対象ディスプレイの空き領域へ移動します。空き領域がない場合は移動せず、chooser を維持します。
+
 エリア選択キーマップの例:
 
 ```lua
@@ -848,6 +850,7 @@ selectedArea = {
   defaultScreen = "DISPLAY_UUID_A",
   screens = {
     ["DISPLAY_UUID_A"] = {
+      freeArea = "V",
       full = "A",
       halfLeft = "S",
       halfHorizontalCenter = "D",
@@ -900,6 +903,7 @@ selectedArea = {
 
 | アイコン | エリア | 位置 | サイズ |
 | --- | --- | --- | --- |
+| - | `freeArea` | 選択したディスプレイの最大空き領域 | 他の可視な標準ウィンドウと重ならない最大サイズ |
 | <img src="./docs/assets/window-mover/areas/full.svg" alt="full" width="48"> | `full` | ディスプレイ全体 | ディスプレイ全体 |
 | <img src="./docs/assets/window-mover/areas/halfLeft.svg" alt="halfLeft" width="48"> | `halfLeft` | 左端 | 横幅 1/2、高さ全体 |
 | <img src="./docs/assets/window-mover/areas/halfHorizontalCenter.svg" alt="halfHorizontalCenter" width="48"> | `halfHorizontalCenter` | 横方向中央 | 横幅 1/2、高さ全体 |

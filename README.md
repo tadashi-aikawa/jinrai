@@ -742,7 +742,7 @@ window_mover = {
   },
   selectedArea = {
     defaultScreen = nil, -- UUID whose keymap is reused for unconfigured displays
-    screens = {},        -- Map screen UUIDs to area keymaps
+    screens = {},        -- Map screen UUIDs to area keymaps, including freeArea
     actions = {
       closeWindow = nil, -- Window close action key (nil disables it)
     },
@@ -839,6 +839,8 @@ Set `selectedArea.hints.show = false` to skip canvas rendering for configured ca
 
 Use the names listed in [Available areas](#available-areas) as keys in `selectedArea.screens`. Set `selectedArea.actions.closeWindow` to close the active window from the chooser. Set `selectedArea.windowHints.key` to close the chooser and switch back to Window Hints; during a JinraiMode chain, the chain continues. Action keys must not duplicate or prefix-conflict with area keys.
 
+Set `freeArea` to show one fixed hint in the top-right corner of that display. On selection, JINRAI recalculates the largest free rectangle from the currently visible standard windows and moves the active window to that rectangle on the target display. If no free rectangle exists, the window is not moved and the chooser remains open.
+
 Example selected-area keymap:
 
 ```lua
@@ -846,6 +848,7 @@ selectedArea = {
   defaultScreen = "DISPLAY_UUID_A",
   screens = {
     ["DISPLAY_UUID_A"] = {
+      freeArea = "V",
       full = "A",
       halfLeft = "S",
       halfHorizontalCenter = "D",
@@ -896,6 +899,7 @@ selectedArea = {
 
 | Icon | Area | Position | Size |
 | --- | --- | --- | --- |
+| - | `freeArea` | Largest free rectangle on the selected display | Largest size that does not overlap other visible standard windows |
 | <img src="./docs/assets/window-mover/areas/full.svg" alt="full" width="48"> | `full` | Full display | Full display |
 | <img src="./docs/assets/window-mover/areas/halfLeft.svg" alt="halfLeft" width="48"> | `halfLeft` | Left edge | 1/2 width, full height |
 | <img src="./docs/assets/window-mover/areas/halfHorizontalCenter.svg" alt="halfHorizontalCenter" width="48"> | `halfHorizontalCenter` | Horizontal center | 1/2 width, full height |

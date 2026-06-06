@@ -147,6 +147,7 @@ describe("window_mover", function()
 			delete = 51,
 			forwarddelete = 117,
 			a = 0,
+			b = 11,
 			s = 1,
 			d = 2,
 			f = 3,
@@ -931,6 +932,119 @@ describe("window_mover", function()
 		assert.are.same({ x = 800, y = 400, w = 400, h = 400 }, win.setFrameCalls[1].frame)
 	end)
 
+	it("freeArea は各ディスプレイの右上に1つずつ表示され、対象ディスプレイの空き領域へ移動する", function()
+		local screenA = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
+		local screenB = newScreen(2, { x = 1000, y = 0, w = 1000, h = 800 }, "uuid-b")
+		local win = newWindow(screenA, { x = 100, y = 100, w = 200, h = 100 })
+		local occupiedA = newWindow(screenA, { x = 0, y = 0, w = 300, h = 800 })
+		local occupiedB = newWindow(screenB, { x = 1700, y = 0, w = 300, h = 800 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = { freeArea = "V" },
+			["uuid-b"] = { freeArea = "B" },
+		}), win, { win, occupiedA, occupiedB })
+		state.screens = { screenA, screenB }
+
+		instance.openWindowActionChooser()
+
+		local framesByKey = canvasFramesByKey(state)
+		assert.are.same({ x = 900, y = 8, w = 92, h = 66 }, framesByKey.V)
+		assert.are.same({ x = 1900, y = 8, w = 92, h = 66 }, framesByKey.B)
+		assert.is_true(canvasHasText(state, "Free"))
+
+		sendKey(state, "b")
+
+		assert.are.same({ x = 1000, y = 0, w = 700, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("freeArea は選択時点の可視ウィンドウ配置で再計算する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local occupied = newWindow(screen, { x = 0, y = 0, w = 300, h = 800 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = { freeArea = "V" },
+		}), win, { win, occupied })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+		occupied._frame = { x = 700, y = 0, w = 300, h = 800 }
+		sendKey(state, "v")
+
+		assert.are.same({ x = 0, y = 0, w = 700, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("freeArea の固定ヒントと重なる通常候補だけを下へずらす", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 300, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 100, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				freeArea = "V",
+				halfRight = "F",
+			},
+		}), win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+
+		local framesByKey = canvasFramesByKey(state)
+		assert.are.same({ x = 200, y = 8, w = 92, h = 66 }, framesByKey.V)
+		assert.is_true(framesByKey.F.y >= framesByKey.V.y + framesByKey.V.h + 8)
+	end)
+
+	it("freeArea がない場合は chooser を維持して適用しない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local occupied = newWindow(screen, { x = 0, y = 0, w = 1000, h = 800 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = { freeArea = "V" },
+		}), win, { win, occupied })
+		state.screens = { screen }
+		local applyCount = 0
+
+		instance.openWindowActionChooser({
+			onApply = function()
+				applyCount = applyCount + 1
+			end,
+		})
+		sendKey(state, "v")
+
+		assert.are.equal(0, #win.setFrameCalls)
+		assert.are.equal(0, applyCount)
+		assert.is_true(state.eventtaps[1].started)
+		assert.is_nil(state.canvases[1]._deleted)
+	end)
+
+	it("freeArea は hints.show=false でもキーで選択できる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local occupied = newWindow(screen, { x = 0, y = 0, w = 300, h = 800 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = { freeArea = "V" },
+		}, nil, {
+			hints = { show = false },
+		}), win, { win, occupied })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+		assert.are.equal(0, #state.canvases)
+		sendKey(state, "v")
+
+		assert.are.same({ x = 300, y = 0, w = 700, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("freeArea の候補外クリックはディスプレイ全体ではなくヒント外で chooser を閉じる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = { freeArea = "V" },
+		}), win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+
+		assert.is_true(sendMouseDown(state, { x = 100, y = 100 }))
+		assert.is_true(state.canvases[1]._deleted)
+	end)
+
 	it("openWindowActionChooser の onApply は移動完了後に呼ばれる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
@@ -1483,6 +1597,7 @@ describe("window_mover", function()
 		assert.is_truthy(state.webviews[1]._html:match("unknown%-uuid"))
 		assert.is_truthy(state.webviews[1]._html:match("Guest Display"))
 		assert.is_truthy(state.webviews[1]._html:match("Copy template"))
+		assert.is_truthy(state.webviews[1]._html:match("freeArea"))
 		assert.is_truthy(state.webviews[1]._html:match("thirdLeft"))
 		assert.is_truthy(state.webviews[1]._html:match("thirdHorizontalCenter"))
 		assert.is_truthy(state.webviews[1]._html:match("thirdRight"))
