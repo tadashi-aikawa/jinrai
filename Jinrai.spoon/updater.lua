@@ -1,6 +1,7 @@
 local M = {}
 
 local RELEASE_API_URL = "https://api.github.com/repos/tadashi-aikawa/jinrai/releases/latest"
+local RELEASES_URL = "https://github.com/tadashi-aikawa/jinrai/releases"
 local RELEASE_ASSET_NAME = "Jinrai.spoon.zip"
 
 local function trimVersion(version)
@@ -123,6 +124,13 @@ function M.new(options)
 				end,
 			})
 		end
+		table.insert(items, { title = "-" })
+		table.insert(items, {
+			title = "Release Notes...",
+			fn = function()
+				hs.urlevent.openURL(RELEASES_URL)
+			end,
+		})
 		return items
 	end
 

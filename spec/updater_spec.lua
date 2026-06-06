@@ -10,6 +10,7 @@ describe("updater", function()
 			notifications = {},
 			httpCallbacks = {},
 			installCallbacks = {},
+			openedUrls = {},
 			reloadCount = 0,
 			timers = {},
 		}
@@ -86,6 +87,11 @@ describe("updater", function()
 					})
 				end,
 			},
+			urlevent = {
+				openURL = function(url)
+					table.insert(state.openedUrls, url)
+				end,
+			},
 			json = {
 				decode = function(body)
 					if body == "invalid" then
@@ -157,12 +163,21 @@ describe("updater", function()
 
 		assert.are.equal("Jinrai v0.28.0", state.menus[1].items[1].title)
 		assert.are.equal("Check for Updates...", state.menus[1].items[3].title)
+		assert.are.equal("Release Notes...", state.menus[1].items[5].title)
 		assert.is_true(state.menus[1].inMenuBar)
 		assert.are.equal("JinraiUpdater", state.menus[1].autosaveName)
 		assert.are.equal("/tmp/jinrai.svg", state.menus[1].icon.path)
 		assert.is_true(state.menus[1].template)
 		assert.is_nil(state.menus[1].title)
 		assert.are.equal("Jinrai", state.menus[1].tooltip)
+	end)
+
+	it("リリースノートをGitHubで開く", function()
+		newUpdater()
+
+		state.menus[1].items[5].fn()
+
+		assert.are.same({ "https://github.com/tadashi-aikawa/jinrai/releases" }, state.openedUrls)
 	end)
 
 	it("新しいReleaseがある場合は更新メニューと通知を表示する", function()
