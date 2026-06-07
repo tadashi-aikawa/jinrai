@@ -40,6 +40,8 @@
 
 [![JINRAI Demo](https://img.youtube.com/vi/clwLqNw0kXw/hqdefault.jpg)](https://youtu.be/clwLqNw0kXw?si=gdetaK7lY0Eovjpp)
 
+[![Jinrai Mode](https://utfs.io/f/nGnSqDveMsqxhHlukstMhHULDOxCZ0brc5TpPYdWQt8vJ2Bg)](https://www.youtube.com/watch?v=Dg_fxulwFok)
+
 ## Deep Wiki
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tadashi-aikawa/jinrai)
@@ -976,4 +978,4 @@ https://github.com/tadashi-aikawa/jinrai/actions/workflows/release.yml
 
 ## ライセンス
 
-MIT
+<img src="https://img.shields.io/github/license/tadashi-aikawa/jinrai" alt="License" />

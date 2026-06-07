@@ -58,4 +58,4 @@ https://github.com/tadashi-aikawa/jinrai/actions/workflows/release.yml
 
 ## ライセンス
 
-MIT
+<img src="https://img.shields.io/github/license/tadashi-aikawa/jinrai" alt="License" />
