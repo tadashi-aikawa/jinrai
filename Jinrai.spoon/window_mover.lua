@@ -1500,9 +1500,9 @@ function M.new(options)
 			local appearance = config.selectedAreaAppearance
 			local state = selectedAreaState(true)
 			local style = selectedAreaStyle(candidate.kind)
-			local canvas = hs.canvas
-				.new({ x = frame.x + labelFrame.x, y = frame.y + labelFrame.y, w = labelFrame.w, h = labelFrame.h })
-				:level(hs.canvas.windowLevels.overlay)
+				local canvas = hs.canvas
+					.new({ x = frame.x + labelFrame.x, y = frame.y + labelFrame.y, w = labelFrame.w, h = labelFrame.h })
+					:level(hs.canvas.windowLevels.overlay + 2)
 				:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
 			canvas[1] = {
 				type = "rectangle",

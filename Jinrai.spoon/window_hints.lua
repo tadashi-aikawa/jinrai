@@ -1287,7 +1287,6 @@ local function measureWindowVisibility(targetFrame, coveringFrames, cols, rows, 
 					}
 				end
 			end
-
 		end
 	end
 
@@ -1869,7 +1868,8 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 				local isCandidate
 				local overlapMetadata
 				if CARDINAL_DIRECTIONS[direction] then
-					isCandidate, overlapMetadata = isCardinalDirectionalCandidate(direction, currentFrame, frame, config)
+					isCandidate, overlapMetadata =
+						isCardinalDirectionalCandidate(direction, currentFrame, frame, config)
 				else
 					isCandidate = isDirectionalCandidate(direction, currentCenter, center)
 				end
@@ -1887,14 +1887,16 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 					if CARDINAL_DIRECTIONS[direction] then
 						local visibility = nil
 						if visibleRatioPreferenceEnabled and not visibility then
-							visibility = measureWindowVisibilityForDirection(win, orderedWins, config, direction, currentFrame)
+							visibility =
+								measureWindowVisibilityForDirection(win, orderedWins, config, direction, currentFrame)
 						end
 						candidate.primaryGap = primaryGap
 						candidate.orthogonalOverlap = orthogonalOverlap(direction, currentFrame, frame)
 						candidate.primaryOverlapRatio = overlapMetadata and overlapMetadata.primaryOverlapRatio or 0
-						candidate.orthogonalOverlapRatio = overlapMetadata and overlapMetadata.orthogonalOverlapRatio or 0
+						candidate.orthogonalOverlapRatio = overlapMetadata and overlapMetadata.orthogonalOverlapRatio
+							or 0
 						candidate.requiresOrthogonalOverlap = overlapMetadata
-							and overlapMetadata.requiresOrthogonalOverlap
+								and overlapMetadata.requiresOrthogonalOverlap
 							or false
 						candidate.secondary = secondary
 						candidate.meetsMinVisibleRatio = not visibleRatioPreferenceEnabled
@@ -1951,7 +1953,8 @@ local function findDirectionalWindowTarget(currentWin, candidateWins, direction,
 								better = false
 							elseif candidate.meetsMinVisibleRatio ~= best.meetsMinVisibleRatio then
 								better = candidate.meetsMinVisibleRatio
-							elseif visibleRatioPreferenceEnabled
+							elseif
+								visibleRatioPreferenceEnabled
 								and not candidate.meetsMinVisibleRatio
 								and math.abs(candidate.visibleRatio - best.visibleRatio) > SCORE_EPSILON
 							then
@@ -2067,6 +2070,11 @@ function M.new(options)
 	local jinraiModeLogoCanvas = nil
 	local jinraiModeLogoImage = nil
 	local jinraiModeLogoFadeTimer = nil
+	local jinraiModeComboCount = 0
+	local jinraiModeComboCanvas = nil
+	local jinraiModeComboImages = {}
+	local jinraiModePreviousComboCanvas = nil
+	local jinraiModeComboAnimationTimer = nil
 	local pendingKeys = {}
 	local activeOverlayCanvases = {}
 	local snapshotTimer = nil
@@ -2120,6 +2128,35 @@ function M.new(options)
 			jinraiModeLogoCanvas:delete()
 			jinraiModeLogoCanvas = nil
 		end
+	end
+
+	local function clearJinraiModeCombo()
+		if jinraiModeComboAnimationTimer then
+			jinraiModeComboAnimationTimer:stop()
+			jinraiModeComboAnimationTimer = nil
+		end
+		if jinraiModeComboCanvas then
+			releaseCanvasImages(jinraiModeComboCanvas)
+			jinraiModeComboCanvas:delete()
+			jinraiModeComboCanvas = nil
+		end
+		if jinraiModePreviousComboCanvas then
+			releaseCanvasImages(jinraiModePreviousComboCanvas)
+			jinraiModePreviousComboCanvas:delete()
+			jinraiModePreviousComboCanvas = nil
+		end
+	end
+
+	local function loadJinraiModeComboImage(index)
+		if jinraiModeComboImages[index] then
+			return jinraiModeComboImages[index]
+		end
+		if not hs or not hs.image or not hs.image.imageFromPath then
+			return nil
+		end
+		local image = hs.image.imageFromPath(resourcePath("resources/jinrai" .. tostring(index) .. ".webp"))
+		jinraiModeComboImages[index] = image
+		return image
 	end
 
 	local function loadJinraiModeLogoImage()
@@ -2202,14 +2239,222 @@ function M.new(options)
 		end
 	end
 
+	local COMBO_LOGO_GAP = -36
+	local COMBO_TEXT_CANVAS_PADDING = 16
+
+	local function comboCanvasLayout(screenFrame, scale, logoSize, textHeight)
+		local baseSize = math.min(560, screenFrame.w * 0.46, screenFrame.h * 0.7)
+		local characterSize = baseSize * scale
+		local characterFrame = {
+			x = screenFrame.x + (screenFrame.w - characterSize) / 2,
+			y = screenFrame.y + (screenFrame.h - characterSize) / 2,
+			w = characterSize,
+			h = characterSize,
+		}
+		local logoTop = screenFrame.y + (screenFrame.h - logoSize) / 2
+		local textFrame = {
+			x = characterFrame.x,
+			y = math.max(screenFrame.y + 16, logoTop - COMBO_LOGO_GAP - textHeight),
+			w = characterFrame.w,
+			h = textHeight,
+		}
+		local canvasTop = math.min(characterFrame.y, textFrame.y - COMBO_TEXT_CANVAS_PADDING)
+		local canvasBottom =
+			math.max(characterFrame.y + characterFrame.h, textFrame.y + textFrame.h + COMBO_TEXT_CANVAS_PADDING)
+		local canvasFrame = {
+			x = characterFrame.x,
+			y = canvasTop,
+			w = characterFrame.w,
+			h = canvasBottom - canvasTop,
+		}
+		return {
+			canvasFrame = canvasFrame,
+			characterFrame = {
+				x = 0,
+				y = characterFrame.y - canvasTop,
+				w = characterFrame.w,
+				h = characterFrame.h,
+			},
+			textFrame = {
+				x = 0,
+				y = textFrame.y - canvasTop,
+				w = textFrame.w,
+				h = textFrame.h,
+			},
+		}
+	end
+
+	local function updateComboCanvasLayout(canvas, layout, imageElementIndex, textElementIndex)
+		if imageElementIndex then
+			canvas[imageElementIndex].frame = layout.characterFrame
+		end
+		if textElementIndex then
+			canvas[textElementIndex].frame = layout.textFrame
+		end
+	end
+
+	local function comboStyledText(text, fontSize, alpha)
+		if not hs or not hs.styledtext or not hs.styledtext.new then
+			return text
+		end
+		return hs.styledtext.new(text, {
+			font = { name = "DIN Condensed", size = fontSize },
+			color = { red = 1, green = 0.83, blue = 0, alpha = alpha },
+			strokeColor = { red = 0, green = 0, blue = 0, alpha = alpha },
+			strokeWidth = -4,
+			paragraphStyle = {
+				alignment = "center",
+			},
+		})
+	end
+
+	local function showJinraiModeCombo()
+		local combo = config.jinraiModeCombo
+		local character = combo and combo.character or nil
+		local text = combo and combo.text or nil
+		local characterEnabled = character and character.enabled
+		local textEnabled = text and text.enabled
+		if not isJinraiMode or jinraiModeComboCount <= 0 or (not characterEnabled and not textEnabled) then
+			clearJinraiModeCombo()
+			return
+		end
+		if not hs or not hs.canvas then
+			return
+		end
+		local screenFrame = activeScreenFrame()
+		if not screenFrame then
+			return
+		end
+
+		if jinraiModeComboAnimationTimer then
+			jinraiModeComboAnimationTimer:stop()
+			jinraiModeComboAnimationTimer = nil
+		end
+		if jinraiModePreviousComboCanvas then
+			releaseCanvasImages(jinraiModePreviousComboCanvas)
+			jinraiModePreviousComboCanvas:delete()
+			jinraiModePreviousComboCanvas = nil
+		end
+
+		local imageIndex = ((jinraiModeComboCount - 1) % 4) + 1
+		local image = characterEnabled and loadJinraiModeComboImage(imageIndex) or nil
+		if not image and not textEnabled then
+			clearJinraiModeCombo()
+			return
+		end
+		local previousCanvas = jinraiModeComboCanvas
+		jinraiModePreviousComboCanvas = previousCanvas
+		local logoSize = config.jinraiModeLogo and config.jinraiModeLogo.size or 480
+		local baseSize = math.min(560, screenFrame.w * 0.46, screenFrame.h * 0.7)
+		local textSize = math.max(52, math.floor(baseSize * 0.13))
+		local textHeight = math.ceil(textSize * 1.8)
+		local startLayout = comboCanvasLayout(screenFrame, 0.9, logoSize, textHeight)
+		local targetLayout = comboCanvasLayout(screenFrame, 1, logoSize, textHeight)
+		local canvas = hs.canvas.new(startLayout.canvasFrame)
+		canvas:level(hs.canvas.windowLevels.overlay + 1)
+		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
+		local imageElementIndex = nil
+		if image then
+			imageElementIndex = 1
+			canvas:appendElements({
+				type = "image",
+				image = image,
+				imageAlpha = character.alpha,
+				imageScaling = "scaleProportionally",
+				frame = startLayout.characterFrame,
+			})
+		end
+		local textElementIndex = nil
+		if textEnabled then
+			textElementIndex = imageElementIndex and 2 or 1
+			canvas:appendElements({
+				type = "text",
+				text = comboStyledText(tostring(jinraiModeComboCount) .. " COMBO", textSize, text.alpha),
+				textAlignment = "center",
+				textColor = { red = 1, green = 0.83, blue = 0, alpha = text.alpha },
+				textFont = "DIN Condensed",
+				textSize = textSize,
+				textLineBreak = "clip",
+				frame = startLayout.textFrame,
+			})
+		end
+		if canvas.alpha then
+			canvas:alpha(0)
+		end
+		canvas:show()
+		jinraiModeComboCanvas = canvas
+
+		if canvas.alpha and hs.timer and hs.timer.doEvery then
+			local animationSteps = 8
+			local currentStep = 0
+			jinraiModeComboAnimationTimer = hs.timer.doEvery(0.02, function()
+				currentStep = currentStep + 1
+				local progress = math.min(1, currentStep / animationSteps)
+				if previousCanvas and previousCanvas.alpha then
+					previousCanvas:alpha(1 - progress)
+				end
+				if jinraiModeComboCanvas == canvas then
+					canvas:alpha(progress)
+					if canvas.frame then
+						local scale = 0.99 + (0.01 * progress)
+						local animationLayout = comboCanvasLayout(screenFrame, scale, logoSize, textHeight)
+						canvas:frame(animationLayout.canvasFrame)
+						updateComboCanvasLayout(canvas, animationLayout, imageElementIndex, textElementIndex)
+					end
+				end
+				if currentStep >= animationSteps then
+					if previousCanvas then
+						releaseCanvasImages(previousCanvas)
+						previousCanvas:delete()
+						previousCanvas = nil
+						jinraiModePreviousComboCanvas = nil
+					end
+					canvas:alpha(1)
+					if canvas.frame then
+						canvas:frame(targetLayout.canvasFrame)
+						updateComboCanvasLayout(canvas, targetLayout, imageElementIndex, textElementIndex)
+					end
+					jinraiModeComboAnimationTimer:stop()
+					jinraiModeComboAnimationTimer = nil
+				end
+			end)
+		else
+			if previousCanvas then
+				releaseCanvasImages(previousCanvas)
+				previousCanvas:delete()
+				jinraiModePreviousComboCanvas = nil
+			end
+			if canvas.alpha then
+				canvas:alpha(1)
+			end
+			if canvas.frame then
+				canvas:frame(targetLayout.canvasFrame)
+				updateComboCanvasLayout(canvas, targetLayout, imageElementIndex, textElementIndex)
+			end
+		end
+	end
+
 	local function stopJinraiMode()
 		isJinraiMode = false
+		jinraiModeComboCount = 0
 		clearJinraiModeLogo()
+		clearJinraiModeCombo()
 	end
 
 	local function startJinraiMode()
+		jinraiModeComboCount = 0
+		clearJinraiModeCombo()
 		isJinraiMode = true
 		showJinraiModeLogo()
+	end
+
+	local function advanceJinraiModeCombo()
+		if not isJinraiMode then
+			return false
+		end
+		jinraiModeComboCount = jinraiModeComboCount + 1
+		showJinraiModeCombo()
+		return true
 	end
 
 	local function pointInFrame(point, frame)
@@ -2464,7 +2709,8 @@ function M.new(options)
 			end
 			scoringConfig.visibilityByWindowId = visibilityByWindowId
 		end
-		local target = findDirectionalWindowTarget(focusedWin, candidates, direction, previousWin, orderedWins, scoringConfig)
+		local target =
+			findDirectionalWindowTarget(focusedWin, candidates, direction, previousWin, orderedWins, scoringConfig)
 		if not target then
 			debugLogDirectional(config, string.format("direction=%s no target", tostring(direction)))
 			return false
@@ -2535,9 +2781,8 @@ function M.new(options)
 			return
 		end
 		if jinraiModeKey and key == jinraiModeKey then
-			isJinraiMode = true
+			startJinraiMode()
 			currentInput = ""
-			showJinraiModeLogo()
 			refreshHighlights()
 			return
 		end
@@ -2856,7 +3101,7 @@ function M.new(options)
 		scale = scale or 1
 		local canvas = hs.canvas
 			.new(frame)
-			:level(hs.canvas.windowLevels.overlay)
+			:level(hs.canvas.windowLevels.overlay + 2)
 			:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
 
 		local iconSz = math.floor(config.iconSize * scale)
@@ -3604,6 +3849,7 @@ function M.new(options)
 		showJinraiMode = function()
 			return invokeShowHints({ jinraiMode = true })
 		end,
+		advanceJinraiModeCombo = advanceJinraiModeCombo,
 		stopJinraiMode = stopJinraiMode,
 		teardown = teardown,
 	}

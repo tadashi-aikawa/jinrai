@@ -269,6 +269,16 @@ local DEFAULT_CONFIG = {
 				size = 480,
 				alpha = 0.4,
 			},
+			combo = {
+				character = {
+					enabled = false,
+					alpha = 0.5,
+				},
+				text = {
+					enabled = false,
+					alpha = 0.7,
+				},
+			},
 		},
 		onJinraiModeSelect = nil,
 		onOpenWindowActionChooser = nil,
@@ -879,6 +889,9 @@ function M.build(options)
 	local jinraiMode = merged.internal.jinraiMode or {}
 	local jinraiModeWindowHints = jinraiMode.windowHints or {}
 	local jinraiModeLogoConfig = jinraiMode.logo or {}
+	local jinraiModeComboConfig = jinraiMode.combo or {}
+	local jinraiModeComboCharacterConfig = jinraiModeComboConfig.character or {}
+	local jinraiModeComboTextConfig = jinraiModeComboConfig.text or {}
 	local jinraiModeKey = normalizeActionKey(jinraiModeWindowHints.key, "jinrai_mode.triggers.windowHints.key")
 	local prevSpaceKey = normalizeActionKey(merged.navigation.spaces.prev.key, "navigation.spaces.prev.key")
 	local nextSpaceKey = normalizeActionKey(merged.navigation.spaces.next.key, "navigation.spaces.next.key")
@@ -940,6 +953,19 @@ function M.build(options)
 		enabled = jinraiModeLogoConfig.enabled,
 		size = normalizePositiveNumber(jinraiModeLogoConfig.size, "jinrai_mode.logo.size"),
 		alpha = normalizeUnitIntervalNumber(jinraiModeLogoConfig.alpha, "jinrai_mode.logo.alpha"),
+	}
+	local jinraiModeCombo = {
+		character = {
+			enabled = jinraiModeComboCharacterConfig.enabled == true,
+			alpha = normalizeUnitIntervalNumber(
+				jinraiModeComboCharacterConfig.alpha,
+				"jinrai_mode.combo.character.alpha"
+			),
+		},
+		text = {
+			enabled = jinraiModeComboTextConfig.enabled == true,
+			alpha = normalizeUnitIntervalNumber(jinraiModeComboTextConfig.alpha, "jinrai_mode.combo.text.alpha"),
+		},
 	}
 
 	return {
@@ -1025,6 +1051,7 @@ function M.build(options)
 		focusBackKey = focusBackKey,
 		jinraiModeKey = jinraiModeKey,
 		jinraiModeLogo = jinraiModeLogo,
+		jinraiModeCombo = jinraiModeCombo,
 		onJinraiModeSelect = merged.internal.onJinraiModeSelect,
 		onOpenWindowActionChooser = merged.internal.onOpenWindowActionChooser,
 		directionKeys = directionKeys,

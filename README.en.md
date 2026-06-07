@@ -200,12 +200,23 @@ jinrai_mode = {
     size = 480,     -- Logo size (px)
     alpha = 0.4,    -- Logo opacity
   },
+  combo = {
+    character = {
+      enabled = false, -- Show the character artwork
+      alpha = 0.5,     -- Character artwork opacity
+    },
+    text = {
+      enabled = false, -- Show the combo text
+      alpha = 0.7,     -- Combo text and outline opacity
+    },
+  },
 }
 ```
 
 In Window Hints, pressing `triggers.windowHints.key` starts JinraiMode, then window selection opens the Window Mover `moveToSelectedArea` chooser.
 In Window Mover, press `triggers.windowMover.key` after opening the `moveToSelectedArea` chooser; the selected area or action is applied first, then Window Hints opens. Canceling either chooser ends JinraiMode.
 Set `window_mover.selectedArea.windowHints.key` to switch back to Window Hints immediately from the `moveToSelectedArea` chooser when you want to reselect the active window. During a JinraiMode chain, it reopens Window Hints in JinraiMode so the chain continues.
+While JinraiMode is active, each transition between Window Hints and Window Mover increments the combo. Enable `combo.character.enabled` to show the character artwork in the center, and enable `combo.text.enabled` to show the outlined combo count 12px above the Jinrai logo. Window Hints and Window Mover `selectedArea` hints always appear in front of the logo and character artwork. The four images repeat in order. Transitions outside JinraiMode never increment or display the combo.
 `triggers.windowMover.key` must not conflict with configured selected-area/action keys; prefix conflicts such as `key = "k"` with area key `"KD"` are rejected.
 
 ## macOS Native Tabs Options

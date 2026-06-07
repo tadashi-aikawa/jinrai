@@ -248,6 +248,7 @@ describe("init", function()
 			startJinraiMode = 0,
 			show = 0,
 			showJinraiMode = 0,
+			advanceJinraiModeCombo = 0,
 			stopJinraiMode = 0,
 		}
 
@@ -265,6 +266,9 @@ describe("init", function()
 							end,
 							showJinraiMode = function()
 								calls.showJinraiMode = calls.showJinraiMode + 1
+							end,
+							advanceJinraiModeCombo = function()
+								calls.advanceJinraiModeCombo = calls.advanceJinraiModeCombo + 1
 							end,
 							stopJinraiMode = function()
 								calls.stopJinraiMode = calls.stopJinraiMode + 1
@@ -329,19 +333,26 @@ describe("init", function()
 
 		assert.are.equal("space", calls.new.window_hints.internal.jinraiMode.windowHints.key)
 		assert.are.equal("j", calls.new.window_mover.internal.jinraiMode.windowMover.key)
+		assert.is_false(calls.new.window_hints.internal.jinraiMode.combo.character.enabled)
+		assert.are.equal(0.5, calls.new.window_hints.internal.jinraiMode.combo.character.alpha)
+		assert.is_false(calls.new.window_hints.internal.jinraiMode.combo.text.enabled)
+		assert.are.equal(0.7, calls.new.window_hints.internal.jinraiMode.combo.text.alpha)
 		assert.is_truthy(calls.new.window_hints.internal.onOpenWindowActionChooser)
 		calls.new.window_hints.internal.onOpenWindowActionChooser()
 		assert.are.equal(1, calls.openWindowActionChooserCount)
 		assert.is_nil(calls.openWindowActionChooserOptions)
+		assert.are.equal(0, calls.advanceJinraiModeCombo)
 		calls.new.window_hints.internal.onOpenWindowActionChooser({ jinraiMode = true })
 		assert.is_true(calls.openWindowActionChooserOptions.jinraiMode)
 		assert.is_truthy(calls.openWindowActionChooserOptions.onApply)
 		assert.is_truthy(calls.openWindowActionChooserOptions.onCancel)
+		assert.are.equal(1, calls.advanceJinraiModeCombo)
 		assert.is_truthy(calls.new.window_hints.internal.onJinraiModeSelect)
 		calls.new.window_hints.internal.onJinraiModeSelect({})
 		assert.is_true(calls.openWindowActionChooserOptions.jinraiMode)
 		assert.is_truthy(calls.openWindowActionChooserOptions.onApply)
 		assert.is_truthy(calls.openWindowActionChooserOptions.onCancel)
+		assert.are.equal(2, calls.advanceJinraiModeCombo)
 		calls.openWindowActionChooserOptions.onApply()
 		calls.openWindowActionChooserOptions.onCancel()
 		calls.new.window_mover.internal.jinraiMode.onStart()
@@ -353,6 +364,7 @@ describe("init", function()
 		assert.are.equal(1, calls.startJinraiMode)
 		assert.are.equal(1, calls.show)
 		assert.are.equal(3, calls.showJinraiMode)
+		assert.are.equal(5, calls.advanceJinraiModeCombo)
 		assert.are.equal(2, calls.stopJinraiMode)
 		assert.are.equal(3, calls.openWindowActionChooserCount)
 	end)

@@ -1120,24 +1120,27 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(2, target:id())
 	end)
 
-	it("上下左右: preferredVisibleRatio 指定時は大きく隠れた近傍候補より可視候補を優先する", function()
-		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
-		local nearRight = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
-		local farRight = stubWindow(3, { x = 140, y = 0, w = 100, h = 100 })
-		local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
-		local target = helper.findDirectionalWindowTarget(
-			current,
-			{ nearRight, farRight },
-			"right",
-			nil,
-			{ blocker, current, nearRight, farRight },
-			{
-				occlusionSamplingEnabled = false,
-				preferredVisibleRatio = 0.5,
-			}
-		)
-		assert.are.equal(3, target:id())
-	end)
+	it(
+		"上下左右: preferredVisibleRatio 指定時は大きく隠れた近傍候補より可視候補を優先する",
+		function()
+			local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
+			local nearRight = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
+			local farRight = stubWindow(3, { x = 140, y = 0, w = 100, h = 100 })
+			local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
+			local target = helper.findDirectionalWindowTarget(
+				current,
+				{ nearRight, farRight },
+				"right",
+				nil,
+				{ blocker, current, nearRight, farRight },
+				{
+					occlusionSamplingEnabled = false,
+					preferredVisibleRatio = 0.5,
+				}
+			)
+			assert.are.equal(3, target:id())
+		end
+	)
 
 	it("上下左右: preferredVisibleRatio は移動方向側の露出を優先する", function()
 		local current = stubWindow(1, { x = 65, y = 20, w = 20, h = 60 })
@@ -1175,23 +1178,26 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(3, target:id())
 	end)
 
-	it("上下左右: 移動方向の大きな候補に内包された候補をウィンドウ順序に依存せず優先する", function()
-		local current = stubWindow(1, { x = 320, y = 0, w = 100, h = 120 })
-		local containingLeft = stubWindow(2, { x = 0, y = 0, w = 280, h = 120 })
-		local containedLeft = stubWindow(3, { x = 170, y = 25, w = 70, h = 70 })
-		local target = helper.findDirectionalWindowTarget(
-			current,
-			{ containingLeft, containedLeft },
-			"left",
-			nil,
-			{ current, containingLeft, containedLeft },
-			{
-				occlusionSamplingEnabled = false,
-				preferredVisibleRatio = 0.5,
-			}
-		)
-		assert.are.equal(3, target:id())
-	end)
+	it(
+		"上下左右: 移動方向の大きな候補に内包された候補をウィンドウ順序に依存せず優先する",
+		function()
+			local current = stubWindow(1, { x = 320, y = 0, w = 100, h = 120 })
+			local containingLeft = stubWindow(2, { x = 0, y = 0, w = 280, h = 120 })
+			local containedLeft = stubWindow(3, { x = 170, y = 25, w = 70, h = 70 })
+			local target = helper.findDirectionalWindowTarget(
+				current,
+				{ containingLeft, containedLeft },
+				"left",
+				nil,
+				{ current, containingLeft, containedLeft },
+				{
+					occlusionSamplingEnabled = false,
+					preferredVisibleRatio = 0.5,
+				}
+			)
+			assert.are.equal(3, target:id())
+		end
+	)
 
 	it("上下左右: 数pxはみ出した内包候補も移動先として優先する", function()
 		local current = stubWindow(1, { x = 320, y = 0, w = 100, h = 120 })
@@ -1229,24 +1235,27 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(3, target:id())
 	end)
 
-	it("上下左右: preferredVisibleRatio=0 なら部分遮蔽していても既存どおり近傍候補を優先する", function()
-		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
-		local nearRight = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
-		local farRight = stubWindow(3, { x = 140, y = 0, w = 100, h = 100 })
-		local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
-		local target = helper.findDirectionalWindowTarget(
-			current,
-			{ nearRight, farRight },
-			"right",
-			nil,
-			{ blocker, current, nearRight, farRight },
-			{
-				occlusionSamplingEnabled = false,
-				preferredVisibleRatio = 0,
-			}
-		)
-		assert.are.equal(2, target:id())
-	end)
+	it(
+		"上下左右: preferredVisibleRatio=0 なら部分遮蔽していても既存どおり近傍候補を優先する",
+		function()
+			local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
+			local nearRight = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
+			local farRight = stubWindow(3, { x = 140, y = 0, w = 100, h = 100 })
+			local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
+			local target = helper.findDirectionalWindowTarget(
+				current,
+				{ nearRight, farRight },
+				"right",
+				nil,
+				{ blocker, current, nearRight, farRight },
+				{
+					occlusionSamplingEnabled = false,
+					preferredVisibleRatio = 0,
+				}
+			)
+			assert.are.equal(2, target:id())
+		end
+	)
 
 	it("上下左右: 可視率がしきい値以上なら既存スコア順を維持する", function()
 		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
@@ -1287,23 +1296,26 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(3, target:id())
 	end)
 
-	it("上下左右: しきい値未満の候補しかなくてもフォールバックとして選択する", function()
-		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
-		local mostlyHidden = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
-		local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
-		local target = helper.findDirectionalWindowTarget(
-			current,
-			{ mostlyHidden },
-			"right",
-			nil,
-			{ blocker, current, mostlyHidden },
-			{
-				occlusionSamplingEnabled = false,
-				preferredVisibleRatio = 0.5,
-			}
-		)
-		assert.are.equal(2, target:id())
-	end)
+	it(
+		"上下左右: しきい値未満の候補しかなくてもフォールバックとして選択する",
+		function()
+			local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 100 })
+			local mostlyHidden = stubWindow(2, { x = 20, y = 0, w = 100, h = 100 })
+			local blocker = stubWindow(9, { x = 20, y = 0, w = 100, h = 75 })
+			local target = helper.findDirectionalWindowTarget(
+				current,
+				{ mostlyHidden },
+				"right",
+				nil,
+				{ blocker, current, mostlyHidden },
+				{
+					occlusionSamplingEnabled = false,
+					preferredVisibleRatio = 0.5,
+				}
+			)
+			assert.are.equal(2, target:id())
+		end
+	)
 
 	it("同距離候補に previousWindow が含まれるとそちらを優先する", function()
 		local current = stubWindow(1, { x = 0, y = 0, w = 10, h = 10 })
@@ -1335,26 +1347,35 @@ describe("window_hints appPrefixOverrides", function()
 		assert.are.equal(nil, target)
 	end)
 
-	it("右方向: 主軸重なり率がしきい値以下なら副軸重なりが小さくても候補に残る", function()
-		local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
-		local detachedRight = stubWindow(2, { x = 180, y = 230, w = 100, h = 100 })
-		local target = helper.findDirectionalWindowTarget(current, { detachedRight }, "right", nil)
-		assert.are.equal(2, target:id())
-	end)
+	it(
+		"右方向: 主軸重なり率がしきい値以下なら副軸重なりが小さくても候補に残る",
+		function()
+			local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
+			local detachedRight = stubWindow(2, { x = 180, y = 230, w = 100, h = 100 })
+			local target = helper.findDirectionalWindowTarget(current, { detachedRight }, "right", nil)
+			assert.are.equal(2, target:id())
+		end
+	)
 
-	it("右方向: 主軸重なり率がしきい値を超え副軸重なり率が不足する候補は除外する", function()
-		local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
-		local mostlyStacked = stubWindow(2, { x = 170, y = 230, w = 100, h = 100 })
-		local target = helper.findDirectionalWindowTarget(current, { mostlyStacked }, "right", nil)
-		assert.are.equal(nil, target)
-	end)
+	it(
+		"右方向: 主軸重なり率がしきい値を超え副軸重なり率が不足する候補は除外する",
+		function()
+			local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
+			local mostlyStacked = stubWindow(2, { x = 170, y = 230, w = 100, h = 100 })
+			local target = helper.findDirectionalWindowTarget(current, { mostlyStacked }, "right", nil)
+			assert.are.equal(nil, target)
+		end
+	)
 
-	it("右方向: 主軸重なり率がしきい値を超えても副軸重なり率が足りれば候補に残る", function()
-		local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
-		local alignedRight = stubWindow(2, { x = 170, y = 150, w = 100, h = 100 })
-		local target = helper.findDirectionalWindowTarget(current, { alignedRight }, "right", nil)
-		assert.are.equal(2, target:id())
-	end)
+	it(
+		"右方向: 主軸重なり率がしきい値を超えても副軸重なり率が足りれば候補に残る",
+		function()
+			local current = stubWindow(1, { x = 100, y = 100, w = 100, h = 100 })
+			local alignedRight = stubWindow(2, { x = 170, y = 150, w = 100, h = 100 })
+			local target = helper.findDirectionalWindowTarget(current, { alignedRight }, "right", nil)
+			assert.are.equal(2, target:id())
+		end
+	)
 
 	it("右方向: 主軸で重なった候補を除外し、離れた候補を選ぶ", function()
 		local current = stubWindow(1, { x = 100, y = 200, w = 100, h = 100 })
@@ -1626,7 +1647,8 @@ describe("window_hints mouse selection", function()
 		local canvasMethods = {}
 		canvasMethods.__index = canvasMethods
 
-		function canvasMethods:level()
+		function canvasMethods:level(value)
+			self._level = value
 			return self
 		end
 
@@ -1642,6 +1664,14 @@ describe("window_hints mouse selection", function()
 		function canvasMethods:alpha(value)
 			self._alpha = value
 			return self
+		end
+
+		function canvasMethods:frame(value)
+			if value then
+				self._frame = value
+				return self
+			end
+			return self._frame
 		end
 
 		function canvasMethods:show()
@@ -1738,6 +1768,8 @@ describe("window_hints mouse selection", function()
 				self.started = false
 			end,
 		}
+		local loadedImagePaths = {}
+		local repeatingTimers = {}
 		_G.hs = {
 			spoons = {
 				resourcePath = function(fileName)
@@ -1796,7 +1828,16 @@ describe("window_hints mouse selection", function()
 					return {}
 				end,
 				imageFromPath = function(path)
+					table.insert(loadedImagePaths, path)
 					return { path = path }
+				end,
+			},
+			styledtext = {
+				new = function(text, attributes)
+					return {
+						string = text,
+						attributes = attributes,
+					}
 				end,
 			},
 			mouse = {
@@ -1809,10 +1850,15 @@ describe("window_hints mouse selection", function()
 						stop = function() end,
 					}
 				end,
-				doEvery = function()
-					return {
-						stop = function() end,
+				doEvery = function(_, callback)
+					local timer = {
+						callback = callback,
+						stop = function(self)
+							self.stopped = true
+						end,
 					}
+					table.insert(repeatingTimers, timer)
+					return timer
 				end,
 			},
 		}
@@ -1820,6 +1866,8 @@ describe("window_hints mouse selection", function()
 			hotkeys = hotkeys,
 			keyBlocker = keyBlocker,
 			mouseClickWatcher = mouseClickWatcher,
+			loadedImagePaths = loadedImagePaths,
+			repeatingTimers = repeatingTimers,
 		}
 	end
 
@@ -1837,7 +1885,7 @@ describe("window_hints mouse selection", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
 		local targetWindow = makeWindow(1, "Target", focusCounter)
-		installHsMock(targetWindow, createdCanvases)
+		local mocks = installHsMock(targetWindow, createdCanvases)
 		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
 
 		local instance = windowHints.new({
@@ -1868,6 +1916,7 @@ describe("window_hints mouse selection", function()
 			end
 		end
 		assert.is_truthy(hintCanvas)
+		assert.are.equal(3, hintCanvas._level)
 		assert.is_true(hintCanvas[1].trackMouseUp)
 		assert.is_true(countCanvasImages(hintCanvas) > 0)
 
@@ -1885,7 +1934,7 @@ describe("window_hints mouse selection", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
 		local targetWindow = makeWindow(1, "Target", focusCounter)
-		installHsMock(targetWindow, createdCanvases)
+		local mocks = installHsMock(targetWindow, createdCanvases)
 		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
 
 		local instance = windowHints.new({
@@ -2258,6 +2307,318 @@ describe("window_hints mouse selection", function()
 		assert.is_truthy(activeLogoCanvas)
 		instance.stopJinraiMode()
 		assert.is_true(activeLogoCanvas._deleted)
+	end)
+
+	it("JinraiMode 中の遷移だけコンボを加算し画像を循環表示する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					combo = {
+						character = {
+							enabled = true,
+							alpha = 0.25,
+						},
+						text = {
+							enabled = true,
+							alpha = 0.75,
+						},
+					},
+				},
+			},
+		})
+
+		assert.is_false(instance.advanceJinraiModeCombo())
+		assert.is_true(instance.showJinraiMode())
+		local comboImagePaths = {}
+		for combo = 1, 5 do
+			assert.is_true(instance.advanceJinraiModeCombo())
+			local comboCanvas = createdCanvases[#createdCanvases]
+			comboImagePaths[combo] = comboCanvas[1].image.path
+		end
+
+		assert.are.same({
+			"./Jinrai.spoon/resources/jinrai1.webp",
+			"./Jinrai.spoon/resources/jinrai2.webp",
+			"./Jinrai.spoon/resources/jinrai3.webp",
+			"./Jinrai.spoon/resources/jinrai4.webp",
+			"./Jinrai.spoon/resources/jinrai1.webp",
+		}, comboImagePaths)
+		local activeComboCanvas = createdCanvases[#createdCanvases]
+		assert.are.equal(0.25, activeComboCanvas[1].imageAlpha)
+		assert.are.equal("5 COMBO", activeComboCanvas[2].text.string)
+		assert.are.same(
+			{ name = "DIN Condensed", size = activeComboCanvas[2].textSize },
+			activeComboCanvas[2].text.attributes.font
+		)
+		assert.are.same({ red = 1, green = 0.83, blue = 0, alpha = 0.75 }, activeComboCanvas[2].text.attributes.color)
+		assert.are.same(
+			{ red = 0, green = 0, blue = 0, alpha = 0.75 },
+			activeComboCanvas[2].text.attributes.strokeColor
+		)
+		assert.are.equal(-4, activeComboCanvas[2].text.attributes.strokeWidth)
+		assert.are.equal("center", activeComboCanvas[2].text.attributes.paragraphStyle.alignment)
+		assert.are.equal(2, activeComboCanvas._level)
+		local comboTextBottom = activeComboCanvas._frame.y + activeComboCanvas[2].frame.y + activeComboCanvas[2].frame.h
+		assert.are.equal(196, comboTextBottom)
+		assert.is_true(activeComboCanvas[2].frame.h >= activeComboCanvas[2].textSize * 1.8)
+		assert.are.equal("clip", activeComboCanvas[2].textLineBreak)
+		local comboTextTop = activeComboCanvas._frame.y + activeComboCanvas[2].frame.y
+		assert.are.equal(16, comboTextTop - activeComboCanvas._frame.y)
+		local comboAnimationTimer = mocks.repeatingTimers[#mocks.repeatingTimers]
+		for _ = 1, 8 do
+			comboAnimationTimer.callback()
+		end
+		local animatedComboTextBottom = activeComboCanvas._frame.y
+			+ activeComboCanvas[2].frame.y
+			+ activeComboCanvas[2].frame.h
+		assert.are.equal(196, animatedComboTextBottom)
+
+		instance.stopJinraiMode()
+		assert.is_true(activeComboCanvas._deleted)
+		assert.is_false(instance.advanceJinraiModeCombo())
+
+		instance.startJinraiMode()
+		assert.is_true(instance.advanceJinraiModeCombo())
+		local restartedComboCanvas = createdCanvases[#createdCanvases]
+		assert.are.equal("1 COMBO", restartedComboCanvas[2].text.string)
+		assert.is_true(instance.advanceJinraiModeCombo())
+		local twoComboCanvas = createdCanvases[#createdCanvases]
+		assert.are.equal("2 COMBO", twoComboCanvas[2].text.string)
+		assert.is_true(twoComboCanvas[2].frame.h >= twoComboCanvas[2].textSize * 1.8)
+	end)
+
+	it("JinraiMode コンボ文字は小さい画面でも上端から 16px 内側に配置する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local smallScreen = {
+			id = function()
+				return 1
+			end,
+			frame = function()
+				return { x = 0, y = 0, w = 800, h = 600 }
+			end,
+		}
+		targetWindow.screen = function()
+			return smallScreen
+		end
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					logo = {
+						size = 580,
+					},
+					combo = {
+						text = {
+							enabled = true,
+						},
+					},
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiMode())
+		assert.is_true(instance.advanceJinraiModeCombo())
+		local comboCanvas = createdCanvases[#createdCanvases]
+		local comboTextTop = comboCanvas._frame.y + comboCanvas[1].frame.y
+		assert.are.equal(16, comboTextTop)
+	end)
+
+	it("JinraiMode コンボ文字と画像が無効でもコンボ遷移は継続する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiMode())
+		local canvasCount = #createdCanvases
+		local imageLoadCount = #mocks.loadedImagePaths
+		assert.is_true(instance.advanceJinraiModeCombo())
+		assert.are.equal(canvasCount, #createdCanvases)
+		assert.are.equal(imageLoadCount, #mocks.loadedImagePaths)
+	end)
+
+	it("JinraiMode コンボ文字だけを表示できる", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			hint = { title = { show = false } },
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = { onStart = false, onSelect = false },
+			},
+			internal = {
+				jinraiMode = {
+					combo = {
+						text = {
+							enabled = true,
+							alpha = 0.65,
+						},
+					},
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiMode())
+		local imageLoadCount = #mocks.loadedImagePaths
+		assert.is_true(instance.advanceJinraiModeCombo())
+		local comboCanvas = createdCanvases[#createdCanvases]
+		assert.are.equal("text", comboCanvas[1].type)
+		assert.are.equal("1 COMBO", comboCanvas[1].text.string)
+		assert.are.equal(0.65, comboCanvas[1].text.attributes.color.alpha)
+		assert.are.equal(imageLoadCount, #mocks.loadedImagePaths)
+	end)
+
+	it("JinraiMode キャラクター画像だけを表示できる", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			hint = { title = { show = false } },
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = { onStart = false, onSelect = false },
+			},
+			internal = {
+				jinraiMode = {
+					combo = {
+						character = {
+							enabled = true,
+							alpha = 0.35,
+						},
+					},
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiMode())
+		assert.is_true(instance.advanceJinraiModeCombo())
+		local comboCanvas = createdCanvases[#createdCanvases]
+		assert.are.equal("image", comboCanvas[1].type)
+		assert.are.equal(0.35, comboCanvas[1].imageAlpha)
+		assert.is_nil(comboCanvas[2])
+	end)
+
+	it("JinraiMode コンボ画像は画像番号ごとにキャッシュする", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					combo = {
+						character = {
+							enabled = true,
+						},
+					},
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiMode())
+		assert.is_true(instance.advanceJinraiModeCombo())
+		for _ = 1, 4 do
+			assert.is_true(instance.advanceJinraiModeCombo())
+		end
+
+		local jinrai1LoadCount = 0
+		for _, path in ipairs(mocks.loadedImagePaths) do
+			if path == "./Jinrai.spoon/resources/jinrai1.webp" then
+				jinrai1LoadCount = jinrai1LoadCount + 1
+			end
+		end
+		assert.are.equal(1, jinrai1LoadCount)
 	end)
 
 	it("JinraiMode 中にキャンセルするとロゴを削除する", function()

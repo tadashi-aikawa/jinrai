@@ -983,6 +983,9 @@ describe("window_mover", function()
 		instance.openWindowActionChooser()
 
 		assert.are.same({ "A", "S", "D", "F", "Q", "W", "E", "T", "Z", "R", "Y", "U", "I", "O", "P" }, canvasKeys(state))
+		for _, canvas in ipairs(state.canvases) do
+			assert.are.equal(12, canvas._level)
+		end
 		assert.are.equal(0, #state.webviews)
 
 		sendKey(state, "z")

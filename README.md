@@ -202,11 +202,22 @@ jinrai_mode = {
     size = 480,     -- ロゴサイズ (px)
     alpha = 0.4,    -- ロゴの透明度
   },
+  combo = {
+    character = {
+      enabled = false, -- キャラクター画像を表示するか
+      alpha = 0.5,     -- キャラクター画像の透明度
+    },
+    text = {
+      enabled = false, -- COMBO 文字を表示するか
+      alpha = 0.7,     -- COMBO 文字と黒縁の透明度
+    },
+  },
 }
 ```
 
 Window Hints では `triggers.windowHints.key` を押すと JinraiMode に入り、ウィンドウ選択後に Window Mover の `moveToSelectedArea` chooser が開きます。Window Mover では `moveToSelectedArea` chooser を開いた後に `triggers.windowMover.key` を押すと JinraiMode に入り、エリアまたは action 適用後に Window Hints が開きます。どちらかでキャンセルすると JinraiMode は終了します。
 `window_mover.selectedArea.windowHints.key` を設定すると、アクティブウィンドウを選び直したいときに `moveToSelectedArea` chooser から Window Hints へ即時に戻れます。JinraiMode の連鎖中は Window Hints を JinraiMode として開き直し、連鎖を継続します。
+JinraiMode 中は Window Hints と Window Mover の間を遷移するたびにコンボ数が増えます。`combo.character.enabled` を有効にすると中央にキャラクター画像を表示し、`combo.text.enabled` を有効にすると Jinrai ロゴの12px上に黒縁付きのコンボ数を表示します。画像は4枚を順番に繰り返します。Window Hints と Window Mover の `selectedArea` ヒントはロゴやキャラクターより常に前面に表示されます。通常モードの遷移ではコンボは加算・表示されません。
 `triggers.windowMover.key` は設定済みの selected-area/action キーと衝突してはいけません。`key = "k"` とエリアキー `"KD"` のような prefix 衝突もエラーになります。
 
 ## macOS Native Tabs オプション

@@ -201,6 +201,16 @@ describe("window_hints_config", function()
 						size = 480,
 						alpha = 0.3,
 					},
+					combo = {
+						character = {
+							enabled = true,
+							alpha = 0.25,
+						},
+						text = {
+							enabled = false,
+							alpha = 0.75,
+						},
+					},
 				},
 			},
 		})
@@ -268,6 +278,10 @@ describe("window_hints_config", function()
 		assert.is_true(built.jinraiModeLogo.enabled)
 		assert.are.equal(480, built.jinraiModeLogo.size)
 		assert.are.equal(0.3, built.jinraiModeLogo.alpha)
+		assert.is_true(built.jinraiModeCombo.character.enabled)
+		assert.are.equal(0.25, built.jinraiModeCombo.character.alpha)
+		assert.is_false(built.jinraiModeCombo.text.enabled)
+		assert.are.equal(0.75, built.jinraiModeCombo.text.alpha)
 		assert.are.same({ "shift" }, built.swapWindowFrameSelectModifiers)
 		assert.are.equal(300, built.cardinalOverlapTieThresholdPx)
 		assert.are.equal(0.15, built.maxPrimaryOverlapRatioForDetached)
@@ -328,6 +342,40 @@ describe("window_hints_config", function()
 		assert.are.equal(0.65, built.dockWindowXBlend)
 		assert.are.equal(1, built.dockWindowYBlend)
 		assert.are.equal(0.4, built.jinraiModeLogo.alpha)
+		assert.is_false(built.jinraiModeCombo.character.enabled)
+		assert.are.equal(0.5, built.jinraiModeCombo.character.alpha)
+		assert.is_false(built.jinraiModeCombo.text.enabled)
+		assert.are.equal(0.7, built.jinraiModeCombo.text.alpha)
+	end)
+
+	it("JinraiMode コンボ透明度は 0 から 1 の範囲のみ許可する", function()
+		assert.has_error(function()
+			mod.build({
+				internal = {
+					jinraiMode = {
+						combo = {
+							character = {
+								alpha = 1.1,
+							},
+						},
+					},
+				},
+			})
+		end, "[jinrai.window_hints] jinrai_mode.combo.character.alpha must be between 0 and 1")
+
+		assert.has_error(function()
+			mod.build({
+				internal = {
+					jinraiMode = {
+						combo = {
+							text = {
+								alpha = "0.5",
+							},
+						},
+					},
+				},
+			})
+		end, "[jinrai.window_hints] jinrai_mode.combo.text.alpha must be a number")
 	end)
 
 	it("focusHistory が無いと focusBackKey は無効化される", function()

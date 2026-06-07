@@ -43,6 +43,16 @@ local DEFAULT_JINRAI_MODE = {
 		size = 480,
 		alpha = 0.4,
 	},
+	combo = {
+		character = {
+			enabled = false,
+			alpha = 0.5,
+		},
+		text = {
+			enabled = false,
+			alpha = 0.7,
+		},
+	},
 }
 
 local function resourcePath(fileName)
@@ -198,6 +208,9 @@ function obj:setup(config)
 				onApply = function()
 					defer(function()
 						if windowHints and windowHints.showJinraiMode then
+							if windowHints.advanceJinraiModeCombo then
+								windowHints.advanceJinraiModeCombo()
+							end
 							windowHints.showJinraiMode()
 						end
 					end)
@@ -213,6 +226,9 @@ function obj:setup(config)
 							return
 						end
 						if ctx and ctx.jinraiMode and windowHints.showJinraiMode then
+							if windowHints.advanceJinraiModeCombo then
+								windowHints.advanceJinraiModeCombo()
+							end
 							windowHints.showJinraiMode()
 						elseif windowHints.show then
 							windowHints.show()
@@ -239,16 +255,23 @@ function obj:setup(config)
 					key = jinraiMode.triggers.windowHints.key,
 				},
 				logo = jinraiMode.logo,
+				combo = jinraiMode.combo,
 			},
 		})
 		windowHintsConfig = mergeTable(windowHintsConfig, { internal = jinraiModeInternalConfig })
 		if windowMover then
 			local function openJinraiModeWindowActionChooser()
+				if windowHints and windowHints.advanceJinraiModeCombo then
+					windowHints.advanceJinraiModeCombo()
+				end
 				windowMover.openWindowActionChooser({
 					jinraiMode = true,
 					onApply = function()
 						defer(function()
 							if windowHints and windowHints.showJinraiMode then
+								if windowHints.advanceJinraiModeCombo then
+									windowHints.advanceJinraiModeCombo()
+								end
 								windowHints.showJinraiMode()
 							end
 						end)
