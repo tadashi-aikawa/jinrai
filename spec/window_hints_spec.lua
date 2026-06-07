@@ -2352,7 +2352,7 @@ describe("window_hints mouse selection", function()
 		assert.is_false(instance.advanceJinraiModeCombo())
 		assert.is_true(instance.showJinraiMode())
 		local comboImagePaths = {}
-		for combo = 1, 5 do
+		for combo = 1, 9 do
 			assert.is_true(instance.advanceJinraiModeCombo())
 			local comboCanvas = createdCanvases[#createdCanvases]
 			comboImagePaths[combo] = comboCanvas[1].image.path
@@ -2363,11 +2363,15 @@ describe("window_hints mouse selection", function()
 			"./Jinrai.spoon/resources/jinrai2.webp",
 			"./Jinrai.spoon/resources/jinrai3.webp",
 			"./Jinrai.spoon/resources/jinrai4.webp",
+			"./Jinrai.spoon/resources/jinrai5.webp",
+			"./Jinrai.spoon/resources/jinrai6.webp",
+			"./Jinrai.spoon/resources/jinrai7.webp",
+			"./Jinrai.spoon/resources/jinrai8.webp",
 			"./Jinrai.spoon/resources/jinrai1.webp",
 		}, comboImagePaths)
 		local activeComboCanvas = createdCanvases[#createdCanvases]
 		assert.are.equal(0.25, activeComboCanvas[1].imageAlpha)
-		assert.are.equal("5 COMBO", activeComboCanvas[2].text.string)
+		assert.are.equal("9 COMBO", activeComboCanvas[2].text.string)
 		assert.are.same(
 			{ name = "DIN Condensed", size = activeComboCanvas[2].textSize },
 			activeComboCanvas[2].text.attributes.font

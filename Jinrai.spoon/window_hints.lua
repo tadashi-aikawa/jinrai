@@ -2336,7 +2336,7 @@ function M.new(options)
 			jinraiModePreviousComboCanvas = nil
 		end
 
-		local imageIndex = ((jinraiModeComboCount - 1) % 4) + 1
+		local imageIndex = ((jinraiModeComboCount - 1) % 8) + 1
 		local image = characterEnabled and loadJinraiModeComboImage(imageIndex) or nil
 		if not image and not textEnabled then
 			clearJinraiModeCombo()
