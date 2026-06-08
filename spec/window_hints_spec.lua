@@ -1743,6 +1743,15 @@ describe("window_hints mouse selection", function()
 		}
 	end
 
+	local function findCanvasByImagePath(createdCanvases, path)
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas[1] and canvas[1].image and canvas[1].image.path == path then
+				return canvas
+			end
+		end
+		return nil
+	end
+
 	local function installHsMock(targetWindow, createdCanvases)
 		_G.utf8 = {
 			len = function(text)
@@ -2351,8 +2360,11 @@ describe("window_hints mouse selection", function()
 
 		assert.is_false(instance.advanceJinraiModeCombo())
 		assert.is_true(instance.showJinraiMode())
+		local initialComboCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/resources/jinrai0.webp")
+		assert.is_truthy(initialComboCanvas)
+		assert.is_nil(initialComboCanvas[2])
 		local comboImagePaths = {}
-		for combo = 1, 9 do
+		for combo = 1, 10 do
 			assert.is_true(instance.advanceJinraiModeCombo())
 			local comboCanvas = createdCanvases[#createdCanvases]
 			comboImagePaths[combo] = comboCanvas[1].image.path
@@ -2367,11 +2379,12 @@ describe("window_hints mouse selection", function()
 			"./Jinrai.spoon/resources/jinrai6.webp",
 			"./Jinrai.spoon/resources/jinrai7.webp",
 			"./Jinrai.spoon/resources/jinrai8.webp",
+			"./Jinrai.spoon/resources/jinrai9.webp",
 			"./Jinrai.spoon/resources/jinrai1.webp",
 		}, comboImagePaths)
 		local activeComboCanvas = createdCanvases[#createdCanvases]
 		assert.are.equal(0.25, activeComboCanvas[1].imageAlpha)
-		assert.are.equal("9 COMBO", activeComboCanvas[2].text.string)
+		assert.are.equal("10 COMBO", activeComboCanvas[2].text.string)
 		assert.are.same(
 			{ name = "DIN Condensed", size = activeComboCanvas[2].textSize },
 			activeComboCanvas[2].text.attributes.font
@@ -2569,11 +2582,15 @@ describe("window_hints mouse selection", function()
 		})
 
 		assert.is_true(instance.showJinraiMode())
-		assert.is_true(instance.advanceJinraiModeCombo())
-		local comboCanvas = createdCanvases[#createdCanvases]
+		local comboCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/resources/jinrai0.webp")
+		assert.is_truthy(comboCanvas)
 		assert.are.equal("image", comboCanvas[1].type)
 		assert.are.equal(0.35, comboCanvas[1].imageAlpha)
 		assert.is_nil(comboCanvas[2])
+		assert.is_true(instance.advanceJinraiModeCombo())
+		local firstComboCanvas = createdCanvases[#createdCanvases]
+		assert.are.equal("./Jinrai.spoon/resources/jinrai1.webp", firstComboCanvas[1].image.path)
+		assert.is_nil(firstComboCanvas[2])
 	end)
 
 	it("JinraiMode コンボ画像は画像番号ごとにキャッシュする", function()

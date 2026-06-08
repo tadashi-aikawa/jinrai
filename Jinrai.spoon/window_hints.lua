@@ -2313,8 +2313,8 @@ function M.new(options)
 		local character = combo and combo.character or nil
 		local text = combo and combo.text or nil
 		local characterEnabled = character and character.enabled
-		local textEnabled = text and text.enabled
-		if not isJinraiMode or jinraiModeComboCount <= 0 or (not characterEnabled and not textEnabled) then
+		local textEnabled = jinraiModeComboCount > 0 and text and text.enabled
+		if not isJinraiMode or (jinraiModeComboCount <= 0 and not characterEnabled) or (not characterEnabled and not textEnabled) then
 			clearJinraiModeCombo()
 			return
 		end
@@ -2336,7 +2336,7 @@ function M.new(options)
 			jinraiModePreviousComboCanvas = nil
 		end
 
-		local imageIndex = ((jinraiModeComboCount - 1) % 8) + 1
+		local imageIndex = jinraiModeComboCount <= 0 and 0 or ((jinraiModeComboCount - 1) % 9) + 1
 		local image = characterEnabled and loadJinraiModeComboImage(imageIndex) or nil
 		if not image and not textEnabled then
 			clearJinraiModeCombo()
@@ -2446,6 +2446,7 @@ function M.new(options)
 		clearJinraiModeCombo()
 		isJinraiMode = true
 		showJinraiModeLogo()
+		showJinraiModeCombo()
 	end
 
 	local function advanceJinraiModeCombo()
@@ -3506,6 +3507,9 @@ function M.new(options)
 		if opts.jinraiMode then
 			isJinraiMode = true
 			showJinraiModeLogo()
+			if jinraiModeComboCount <= 0 then
+				showJinraiModeCombo()
+			end
 		end
 		showActiveOverlay()
 
