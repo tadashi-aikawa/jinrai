@@ -2241,10 +2241,20 @@ function M.new(options)
 
 	local COMBO_LOGO_GAP = -36
 	local COMBO_TEXT_CANVAS_PADDING = 16
+	local COMBO_TEXT_FONT = "Avenir Next Heavy"
+	local COMBO_TEXT_COLOR = { red = 1, green = 0.46, blue = 0.08 }
 
-	local function comboCanvasLayout(screenFrame, scale, logoSize, textHeight)
+	local function comboCanvasLayout(screenFrame, scale, logoSize, numberTextMetrics, labelTextMetrics)
 		local baseSize = math.min(560, screenFrame.w * 0.46, screenFrame.h * 0.7)
 		local characterSize = baseSize * scale
+		local textHeight = math.max(numberTextMetrics.height, labelTextMetrics.height)
+		local textGap = math.floor(labelTextMetrics.size * 0.22)
+		local totalTextWidth = numberTextMetrics.width + textGap + labelTextMetrics.width
+		local textWidth = math.min(characterSize, totalTextWidth)
+		local textLeft = (characterSize - textWidth) / 2
+		local numberTextWidth = math.min(numberTextMetrics.width, textWidth)
+		local labelTextWidth = math.min(labelTextMetrics.width, math.max(0, textWidth - numberTextWidth - textGap))
+		local effectiveTextGap = math.max(0, textWidth - numberTextWidth - labelTextWidth)
 		local characterFrame = {
 			x = screenFrame.x + (screenFrame.w - characterSize) / 2,
 			y = screenFrame.y + (screenFrame.h - characterSize) / 2,
@@ -2275,33 +2285,42 @@ function M.new(options)
 				w = characterFrame.w,
 				h = characterFrame.h,
 			},
-			textFrame = {
-				x = 0,
-				y = textFrame.y - canvasTop,
-				w = textFrame.w,
-				h = textFrame.h,
+			numberTextFrame = {
+				x = textLeft,
+				y = textFrame.y - canvasTop + textHeight - numberTextMetrics.height,
+				w = numberTextWidth,
+				h = numberTextMetrics.height,
+			},
+			comboTextFrame = {
+				x = textLeft + numberTextWidth + effectiveTextGap,
+				y = textFrame.y - canvasTop + textHeight - labelTextMetrics.height,
+				w = labelTextWidth,
+				h = labelTextMetrics.height,
 			},
 		}
 	end
 
-	local function updateComboCanvasLayout(canvas, layout, imageElementIndex, textElementIndex)
+	local function updateComboCanvasLayout(canvas, layout, imageElementIndex, numberTextElementIndex, comboTextElementIndex)
 		if imageElementIndex then
 			canvas[imageElementIndex].frame = layout.characterFrame
 		end
-		if textElementIndex then
-			canvas[textElementIndex].frame = layout.textFrame
+		if numberTextElementIndex then
+			canvas[numberTextElementIndex].frame = layout.numberTextFrame
+		end
+		if comboTextElementIndex then
+			canvas[comboTextElementIndex].frame = layout.comboTextFrame
 		end
 	end
 
-	local function comboStyledText(text, fontSize, alpha)
+	local function comboStyledText(text, fontSize, alpha, color, strokeWidth)
 		if not hs or not hs.styledtext or not hs.styledtext.new then
 			return text
 		end
 		return hs.styledtext.new(text, {
-			font = { name = "DIN Condensed", size = fontSize },
-			color = { red = 1, green = 0.83, blue = 0, alpha = alpha },
+			font = { name = COMBO_TEXT_FONT, size = fontSize },
+			color = { red = color.red, green = color.green, blue = color.blue, alpha = alpha },
 			strokeColor = { red = 0, green = 0, blue = 0, alpha = alpha },
-			strokeWidth = -4,
+			strokeWidth = strokeWidth,
 			paragraphStyle = {
 				alignment = "center",
 			},
@@ -2346,10 +2365,21 @@ function M.new(options)
 		jinraiModePreviousComboCanvas = previousCanvas
 		local logoSize = config.jinraiModeLogo and config.jinraiModeLogo.size or 480
 		local baseSize = math.min(560, screenFrame.w * 0.46, screenFrame.h * 0.7)
-		local textSize = math.max(52, math.floor(baseSize * 0.13))
-		local textHeight = math.ceil(textSize * 1.8)
-		local startLayout = comboCanvasLayout(screenFrame, 0.9, logoSize, textHeight)
-		local targetLayout = comboCanvasLayout(screenFrame, 1, logoSize, textHeight)
+		local numberTextSize = math.max(72, math.floor(baseSize * 0.18))
+		local comboTextSize = math.max(34, math.floor(baseSize * 0.075))
+		local comboCountText = tostring(jinraiModeComboCount)
+		local numberTextMetrics = {
+			size = numberTextSize,
+			width = math.ceil(math.max(1, #comboCountText) * numberTextSize * 0.92),
+			height = math.ceil(numberTextSize * 1.15),
+		}
+		local comboTextMetrics = {
+			size = comboTextSize,
+			width = math.ceil(comboTextSize * 4.7),
+			height = math.ceil(comboTextSize * 1.25),
+		}
+		local startLayout = comboCanvasLayout(screenFrame, 1.18, logoSize, numberTextMetrics, comboTextMetrics)
+		local targetLayout = comboCanvasLayout(screenFrame, 1, logoSize, numberTextMetrics, comboTextMetrics)
 		local canvas = hs.canvas.new(startLayout.canvasFrame)
 		canvas:level(hs.canvas.windowLevels.overlay + 1)
 		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
@@ -2364,18 +2394,52 @@ function M.new(options)
 				frame = startLayout.characterFrame,
 			})
 		end
-		local textElementIndex = nil
+		local numberTextElementIndex = nil
+		local comboTextElementIndex = nil
 		if textEnabled then
-			textElementIndex = imageElementIndex and 2 or 1
+			numberTextElementIndex = imageElementIndex and 2 or 1
 			canvas:appendElements({
 				type = "text",
-				text = comboStyledText(tostring(jinraiModeComboCount) .. " COMBO", textSize, text.alpha),
+				text = comboStyledText(
+					comboCountText,
+					numberTextSize,
+					text.alpha,
+					COMBO_TEXT_COLOR,
+					-5
+				),
 				textAlignment = "center",
-				textColor = { red = 1, green = 0.83, blue = 0, alpha = text.alpha },
-				textFont = "DIN Condensed",
-				textSize = textSize,
+				textColor = {
+					red = COMBO_TEXT_COLOR.red,
+					green = COMBO_TEXT_COLOR.green,
+					blue = COMBO_TEXT_COLOR.blue,
+					alpha = text.alpha,
+				},
+				textFont = COMBO_TEXT_FONT,
+				textSize = numberTextSize,
 				textLineBreak = "clip",
-				frame = startLayout.textFrame,
+				frame = startLayout.numberTextFrame,
+			})
+			comboTextElementIndex = numberTextElementIndex + 1
+			canvas:appendElements({
+				type = "text",
+				text = comboStyledText(
+					"COMBO!",
+					comboTextSize,
+					text.alpha,
+					COMBO_TEXT_COLOR,
+					-4
+				),
+				textAlignment = "center",
+				textColor = {
+					red = COMBO_TEXT_COLOR.red,
+					green = COMBO_TEXT_COLOR.green,
+					blue = COMBO_TEXT_COLOR.blue,
+					alpha = text.alpha,
+				},
+				textFont = COMBO_TEXT_FONT,
+				textSize = comboTextSize,
+				textLineBreak = "clip",
+				frame = startLayout.comboTextFrame,
 			})
 		end
 		if canvas.alpha then
@@ -2396,10 +2460,17 @@ function M.new(options)
 				if jinraiModeComboCanvas == canvas then
 					canvas:alpha(progress)
 					if canvas.frame then
-						local scale = 0.99 + (0.01 * progress)
-						local animationLayout = comboCanvasLayout(screenFrame, scale, logoSize, textHeight)
+						local scale = 1.18 - (0.18 * progress)
+						local animationLayout =
+							comboCanvasLayout(screenFrame, scale, logoSize, numberTextMetrics, comboTextMetrics)
 						canvas:frame(animationLayout.canvasFrame)
-						updateComboCanvasLayout(canvas, animationLayout, imageElementIndex, textElementIndex)
+						updateComboCanvasLayout(
+							canvas,
+							animationLayout,
+							imageElementIndex,
+							numberTextElementIndex,
+							comboTextElementIndex
+						)
 					end
 				end
 				if currentStep >= animationSteps then
@@ -2412,7 +2483,13 @@ function M.new(options)
 					canvas:alpha(1)
 					if canvas.frame then
 						canvas:frame(targetLayout.canvasFrame)
-						updateComboCanvasLayout(canvas, targetLayout, imageElementIndex, textElementIndex)
+						updateComboCanvasLayout(
+							canvas,
+							targetLayout,
+							imageElementIndex,
+							numberTextElementIndex,
+							comboTextElementIndex
+						)
 					end
 					jinraiModeComboAnimationTimer:stop()
 					jinraiModeComboAnimationTimer = nil
@@ -2429,7 +2506,13 @@ function M.new(options)
 			end
 			if canvas.frame then
 				canvas:frame(targetLayout.canvasFrame)
-				updateComboCanvasLayout(canvas, targetLayout, imageElementIndex, textElementIndex)
+				updateComboCanvasLayout(
+					canvas,
+					targetLayout,
+					imageElementIndex,
+					numberTextElementIndex,
+					comboTextElementIndex
+				)
 			end
 		end
 	end
