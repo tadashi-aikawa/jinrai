@@ -2200,6 +2200,18 @@ function M.new(options)
 			w = size,
 			h = size,
 		}
+		if jinraiModeLogoCanvas then
+			if jinraiModeLogoCanvas.frame then
+				jinraiModeLogoCanvas:frame(logoFrame)
+			end
+			if jinraiModeLogoCanvas[1] then
+				jinraiModeLogoCanvas[1].image = image
+				jinraiModeLogoCanvas[1].imageAlpha = logo.alpha
+				jinraiModeLogoCanvas[1].frame = { x = 0, y = 0, w = size, h = size }
+			end
+			return
+		end
+
 		clearJinraiModeLogo()
 		local canvas = hs.canvas.new(logoFrame)
 		canvas:level(hs.canvas.windowLevels.overlay)

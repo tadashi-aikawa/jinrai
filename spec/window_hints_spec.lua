@@ -2318,6 +2318,72 @@ describe("window_hints mouse selection", function()
 		assert.is_true(activeLogoCanvas._deleted)
 	end)
 
+	it("JinraiMode 再表示時はロゴを再作成せずアクティブ画面中央へ移動する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local activeScreenFrame = { x = 0, y = 0, w = 1200, h = 800 }
+		targetWindow.screen = function()
+			return {
+				id = function()
+					return 1
+				end,
+				frame = function()
+					return activeScreenFrame
+				end,
+			}
+		end
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					logo = {
+						enabled = true,
+						size = 480,
+						alpha = 0.3,
+					},
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiMode())
+		local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
+		assert.is_truthy(logoCanvas)
+		assert.are.same({ x = 360, y = 160, w = 480, h = 480 }, logoCanvas._frame)
+
+		activeScreenFrame = { x = 1200, y = 100, w = 1600, h = 1000 }
+		assert.is_true(instance.showJinraiMode())
+
+		local logoCanvasCount = 0
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas[1] and canvas[1].image and canvas[1].image.path == "./Jinrai.spoon/jinrai.svg" then
+				logoCanvasCount = logoCanvasCount + 1
+			end
+		end
+		assert.are.equal(1, logoCanvasCount)
+		assert.is_nil(logoCanvas._deleted)
+		assert.are.same({ x = 1760, y = 360, w = 480, h = 480 }, logoCanvas._frame)
+		assert.are.equal(0.3, logoCanvas[1].imageAlpha)
+	end)
+
 	it("JinraiMode 中の遷移だけコンボを加算し画像を循環表示する", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
