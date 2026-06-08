@@ -560,6 +560,7 @@ describe("window_mover", function()
 			"f6",
 		}
 		local commands = {
+			moveToSelectedAreaInJinraiMode = { hotkey = { modifiers = { "cmd", "alt" }, key = "f18" } },
 			minimizeWindow = { hotkey = { modifiers = { "cmd" }, key = "m" } },
 			maximizeWindow = { hotkey = { modifiers = { "cmd" }, key = "f" } },
 			cycleLeft = { hotkey = { modifiers = { "ctrl", "alt" }, key = "h" } },
@@ -574,7 +575,7 @@ describe("window_mover", function()
 		end
 		local state, instance = newWindowMoverWithMock({ commands = commands }, win, { win })
 
-		local expectedKeys = { "m", "f", "h", "j", "l", "k", "i", "n" }
+		local expectedKeys = { "f18", "m", "f", "h", "j", "l", "k", "i", "n" }
 		for _, key in ipairs(directAreaKeys) do
 			table.insert(expectedKeys, key)
 		end
@@ -1404,6 +1405,86 @@ describe("window_mover", function()
 
 		assert.are.equal(1, startCount)
 		assert.are.equal(1, applyCount)
+	end)
+
+	it("moveToSelectedAreaInJinraiMode hotkey は最初から JinraiMode として chooser を開く", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		})
+		options.commands = {
+			moveToSelectedAreaInJinraiMode = {
+				hotkey = {
+					modifiers = { "cmd", "alt" },
+					key = "f18",
+				},
+			},
+		}
+		local startCount = 0
+		local applyCount = 0
+		local cancelCount = 0
+		options.internal = {
+			jinraiMode = {
+				onStart = function()
+					startCount = startCount + 1
+				end,
+				onApply = function()
+					applyCount = applyCount + 1
+				end,
+				onCancel = function()
+					cancelCount = cancelCount + 1
+				end,
+			},
+		}
+		local state = newWindowMoverWithMock(options, win, { win })
+		state.screens = { screen }
+		local hotkey = state.hotkeys[1]
+
+		hotkey.callback()
+		sendKey(state, "a")
+		hotkey.callback()
+		sendKey(state, "escape")
+
+		assert.are.equal("f18", hotkey.key)
+		assert.are.equal(2, startCount)
+		assert.are.equal(1, applyCount)
+		assert.are.equal(1, cancelCount)
+	end)
+
+	it("moveToSelectedAreaInJinraiMode hotkey は chooser を開けないとき JinraiMode を開始しない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local startCount = 0
+		local cancelCount = 0
+		local options = {
+			commands = {
+				moveToSelectedAreaInJinraiMode = {
+					hotkey = {
+						modifiers = { "cmd", "alt" },
+						key = "f18",
+					},
+				},
+			},
+			internal = {
+				jinraiMode = {
+					onStart = function()
+						startCount = startCount + 1
+					end,
+					onCancel = function()
+						cancelCount = cancelCount + 1
+					end,
+				},
+			},
+		}
+		local state = newWindowMoverWithMock(options, win, { win })
+
+		state.hotkeys[1].callback()
+
+		assert.are.equal(0, startCount)
+		assert.are.equal(0, cancelCount)
 	end)
 
 	it("openWindowActionChooser 表示中に JinraiMode キーを押した後のキャンセルで終了コールバックを呼ぶ", function()

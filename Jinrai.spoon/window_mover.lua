@@ -1152,6 +1152,13 @@ function M.new(options)
 				closeAreaChooser(true, { cancel = true })
 				return true
 			end
+			if
+				key == config.openJinraiModeWindowActionChooserHotkeyKey
+				and modifierListKey(modifiers) == modifierListKey(config.openJinraiModeWindowActionChooserHotkeyModifiers)
+			then
+				closeAreaChooser(true, { cancel = true })
+				return true
+			end
 
 			if key == "escape" then
 				closeAreaChooser(true, { cancel = true })
@@ -1779,6 +1786,7 @@ button:active {
 			return
 		end
 		options = options or {}
+		local startJinraiMode = options.startJinraiMode == true
 		areaApplyCallback = options.onApply
 		areaCancelCallback = options.onCancel
 		areaJinraiModeActive = false
@@ -1802,10 +1810,21 @@ button:active {
 		end
 
 		areaChooserShowing = true
+		if startJinraiMode then
+			areaJinraiModeActive = true
+			areaJinraiModeContext = true
+		end
+		if areaJinraiModeActive and config.onJinraiModeStart then
+			config.onJinraiModeStart()
+		end
 		if config.selectedAreaHintsShow then
 			showAreaCandidates(areaCandidates)
 		end
 		showAreaInfoScreens(screensWithoutCandidates)
+	end
+
+	local function openJinraiModeWindowActionChooser()
+		openWindowActionChooser({ startJinraiMode = true })
 	end
 
 	local function moveToNextDisplay()
@@ -2062,6 +2081,11 @@ button:active {
 		config.openWindowActionChooserHotkeyModifiers,
 		config.openWindowActionChooserHotkeyKey,
 		openWindowActionChooser
+	)
+	bindHotkey(
+		config.openJinraiModeWindowActionChooserHotkeyModifiers,
+		config.openJinraiModeWindowActionChooserHotkeyKey,
+		openJinraiModeWindowActionChooser
 	)
 	bindHotkey(config.minimizeWindowHotkeyModifiers, config.minimizeWindowHotkeyKey, minimizeWindow)
 	bindHotkey(config.maximizeWindowHotkeyModifiers, config.maximizeWindowHotkeyKey, maximizeWindow)

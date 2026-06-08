@@ -653,6 +653,12 @@ window_mover = {
         key = nil,       -- Hotkey (nil to disable)
       },
     },
+    moveToSelectedAreaInJinraiMode = {
+      hotkey = {
+        modifiers = nil, -- Hotkey modifiers (nil to disable)
+        key = nil,       -- Hotkey (nil to disable)
+      },
+    },
     -- Change the active window state or size
     maximizeWindow = {
       hotkey = {
@@ -817,6 +823,7 @@ window_mover = {
 | `moveToNextDisplay` | Moves the active window to `screen:next()` from the current display and maximizes it there. |
 | `moveToActiveDisplayFreeArea` | Moves the active window to the largest rectangle inside the current display's `frame()` that does not overlap frontmost standard windows. The active window and background windows overlapping a front window are excluded. Ties prefer the area closest to the active window. |
 | `moveToSelectedArea` | Opens the chooser for configured screen areas and `selectedArea.actions` window actions. |
+| `moveToSelectedAreaInJinraiMode` | Opens the `moveToSelectedArea` chooser in JinraiMode from the start. |
 | `maximizeWindow` | Moves and resizes the active window to the current display's `frame()` without using macOS fullscreen. |
 | `minimizeWindow` | Minimizes the active window. |
 | `cycleLeft` | Moves the active window to the left edge and cycles width through `behavior.cycle.horizontalRatios` (`1/2` → `1/3` → `2/3` by default). |

@@ -652,6 +652,12 @@ window_mover = {
         key = nil,       -- ホットキー（nil で無効化）
       },
     },
+    moveToSelectedAreaInJinraiMode = {
+      hotkey = {
+        modifiers = nil, -- ホットキー修飾キー（nil で無効化）
+        key = nil,       -- ホットキー（nil で無効化）
+      },
+    },
     -- アクティブウィンドウの状態やサイズを変更
     maximizeWindow = {
       hotkey = {
@@ -816,6 +822,7 @@ window_mover = {
 | `moveToNextDisplay` | アクティブウィンドウを現在のディスプレイの `screen:next()` へ移動し、移動先で最大化します。 |
 | `moveToActiveDisplayFreeArea` | 現在ディスプレイの `frame()` 内で、前面にある標準ウィンドウと重ならない最大の矩形へ移動します。アクティブウィンドウと、前面ウィンドウに重なる背面ウィンドウは計算から除外します。同面積の場合はアクティブウィンドウに近い領域を優先します。 |
 | `moveToSelectedArea` | ディスプレイ UUID ごとに設定した領域、または `selectedArea.actions` の window action を選ぶ chooser を開きます。 |
+| `moveToSelectedAreaInJinraiMode` | 最初から JinraiMode として `moveToSelectedArea` chooser を開きます。 |
 | `maximizeWindow` | macOS のフルスクリーン化ではなく、アクティブウィンドウを現在ディスプレイの `frame()` と同じサイズへ移動・リサイズします。 |
 | `minimizeWindow` | アクティブウィンドウを最小化します。 |
 | `cycleLeft` | アクティブウィンドウを左端へ移動し、横幅を `behavior.cycle.horizontalRatios` の順序で切り替えます（デフォルトは `1/2` → `1/3` → `2/3`）。 |

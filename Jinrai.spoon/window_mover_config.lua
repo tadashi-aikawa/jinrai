@@ -100,6 +100,12 @@ local DEFAULT_CONFIG = {
 				key = nil,
 			},
 		},
+		moveToSelectedAreaInJinraiMode = {
+			hotkey = {
+				modifiers = nil,
+				key = nil,
+			},
+		},
 		minimizeWindow = {
 			hotkey = {
 				modifiers = nil,
@@ -552,6 +558,8 @@ function M.build(options)
 		moveToActiveDisplayFreeAreaHotkeyKey = merged.commands.moveToActiveDisplayFreeArea.hotkey.key,
 		openWindowActionChooserHotkeyModifiers = merged.commands.moveToSelectedArea.hotkey.modifiers,
 		openWindowActionChooserHotkeyKey = merged.commands.moveToSelectedArea.hotkey.key,
+		openJinraiModeWindowActionChooserHotkeyModifiers = merged.commands.moveToSelectedAreaInJinraiMode.hotkey.modifiers,
+		openJinraiModeWindowActionChooserHotkeyKey = merged.commands.moveToSelectedAreaInJinraiMode.hotkey.key,
 		minimizeWindowHotkeyModifiers = merged.commands.minimizeWindow.hotkey.modifiers,
 		minimizeWindowHotkeyKey = merged.commands.minimizeWindow.hotkey.key,
 		maximizeWindowHotkeyModifiers = merged.commands.maximizeWindow.hotkey.modifiers,

@@ -64,6 +64,12 @@ describe("window_mover_config", function()
 						key = "f18",
 					},
 				},
+				moveToSelectedAreaInJinraiMode = {
+					hotkey = {
+						modifiers = { "cmd", "ctrl" },
+						key = "f19",
+					},
+				},
 				minimizeWindow = {
 					hotkey = {
 						modifiers = { "cmd" },
@@ -226,6 +232,8 @@ describe("window_mover_config", function()
 		assert.are.equal("f19", built.moveToActiveDisplayFreeAreaHotkeyKey)
 		assert.are.same({ "cmd", "alt" }, built.openWindowActionChooserHotkeyModifiers)
 		assert.are.equal("f18", built.openWindowActionChooserHotkeyKey)
+		assert.are.same({ "cmd", "ctrl" }, built.openJinraiModeWindowActionChooserHotkeyModifiers)
+		assert.are.equal("f19", built.openJinraiModeWindowActionChooserHotkeyKey)
 		assert.are.same({ "cmd" }, built.minimizeWindowHotkeyModifiers)
 		assert.are.equal("m", built.minimizeWindowHotkeyKey)
 		assert.are.same({ "cmd" }, built.maximizeWindowHotkeyModifiers)
