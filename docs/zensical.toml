@@ -44,7 +44,18 @@ Copyright &copy; 2026 The authors
 # can be defined using TOML syntax.
 #
 # Read more: https://zensical.org/docs/setup/navigation/
-nav = [{ "はじめに" = "index.md" }]
+nav = [
+  { "はじめに" = "index.md" },
+  { "セットアップ" = "setup.md" },
+  { "機能" = [
+    { "Window Hints" = "window-hints.md" },
+    { "Window Mover" = "window-mover.md" },
+    { "JinraiMode" = "jinrai-mode.md" },
+    { "Focus Border" = "focus-border.md" },
+    { "Focus Back" = "focus-back.md" },
+    { "macOS Native Tabs" = "macos-native-tabs.md" },
+  ] },
+]
 
 # With the "extra_css" option you can add your own CSS styling to customize
 # your Zensical project according to your needs. You can add any number of
