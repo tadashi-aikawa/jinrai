@@ -6,9 +6,6 @@
     <div>思考の速度で素早くウィンドウの切り替えや認識を行うためのhammerspoonスクリプト</div>
     </p>
     <p>
-        <a href="./README.en.md">English</a> | 日本語
-    </p>
-    <p>
         <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml">
           <img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" />
         </a>
