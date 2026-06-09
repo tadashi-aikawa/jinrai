@@ -348,8 +348,8 @@ local function startsWith(value, prefix)
 end
 
 local function normalizeSelectedAreaKey(key, path)
-	if type(key) ~= "string" or #key < 1 or #key > 2 then
-		error("[jinrai.window_mover] " .. path .. " must be a 1-2 character string")
+	if type(key) ~= "string" or #key < 1 or #key > 3 then
+		error("[jinrai.window_mover] " .. path .. " must be a 1-3 character string")
 	end
 
 	return string.upper(key)

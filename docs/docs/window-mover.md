@@ -254,4 +254,4 @@ window_mover = {
 | <img src="./attachments/window-mover/areas/threeQuartersCenter.svg" alt="threeQuartersCenter" width="48"> | `threeQuartersCenter` | ディスプレイ中央 | 横幅 3/4、高さ 3/4 |
 | <img src="./attachments/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイ内に収まるよう調整 |
 
-エリア名の方角はディスプレイの向きにかかわらず変わりません。選択キーには1文字または2文字を使用できます。
+エリア名の方角はディスプレイの向きにかかわらず変わりません。選択キーには1〜3文字を使用できます。

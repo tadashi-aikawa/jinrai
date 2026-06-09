@@ -173,6 +173,22 @@ describe("window_mover", function()
 			keycodesMap[code] = name
 		end
 		_G.hs = {
+			drawing = {
+				getTextDrawingSize = function(text, style)
+					local width = 0
+					local size = style.size
+					for char in text:gmatch(".") do
+						if char == "I" then
+							width = width + (size * 4 / 13)
+						elseif char == "W" then
+							width = width + size
+						else
+							width = width + (size * 8 / 13)
+						end
+					end
+					return { w = width, h = size }
+				end,
+			},
 			styledtext = {
 				new = function(text, _style)
 					local obj = { _text = text }
@@ -1101,6 +1117,33 @@ describe("window_mover", function()
 		sendKey(state, "z")
 
 		assert.are.same({ x = 800, y = 400, w = 400, h = 400 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("3文字の選択キーは3打鍵目でエリアへ移動する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "www",
+				halfRight = "iii",
+			},
+		}), win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+
+		assert.are.same({ "WWW", "III" }, canvasKeys(state))
+		assert.are.equal(84, canvasForKey(state, "WWW")[3].frame.w)
+		assert.are.equal(30, canvasForKey(state, "III")[3].frame.w)
+
+		sendKey(state, "w")
+		assert.are.equal(0, #win.setFrameCalls)
+
+		sendKey(state, "w")
+		assert.are.equal(0, #win.setFrameCalls)
+
+		sendKey(state, "w")
+		assert.are.same({ x = 0, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
 	end)
 
 	it("freeArea は各ディスプレイの右上に1つずつ表示され、対象ディスプレイの空き領域へ移動する", function()

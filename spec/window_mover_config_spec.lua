@@ -471,14 +471,14 @@ describe("window_mover_config", function()
 				selectedArea = {
 					screens = {
 						["uuid-a"] = {
-							full = "ABC",
+							full = "ABCD",
 						},
 					},
 				},
 			})
 		end)
 		assert.is_false(ok)
-		assert.is_truthy(tostring(err):match("must be a 1%-2 character string"))
+		assert.is_truthy(tostring(err):match("must be a 1%-3 character string"))
 	end)
 
 	it("selectedArea.screens に freeArea を設定できる", function()
@@ -486,13 +486,13 @@ describe("window_mover_config", function()
 			selectedArea = {
 				screens = {
 					["uuid-a"] = {
-						freeArea = "v",
+						freeArea = "v12",
 					},
 				},
 			},
 		})
 
-		assert.are.same({ ["uuid-a"] = { freeArea = "V" } }, built.selectedAreaScreens)
+		assert.are.same({ ["uuid-a"] = { freeArea = "V12" } }, built.selectedAreaScreens)
 	end)
 
 	it("selectedArea の重複キーはエラー", function()
@@ -533,12 +533,12 @@ describe("window_mover_config", function()
 		local built = mod.build({
 			selectedArea = {
 				actions = {
-					closeWindow = "x",
+					closeWindow = "x12",
 				},
 			},
 		})
 
-		assert.are.same({ closeWindow = "X" }, built.selectedAreaActions)
+		assert.are.same({ closeWindow = "X12" }, built.selectedAreaActions)
 	end)
 
 	it("selectedArea.windowHints.key を設定できる", function()

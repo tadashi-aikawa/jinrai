@@ -23,6 +23,8 @@ end
 local AREA_LABEL_MIN_MARGIN = 8
 local AREA_LABEL_GAP = 8
 local AREA_LABEL_HEIGHT = 52
+local AREA_HINT_TEXT_SIZE = 26
+local AREA_HINT_TEXT_HORIZONTAL_PADDING = 6
 local AREA_DETAIL_TEXT_SIZE = 13
 local AREA_INFO_WIDTH = 420
 local AREA_INFO_HEIGHT = 480
@@ -1132,10 +1134,10 @@ function M.new(options)
 				local restStr = string.sub(candidate.key, prefixLen + 1)
 				local typedColor = state.typedTextColor or state.textColor
 				candidate.labelCanvas[candidate.keyTextIdx].text = hs.styledtext.new(prefixStr, {
-					font = { size = 26 },
+					font = { size = AREA_HINT_TEXT_SIZE },
 					color = cloneColor(typedColor),
 				}) .. hs.styledtext.new(restStr, {
-					font = { size = 26 },
+					font = { size = AREA_HINT_TEXT_SIZE },
 					color = cloneColor(state.textColor),
 				})
 				if candidate.detailTextIdx then
@@ -1425,7 +1427,12 @@ function M.new(options)
 	end
 
 	local function areaHintKeyWidth(key)
-		return math.max(30, #key * 22)
+		local size = hs.drawing.getTextDrawingSize(key, { size = AREA_HINT_TEXT_SIZE })
+		local measuredWidth = size and (size.w or size.Width)
+		if type(measuredWidth) ~= "number" then
+			measuredWidth = #key * AREA_HINT_TEXT_SIZE
+		end
+		return math.max(30, math.ceil(measuredWidth + AREA_HINT_TEXT_HORIZONTAL_PADDING))
 	end
 
 	local function areaDetailTextWidth(text)
@@ -1634,9 +1641,12 @@ function M.new(options)
 			local keyW = areaHintKeyWidth(candidate.key)
 			canvas[3] = {
 				type = "text",
-				text = hs.styledtext.new(candidate.key, { font = { size = 26 }, color = cloneColor(state.textColor) }),
+				text = hs.styledtext.new(candidate.key, {
+					font = { size = AREA_HINT_TEXT_SIZE },
+					color = cloneColor(state.textColor),
+				}),
 				textFont = nil,
-				textSize = 26,
+				textSize = AREA_HINT_TEXT_SIZE,
 				textAlignment = "center",
 				frame = { x = 9, y = 9, w = keyW, h = AREA_LABEL_HEIGHT - 9 },
 			}
