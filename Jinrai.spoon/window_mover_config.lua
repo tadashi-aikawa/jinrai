@@ -39,6 +39,12 @@ local AREA_KEYS = {
 	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
 	"twoThirdsBottom",
+	"threeQuartersLeft",
+	"threeQuartersHorizontalCenter",
+	"threeQuartersRight",
+	"threeQuartersTop",
+	"threeQuartersVerticalCenter",
+	"threeQuartersBottom",
 }
 
 local DIRECT_AREA_COMMAND_KEYS = {
@@ -78,6 +84,12 @@ local DIRECT_AREA_COMMAND_KEYS = {
 	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
 	"twoThirdsBottom",
+	"threeQuartersLeft",
+	"threeQuartersHorizontalCenter",
+	"threeQuartersRight",
+	"threeQuartersTop",
+	"threeQuartersVerticalCenter",
+	"threeQuartersBottom",
 }
 
 local DEFAULT_CONFIG = {
@@ -198,6 +210,10 @@ local DEFAULT_CONFIG = {
 				twoThirds = {
 					color = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 },
 					dimmedColor = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.22 },
+				},
+				threeQuarters = {
+					color = { red = 0.30, green = 0.76, blue = 0.86, alpha = 0.92 },
+					dimmedColor = { red = 0.30, green = 0.76, blue = 0.86, alpha = 0.22 },
 				},
 				half = {
 					color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },

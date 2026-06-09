@@ -65,6 +65,12 @@ local AREA_ORDER = {
 	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
 	"twoThirdsBottom",
+	"threeQuartersLeft",
+	"threeQuartersHorizontalCenter",
+	"threeQuartersRight",
+	"threeQuartersTop",
+	"threeQuartersVerticalCenter",
+	"threeQuartersBottom",
 }
 
 local DIRECT_AREA_COMMAND_KEYS = {
@@ -104,6 +110,12 @@ local DIRECT_AREA_COMMAND_KEYS = {
 	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
 	"twoThirdsBottom",
+	"threeQuartersLeft",
+	"threeQuartersHorizontalCenter",
+	"threeQuartersRight",
+	"threeQuartersTop",
+	"threeQuartersVerticalCenter",
+	"threeQuartersBottom",
 }
 
 local AREA_ORDER_LOOKUP = {}
@@ -925,6 +937,48 @@ function M.new(options)
 				w = screenFrame.w,
 				h = screenFrame.h * 2 / 3,
 			}, "twoThirds", { slots = 3, index = 2, span = 2, axis = "vertical" }
+		elseif areaName == "threeQuartersLeft" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y,
+				w = screenFrame.w * 3 / 4,
+				h = screenFrame.h,
+			}, "threeQuarters", { slots = 4, index = 1, span = 3, axis = "horizontal" }
+		elseif areaName == "threeQuartersHorizontalCenter" then
+			return {
+				x = screenFrame.x + (screenFrame.w / 8),
+				y = screenFrame.y,
+				w = screenFrame.w * 3 / 4,
+				h = screenFrame.h,
+			}, "threeQuarters", { slots = 8, index = 2, span = 6, axis = "horizontal" }
+		elseif areaName == "threeQuartersRight" then
+			return {
+				x = screenFrame.x + (screenFrame.w / 4),
+				y = screenFrame.y,
+				w = screenFrame.w * 3 / 4,
+				h = screenFrame.h,
+			}, "threeQuarters", { slots = 4, index = 2, span = 3, axis = "horizontal" }
+		elseif areaName == "threeQuartersTop" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y,
+				w = screenFrame.w,
+				h = screenFrame.h * 3 / 4,
+			}, "threeQuarters", { slots = 4, index = 1, span = 3, axis = "vertical" }
+		elseif areaName == "threeQuartersVerticalCenter" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y + (screenFrame.h / 8),
+				w = screenFrame.w,
+				h = screenFrame.h * 3 / 4,
+			}, "threeQuarters", { slots = 8, index = 2, span = 6, axis = "vertical" }
+		elseif areaName == "threeQuartersBottom" then
+			return {
+				x = screenFrame.x,
+				y = screenFrame.y + (screenFrame.h / 4),
+				w = screenFrame.w,
+				h = screenFrame.h * 3 / 4,
+			}, "threeQuarters", { slots = 4, index = 2, span = 3, axis = "vertical" }
 		else
 			local width, height = parseFixedSizeCenterArea(areaName)
 			if width and height then
@@ -1631,6 +1685,12 @@ function M.new(options)
 			'  twoThirdsTop = "T1",',
 			'  twoThirdsVerticalCenter = "T2",',
 			'  twoThirdsBottom = "T3",',
+			'  threeQuartersLeft = "N1",',
+			'  threeQuartersHorizontalCenter = "N2",',
+			'  threeQuartersRight = "N3",',
+			'  threeQuartersTop = "P1",',
+			'  threeQuartersVerticalCenter = "P2",',
+			'  threeQuartersBottom = "P3",',
 			'  ["1920x1080Center"] = "M",',
 			"},",
 		}

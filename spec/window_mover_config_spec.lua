@@ -37,6 +37,12 @@ describe("window_mover_config", function()
 		"twoThirdsTop",
 		"twoThirdsVerticalCenter",
 		"twoThirdsBottom",
+		"threeQuartersLeft",
+		"threeQuartersHorizontalCenter",
+		"threeQuartersRight",
+		"threeQuartersTop",
+		"threeQuartersVerticalCenter",
+		"threeQuartersBottom",
 	}
 
 	before_each(function()
@@ -148,6 +154,12 @@ describe("window_mover_config", function()
 						key = "5",
 					},
 				},
+				threeQuartersRight = {
+					hotkey = {
+						modifiers = { "cmd", "alt" },
+						key = "6",
+					},
+				},
 			},
 			behavior = {
 				cursor = {
@@ -199,6 +211,12 @@ describe("window_mover_config", function()
 						twoThirdsTop = "cd",
 						twoThirdsVerticalCenter = "ce",
 						twoThirdsBottom = "cf",
+						threeQuartersLeft = "ga",
+						threeQuartersHorizontalCenter = "gb",
+						threeQuartersRight = "gc",
+						threeQuartersTop = "gd",
+						threeQuartersVerticalCenter = "ge",
+						threeQuartersBottom = "gf",
 						["1920x1080Center"] = "v",
 					},
 				},
@@ -260,6 +278,8 @@ describe("window_mover_config", function()
 		assert.are.equal("4", built.sixthTopCenterHotkeyKey)
 		assert.are.same({ "cmd", "alt" }, built.twoThirdsRightHotkeyModifiers)
 		assert.are.equal("5", built.twoThirdsRightHotkeyKey)
+		assert.are.same({ "cmd", "alt" }, built.threeQuartersRightHotkeyModifiers)
+		assert.are.equal("6", built.threeQuartersRightHotkeyKey)
 		assert.is_false(built.centerCursor)
 		assert.are.equal("uuid-a", built.selectedAreaDefault)
 		assert.is_false(built.selectedAreaHintsShow)
@@ -302,6 +322,12 @@ describe("window_mover_config", function()
 				twoThirdsTop = "CD",
 				twoThirdsVerticalCenter = "CE",
 				twoThirdsBottom = "CF",
+				threeQuartersLeft = "GA",
+				threeQuartersHorizontalCenter = "GB",
+				threeQuartersRight = "GC",
+				threeQuartersTop = "GD",
+				threeQuartersVerticalCenter = "GE",
+				threeQuartersBottom = "GF",
 				["1920x1080Center"] = "V",
 			},
 		}, built.selectedAreaScreens)
@@ -317,6 +343,10 @@ describe("window_mover_config", function()
 		assert.are.same({ red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 }, built.selectedAreaAppearance.styles.quarter.color)
 		assert.are.same({ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 }, built.selectedAreaAppearance.styles.sixth.color)
 		assert.are.same({ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 }, built.selectedAreaAppearance.styles.twoThirds.color)
+		assert.are.same(
+			{ red = 0.30, green = 0.76, blue = 0.86, alpha = 0.92 },
+			built.selectedAreaAppearance.styles.threeQuarters.color
+		)
 		assert.are.same({ 1 / 3, 1 / 2 }, built.cycleHorizontalRatios)
 		assert.are.same({ 2 / 3, 1 / 2 }, built.cycleVerticalRatios)
 	end)
@@ -360,6 +390,10 @@ describe("window_mover_config", function()
 		assert.are.same({ red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 }, built.selectedAreaAppearance.styles.full.color)
 		assert.are.same({ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 }, built.selectedAreaAppearance.styles.sixth.color)
 		assert.are.same({ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 }, built.selectedAreaAppearance.styles.twoThirds.color)
+		assert.are.same(
+			{ red = 0.30, green = 0.76, blue = 0.86, alpha = 0.92 },
+			built.selectedAreaAppearance.styles.threeQuarters.color
+		)
 		assert.are.same({ 1 / 2, 1 / 3, 2 / 3 }, built.cycleHorizontalRatios)
 		assert.are.same({ 1 / 2, 1 / 3, 2 / 3 }, built.cycleVerticalRatios)
 	end)
