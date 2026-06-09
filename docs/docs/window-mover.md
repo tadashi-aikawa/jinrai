@@ -205,7 +205,7 @@ window_mover = {
 
 | アイコン | エリア | 位置 | サイズ |
 | --- | --- | --- | --- |
-| - | `freeArea` | 選択したディスプレイの最大空き領域 | 他の可視な標準ウィンドウと重ならない最大サイズ |
+| <img src="./attachments/window-mover/areas/freeArea.svg" alt="freeArea" width="48"> | `freeArea` | 選択したディスプレイの最大空き領域 | 他の可視な標準ウィンドウと重ならない最大サイズ |
 | <img src="./attachments/window-mover/areas/full.svg" alt="full" width="48"> | `full` | ディスプレイ全体 | ディスプレイ全体 |
 | <img src="./attachments/window-mover/areas/halfLeft.svg" alt="halfLeft" width="48"> | `halfLeft` | 左端 | 横幅 1/2、高さ全体 |
 | <img src="./attachments/window-mover/areas/halfHorizontalCenter.svg" alt="halfHorizontalCenter" width="48"> | `halfHorizontalCenter` | 横方向中央 | 横幅 1/2、高さ全体 |

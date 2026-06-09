@@ -935,7 +935,7 @@ function M.new(options)
 					y = screenFrame.y + ((screenFrame.h - height) / 2),
 					w = width,
 					h = height,
-				}, "free", { free = true }, areaName:match("^(%d+x%d+)Center$")
+				}, "free", { fixedSizeCenter = true }, areaName:match("^(%d+x%d+)Center$")
 			end
 		end
 	end
@@ -1255,6 +1255,25 @@ function M.new(options)
 		})
 
 		local icon = candidate.icon or {}
+		if icon.fixedSizeCenter then
+			local dots = {
+				{ x = outlineFrame.x + 7, y = outlineFrame.y + 6, size = 4 },
+				{ x = outlineFrame.x + 27, y = outlineFrame.y + 6, size = 4 },
+				{ x = outlineFrame.x + 7, y = outlineFrame.y + 20, size = 4 },
+				{ x = outlineFrame.x + 27, y = outlineFrame.y + 20, size = 4 },
+				{ x = outlineFrame.x + 16, y = outlineFrame.y + 9, size = 6 },
+			}
+			for _, dot in ipairs(dots) do
+				appendIconElement({
+					type = "rectangle",
+					action = "fill",
+					fillColor = cloneColor(color),
+					roundedRectRadii = { xRadius = dot.size / 2, yRadius = dot.size / 2 },
+					frame = { x = dot.x, y = dot.y, w = dot.size, h = dot.size },
+				})
+			end
+			return nextIdx, iconElementIndices
+		end
 		if icon.free then
 			local dotSize = 5
 			local dots = {

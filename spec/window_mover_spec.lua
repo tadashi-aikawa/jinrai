@@ -354,6 +354,32 @@ describe("window_mover", function()
 		return false
 	end
 
+	local function canvasForKey(state, key)
+		for _, canvas in ipairs(state.canvases) do
+			local text = canvas[3].text
+			if (type(text) == "table" and text._text or text) == key then
+				return canvas
+			end
+		end
+	end
+
+	local function filledSquareSizes(canvas)
+		local sizes = {}
+		for _, element in pairs(canvas) do
+			if
+				type(element) == "table"
+				and element.type == "rectangle"
+				and element.action == "fill"
+				and element.frame
+				and element.frame.w == element.frame.h
+			then
+				table.insert(sizes, element.frame.w)
+			end
+		end
+		table.sort(sizes)
+		return sizes
+	end
+
 	local function canvasFramesByKey(state)
 		local frames = {}
 		for _, canvas in ipairs(state.canvases) do
@@ -1012,6 +1038,7 @@ describe("window_mover", function()
 		assert.are.same({ x = 900, y = 8, w = 92, h = 66 }, framesByKey.V)
 		assert.are.same({ x = 1900, y = 8, w = 92, h = 66 }, framesByKey.B)
 		assert.is_true(canvasHasText(state, "Free"))
+		assert.are.same({ 5, 5, 5, 5 }, filledSquareSizes(canvasForKey(state, "V")))
 
 		sendKey(state, "b")
 
@@ -1564,6 +1591,7 @@ describe("window_mover", function()
 
 		instance.openWindowActionChooser()
 		assert.is_true(canvasHasText(state, "800x600"))
+		assert.are.same({ 4, 4, 4, 4, 6 }, filledSquareSizes(canvasForKey(state, "M")))
 		sendKey(state, "v")
 		assert.are.same({ x = 0, y = 150, w = 1200, h = 600 }, win.setFrameCalls[1].frame)
 
