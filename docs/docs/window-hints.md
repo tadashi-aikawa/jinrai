@@ -22,7 +22,9 @@ window_hints = {
 - ヒント外をクリック、`escape`、または同じホットキーを押して閉じる
 - `1`から`9`を押して対応するSpaceへ移動
 
-## ヒント表示
+## ヒントをカスタマイズ
+
+### ヒント表示
 
 ```lua
 window_hints = {
@@ -96,7 +98,7 @@ window_hints = {
 
 ヒントの背景色、文字色、枠線色は、`hint.state`、`hint.icon.state`、`hint.key.state`、`hint.title.state`、`hint.spaceBadge.state`で変更できます。各設定では`normal`、`dimmed`、`occluded`、`active`の状態ごとに色や透明度を指定できます。
 
-## ヒントキーの先頭文字を指定
+### ヒントキーの先頭文字を指定
 
 アプリやウィンドウタイトルに応じて、ヒントキーの先頭文字を固定できます。ルールは上から順に評価され、最初に一致したものが使われます。
 
@@ -121,7 +123,9 @@ window_hints = {
 - `prefix`は`hint.chars`に含まれる1文字または2文字で指定します。
 - 複数のヒントキーが互いの先頭と一致しないよう、残りの文字は自動調整されます。
 
-## ナビゲーション
+## 操作をカスタマイズ
+
+### ナビゲーション
 
 ```lua
 window_hints = {
@@ -168,17 +172,17 @@ window_hints = {
 
 | 設定 | 説明 |
 | --- | --- |
-| `navigation.focusBack.key` | ヒント表示中にFocus Backを実行するキーです。 |
+| `navigation.focusBack.key` | ヒント表示中に[Focus Back](focus-back.md)を実行するキーです。 |
 | `navigation.direction.hints.keys` | ヒント表示中に方向でウィンドウを選ぶキーです。 |
 | `navigation.direction.direct` | Window Hintsを表示せず、方向で直接フォーカスを移動するホットキーです。 |
 | `navigation.spaces.numbers` | ヒント表示中に数字キーでSpaceを切り替えるかを指定します。 |
 | `navigation.spaces.prev.key` | 前のSpaceへ移動するキーです。 |
 | `navigation.spaces.next.key` | 次のSpaceへ移動するキーです。 |
-| `navigation.windowMover.moveToSelectedArea.key` | Window Hintsを閉じ、Window Moverのエリア選択を開くキーです。 |
+| `navigation.windowMover.moveToSelectedArea.key` | Window Hintsを閉じ、[Window Mover](window-mover.md)のエリア選択を開くキーです。 |
 
 ヒント表示中のナビゲーションキーと`hint.chars`が重複した場合は、ナビゲーションキーが優先されます。方向移動は現在のSpaceにあるウィンドウを対象にします。
 
-## 選択対象とカーソル
+### 選択対象とカーソル
 
 ```lua
 window_hints = {

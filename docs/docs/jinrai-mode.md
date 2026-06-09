@@ -6,11 +6,11 @@ JinraiModeは、[Window Hints](window-hints.md)によるウィンドウ選択と
 
 JinraiModeは次の方法で開始できます。
 
-- Window Hintsの表示中に`triggers.windowHints.key`を押す
-- Window Moverのエリア選択中に`triggers.windowMover.key`を押す
-- Window Moverの`moveToSelectedAreaInJinraiMode`ホットキーを押す
+- [Window Hints](window-hints.md)の表示中に`triggers.windowHints.key`を押す
+- [Window Mover](window-mover.md)のエリア選択中に`triggers.windowMover.key`を押す
+- [Window Mover](window-mover.md)の`moveToSelectedAreaInJinraiMode`ホットキーを押す
 
-Window Hintsから開始した場合は、ウィンドウを選択すると移動先の候補が開きます。移動先を選択するとWindow Hintsへ戻り、次のウィンドウを続けて選べます。
+[Window Hints](window-hints.md)から開始した場合は、ウィンドウを選択すると移動先の候補が開きます。移動先を選択すると[Window Hints](window-hints.md)へ戻り、次のウィンドウを続けて選べます。
 
 `escape`、候補外のクリック、または表示中のホットキーをもう一度押して操作をキャンセルすると、JinraiModeも終了します。
 
@@ -46,7 +46,7 @@ jinrai_mode = {
 
 | 設定 | 説明 |
 | --- | --- |
-| `triggers.windowHints.key` | Window Hintsの表示中にJinraiModeを開始するキーです。 |
+| `triggers.windowHints.key` | [Window Hints](window-hints.md)の表示中にJinraiModeを開始するキーです。 |
 | `triggers.windowMover.key` | 移動先の選択中にJinraiModeを開始するキーです。 |
 | `logo.enabled` | JinraiMode中にJINRAIロゴを表示するかを指定します。 |
 | `logo.size` | ロゴの大きさです。 |
@@ -56,9 +56,9 @@ jinrai_mode = {
 | `combo.text.enabled` | 継続回数をCOMBOテキストで表示するかを指定します。 |
 | `combo.text.alpha` | COMBOテキストの透明度です。 |
 
-## 機能間を直接移動
+### 機能間を直接移動
 
-Window Moverのエリア選択中にウィンドウを選び直すキーも設定できます。
+[Window Mover](window-mover.md)のエリア選択中にウィンドウを選び直すキーも設定できます。
 
 ```lua
 window_mover = {
@@ -70,6 +70,6 @@ window_mover = {
 }
 ```
 
-このキーは通常の操作でも利用できます。JinraiMode中に使った場合は、モードを終了せずWindow Hintsへ戻ります。
+このキーは通常の操作でも利用できます。JinraiMode中に使った場合は、モードを終了せず[Window Hints](window-hints.md)へ戻ります。
 
 JinraiModeの開始キーや戻るキーは、同じ画面で使うエリアキーやアクションキーと重複させないでください。`K`と`KD`のような、一方がもう一方の先頭に一致する組み合わせも使用できません。

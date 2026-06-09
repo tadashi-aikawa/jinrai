@@ -2,7 +2,9 @@
 
 Window Moverは、アクティブウィンドウの位置や大きさをホットキーまたはエリア選択から変更する機能です。
 
-## ホットキーを設定
+## ホットキーで移動する
+
+### ホットキーを設定
 
 使いたいコマンドにホットキーを設定します。
 
@@ -38,8 +40,6 @@ window_mover = {
 ```
 
 ホットキーを指定していないコマンドは無効です。
-
-## コマンド
 
 ### ディスプレイとエリア
 
@@ -85,7 +85,7 @@ window_mover = {
 
 ### 決まったサイズへ配置
 
-次のコマンドは、名前に対応する[利用可能なエリア](#available-areas)へ直接移動します。
+次のコマンドは、名前に対応する[利用可能なエリア](window-mover-areas.md)へ直接移動します。
 
 | サイズ | コマンド |
 | --- | --- |
@@ -97,7 +97,9 @@ window_mover = {
 | 3分の2 | `twoThirdsLeft`、`twoThirdsHorizontalCenter`、`twoThirdsRight`、`twoThirdsTop`、`twoThirdsVerticalCenter`、`twoThirdsBottom`、`twoThirdsCenter` |
 | 4分の3 | `threeQuartersLeft`、`threeQuartersHorizontalCenter`、`threeQuartersRight`、`threeQuartersTop`、`threeQuartersVerticalCenter`、`threeQuartersBottom`、`threeQuartersCenter` |
 
-## 移動後のカーソル
+## 共通設定
+
+### 移動後にカーソルを追従
 
 ```lua
 window_mover = {
@@ -120,6 +122,8 @@ window_mover = {
 エリアが未設定の状態で`moveToSelectedArea`を実行すると、各ディスプレイ上にUUIDと設定例が表示されます。表示されたUUIDを`selectedArea.screens`のキーに使用します。
 
 ### エリアを設定
+
+設定できるエリア名は[利用可能なエリア](window-mover-areas.md)を参照してください。
 
 ```lua
 window_mover = {
@@ -165,16 +169,16 @@ window_mover = {
 | `selectedArea.screens` | ディスプレイUUIDごとに、エリア名と選択キーを指定します。 |
 | `selectedArea.defaultScreen` | 設定がないディスプレイへ流用するキーマップのUUIDです。 |
 | `selectedArea.actions.closeWindow` | エリア選択中にアクティブウィンドウを閉じるキーです。 |
-| `selectedArea.windowHints.key` | エリア選択を閉じ、Window Hintsを開くキーです。 |
+| `selectedArea.windowHints.key` | エリア選択を閉じ、[Window Hints](window-hints.md)を開くキーです。 |
 | `selectedArea.hints.show` | エリアとキーを画面上に表示するかを指定します。`false`でもキー入力は有効です。 |
 
 選択画面は`escape`、候補外のクリック、または起動に使ったホットキーで閉じられます。
 
 `freeArea`を選ぶと、選択した時点のウィンドウ配置から最大の空き領域を探します。空き領域がない場合、ウィンドウは移動せず選択画面が維持されます。
 
-同じディスプレイ内のエリアキー、アクションキー、Window Hintsへ戻るキーは重複させないでください。`B`と`B1`のような、一方がもう一方の先頭に一致する組み合わせも使用できません。
+同じディスプレイ内のエリアキー、アクションキー、[Window Hints](window-hints.md)へ戻るキーは重複させないでください。`B`と`B1`のような、一方がもう一方の先頭に一致する組み合わせも使用できません。
 
-## 選択画面の見た目
+### 選択画面の見た目
 
 ```lua
 window_mover = {
@@ -198,60 +202,4 @@ window_mover = {
 }
 ```
 
-`selectedArea.appearance.styles`では、`full`、`twoThirds`、`threeQuarters`、`half`、`third`、`quarter`、`sixth`、`free`の種類ごとにエリアの色を変更できます。
-
-<a id="available-areas"></a>
-
-## 利用可能なエリア
-
-| アイコン | エリア | 位置 | サイズ |
-| --- | --- | --- | --- |
-| <img src="./attachments/window-mover/areas/freeArea.svg" alt="freeArea" width="48"> | `freeArea` | 選択したディスプレイの最大空き領域 | 他の可視な標準ウィンドウと重ならない最大サイズ |
-| <img src="./attachments/window-mover/areas/full.svg" alt="full" width="48"> | `full` | ディスプレイ全体 | ディスプレイ全体 |
-| <img src="./attachments/window-mover/areas/halfLeft.svg" alt="halfLeft" width="48"> | `halfLeft` | 左端 | 横幅 1/2、高さ全体 |
-| <img src="./attachments/window-mover/areas/halfHorizontalCenter.svg" alt="halfHorizontalCenter" width="48"> | `halfHorizontalCenter` | 横方向中央 | 横幅 1/2、高さ全体 |
-| <img src="./attachments/window-mover/areas/halfRight.svg" alt="halfRight" width="48"> | `halfRight` | 右端 | 横幅 1/2、高さ全体 |
-| <img src="./attachments/window-mover/areas/halfTop.svg" alt="halfTop" width="48"> | `halfTop` | 上端 | 横幅全体、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/halfVerticalCenter.svg" alt="halfVerticalCenter" width="48"> | `halfVerticalCenter` | 縦方向中央 | 横幅全体、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/halfBottom.svg" alt="halfBottom" width="48"> | `halfBottom` | 下端 | 横幅全体、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/thirdLeft.svg" alt="thirdLeft" width="48"> | `thirdLeft` | 左端 | 横幅 1/3、高さ全体 |
-| <img src="./attachments/window-mover/areas/thirdHorizontalCenter.svg" alt="thirdHorizontalCenter" width="48"> | `thirdHorizontalCenter` | 横方向中央 | 横幅 1/3、高さ全体 |
-| <img src="./attachments/window-mover/areas/thirdRight.svg" alt="thirdRight" width="48"> | `thirdRight` | 右端 | 横幅 1/3、高さ全体 |
-| <img src="./attachments/window-mover/areas/thirdTop.svg" alt="thirdTop" width="48"> | `thirdTop` | 上端 | 横幅全体、高さ 1/3 |
-| <img src="./attachments/window-mover/areas/thirdVerticalCenter.svg" alt="thirdVerticalCenter" width="48"> | `thirdVerticalCenter` | 縦方向中央 | 横幅全体、高さ 1/3 |
-| <img src="./attachments/window-mover/areas/thirdBottom.svg" alt="thirdBottom" width="48"> | `thirdBottom` | 下端 | 横幅全体、高さ 1/3 |
-| <img src="./attachments/window-mover/areas/quarterLeft.svg" alt="quarterLeft" width="48"> | `quarterLeft` | 左端 | 横幅 1/4、高さ全体 |
-| <img src="./attachments/window-mover/areas/quarterHorizontalLeftCenter.svg" alt="quarterHorizontalLeftCenter" width="48"> | `quarterHorizontalLeftCenter` | 横方向左中央 | 横幅 1/4、高さ全体 |
-| <img src="./attachments/window-mover/areas/quarterHorizontalRightCenter.svg" alt="quarterHorizontalRightCenter" width="48"> | `quarterHorizontalRightCenter` | 横方向右中央 | 横幅 1/4、高さ全体 |
-| <img src="./attachments/window-mover/areas/quarterRight.svg" alt="quarterRight" width="48"> | `quarterRight` | 右端 | 横幅 1/4、高さ全体 |
-| <img src="./attachments/window-mover/areas/quarterTop.svg" alt="quarterTop" width="48"> | `quarterTop` | 上端 | 横幅全体、高さ 1/4 |
-| <img src="./attachments/window-mover/areas/quarterVerticalTopCenter.svg" alt="quarterVerticalTopCenter" width="48"> | `quarterVerticalTopCenter` | 縦方向上中央 | 横幅全体、高さ 1/4 |
-| <img src="./attachments/window-mover/areas/quarterVerticalBottomCenter.svg" alt="quarterVerticalBottomCenter" width="48"> | `quarterVerticalBottomCenter` | 縦方向下中央 | 横幅全体、高さ 1/4 |
-| <img src="./attachments/window-mover/areas/quarterBottom.svg" alt="quarterBottom" width="48"> | `quarterBottom` | 下端 | 横幅全体、高さ 1/4 |
-| <img src="./attachments/window-mover/areas/quarterTopLeft.svg" alt="quarterTopLeft" width="48"> | `quarterTopLeft` | 左上 | 横幅 1/2、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/quarterTopRight.svg" alt="quarterTopRight" width="48"> | `quarterTopRight` | 右上 | 横幅 1/2、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/quarterBottomLeft.svg" alt="quarterBottomLeft" width="48"> | `quarterBottomLeft` | 左下 | 横幅 1/2、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/quarterBottomRight.svg" alt="quarterBottomRight" width="48"> | `quarterBottomRight` | 右下 | 横幅 1/2、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/sixthTopLeft.svg" alt="sixthTopLeft" width="48"> | `sixthTopLeft` | 左上 | 横幅 1/3、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/sixthTopCenter.svg" alt="sixthTopCenter" width="48"> | `sixthTopCenter` | 中央上 | 横幅 1/3、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/sixthTopRight.svg" alt="sixthTopRight" width="48"> | `sixthTopRight` | 右上 | 横幅 1/3、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/sixthBottomLeft.svg" alt="sixthBottomLeft" width="48"> | `sixthBottomLeft` | 左下 | 横幅 1/3、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/sixthBottomCenter.svg" alt="sixthBottomCenter" width="48"> | `sixthBottomCenter` | 中央下 | 横幅 1/3、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/sixthBottomRight.svg" alt="sixthBottomRight" width="48"> | `sixthBottomRight` | 右下 | 横幅 1/3、高さ 1/2 |
-| <img src="./attachments/window-mover/areas/twoThirdsLeft.svg" alt="twoThirdsLeft" width="48"> | `twoThirdsLeft` | 左端 | 横幅 2/3、高さ全体 |
-| <img src="./attachments/window-mover/areas/twoThirdsHorizontalCenter.svg" alt="twoThirdsHorizontalCenter" width="48"> | `twoThirdsHorizontalCenter` | 横方向中央 | 横幅 2/3、高さ全体 |
-| <img src="./attachments/window-mover/areas/twoThirdsRight.svg" alt="twoThirdsRight" width="48"> | `twoThirdsRight` | 右端 | 横幅 2/3、高さ全体 |
-| <img src="./attachments/window-mover/areas/twoThirdsTop.svg" alt="twoThirdsTop" width="48"> | `twoThirdsTop` | 上端 | 横幅全体、高さ 2/3 |
-| <img src="./attachments/window-mover/areas/twoThirdsVerticalCenter.svg" alt="twoThirdsVerticalCenter" width="48"> | `twoThirdsVerticalCenter` | 縦方向中央 | 横幅全体、高さ 2/3 |
-| <img src="./attachments/window-mover/areas/twoThirdsBottom.svg" alt="twoThirdsBottom" width="48"> | `twoThirdsBottom` | 下端 | 横幅全体、高さ 2/3 |
-| <img src="./attachments/window-mover/areas/twoThirdsCenter.svg" alt="twoThirdsCenter" width="48"> | `twoThirdsCenter` | ディスプレイ中央 | 横幅 2/3、高さ 2/3 |
-| <img src="./attachments/window-mover/areas/threeQuartersLeft.svg" alt="threeQuartersLeft" width="48"> | `threeQuartersLeft` | 左端 | 横幅 3/4、高さ全体 |
-| <img src="./attachments/window-mover/areas/threeQuartersHorizontalCenter.svg" alt="threeQuartersHorizontalCenter" width="48"> | `threeQuartersHorizontalCenter` | 横方向中央 | 横幅 3/4、高さ全体 |
-| <img src="./attachments/window-mover/areas/threeQuartersRight.svg" alt="threeQuartersRight" width="48"> | `threeQuartersRight` | 右端 | 横幅 3/4、高さ全体 |
-| <img src="./attachments/window-mover/areas/threeQuartersTop.svg" alt="threeQuartersTop" width="48"> | `threeQuartersTop` | 上端 | 横幅全体、高さ 3/4 |
-| <img src="./attachments/window-mover/areas/threeQuartersVerticalCenter.svg" alt="threeQuartersVerticalCenter" width="48"> | `threeQuartersVerticalCenter` | 縦方向中央 | 横幅全体、高さ 3/4 |
-| <img src="./attachments/window-mover/areas/threeQuartersBottom.svg" alt="threeQuartersBottom" width="48"> | `threeQuartersBottom` | 下端 | 横幅全体、高さ 3/4 |
-| <img src="./attachments/window-mover/areas/threeQuartersCenter.svg" alt="threeQuartersCenter" width="48"> | `threeQuartersCenter` | ディスプレイ中央 | 横幅 3/4、高さ 3/4 |
-| <img src="./attachments/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイ内に収まるよう調整 |
-
-エリア名の方角はディスプレイの向きにかかわらず変わりません。選択キーには1〜3文字を使用できます。
+`selectedArea.appearance.styles`では、[利用可能なエリア](window-mover-areas.md)の種類ごとにエリアの色を変更できます。

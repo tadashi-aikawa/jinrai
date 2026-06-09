@@ -53,6 +53,9 @@ nav = [
     { "JinraiMode" = "jinrai-mode.md" },
     { "Focus Border" = "focus-border.md" },
     { "Focus Back" = "focus-back.md" },
+  ] },
+  { "設定・リファレンス" = [
+    { "利用可能なエリア" = "window-mover-areas.md" },
     { "macOS Native Tabs" = "macos-native-tabs.md" },
   ] },
 ]

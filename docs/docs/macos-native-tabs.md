@@ -1,6 +1,6 @@
 # macOS Native Tabs
 
-macOSネイティブタブを使うアプリで、Window HintsとFocus Backを安定して利用するための補正設定です。
+macOSネイティブタブを使うアプリで、[Window Hints](window-hints.md)と[Focus Back](focus-back.md)を安定して利用するための補正設定です。
 
 GhosttyとFinderは最初から対象に含まれています。
 

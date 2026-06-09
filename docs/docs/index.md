@@ -21,31 +21,35 @@ JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択
 
 ## 主な機能
 
-- **Window Hints**
+- **[Window Hints](window-hints.md)**
     - アプリアイコンとキーヒントからウィンドウを選択
     - 別のSpaceや他のウィンドウに隠れたウィンドウも候補として表示
     - キー入力、方向キー、マウスクリックによる選択
-- **Window Mover**
+- **[Window Mover](window-mover.md)**
     - ウィンドウを別ディスプレイ、空き領域、指定した画面領域へ移動
     - 最大化、最小化、画面分割レイアウトへの配置
-- **JinraiMode**
-    - Window HintsとWindow Moverを交互に連続実行
-- **Focus Border**
+- **[JinraiMode](jinrai-mode.md)**
+    - [Window Hints](window-hints.md)と[Window Mover](window-mover.md)を交互に連続実行
+- **[Focus Border](focus-border.md)**
     - フォーカスしたウィンドウを一時的な枠線で強調
-- **Focus Back**
+- **[Focus Back](focus-back.md)**
     - 直前に使用していたウィンドウへ戻る
 
 ## はじめる
 
 [セットアップ](setup.md)では、HammerspoonとJINRAIのインストール、最小設定、アップデート方法を説明します。
 
-機能の使い方や設定は、次のページを参照してください。
+各機能の使い方や設定は、次のページを参照してください。
 
 - [Window Hints](window-hints.md)
 - [Window Mover](window-mover.md)
 - [JinraiMode](jinrai-mode.md)
 - [Focus Border](focus-border.md)
 - [Focus Back](focus-back.md)
+
+補足設定やリファレンスは、次のページを参照してください。
+
+- [利用可能なエリア](window-mover-areas.md)
 - [macOS Native Tabs](macos-native-tabs.md)
 
 ## デモ動画
