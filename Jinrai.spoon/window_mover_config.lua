@@ -39,12 +39,14 @@ local AREA_KEYS = {
 	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
 	"twoThirdsBottom",
+	"twoThirdsCenter",
 	"threeQuartersLeft",
 	"threeQuartersHorizontalCenter",
 	"threeQuartersRight",
 	"threeQuartersTop",
 	"threeQuartersVerticalCenter",
 	"threeQuartersBottom",
+	"threeQuartersCenter",
 }
 
 local DIRECT_AREA_COMMAND_KEYS = {
@@ -84,12 +86,14 @@ local DIRECT_AREA_COMMAND_KEYS = {
 	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
 	"twoThirdsBottom",
+	"twoThirdsCenter",
 	"threeQuartersLeft",
 	"threeQuartersHorizontalCenter",
 	"threeQuartersRight",
 	"threeQuartersTop",
 	"threeQuartersVerticalCenter",
 	"threeQuartersBottom",
+	"threeQuartersCenter",
 }
 
 local DEFAULT_CONFIG = {

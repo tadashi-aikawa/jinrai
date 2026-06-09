@@ -65,12 +65,14 @@ local AREA_ORDER = {
 	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
 	"twoThirdsBottom",
+	"twoThirdsCenter",
 	"threeQuartersLeft",
 	"threeQuartersHorizontalCenter",
 	"threeQuartersRight",
 	"threeQuartersTop",
 	"threeQuartersVerticalCenter",
 	"threeQuartersBottom",
+	"threeQuartersCenter",
 }
 
 local DIRECT_AREA_COMMAND_KEYS = {
@@ -110,12 +112,14 @@ local DIRECT_AREA_COMMAND_KEYS = {
 	"twoThirdsTop",
 	"twoThirdsVerticalCenter",
 	"twoThirdsBottom",
+	"twoThirdsCenter",
 	"threeQuartersLeft",
 	"threeQuartersHorizontalCenter",
 	"threeQuartersRight",
 	"threeQuartersTop",
 	"threeQuartersVerticalCenter",
 	"threeQuartersBottom",
+	"threeQuartersCenter",
 }
 
 local AREA_ORDER_LOOKUP = {}
@@ -937,6 +941,13 @@ function M.new(options)
 				w = screenFrame.w,
 				h = screenFrame.h * 2 / 3,
 			}, "twoThirds", { slots = 3, index = 2, span = 2, axis = "vertical" }
+		elseif areaName == "twoThirdsCenter" then
+			return {
+				x = screenFrame.x + (screenFrame.w / 6),
+				y = screenFrame.y + (screenFrame.h / 6),
+				w = screenFrame.w * 2 / 3,
+				h = screenFrame.h * 2 / 3,
+			}, "twoThirds", { centeredRatio = 2 / 3 }
 		elseif areaName == "threeQuartersLeft" then
 			return {
 				x = screenFrame.x,
@@ -979,6 +990,13 @@ function M.new(options)
 				w = screenFrame.w,
 				h = screenFrame.h * 3 / 4,
 			}, "threeQuarters", { slots = 4, index = 2, span = 3, axis = "vertical" }
+		elseif areaName == "threeQuartersCenter" then
+			return {
+				x = screenFrame.x + (screenFrame.w / 8),
+				y = screenFrame.y + (screenFrame.h / 8),
+				w = screenFrame.w * 3 / 4,
+				h = screenFrame.h * 3 / 4,
+			}, "threeQuarters", { centeredRatio = 3 / 4 }
 		else
 			local width, height = parseFixedSizeCenterArea(areaName)
 			if width and height then
@@ -1359,7 +1377,16 @@ function M.new(options)
 			h = outlineFrame.h - 10,
 		}
 		local fillFrame
-		if icon.cols and icon.rows and icon.col and icon.row then
+		if icon.centeredRatio then
+			local fillW = inner.w * icon.centeredRatio
+			local fillH = inner.h * icon.centeredRatio
+			fillFrame = {
+				x = inner.x + ((inner.w - fillW) / 2),
+				y = inner.y + ((inner.h - fillH) / 2),
+				w = fillW,
+				h = fillH,
+			}
+		elseif icon.cols and icon.rows and icon.col and icon.row then
 			local slotW = (inner.w - (gap * (icon.cols - 1))) / icon.cols
 			local slotH = (inner.h - (gap * (icon.rows - 1))) / icon.rows
 			fillFrame = {
@@ -1685,12 +1712,14 @@ function M.new(options)
 			'  twoThirdsTop = "T1",',
 			'  twoThirdsVerticalCenter = "T2",',
 			'  twoThirdsBottom = "T3",',
+			'  twoThirdsCenter = "R4",',
 			'  threeQuartersLeft = "N1",',
 			'  threeQuartersHorizontalCenter = "N2",',
 			'  threeQuartersRight = "N3",',
 			'  threeQuartersTop = "P1",',
 			'  threeQuartersVerticalCenter = "P2",',
 			'  threeQuartersBottom = "P3",',
+			'  threeQuartersCenter = "N4",',
 			'  ["1920x1080Center"] = "M",',
 			"},",
 		}

@@ -380,6 +380,22 @@ describe("window_mover", function()
 		return sizes
 	end
 
+	local function canvasHasFilledRectangle(canvas, width, height)
+		for _, element in pairs(canvas) do
+			if
+				type(element) == "table"
+				and element.type == "rectangle"
+				and element.action == "fill"
+				and element.frame
+				and math.abs(element.frame.w - width) < 0.001
+				and math.abs(element.frame.h - height) < 0.001
+			then
+				return true
+			end
+		end
+		return false
+	end
+
 	local function canvasFramesByKey(state)
 		local frames = {}
 		for _, canvas in ipairs(state.canvases) do
@@ -546,12 +562,14 @@ describe("window_mover", function()
 			"twoThirdsTop",
 			"twoThirdsVerticalCenter",
 			"twoThirdsBottom",
+			"twoThirdsCenter",
 			"threeQuartersLeft",
 			"threeQuartersHorizontalCenter",
 			"threeQuartersRight",
 			"threeQuartersTop",
 			"threeQuartersVerticalCenter",
 			"threeQuartersBottom",
+			"threeQuartersCenter",
 		}
 		local directAreaKeys = {
 			"a",
@@ -596,6 +614,8 @@ describe("window_mover", function()
 			"f10",
 			"f11",
 			"f12",
+			"f13",
+			"f14",
 		}
 		local commands = {
 			moveToSelectedAreaInJinraiMode = { hotkey = { modifiers = { "cmd", "alt" }, key = "f18" } },
@@ -811,12 +831,14 @@ describe("window_mover", function()
 		instance.twoThirdsTop()
 		instance.twoThirdsVerticalCenter()
 		instance.twoThirdsBottom()
+		instance.twoThirdsCenter()
 		instance.threeQuartersLeft()
 		instance.threeQuartersHorizontalCenter()
 		instance.threeQuartersRight()
 		instance.threeQuartersTop()
 		instance.threeQuartersVerticalCenter()
 		instance.threeQuartersBottom()
+		instance.threeQuartersCenter()
 
 		assert.are.same({ x = 10, y = 20, w = 600, h = 900 }, win.setFrameCalls[1].frame)
 		assert.are.same({ x = 310, y = 20, w = 600, h = 900 }, win.setFrameCalls[2].frame)
@@ -854,12 +876,14 @@ describe("window_mover", function()
 		assert.are.same({ x = 10, y = 20, w = 1200, h = 600 }, win.setFrameCalls[34].frame)
 		assert.are.same({ x = 10, y = 170, w = 1200, h = 600 }, win.setFrameCalls[35].frame)
 		assert.are.same({ x = 10, y = 320, w = 1200, h = 600 }, win.setFrameCalls[36].frame)
-		assert.are.same({ x = 10, y = 20, w = 900, h = 900 }, win.setFrameCalls[37].frame)
-		assert.are.same({ x = 160, y = 20, w = 900, h = 900 }, win.setFrameCalls[38].frame)
-		assert.are.same({ x = 310, y = 20, w = 900, h = 900 }, win.setFrameCalls[39].frame)
-		assert.are.same({ x = 10, y = 20, w = 1200, h = 675 }, win.setFrameCalls[40].frame)
-		assert.are.same({ x = 10, y = 132.5, w = 1200, h = 675 }, win.setFrameCalls[41].frame)
-		assert.are.same({ x = 10, y = 245, w = 1200, h = 675 }, win.setFrameCalls[42].frame)
+		assert.are.same({ x = 210, y = 170, w = 800, h = 600 }, win.setFrameCalls[37].frame)
+		assert.are.same({ x = 10, y = 20, w = 900, h = 900 }, win.setFrameCalls[38].frame)
+		assert.are.same({ x = 160, y = 20, w = 900, h = 900 }, win.setFrameCalls[39].frame)
+		assert.are.same({ x = 310, y = 20, w = 900, h = 900 }, win.setFrameCalls[40].frame)
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 675 }, win.setFrameCalls[41].frame)
+		assert.are.same({ x = 10, y = 132.5, w = 1200, h = 675 }, win.setFrameCalls[42].frame)
+		assert.are.same({ x = 10, y = 245, w = 1200, h = 675 }, win.setFrameCalls[43].frame)
+		assert.are.same({ x = 160, y = 132.5, w = 900, h = 675 }, win.setFrameCalls[44].frame)
 	end)
 
 	it("縦方向の cycle は 1/2、1/3、2/3 の順で高さを切り替える", function()
@@ -1027,12 +1051,14 @@ describe("window_mover", function()
 				twoThirdsTop = "I",
 				twoThirdsVerticalCenter = "O",
 				twoThirdsBottom = "P",
+				twoThirdsCenter = "B",
 				threeQuartersLeft = "G",
 				threeQuartersHorizontalCenter = "H",
 				threeQuartersRight = "J",
 				threeQuartersTop = "K",
 				threeQuartersVerticalCenter = "L",
 				threeQuartersBottom = "M",
+				threeQuartersCenter = "N4",
 			},
 		}), win, { win })
 		state.screens = { screen }
@@ -1040,7 +1066,31 @@ describe("window_mover", function()
 		instance.openWindowActionChooser()
 
 		assert.are.same(
-			{ "A", "S", "D", "F", "Q", "W", "E", "T", "Z", "R", "Y", "U", "I", "O", "P", "G", "H", "J", "K", "L", "M" },
+			{
+				"A",
+				"S",
+				"D",
+				"F",
+				"Q",
+				"W",
+				"E",
+				"T",
+				"Z",
+				"R",
+				"Y",
+				"U",
+				"I",
+				"O",
+				"P",
+				"B",
+				"G",
+				"H",
+				"J",
+				"K",
+				"L",
+				"M",
+				"N4",
+			},
 			canvasKeys(state)
 		)
 		for _, canvas in ipairs(state.canvases) do
@@ -1644,11 +1694,13 @@ describe("window_mover", function()
 				twoThirdsTop = "Q",
 				twoThirdsVerticalCenter = "W",
 				twoThirdsBottom = "E",
+				twoThirdsCenter = "R",
 			},
 		}), win, { win })
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
+		assert.is_true(canvasHasFilledRectangle(canvasForKey(state, "R"), 28 * 2 / 3, 20 * 2 / 3))
 		sendKey(state, "a")
 		instance.openWindowActionChooser()
 		sendKey(state, "s")
@@ -1660,6 +1712,8 @@ describe("window_mover", function()
 		sendKey(state, "w")
 		instance.openWindowActionChooser()
 		sendKey(state, "e")
+		instance.openWindowActionChooser()
+		sendKey(state, "r")
 
 		assert.are.same({ x = 0, y = 0, w = 800, h = 900 }, win.setFrameCalls[1].frame)
 		assert.are.same({ x = 200, y = 0, w = 800, h = 900 }, win.setFrameCalls[2].frame)
@@ -1667,6 +1721,7 @@ describe("window_mover", function()
 		assert.are.same({ x = 0, y = 0, w = 1200, h = 600 }, win.setFrameCalls[4].frame)
 		assert.are.same({ x = 0, y = 150, w = 1200, h = 600 }, win.setFrameCalls[5].frame)
 		assert.are.same({ x = 0, y = 300, w = 1200, h = 600 }, win.setFrameCalls[6].frame)
+		assert.are.same({ x = 200, y = 150, w = 800, h = 600 }, win.setFrameCalls[7].frame)
 	end)
 
 	it("threeQuarters の各エリアへ移動する", function()
@@ -1680,11 +1735,13 @@ describe("window_mover", function()
 				threeQuartersTop = "Q",
 				threeQuartersVerticalCenter = "W",
 				threeQuartersBottom = "E",
+				threeQuartersCenter = "R",
 			},
 		}), win, { win })
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
+		assert.is_true(canvasHasFilledRectangle(canvasForKey(state, "R"), 28 * 3 / 4, 20 * 3 / 4))
 		sendKey(state, "a")
 		instance.openWindowActionChooser()
 		sendKey(state, "s")
@@ -1696,6 +1753,8 @@ describe("window_mover", function()
 		sendKey(state, "w")
 		instance.openWindowActionChooser()
 		sendKey(state, "e")
+		instance.openWindowActionChooser()
+		sendKey(state, "r")
 
 		assert.are.same({ x = 0, y = 0, w = 900, h = 800 }, win.setFrameCalls[1].frame)
 		assert.are.same({ x = 150, y = 0, w = 900, h = 800 }, win.setFrameCalls[2].frame)
@@ -1703,6 +1762,7 @@ describe("window_mover", function()
 		assert.are.same({ x = 0, y = 0, w = 1200, h = 600 }, win.setFrameCalls[4].frame)
 		assert.are.same({ x = 0, y = 100, w = 1200, h = 600 }, win.setFrameCalls[5].frame)
 		assert.are.same({ x = 0, y = 200, w = 1200, h = 600 }, win.setFrameCalls[6].frame)
+		assert.are.same({ x = 150, y = 100, w = 900, h = 600 }, win.setFrameCalls[7].frame)
 	end)
 
 	it("固定サイズ Center はディスプレイサイズを上限にする", function()
@@ -1857,12 +1917,14 @@ describe("window_mover", function()
 		assert.is_truthy(state.webviews[1]._html:match("twoThirdsTop"))
 		assert.is_truthy(state.webviews[1]._html:match("twoThirdsVerticalCenter"))
 		assert.is_truthy(state.webviews[1]._html:match("twoThirdsBottom"))
+		assert.is_truthy(state.webviews[1]._html:match("twoThirdsCenter"))
 		assert.is_truthy(state.webviews[1]._html:match("threeQuartersLeft"))
 		assert.is_truthy(state.webviews[1]._html:match("threeQuartersHorizontalCenter"))
 		assert.is_truthy(state.webviews[1]._html:match("threeQuartersRight"))
 		assert.is_truthy(state.webviews[1]._html:match("threeQuartersTop"))
 		assert.is_truthy(state.webviews[1]._html:match("threeQuartersVerticalCenter"))
 		assert.is_truthy(state.webviews[1]._html:match("threeQuartersBottom"))
+		assert.is_truthy(state.webviews[1]._html:match("threeQuartersCenter"))
 		assert.is_true(state.eventtaps[1].started)
 	end)
 

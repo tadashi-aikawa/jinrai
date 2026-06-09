@@ -94,8 +94,8 @@ window_mover = {
 | 横または縦の4分割 | `quarterLeft`、`quarterHorizontalLeftCenter`、`quarterHorizontalRightCenter`、`quarterRight`、`quarterTop`、`quarterVerticalTopCenter`、`quarterVerticalBottomCenter`、`quarterBottom` |
 | 画面の4分割 | `quarterTopLeft`、`quarterTopRight`、`quarterBottomLeft`、`quarterBottomRight` |
 | 画面の6分割 | `sixthTopLeft`、`sixthTopCenter`、`sixthTopRight`、`sixthBottomLeft`、`sixthBottomCenter`、`sixthBottomRight` |
-| 横または縦の3分の2 | `twoThirdsLeft`、`twoThirdsHorizontalCenter`、`twoThirdsRight`、`twoThirdsTop`、`twoThirdsVerticalCenter`、`twoThirdsBottom` |
-| 横または縦の4分の3 | `threeQuartersLeft`、`threeQuartersHorizontalCenter`、`threeQuartersRight`、`threeQuartersTop`、`threeQuartersVerticalCenter`、`threeQuartersBottom` |
+| 3分の2 | `twoThirdsLeft`、`twoThirdsHorizontalCenter`、`twoThirdsRight`、`twoThirdsTop`、`twoThirdsVerticalCenter`、`twoThirdsBottom`、`twoThirdsCenter` |
+| 4分の3 | `threeQuartersLeft`、`threeQuartersHorizontalCenter`、`threeQuartersRight`、`threeQuartersTop`、`threeQuartersVerticalCenter`、`threeQuartersBottom`、`threeQuartersCenter` |
 
 ## 移動後のカーソル
 
@@ -244,12 +244,14 @@ window_mover = {
 | <img src="./attachments/window-mover/areas/twoThirdsTop.svg" alt="twoThirdsTop" width="48"> | `twoThirdsTop` | 上端 | 横幅全体、高さ 2/3 |
 | <img src="./attachments/window-mover/areas/twoThirdsVerticalCenter.svg" alt="twoThirdsVerticalCenter" width="48"> | `twoThirdsVerticalCenter` | 縦方向中央 | 横幅全体、高さ 2/3 |
 | <img src="./attachments/window-mover/areas/twoThirdsBottom.svg" alt="twoThirdsBottom" width="48"> | `twoThirdsBottom` | 下端 | 横幅全体、高さ 2/3 |
+| <img src="./attachments/window-mover/areas/twoThirdsCenter.svg" alt="twoThirdsCenter" width="48"> | `twoThirdsCenter` | ディスプレイ中央 | 横幅 2/3、高さ 2/3 |
 | <img src="./attachments/window-mover/areas/threeQuartersLeft.svg" alt="threeQuartersLeft" width="48"> | `threeQuartersLeft` | 左端 | 横幅 3/4、高さ全体 |
 | <img src="./attachments/window-mover/areas/threeQuartersHorizontalCenter.svg" alt="threeQuartersHorizontalCenter" width="48"> | `threeQuartersHorizontalCenter` | 横方向中央 | 横幅 3/4、高さ全体 |
 | <img src="./attachments/window-mover/areas/threeQuartersRight.svg" alt="threeQuartersRight" width="48"> | `threeQuartersRight` | 右端 | 横幅 3/4、高さ全体 |
 | <img src="./attachments/window-mover/areas/threeQuartersTop.svg" alt="threeQuartersTop" width="48"> | `threeQuartersTop` | 上端 | 横幅全体、高さ 3/4 |
 | <img src="./attachments/window-mover/areas/threeQuartersVerticalCenter.svg" alt="threeQuartersVerticalCenter" width="48"> | `threeQuartersVerticalCenter` | 縦方向中央 | 横幅全体、高さ 3/4 |
 | <img src="./attachments/window-mover/areas/threeQuartersBottom.svg" alt="threeQuartersBottom" width="48"> | `threeQuartersBottom` | 下端 | 横幅全体、高さ 3/4 |
+| <img src="./attachments/window-mover/areas/threeQuartersCenter.svg" alt="threeQuartersCenter" width="48"> | `threeQuartersCenter` | ディスプレイ中央 | 横幅 3/4、高さ 3/4 |
 | <img src="./attachments/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイ内に収まるよう調整 |
 
 エリア名の方角はディスプレイの向きにかかわらず変わりません。選択キーには1文字または2文字を使用できます。
