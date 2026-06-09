@@ -167,7 +167,11 @@ function M.new(options)
 
 		checking = true
 		refreshMenu()
-		hs.http.asyncGet(RELEASE_API_URL, { ["Accept"] = "application/vnd.github+json" }, function(status, body)
+		hs.http.asyncGet(RELEASE_API_URL, {
+			["Accept"] = "application/vnd.github+json",
+			["User-Agent"] = "Jinrai/" .. trimVersion(currentVersion),
+			["X-GitHub-Api-Version"] = "2022-11-28",
+		}, function(status, body)
 			if not active then
 				return
 			end

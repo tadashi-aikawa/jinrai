@@ -184,6 +184,11 @@ describe("updater", function()
 		local updater = newUpdater()
 		assert.is_true(updater:checkForUpdate())
 		assert.are.equal("Checking for Updates...", state.menus[1].items[3].title)
+		assert.are.same({
+			["Accept"] = "application/vnd.github+json",
+			["User-Agent"] = "Jinrai/0.28.0",
+			["X-GitHub-Api-Version"] = "2022-11-28",
+		}, state.httpCallbacks[1].headers)
 
 		state.httpCallbacks[1].callback(200, latestRelease("v0.29.0"))
 
