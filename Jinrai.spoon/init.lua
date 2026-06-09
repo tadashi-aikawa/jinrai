@@ -30,6 +30,7 @@ local DEFAULT_MACOS_NATIVE_TABS = {
 }
 
 local DEFAULT_JINRAI_MODE = {
+	position = "activeWindow",
 	triggers = {
 		windowHints = {
 			key = nil,
@@ -251,6 +252,7 @@ function obj:setup(config)
 		local windowHintsConfig = config.window_hints
 		local jinraiModeInternalConfig = mergeTable(windowHintsConfig.internal or {}, {
 			jinraiMode = {
+				position = jinraiMode.position,
 				windowHints = {
 					key = jinraiMode.triggers.windowHints.key,
 				},

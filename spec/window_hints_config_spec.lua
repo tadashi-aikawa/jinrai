@@ -193,6 +193,7 @@ describe("window_hints_config", function()
 					apps = { "com.mitchellh.ghostty" },
 				},
 				jinraiMode = {
+					position = "activeWindow",
 					windowHints = {
 						key = "space",
 					},
@@ -274,6 +275,7 @@ describe("window_hints_config", function()
 		assert.are.same({ "cmd" }, built.directDirectionHotkeys.modifiers)
 		assert.are.equal("i", built.focusBackKey)
 		assert.are.equal("space", built.jinraiModeKey)
+		assert.are.equal("activeWindow", built.jinraiModePosition)
 		assert.are.equal("m", built.openWindowActionChooserKey)
 		assert.is_true(built.jinraiModeLogo.enabled)
 		assert.are.equal(480, built.jinraiModeLogo.size)
@@ -341,11 +343,24 @@ describe("window_hints_config", function()
 		assert.are.equal(96, built.dockBottomMargin)
 		assert.are.equal(0.65, built.dockWindowXBlend)
 		assert.are.equal(1, built.dockWindowYBlend)
+		assert.are.equal("activeWindow", built.jinraiModePosition)
 		assert.are.equal(0.4, built.jinraiModeLogo.alpha)
 		assert.is_false(built.jinraiModeCombo.character.enabled)
 		assert.are.equal(0.5, built.jinraiModeCombo.character.alpha)
 		assert.is_false(built.jinraiModeCombo.text.enabled)
 		assert.are.equal(0.7, built.jinraiModeCombo.text.alpha)
+	end)
+
+	it("JinraiMode position は activeDisplay または activeWindow のみ許可する", function()
+		assert.has_error(function()
+			mod.build({
+				internal = {
+					jinraiMode = {
+						position = "window",
+					},
+				},
+			})
+		end, "[jinrai.window_hints] jinrai_mode.position must be one of activeDisplay/activeWindow")
 	end)
 
 	it("JinraiMode コンボ透明度は 0 から 1 の範囲のみ許可する", function()

@@ -18,6 +18,7 @@ JinraiModeは次の方法で開始できます。
 
 ```lua
 jinrai_mode = {
+  position = "activeWindow",
   triggers = {
     windowHints = {
       key = "space",
@@ -46,6 +47,7 @@ jinrai_mode = {
 
 | 設定 | 説明 |
 | --- | --- |
+| `position` | ロゴ・キャラクター・COMBOテキストの中心位置です。`activeDisplay`（アクティブディスプレイ中央）または`activeWindow`（アクティブウィンドウ中央、デフォルト）を指定します。 |
 | `triggers.windowHints.key` | [Window Hints](window-hints.md)の表示中にJinraiModeを開始するキーです。 |
 | `triggers.windowMover.key` | 移動先の選択中にJinraiModeを開始するキーです。 |
 | `logo.enabled` | JinraiMode中にJINRAIロゴを表示するかを指定します。 |

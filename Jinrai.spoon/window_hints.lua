@@ -2170,13 +2170,34 @@ function M.new(options)
 		return jinraiModeLogoImage
 	end
 
-	local function activeScreenFrame()
+	local function activeWindowAndScreenFrame()
 		local win = hs and hs.window and hs.window.focusedWindow and hs.window.focusedWindow() or nil
 		local screen = win and win.screen and win:screen() or nil
 		if not screen and hs and hs.screen and hs.screen.mainScreen then
 			screen = hs.screen.mainScreen()
 		end
-		return screen and screen.frame and screen:frame() or nil
+		local screenFrame = screen and screen.frame and screen:frame() or nil
+		local windowFrame = nil
+		if config.jinraiModePosition == "activeWindow" then
+			windowFrame = win and win.frame and win:frame() or nil
+		end
+		return windowFrame, screenFrame
+	end
+
+	local function jinraiModeDisplayContext()
+		local windowFrame, screenFrame = activeWindowAndScreenFrame()
+		if not screenFrame then
+			return nil
+		end
+		local centerFrame = screenFrame
+		if config.jinraiModePosition == "activeWindow" and windowFrame then
+			centerFrame = windowFrame
+		end
+		return {
+			screenFrame = screenFrame,
+			centerX = centerFrame.x + (centerFrame.w / 2),
+			centerY = centerFrame.y + (centerFrame.h / 2),
+		}
 	end
 
 	local function showJinraiModeLogo()
@@ -2189,14 +2210,14 @@ function M.new(options)
 			return
 		end
 		local image = loadJinraiModeLogoImage()
-		local frame = activeScreenFrame()
-		if not image or not frame then
+		local displayContext = jinraiModeDisplayContext()
+		if not image or not displayContext then
 			return
 		end
 		local size = logo.size
 		local logoFrame = {
-			x = frame.x + (frame.w - size) / 2,
-			y = frame.y + (frame.h - size) / 2,
+			x = displayContext.centerX - (size / 2),
+			y = displayContext.centerY - (size / 2),
 			w = size,
 			h = size,
 		}
@@ -2256,7 +2277,8 @@ function M.new(options)
 	local COMBO_TEXT_FONT = "Avenir Next Heavy"
 	local COMBO_TEXT_COLOR = { red = 1, green = 0.46, blue = 0.08 }
 
-	local function comboCanvasLayout(screenFrame, scale, logoSize, numberTextMetrics, labelTextMetrics)
+	local function comboCanvasLayout(displayContext, scale, logoSize, numberTextMetrics, labelTextMetrics)
+		local screenFrame = displayContext.screenFrame
 		local baseSize = math.min(560, screenFrame.w * 0.46, screenFrame.h * 0.7)
 		local characterSize = baseSize * scale
 		local textHeight = math.max(numberTextMetrics.height, labelTextMetrics.height)
@@ -2268,12 +2290,12 @@ function M.new(options)
 		local labelTextWidth = math.min(labelTextMetrics.width, math.max(0, textWidth - numberTextWidth - textGap))
 		local effectiveTextGap = math.max(0, textWidth - numberTextWidth - labelTextWidth)
 		local characterFrame = {
-			x = screenFrame.x + (screenFrame.w - characterSize) / 2,
-			y = screenFrame.y + (screenFrame.h - characterSize) / 2,
+			x = displayContext.centerX - (characterSize / 2),
+			y = displayContext.centerY - (characterSize / 2),
 			w = characterSize,
 			h = characterSize,
 		}
-		local logoTop = screenFrame.y + (screenFrame.h - logoSize) / 2
+		local logoTop = displayContext.centerY - (logoSize / 2)
 		local textFrame = {
 			x = characterFrame.x,
 			y = math.max(screenFrame.y + 16, logoTop - COMBO_LOGO_GAP - textHeight),
@@ -2352,10 +2374,11 @@ function M.new(options)
 		if not hs or not hs.canvas then
 			return
 		end
-		local screenFrame = activeScreenFrame()
-		if not screenFrame then
+		local displayContext = jinraiModeDisplayContext()
+		if not displayContext then
 			return
 		end
+		local screenFrame = displayContext.screenFrame
 
 		if jinraiModeComboAnimationTimer then
 			jinraiModeComboAnimationTimer:stop()
@@ -2390,8 +2413,8 @@ function M.new(options)
 			width = math.ceil(comboTextSize * 4.7),
 			height = math.ceil(comboTextSize * 1.25),
 		}
-		local startLayout = comboCanvasLayout(screenFrame, 1.18, logoSize, numberTextMetrics, comboTextMetrics)
-		local targetLayout = comboCanvasLayout(screenFrame, 1, logoSize, numberTextMetrics, comboTextMetrics)
+		local startLayout = comboCanvasLayout(displayContext, 1.18, logoSize, numberTextMetrics, comboTextMetrics)
+		local targetLayout = comboCanvasLayout(displayContext, 1, logoSize, numberTextMetrics, comboTextMetrics)
 		local canvas = hs.canvas.new(startLayout.canvasFrame)
 		canvas:level(hs.canvas.windowLevels.overlay + 1)
 		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
@@ -2474,7 +2497,7 @@ function M.new(options)
 					if canvas.frame then
 						local scale = 1.18 - (0.18 * progress)
 						local animationLayout =
-							comboCanvasLayout(screenFrame, scale, logoSize, numberTextMetrics, comboTextMetrics)
+							comboCanvasLayout(displayContext, scale, logoSize, numberTextMetrics, comboTextMetrics)
 						canvas:frame(animationLayout.canvasFrame)
 						updateComboCanvasLayout(
 							canvas,

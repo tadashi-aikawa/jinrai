@@ -261,6 +261,7 @@ local DEFAULT_CONFIG = {
 		focusHistory = nil,
 		macosNativeTabs = nil,
 		jinraiMode = {
+			position = "activeWindow",
 			windowHints = {
 				key = nil,
 			},
@@ -658,6 +659,13 @@ local function normalizeUnitIntervalNumber(value, optionName)
 	return value
 end
 
+local function normalizeJinraiModePosition(value)
+	if value ~= "activeDisplay" and value ~= "activeWindow" then
+		error("[jinrai.window_hints] jinrai_mode.position must be one of activeDisplay/activeWindow")
+	end
+	return value
+end
+
 local function normalizePositiveNumber(value, optionName)
 	if type(value) ~= "number" or value ~= value then
 		error(string.format("[jinrai.window_hints] %s must be a number", optionName))
@@ -893,6 +901,7 @@ function M.build(options)
 	local jinraiModeComboCharacterConfig = jinraiModeComboConfig.character or {}
 	local jinraiModeComboTextConfig = jinraiModeComboConfig.text or {}
 	local jinraiModeKey = normalizeActionKey(jinraiModeWindowHints.key, "jinrai_mode.triggers.windowHints.key")
+	local jinraiModePosition = normalizeJinraiModePosition(jinraiMode.position)
 	local prevSpaceKey = normalizeActionKey(merged.navigation.spaces.prev.key, "navigation.spaces.prev.key")
 	local nextSpaceKey = normalizeActionKey(merged.navigation.spaces.next.key, "navigation.spaces.next.key")
 	local openWindowActionChooserKey = normalizeActionKey(
@@ -1050,6 +1059,7 @@ function M.build(options)
 		macosNativeTabs = merged.internal.macosNativeTabs,
 		focusBackKey = focusBackKey,
 		jinraiModeKey = jinraiModeKey,
+		jinraiModePosition = jinraiModePosition,
 		jinraiModeLogo = jinraiModeLogo,
 		jinraiModeCombo = jinraiModeCombo,
 		onJinraiModeSelect = merged.internal.onJinraiModeSelect,

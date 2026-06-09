@@ -318,6 +318,7 @@ describe("init", function()
 
 		init:setup({
 			jinrai_mode = {
+				position = "activeWindow",
 				triggers = {
 					windowHints = {
 						key = "space",
@@ -331,6 +332,7 @@ describe("init", function()
 			window_mover = {},
 		})
 
+		assert.are.equal("activeWindow", calls.new.window_hints.internal.jinraiMode.position)
 		assert.are.equal("space", calls.new.window_hints.internal.jinraiMode.windowHints.key)
 		assert.are.equal("j", calls.new.window_mover.internal.jinraiMode.windowMover.key)
 		assert.is_false(calls.new.window_hints.internal.jinraiMode.combo.character.enabled)

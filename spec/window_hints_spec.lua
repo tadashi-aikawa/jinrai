@@ -2257,6 +2257,7 @@ describe("window_hints mouse selection", function()
 			},
 			internal = {
 				jinraiMode = {
+					position = "activeDisplay",
 					windowHints = {
 						key = "space",
 					},
@@ -2355,6 +2356,7 @@ describe("window_hints mouse selection", function()
 			},
 			internal = {
 				jinraiMode = {
+					position = "activeDisplay",
 					logo = {
 						enabled = true,
 						size = 480,
@@ -2384,6 +2386,110 @@ describe("window_hints mouse selection", function()
 		assert.are.equal(0.3, logoCanvas[1].imageAlpha)
 	end)
 
+	it("JinraiMode の表示をアクティブウィンドウ中央に配置する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			hint = { title = { show = false } },
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = { onStart = false, onSelect = false },
+			},
+			internal = {
+				jinraiMode = {
+					position = "activeWindow",
+					logo = {
+						enabled = true,
+						size = 480,
+						alpha = 0.3,
+					},
+					combo = {
+						character = {
+							enabled = true,
+							alpha = 0.25,
+						},
+						text = {
+							enabled = true,
+							alpha = 0.75,
+						},
+					},
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiMode())
+		local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
+		assert.are.same({ x = 60, y = 10, w = 480, h = 480 }, logoCanvas._frame)
+
+		assert.is_true(instance.advanceJinraiModeCombo())
+		local comboCanvas = createdCanvases[#createdCanvases]
+		local characterFrame = comboCanvas[1].frame
+		local characterCenterX = comboCanvas._frame.x + characterFrame.x + (characterFrame.w / 2)
+		local characterCenterY = comboCanvas._frame.y + characterFrame.y + (characterFrame.h / 2)
+		assert.are.equal(300, characterCenterX)
+		assert.are.equal(250, characterCenterY)
+		assert.are.equal(651.36, characterFrame.w)
+
+		local textLeft = comboCanvas._frame.x + comboCanvas[2].frame.x
+		local textRight = comboCanvas._frame.x + comboCanvas[3].frame.x + comboCanvas[3].frame.w
+		assert.are.equal(300, (textLeft + textRight) / 2)
+	end)
+
+	it("activeWindow 指定時は再表示で最新のウィンドウ中央へロゴを移動する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local activeWindowFrame = { x = 100, y = 100, w = 400, h = 300 }
+		targetWindow.frame = function()
+			return activeWindowFrame
+		end
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			internal = {
+				jinraiMode = {
+					position = "activeWindow",
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiMode())
+		local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
+		assert.are.same({ x = 60, y = 10, w = 480, h = 480 }, logoCanvas._frame)
+
+		activeWindowFrame = { x = 800, y = 300, w = 1000, h = 700 }
+		assert.is_true(instance.showJinraiMode())
+		assert.are.same({ x = 1060, y = 410, w = 480, h = 480 }, logoCanvas._frame)
+	end)
+
+	it("activeWindow 指定時にウィンドウフレームを取得できなければ画面中央へ配置する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		targetWindow.frame = nil
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			internal = {
+				jinraiMode = {
+					position = "activeWindow",
+				},
+			},
+		})
+
+		instance.startJinraiMode()
+		local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
+		assert.are.same({ x = 360, y = 160, w = 480, h = 480 }, logoCanvas._frame)
+	end)
+
 	it("JinraiMode 中の遷移だけコンボを加算し画像を循環表示する", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
@@ -2410,6 +2516,7 @@ describe("window_hints mouse selection", function()
 			},
 			internal = {
 				jinraiMode = {
+					position = "activeDisplay",
 					combo = {
 						character = {
 							enabled = true,
