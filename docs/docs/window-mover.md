@@ -70,14 +70,14 @@ window_mover = {
 | `cycleVerticalCenter` | 縦方向中央へ配置し、高さを切り替えます。 |
 | `cycleBottom` | 下端へ配置し、高さを切り替えます。 |
 
-切り替える比率は変更できます。
+切り替える比率は、`0`より大きく`1`以下の任意の値へ変更できます。たとえば、次の設定では`1/4`と`3/4`も含めて切り替えます。
 
 ```lua
 window_mover = {
   behavior = {
     cycle = {
-      horizontalRatios = { 1 / 2, 1 / 3, 2 / 3 },
-      verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },
+      horizontalRatios = { 1 / 2, 1 / 3, 1 / 4, 2 / 3, 3 / 4 },
+      verticalRatios = { 1 / 2, 1 / 3, 1 / 4, 2 / 3, 3 / 4 },
     },
   },
 }
