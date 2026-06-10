@@ -2006,6 +2006,142 @@ describe("window_hints mouse selection", function()
 		assert.is_nil(hintCanvas._deleted)
 	end)
 
+	it("activeWindowキーでアクティブウィンドウを選択する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local selectedWindow
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			navigation = {
+				activeWindow = {
+					key = "space",
+				},
+			},
+			behavior = {
+				callbacks = {
+					onSelect = function(win)
+						selectedWindow = win
+					end,
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+		assert.is_true(instance.show())
+
+		assert.is_true(mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 49
+			end,
+			getFlags = function()
+				return {}
+			end,
+		}))
+
+		assert.are.equal(1, focusCounter.count)
+		assert.are.equal(targetWindow, selectedWindow)
+		assert.is_false(mocks.keyBlocker.started)
+	end)
+
+	it("JinraiMode中のactiveWindowキーは内部コールバックへ通知する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local selectedWindow
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			navigation = {
+				activeWindow = {
+					key = "space",
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				onJinraiModeSelect = function(win)
+					selectedWindow = win
+				end,
+			},
+		})
+		assert.is_true(instance.showJinraiMode())
+
+		assert.is_true(mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 49
+			end,
+			getFlags = function()
+				return {}
+			end,
+		}))
+
+		assert.are.equal(1, focusCounter.count)
+		assert.are.equal(targetWindow, selectedWindow)
+		assert.is_false(mocks.keyBlocker.started)
+	end)
+
+	it("アクティブウィンドウが候補外ならactiveWindowキーでは選択しない", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+
+		local instance = windowHints.new({
+			navigation = {
+				activeWindow = {
+					key = "space",
+				},
+			},
+			behavior = {
+				candidates = {
+					includeActiveWindow = false,
+				},
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+		assert.is_true(instance.show())
+
+		assert.are.equal(0, focusCounter.count)
+		assert.is_false(mocks.keyBlocker.started)
+	end)
+
 	it("JinraiModeキー押下後の選択は内部コールバックへ通知する", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }

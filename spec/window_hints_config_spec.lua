@@ -124,6 +124,9 @@ describe("window_hints_config", function()
 				borderWidth = 15,
 			},
 			navigation = {
+				activeWindow = {
+					key = "RETURN",
+				},
 				focusBack = {
 					key = "i",
 				},
@@ -273,6 +276,7 @@ describe("window_hints_config", function()
 		assert.are.equal("h", built.directionKeys.left)
 		assert.are.equal("left", built.directionKeyLookup.h)
 		assert.are.same({ "cmd" }, built.directDirectionHotkeys.modifiers)
+		assert.are.equal("return", built.activeWindowKey)
 		assert.are.equal("i", built.focusBackKey)
 		assert.are.equal("space", built.jinraiModeKey)
 		assert.are.equal("activeWindow", built.jinraiModePosition)
@@ -624,6 +628,28 @@ describe("window_hints_config", function()
 		})
 		assert.are.same({ "A", "B" }, built.hintChars)
 		assert.is_true(built.spaceKeys)
+	end)
+
+	it("activeWindowKey は hintChars から除外される", function()
+		local built = mod.build({
+			hint = {
+				chars = { "A", "R", "B" },
+			},
+			navigation = {
+				activeWindow = {
+					key = "R",
+				},
+			},
+		})
+
+		assert.are.same({ "A", "B" }, built.hintChars)
+		assert.are.equal("r", built.activeWindowKey)
+	end)
+
+	it("activeWindowKey は未指定なら無効", function()
+		local built = mod.build()
+
+		assert.is_nil(built.activeWindowKey)
 	end)
 
 	it("prevSpaceKey/nextSpaceKey は hintChars から除外される", function()
