@@ -2997,6 +2997,10 @@ function M.new(options)
 			startJinraiMode()
 			currentInput = ""
 			refreshHighlights()
+			if config.onJinraiModeStart then
+				closeHints(true, { keepJinraiMode = true })
+				config.onJinraiModeStart()
+			end
 			return
 		end
 		if focusBackKey and key == focusBackKey then
@@ -4073,6 +4077,7 @@ function M.new(options)
 		showJinraiMode = function()
 			return invokeShowHints({ jinraiMode = true })
 		end,
+		refreshJinraiModeLogo = showJinraiModeLogo,
 		advanceJinraiModeCombo = advanceJinraiModeCombo,
 		stopJinraiMode = stopJinraiMode,
 		teardown = teardown,

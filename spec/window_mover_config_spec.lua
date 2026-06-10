@@ -825,6 +825,30 @@ describe("window_mover_config", function()
 		assert.is_truthy(tostring(err):match("conflicts"))
 	end)
 
+	it("JinraiMode の選択順序を設定できる", function()
+		local built = mod.build({
+			internal = {
+				jinraiMode = {
+					selectionOrder = "actionFirst",
+				},
+			},
+		})
+
+		assert.are.equal("actionFirst", built.jinraiModeSelectionOrder)
+	end)
+
+	it("JinraiMode の選択順序が不正ならエラー", function()
+		assert.has_error(function()
+			mod.build({
+				internal = {
+					jinraiMode = {
+						selectionOrder = "invalid",
+					},
+				},
+			})
+		end, "[jinrai.window_mover] jinrai_mode.selectionOrder must be one of windowFirst/actionFirst")
+	end)
+
 	it("options が table でなければエラー", function()
 		local ok, err = pcall(function()
 			mod.build("invalid")
