@@ -95,6 +95,7 @@ describe("window_mover", function()
 			orderedWindows = {},
 			screens = {},
 			canvases = {},
+			delayTimers = {},
 			eventtaps = {},
 			webviews = {},
 			pasteboardWrites = {},
@@ -111,6 +112,12 @@ describe("window_mover", function()
 		end
 		function canvasMethods:show()
 			self._shown = true
+			self._hidden = nil
+			return self
+		end
+		function canvasMethods:hide()
+			self._hidden = true
+			self._shown = false
 			return self
 		end
 		function canvasMethods:delete()
@@ -242,6 +249,20 @@ describe("window_mover", function()
 					table.insert(state.mousePositions, position)
 				end,
 			},
+			timer = {
+				doAfter = function(interval, callback)
+					local timer = {
+						interval = interval,
+						callback = callback,
+						stopped = false,
+					}
+					function timer:stop()
+						self.stopped = true
+					end
+					table.insert(state.delayTimers, timer)
+					return timer
+				end,
+			},
 			canvas = {
 				windowLevels = {
 					overlay = 10,
@@ -349,20 +370,24 @@ describe("window_mover", function()
 	local function canvasKeys(state)
 		local keys = {}
 		for _, canvas in ipairs(state.canvases) do
-			local text = canvas[3].text
-			table.insert(keys, type(text) == "table" and text._text or text)
+			if not canvas._deleted then
+				local text = canvas[3].text
+				table.insert(keys, type(text) == "table" and text._text or text)
+			end
 		end
 		return keys
 	end
 
 	local function canvasHasText(state, text)
 		for _, canvas in ipairs(state.canvases) do
-			for _, element in pairs(canvas) do
-				if type(element) == "table" then
-					local value = element.text
-					value = type(value) == "table" and value._text or value
-					if value == text then
-						return true
+			if not canvas._deleted then
+				for _, element in pairs(canvas) do
+					if type(element) == "table" then
+						local value = element.text
+						value = type(value) == "table" and value._text or value
+						if value == text then
+							return true
+						end
 					end
 				end
 			end
@@ -371,12 +396,16 @@ describe("window_mover", function()
 	end
 
 	local function canvasForKey(state, key)
+		local matched = nil
 		for _, canvas in ipairs(state.canvases) do
-			local text = canvas[3].text
-			if (type(text) == "table" and text._text or text) == key then
-				return canvas
+			if not canvas._deleted then
+				local text = canvas[3].text
+				if (type(text) == "table" and text._text or text) == key then
+					matched = canvas
+				end
 			end
 		end
+		return matched
 	end
 
 	local function filledSquareSizes(canvas)
@@ -415,8 +444,10 @@ describe("window_mover", function()
 	local function canvasFramesByKey(state)
 		local frames = {}
 		for _, canvas in ipairs(state.canvases) do
-			local text = canvas[3].text
-			frames[type(text) == "table" and text._text or text] = canvas._frame
+			if not canvas._deleted then
+				local text = canvas[3].text
+				frames[type(text) == "table" and text._text or text] = canvas._frame
+			end
 		end
 		return frames
 	end
@@ -1257,7 +1288,8 @@ describe("window_mover", function()
 		instance.openWindowActionChooser()
 
 		assert.is_true(sendMouseDown(state, { x = 100, y = 100 }))
-		assert.is_true(state.canvases[1]._deleted)
+		assert.is_true(state.canvases[1]._hidden)
+		assert.is_nil(state.canvases[1]._deleted)
 	end)
 
 	it("openWindowActionChooser の onApply は移動完了後に呼ばれる", function()
@@ -2108,6 +2140,124 @@ describe("window_mover", function()
 		assert.is_nil(state.canvases[1]._deleted)
 	end)
 
+	it("selectedArea の canvas は chooser を閉じても再利用する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}), win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+		local firstCanvas = canvasForKey(state, "A")
+
+		sendKey(state, "escape")
+
+		assert.is_true(firstCanvas._hidden)
+		assert.is_nil(firstCanvas._deleted)
+		assert.are.equal(1, #state.canvases)
+
+		instance.openWindowActionChooser()
+		local reopenedCanvas = canvasForKey(state, "A")
+
+		assert.are.equal(1, #state.canvases)
+		assert.are.same(firstCanvas, reopenedCanvas)
+		assert.is_nil(reopenedCanvas._hidden)
+	end)
+
+	it("selectedArea.screens が設定されていれば起動直後に遅延 prewarm を予約する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}), win, { win })
+		state.screens = { screen }
+
+		assert.are.equal(1, #state.delayTimers)
+		assert.are.equal(0.2, state.delayTimers[1].interval)
+
+		state.delayTimers[1].callback()
+		local prewarmedCanvas = canvasForKey(state, "A")
+
+		assert.are.equal(1, #state.canvases)
+		assert.is_true(prewarmedCanvas._hidden)
+		assert.is_false(prewarmedCanvas._shown)
+
+		instance.openWindowActionChooser()
+
+		assert.are.equal(1, #state.canvases)
+		assert.are.same(prewarmedCanvas, canvasForKey(state, "A"))
+		assert.is_nil(prewarmedCanvas._hidden)
+		assert.is_true(prewarmedCanvas._shown)
+	end)
+
+	it("selectedArea.hints.show=false のときは prewarm を予約しない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			hints = { show = false },
+		}), win, { win })
+		state.screens = { screen }
+
+		assert.are.equal(0, #state.delayTimers)
+	end)
+
+	it("selectedArea の配置が変わった候補は canvas を再生成する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}), win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+		local firstCanvas = canvasForKey(state, "A")
+		sendKey(state, "escape")
+		screen._frame = { x = 0, y = 0, w = 1000, h = 800 }
+
+		instance.openWindowActionChooser()
+		local secondCanvas = canvasForKey(state, "A")
+
+		assert.are.equal(2, #state.canvases)
+		assert.is_true(firstCanvas._deleted)
+		assert.are_not.same(firstCanvas, secondCanvas)
+	end)
+
+	it("再利用した selectedArea の canvas は再オープン時に active 状態へ戻る", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "AA",
+				halfRight = "SS",
+			},
+		}), win, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser()
+		local rightCanvas = canvasForKey(state, "SS")
+
+		sendKey(state, "a")
+		local dimmedStrokeColor = rightCanvas[2].strokeColor
+		sendKey(state, "escape")
+
+		instance.openWindowActionChooser()
+		local reopenedCanvas = canvasForKey(state, "SS")
+
+		assert.are.same(rightCanvas, reopenedCanvas)
+		assert.are_not.same(dimmedStrokeColor, reopenedCanvas[2].strokeColor)
+	end)
+
 	it("Escape と teardown は canvas と webview を解放する", function()
 		local configured = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local unknown = newScreen(2, { x = 1200, y = 0, w = 1200, h = 800 }, "unknown")
@@ -2122,17 +2272,19 @@ describe("window_mover", function()
 		instance.openWindowActionChooser()
 		sendKey(state, "escape")
 
-		assert.is_true(state.canvases[1]._deleted)
+		assert.is_true(state.canvases[1]._hidden)
+		assert.is_nil(state.canvases[1]._deleted)
 		assert.is_true(state.webviews[1]._deleted)
 		assert.is_true(state.eventtaps[1].stopped)
 
 		instance.openWindowActionChooser()
-		local canvas = state.canvases[2]
+		local canvas = canvasForKey(state, "A")
 		local webview = state.webviews[2]
 		instance.teardown()
 
 		assert.is_true(canvas._deleted)
 		assert.is_true(webview._deleted)
+		assert.is_true(state.delayTimers[1].stopped)
 	end)
 
 	it("screenInfos は UUID/name/id/frame を返す", function()

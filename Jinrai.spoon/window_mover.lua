@@ -28,6 +28,7 @@ local AREA_HINT_TEXT_HORIZONTAL_PADDING = 6
 local AREA_DETAIL_TEXT_SIZE = 13
 local AREA_INFO_WIDTH = 420
 local AREA_INFO_HEIGHT = 480
+local SELECTED_AREA_PREWARM_DELAY = 0.2
 local AREA_ORDER = {
 	"freeArea",
 	"full",
@@ -216,6 +217,15 @@ local function cloneFrame(frame)
 		return nil
 	end
 	return { x = frame.x, y = frame.y, w = frame.w, h = frame.h }
+end
+
+local function sameFrame(a, b)
+	return validFrame(a)
+		and validFrame(b)
+		and a.x == b.x
+		and a.y == b.y
+		and a.w == b.w
+		and a.h == b.h
 end
 
 local function intersectFrame(a, b)
@@ -457,6 +467,8 @@ function M.new(options)
 
 	local hotkeys = {}
 	local areaCanvases = {}
+	local areaCanvasPool = {}
+	local areaCanvasPrewarmTimer = nil
 	local areaInfoWebviews = {}
 	local areaCandidates = {}
 	local areaCandidateByKey = {}
@@ -479,6 +491,10 @@ function M.new(options)
 		local styles = config.selectedAreaAppearance.styles
 		return styles[kind] or styles.free
 	end
+
+	local appendAreaIconElements
+	local areaHintKeyWidth
+	local areaDetailTextWidth
 
 	local function centerCursorOnWindow(win)
 		if not config.centerCursor then
@@ -539,7 +555,9 @@ function M.new(options)
 
 	local function clearAreaChooserCanvases()
 		for _, canvas in ipairs(areaCanvases) do
-			canvas:delete()
+			if canvas.hide then
+				canvas:hide()
+			end
 		end
 		areaCanvases = {}
 		for _, item in ipairs(areaInfoWebviews) do
@@ -549,7 +567,171 @@ function M.new(options)
 		for _, candidate in ipairs(areaCandidates) do
 			candidate.labelCanvas = nil
 			candidate.iconElementIndices = nil
+			candidate.keyTextIdx = nil
+			candidate.detailTextIdx = nil
 		end
+	end
+
+	local function deleteAreaCanvasPool()
+		for _, poolEntry in pairs(areaCanvasPool) do
+			poolEntry.canvas:delete()
+		end
+		areaCanvasPool = {}
+	end
+
+	local function areaCanvasPoolKey(candidate)
+		return tostring(candidate.screenId or "") .. "|" .. tostring(candidate.key or "")
+	end
+
+	local function areaCanvasAbsoluteFrame(candidate)
+		local frame = candidate.frame
+		local labelFrame = candidate.labelFrame
+		if not validFrame(frame) or not validFrame(labelFrame) then
+			return nil
+		end
+		return {
+			x = frame.x + labelFrame.x,
+			y = frame.y + labelFrame.y,
+			w = labelFrame.w,
+			h = labelFrame.h,
+		}
+	end
+
+	local function areaCanvasSignature(candidate, absoluteFrame)
+		return {
+			frame = cloneFrame(absoluteFrame),
+			kind = candidate.kind,
+			key = candidate.key,
+			detailLabel = candidate.detailLabel or "",
+		}
+	end
+
+	local function sameAreaCanvasSignature(a, b)
+		return a
+			and b
+			and a.kind == b.kind
+			and a.key == b.key
+			and a.detailLabel == b.detailLabel
+			and sameFrame(a.frame, b.frame)
+	end
+
+	local function applyAreaCanvasReference(candidate, poolEntry)
+		candidate.labelCanvas = poolEntry.canvas
+		candidate.iconElementIndices = poolEntry.iconElementIndices
+		candidate.keyTextIdx = poolEntry.keyTextIdx
+		candidate.detailTextIdx = poolEntry.detailTextIdx
+	end
+
+	local function updateAreaCandidateCanvas(candidate, active)
+		local state = selectedAreaState(active)
+		local style = selectedAreaStyle(candidate.kind)
+		local color = active and style.color or style.dimmedColor
+		if not candidate.labelCanvas then
+			return
+		end
+		local labelColor = cloneColor(color)
+		candidate.labelCanvas[1].fillColor = cloneColor(state.bgColor)
+		candidate.labelCanvas[2].strokeColor = labelColor
+		local keyLen = #candidate.key
+		local prefixLen = 0
+		if active and areaCurrentInput ~= "" and startsWith(candidate.key, areaCurrentInput) then
+			prefixLen = math.min(#areaCurrentInput, keyLen)
+		end
+		local prefixStr = string.sub(candidate.key, 1, prefixLen)
+		local restStr = string.sub(candidate.key, prefixLen + 1)
+		local typedColor = state.typedTextColor or state.textColor
+		candidate.labelCanvas[candidate.keyTextIdx].text = hs.styledtext.new(prefixStr, {
+			font = { size = AREA_HINT_TEXT_SIZE },
+			color = cloneColor(typedColor),
+		}) .. hs.styledtext.new(restStr, {
+			font = { size = AREA_HINT_TEXT_SIZE },
+			color = cloneColor(state.textColor),
+		})
+		if candidate.detailTextIdx then
+			candidate.labelCanvas[candidate.detailTextIdx].text = hs.styledtext.new(candidate.detailLabel, {
+				font = { size = AREA_DETAIL_TEXT_SIZE },
+				color = cloneColor(state.textColor),
+			})
+		end
+		for _, idx in ipairs(candidate.iconElementIndices or {}) do
+			if candidate.labelCanvas[idx].fillColor then
+				candidate.labelCanvas[idx].fillColor = cloneColor(color)
+			end
+			if candidate.labelCanvas[idx].strokeColor then
+				candidate.labelCanvas[idx].strokeColor = labelColor
+			end
+		end
+	end
+
+	local function newAreaLabelCanvas(candidate, absoluteFrame)
+		local labelFrame = candidate.labelFrame
+		local appearance = config.selectedAreaAppearance
+		local state = selectedAreaState(true)
+		local style = selectedAreaStyle(candidate.kind)
+		local canvas = hs.canvas
+			.new(absoluteFrame)
+			:level(hs.canvas.windowLevels.overlay + 2)
+			:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
+		canvas[1] = {
+			type = "rectangle",
+			action = "fill",
+			fillColor = cloneColor(state.bgColor),
+			roundedRectRadii = { xRadius = appearance.cornerRadius, yRadius = appearance.cornerRadius },
+			frame = { x = 0, y = 0, w = labelFrame.w, h = labelFrame.h },
+		}
+		canvas[2] = {
+			type = "rectangle",
+			action = "stroke",
+			strokeColor = cloneColor(style.color),
+			strokeWidth = appearance.borderWidth,
+			roundedRectRadii = { xRadius = appearance.cornerRadius, yRadius = appearance.cornerRadius },
+			frame = {
+				x = appearance.borderWidth / 2,
+				y = appearance.borderWidth / 2,
+				w = labelFrame.w - appearance.borderWidth,
+				h = labelFrame.h - appearance.borderWidth,
+			},
+		}
+		local keyW = areaHintKeyWidth(candidate.key)
+		canvas[3] = {
+			type = "text",
+			text = hs.styledtext.new(candidate.key, {
+				font = { size = AREA_HINT_TEXT_SIZE },
+				color = cloneColor(state.textColor),
+			}),
+			textFont = nil,
+			textSize = AREA_HINT_TEXT_SIZE,
+			textAlignment = "center",
+			frame = { x = 9, y = 9, w = keyW, h = AREA_LABEL_HEIGHT - 9 },
+		}
+		local nextIdx, iconElementIndices = appendAreaIconElements(canvas, candidate, style.color, 4, 9 + keyW + 5)
+		local detailTextIdx = nil
+		if candidate.detailLabel then
+			canvas[nextIdx] = {
+				type = "text",
+				text = hs.styledtext.new(candidate.detailLabel, {
+					font = { size = AREA_DETAIL_TEXT_SIZE },
+					color = cloneColor(state.textColor),
+				}),
+				textFont = nil,
+				textSize = AREA_DETAIL_TEXT_SIZE,
+				textAlignment = "center",
+				frame = {
+					x = (labelFrame.w - areaDetailTextWidth(candidate.detailLabel)) / 2,
+					y = 47,
+					w = areaDetailTextWidth(candidate.detailLabel),
+					h = 16,
+				},
+			}
+			detailTextIdx = nextIdx
+		end
+		return {
+			canvas = canvas,
+			keyTextIdx = 3,
+			detailTextIdx = detailTextIdx,
+			iconElementIndices = iconElementIndices,
+			signature = areaCanvasSignature(candidate, absoluteFrame),
+		}
 	end
 
 	local function closeAreaChooser(stopWatchers, opts)
@@ -570,6 +752,9 @@ function M.new(options)
 		areaJinraiModeActive = false
 		areaJinraiModeContext = false
 		clearAreaChooserCanvases()
+		if opts.deleteCachedCanvases then
+			deleteAreaCanvasPool()
+		end
 		areaCandidates = {}
 		if onCancel then
 			onCancel()
@@ -1115,47 +1300,15 @@ function M.new(options)
 		return candidates, screensWithoutCandidates
 	end
 
-	local function updateAreaCandidateActiveState()
-		for _, candidate in ipairs(areaCandidates) do
+	local function updateAreaCandidatesActiveState(candidates)
+		for _, candidate in ipairs(candidates) do
 			local active = areaCurrentInput == "" or startsWith(candidate.key, areaCurrentInput)
-			local state = selectedAreaState(active)
-			local style = selectedAreaStyle(candidate.kind)
-			local color = active and style.color or style.dimmedColor
-			if candidate.labelCanvas then
-				local labelColor = cloneColor(color)
-				candidate.labelCanvas[1].fillColor = cloneColor(state.bgColor)
-				candidate.labelCanvas[2].strokeColor = labelColor
-				local keyLen = #candidate.key
-				local prefixLen = 0
-				if active and areaCurrentInput ~= "" and startsWith(candidate.key, areaCurrentInput) then
-					prefixLen = math.min(#areaCurrentInput, keyLen)
-				end
-				local prefixStr = string.sub(candidate.key, 1, prefixLen)
-				local restStr = string.sub(candidate.key, prefixLen + 1)
-				local typedColor = state.typedTextColor or state.textColor
-				candidate.labelCanvas[candidate.keyTextIdx].text = hs.styledtext.new(prefixStr, {
-					font = { size = AREA_HINT_TEXT_SIZE },
-					color = cloneColor(typedColor),
-				}) .. hs.styledtext.new(restStr, {
-					font = { size = AREA_HINT_TEXT_SIZE },
-					color = cloneColor(state.textColor),
-				})
-				if candidate.detailTextIdx then
-					candidate.labelCanvas[candidate.detailTextIdx].text = hs.styledtext.new(candidate.detailLabel, {
-						font = { size = AREA_DETAIL_TEXT_SIZE },
-						color = cloneColor(state.textColor),
-					})
-				end
-				for _, idx in ipairs(candidate.iconElementIndices or {}) do
-					if candidate.labelCanvas[idx].fillColor then
-						candidate.labelCanvas[idx].fillColor = cloneColor(color)
-					end
-					if candidate.labelCanvas[idx].strokeColor then
-						candidate.labelCanvas[idx].strokeColor = labelColor
-					end
-				end
-			end
+			updateAreaCandidateCanvas(candidate, active)
 		end
+	end
+
+	local function updateAreaCandidateActiveState()
+		updateAreaCandidatesActiveState(areaCandidates)
 	end
 
 	local function hasAreaCandidateAtPoint(point)
@@ -1309,7 +1462,7 @@ function M.new(options)
 		end)
 	end
 
-	local function appendAreaIconElements(canvas, candidate, color, startIndex, iconX)
+	appendAreaIconElements = function(canvas, candidate, color, startIndex, iconX)
 		local nextIdx = startIndex
 		local iconElementIndices = {}
 		local function appendIconElement(element)
@@ -1426,7 +1579,7 @@ function M.new(options)
 		return nextIdx, iconElementIndices
 	end
 
-	local function areaHintKeyWidth(key)
+	areaHintKeyWidth = function(key)
 		local size = hs.drawing.getTextDrawingSize(key, { size = AREA_HINT_TEXT_SIZE })
 		local measuredWidth = size and (size.w or size.Width)
 		if type(measuredWidth) ~= "number" then
@@ -1435,7 +1588,7 @@ function M.new(options)
 		return math.max(30, math.ceil(measuredWidth + AREA_HINT_TEXT_HORIZONTAL_PADDING))
 	end
 
-	local function areaDetailTextWidth(text)
+	areaDetailTextWidth = function(text)
 		return math.max(64, #tostring(text or "") * 8)
 	end
 
@@ -1600,7 +1753,8 @@ function M.new(options)
 		end
 	end
 
-	local function showAreaCandidates(candidates)
+	local function prepareAreaCandidateCanvases(candidates, opts)
+		opts = opts or {}
 		local visibleCandidates = {}
 		for _, candidate in ipairs(candidates) do
 			if not candidate.hiddenHint then
@@ -1609,75 +1763,59 @@ function M.new(options)
 		end
 		resolveAreaLabelFrames(visibleCandidates)
 		for _, candidate in ipairs(visibleCandidates) do
-			local frame = candidate.frame
-			local labelFrame = candidate.labelFrame
-			local appearance = config.selectedAreaAppearance
-			local state = selectedAreaState(true)
-			local style = selectedAreaStyle(candidate.kind)
-				local canvas = hs.canvas
-					.new({ x = frame.x + labelFrame.x, y = frame.y + labelFrame.y, w = labelFrame.w, h = labelFrame.h })
-					:level(hs.canvas.windowLevels.overlay + 2)
-				:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
-			canvas[1] = {
-				type = "rectangle",
-				action = "fill",
-				fillColor = cloneColor(state.bgColor),
-				roundedRectRadii = { xRadius = appearance.cornerRadius, yRadius = appearance.cornerRadius },
-				frame = { x = 0, y = 0, w = labelFrame.w, h = labelFrame.h },
-			}
-			canvas[2] = {
-				type = "rectangle",
-				action = "stroke",
-				strokeColor = cloneColor(style.color),
-				strokeWidth = appearance.borderWidth,
-				roundedRectRadii = { xRadius = appearance.cornerRadius, yRadius = appearance.cornerRadius },
-				frame = {
-					x = appearance.borderWidth / 2,
-					y = appearance.borderWidth / 2,
-					w = labelFrame.w - appearance.borderWidth,
-					h = labelFrame.h - appearance.borderWidth,
-				},
-			}
-			local keyW = areaHintKeyWidth(candidate.key)
-			canvas[3] = {
-				type = "text",
-				text = hs.styledtext.new(candidate.key, {
-					font = { size = AREA_HINT_TEXT_SIZE },
-					color = cloneColor(state.textColor),
-				}),
-				textFont = nil,
-				textSize = AREA_HINT_TEXT_SIZE,
-				textAlignment = "center",
-				frame = { x = 9, y = 9, w = keyW, h = AREA_LABEL_HEIGHT - 9 },
-			}
-			local nextIdx, iconElementIndices =
-				appendAreaIconElements(canvas, candidate, style.color, 4, 9 + keyW + 5)
-			if candidate.detailLabel then
-				canvas[nextIdx] = {
-					type = "text",
-					text = hs.styledtext.new(candidate.detailLabel, {
-						font = { size = AREA_DETAIL_TEXT_SIZE },
-						color = cloneColor(state.textColor),
-					}),
-					textFont = nil,
-					textSize = AREA_DETAIL_TEXT_SIZE,
-					textAlignment = "center",
-					frame = {
-						x = (labelFrame.w - areaDetailTextWidth(candidate.detailLabel)) / 2,
-						y = 47,
-						w = areaDetailTextWidth(candidate.detailLabel),
-						h = 16,
-					},
-				}
-				candidate.detailTextIdx = nextIdx
-				nextIdx = nextIdx + 1
+			local poolKey = areaCanvasPoolKey(candidate)
+			local absoluteFrame = areaCanvasAbsoluteFrame(candidate)
+			local nextSignature = areaCanvasSignature(candidate, absoluteFrame)
+			local poolEntry = areaCanvasPool[poolKey]
+			if not sameAreaCanvasSignature(poolEntry and poolEntry.signature or nil, nextSignature) then
+				if poolEntry and poolEntry.canvas then
+					poolEntry.canvas:delete()
+				end
+				poolEntry = newAreaLabelCanvas(candidate, absoluteFrame)
+				areaCanvasPool[poolKey] = poolEntry
 			end
-			candidate.iconElementIndices = iconElementIndices
-			candidate.keyTextIdx = 3
-			canvas:show()
-			candidate.labelCanvas = canvas
-			table.insert(areaCanvases, canvas)
+			applyAreaCanvasReference(candidate, poolEntry)
+			if opts.show then
+				poolEntry.canvas:show()
+				table.insert(areaCanvases, poolEntry.canvas)
+			elseif poolEntry.canvas.hide then
+				poolEntry.canvas:hide()
+			end
 		end
+		updateAreaCandidatesActiveState(candidates)
+	end
+
+	local function showAreaCandidates(candidates)
+		prepareAreaCandidateCanvases(candidates, { show = true })
+	end
+
+	local function prewarmAreaCandidateCanvases()
+		if areaChooserShowing or not config.selectedAreaHintsShow then
+			return
+		end
+		local candidates = select(1, collectAreaCandidates())
+		if #candidates == 0 then
+			return
+		end
+		prepareAreaCandidateCanvases(candidates, { show = false })
+	end
+
+	local function scheduleAreaCanvasPrewarm()
+		if
+			areaCanvasPrewarmTimer
+			or not config.selectedAreaHintsShow
+			or type(config.selectedAreaScreens) ~= "table"
+			or next(config.selectedAreaScreens) == nil
+			or not hs
+			or not hs.timer
+			or not hs.timer.doAfter
+		then
+			return
+		end
+		areaCanvasPrewarmTimer = hs.timer.doAfter(SELECTED_AREA_PREWARM_DELAY, function()
+			areaCanvasPrewarmTimer = nil
+			prewarmAreaCandidateCanvases()
+		end)
 	end
 
 	local function screenInfoText(screen, uuid, frame)
@@ -2216,9 +2354,14 @@ button:active {
 	for _, areaName in ipairs(DIRECT_AREA_COMMAND_KEYS) do
 		bindHotkey(config[areaName .. "HotkeyModifiers"], config[areaName .. "HotkeyKey"], directAreaCommands[areaName])
 	end
+	scheduleAreaCanvasPrewarm()
 
 	local function teardown()
-		closeAreaChooser(true)
+		if areaCanvasPrewarmTimer then
+			areaCanvasPrewarmTimer:stop()
+			areaCanvasPrewarmTimer = nil
+		end
+		closeAreaChooser(true, { deleteCachedCanvases = true })
 		for _, hotkey in ipairs(hotkeys) do
 			hotkey:delete()
 		end
