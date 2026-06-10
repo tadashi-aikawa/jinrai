@@ -2073,6 +2073,8 @@ function M.new(options)
 	local jinraiModeComboCount = 0
 	local jinraiModeComboCanvas = nil
 	local jinraiModeComboImages = {}
+	local jinraiModeComboCanvases = {}
+	local jinraiModeComboCanvasElements = {}
 	local jinraiModePreviousComboCanvas = nil
 	local jinraiModeComboAnimationTimer = nil
 	local pendingKeys = {}
@@ -2130,21 +2132,27 @@ function M.new(options)
 		end
 	end
 
+	local function hideJinraiModeComboCanvas(canvas)
+		if not canvas then
+			return
+		end
+		if canvas.hide then
+			canvas:hide()
+		elseif canvas.alpha then
+			canvas:alpha(0)
+		end
+	end
+
 	local function clearJinraiModeCombo()
 		if jinraiModeComboAnimationTimer then
 			jinraiModeComboAnimationTimer:stop()
 			jinraiModeComboAnimationTimer = nil
 		end
-		if jinraiModeComboCanvas then
-			releaseCanvasImages(jinraiModeComboCanvas)
-			jinraiModeComboCanvas:delete()
-			jinraiModeComboCanvas = nil
+		for _, canvas in ipairs(jinraiModeComboCanvases) do
+			hideJinraiModeComboCanvas(canvas)
 		end
-		if jinraiModePreviousComboCanvas then
-			releaseCanvasImages(jinraiModePreviousComboCanvas)
-			jinraiModePreviousComboCanvas:delete()
-			jinraiModePreviousComboCanvas = nil
-		end
+		jinraiModeComboCanvas = nil
+		jinraiModePreviousComboCanvas = nil
 	end
 
 	local function loadJinraiModeComboImage(index)
@@ -2157,6 +2165,17 @@ function M.new(options)
 		local image = hs.image.imageFromPath(resourcePath("resources/jinrai" .. tostring(index) .. ".webp"))
 		jinraiModeComboImages[index] = image
 		return image
+	end
+
+	local function preloadJinraiModeComboImages()
+		local combo = config.jinraiModeCombo
+		local character = combo and combo.character or nil
+		if not character or not character.enabled then
+			return
+		end
+		for index = 0, 9 do
+			loadJinraiModeComboImage(index)
+		end
 	end
 
 	local function loadJinraiModeLogoImage()
@@ -2248,6 +2267,7 @@ function M.new(options)
 		end
 		canvas:show()
 		jinraiModeLogoCanvas = canvas
+
 		if canvas.alpha and hs.timer and hs.timer.doEvery then
 			local fadeSteps = 8
 			local currentStep = 0
@@ -2334,7 +2354,13 @@ function M.new(options)
 		}
 	end
 
-	local function updateComboCanvasLayout(canvas, layout, imageElementIndex, numberTextElementIndex, comboTextElementIndex)
+	local function updateComboCanvasLayout(
+		canvas,
+		layout,
+		imageElementIndex,
+		numberTextElementIndex,
+		comboTextElementIndex
+	)
 		if imageElementIndex then
 			canvas[imageElementIndex].frame = layout.characterFrame
 		end
@@ -2361,13 +2387,117 @@ function M.new(options)
 		})
 	end
 
+	local function createJinraiModeComboCanvas()
+		local combo = config.jinraiModeCombo
+		local character = combo and combo.character or nil
+		local text = combo and combo.text or nil
+		local characterEnabled = character and character.enabled
+		local textEnabled = text and text.enabled
+		if not hs or not hs.canvas or (not characterEnabled and not textEnabled) then
+			return nil
+		end
+
+		local canvas = hs.canvas.new({ x = 0, y = 0, w = 1, h = 1 })
+		canvas:level(hs.canvas.windowLevels.overlay + 1)
+		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
+		local imageElementIndex = nil
+		if characterEnabled then
+			imageElementIndex = 1
+			canvas:appendElements({
+				type = "image",
+				image = jinraiModeComboImages[0],
+				imageAlpha = character.alpha,
+				imageScaling = "scaleProportionally",
+				frame = { x = 0, y = 0, w = 1, h = 1 },
+			})
+		end
+		local numberTextElementIndex = nil
+		local comboTextElementIndex = nil
+		if textEnabled then
+			numberTextElementIndex = imageElementIndex and 2 or 1
+			canvas:appendElements({
+				type = "text",
+				text = "",
+				textAlignment = "center",
+				textColor = {
+					red = COMBO_TEXT_COLOR.red,
+					green = COMBO_TEXT_COLOR.green,
+					blue = COMBO_TEXT_COLOR.blue,
+					alpha = text.alpha,
+				},
+				textFont = COMBO_TEXT_FONT,
+				textSize = 1,
+				textLineBreak = "clip",
+				frame = { x = 0, y = 0, w = 1, h = 1 },
+			})
+			comboTextElementIndex = numberTextElementIndex + 1
+			canvas:appendElements({
+				type = "text",
+				text = "",
+				textAlignment = "center",
+				textColor = {
+					red = COMBO_TEXT_COLOR.red,
+					green = COMBO_TEXT_COLOR.green,
+					blue = COMBO_TEXT_COLOR.blue,
+					alpha = text.alpha,
+				},
+				textFont = COMBO_TEXT_FONT,
+				textSize = 1,
+				textLineBreak = "clip",
+				frame = { x = 0, y = 0, w = 1, h = 1 },
+			})
+		end
+		if canvas.alpha then
+			canvas:alpha(0)
+		end
+		if canvas.hide then
+			canvas:hide()
+		end
+		jinraiModeComboCanvasElements[canvas] = {
+			image = imageElementIndex,
+			numberText = numberTextElementIndex,
+			comboText = comboTextElementIndex,
+		}
+		return canvas
+	end
+
+	local function prepareJinraiModeComboResources()
+		preloadJinraiModeComboImages()
+		local combo = config.jinraiModeCombo
+		local character = combo and combo.character or nil
+		local text = combo and combo.text or nil
+		if not (character and character.enabled) and not (text and text.enabled) then
+			return
+		end
+		for _ = 1, 2 do
+			local canvas = createJinraiModeComboCanvas()
+			if canvas then
+				table.insert(jinraiModeComboCanvases, canvas)
+			end
+		end
+	end
+
+	local function nextJinraiModeComboCanvas()
+		if #jinraiModeComboCanvases == 0 then
+			return nil
+		end
+		if jinraiModeComboCanvas == jinraiModeComboCanvases[1] then
+			return jinraiModeComboCanvases[2] or jinraiModeComboCanvases[1]
+		end
+		return jinraiModeComboCanvases[1]
+	end
+
 	local function showJinraiModeCombo()
 		local combo = config.jinraiModeCombo
 		local character = combo and combo.character or nil
 		local text = combo and combo.text or nil
 		local characterEnabled = character and character.enabled
 		local textEnabled = jinraiModeComboCount > 0 and text and text.enabled
-		if not isJinraiMode or (jinraiModeComboCount <= 0 and not characterEnabled) or (not characterEnabled and not textEnabled) then
+		if
+			not isJinraiMode
+			or (jinraiModeComboCount <= 0 and not characterEnabled)
+			or (not characterEnabled and not textEnabled)
+		then
 			clearJinraiModeCombo()
 			return
 		end
@@ -2385,8 +2515,7 @@ function M.new(options)
 			jinraiModeComboAnimationTimer = nil
 		end
 		if jinraiModePreviousComboCanvas then
-			releaseCanvasImages(jinraiModePreviousComboCanvas)
-			jinraiModePreviousComboCanvas:delete()
+			hideJinraiModeComboCanvas(jinraiModePreviousComboCanvas)
 			jinraiModePreviousComboCanvas = nil
 		end
 
@@ -2415,67 +2544,34 @@ function M.new(options)
 		}
 		local startLayout = comboCanvasLayout(displayContext, 1.18, logoSize, numberTextMetrics, comboTextMetrics)
 		local targetLayout = comboCanvasLayout(displayContext, 1, logoSize, numberTextMetrics, comboTextMetrics)
-		local canvas = hs.canvas.new(startLayout.canvasFrame)
-		canvas:level(hs.canvas.windowLevels.overlay + 1)
-		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
-		local imageElementIndex = nil
-		if image then
-			imageElementIndex = 1
-			canvas:appendElements({
-				type = "image",
-				image = image,
-				imageAlpha = character.alpha,
-				imageScaling = "scaleProportionally",
-				frame = startLayout.characterFrame,
-			})
+		local canvas = nextJinraiModeComboCanvas()
+		if not canvas then
+			return
 		end
-		local numberTextElementIndex = nil
-		local comboTextElementIndex = nil
-		if textEnabled then
-			numberTextElementIndex = imageElementIndex and 2 or 1
-			canvas:appendElements({
-				type = "text",
-				text = comboStyledText(
-					comboCountText,
-					numberTextSize,
-					text.alpha,
-					COMBO_TEXT_COLOR,
-					-5
-				),
-				textAlignment = "center",
-				textColor = {
-					red = COMBO_TEXT_COLOR.red,
-					green = COMBO_TEXT_COLOR.green,
-					blue = COMBO_TEXT_COLOR.blue,
-					alpha = text.alpha,
-				},
-				textFont = COMBO_TEXT_FONT,
-				textSize = numberTextSize,
-				textLineBreak = "clip",
-				frame = startLayout.numberTextFrame,
-			})
-			comboTextElementIndex = numberTextElementIndex + 1
-			canvas:appendElements({
-				type = "text",
-				text = comboStyledText(
-					"COMBO!",
-					comboTextSize,
-					text.alpha,
-					COMBO_TEXT_COLOR,
-					-4
-				),
-				textAlignment = "center",
-				textColor = {
-					red = COMBO_TEXT_COLOR.red,
-					green = COMBO_TEXT_COLOR.green,
-					blue = COMBO_TEXT_COLOR.blue,
-					alpha = text.alpha,
-				},
-				textFont = COMBO_TEXT_FONT,
-				textSize = comboTextSize,
-				textLineBreak = "clip",
-				frame = startLayout.comboTextFrame,
-			})
+		local canvasElements = jinraiModeComboCanvasElements[canvas] or {}
+		local imageElementIndex = canvasElements.image
+		local numberTextElementIndex = canvasElements.numberText
+		local comboTextElementIndex = canvasElements.comboText
+		canvas:frame(startLayout.canvasFrame)
+		if imageElementIndex then
+			canvas[imageElementIndex].image = image
+			canvas[imageElementIndex].imageAlpha = character.alpha
+			canvas[imageElementIndex].frame = startLayout.characterFrame
+		end
+		if numberTextElementIndex then
+			local numberText = textEnabled
+					and comboStyledText(comboCountText, numberTextSize, text.alpha, COMBO_TEXT_COLOR, -5)
+				or ""
+			canvas[numberTextElementIndex].text = numberText
+			canvas[numberTextElementIndex].textSize = numberTextSize
+			canvas[numberTextElementIndex].frame = startLayout.numberTextFrame
+		end
+		if comboTextElementIndex then
+			local comboText = textEnabled and comboStyledText("COMBO!", comboTextSize, text.alpha, COMBO_TEXT_COLOR, -4)
+				or ""
+			canvas[comboTextElementIndex].text = comboText
+			canvas[comboTextElementIndex].textSize = comboTextSize
+			canvas[comboTextElementIndex].frame = startLayout.comboTextFrame
 		end
 		if canvas.alpha then
 			canvas:alpha(0)
@@ -2510,8 +2606,7 @@ function M.new(options)
 				end
 				if currentStep >= animationSteps then
 					if previousCanvas then
-						releaseCanvasImages(previousCanvas)
-						previousCanvas:delete()
+						hideJinraiModeComboCanvas(previousCanvas)
 						previousCanvas = nil
 						jinraiModePreviousComboCanvas = nil
 					end
@@ -2532,8 +2627,7 @@ function M.new(options)
 			end)
 		else
 			if previousCanvas then
-				releaseCanvasImages(previousCanvas)
-				previousCanvas:delete()
+				hideJinraiModeComboCanvas(previousCanvas)
 				jinraiModePreviousComboCanvas = nil
 			end
 			if canvas.alpha then
@@ -3944,8 +4038,16 @@ function M.new(options)
 			mouseClickWatcher:stop()
 			mouseClickWatcher = nil
 		end
+		for _, canvas in ipairs(jinraiModeComboCanvases) do
+			releaseCanvasImages(canvas)
+			canvas:delete()
+		end
+		jinraiModeComboCanvases = {}
+		jinraiModeComboCanvasElements = {}
+		jinraiModeComboImages = {}
 	end
 
+	prepareJinraiModeComboResources()
 	hotkey = hs.hotkey.bind(config.hotkeyModifiers, config.hotkeyKey, function()
 		if isShowing or isPreparing then
 			closeHints(true)

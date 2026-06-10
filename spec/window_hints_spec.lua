@@ -1679,6 +1679,11 @@ describe("window_hints mouse selection", function()
 			return self
 		end
 
+		function canvasMethods:hide()
+			self._shown = false
+			return self
+		end
+
 		function canvasMethods:delete()
 			self._deleted = true
 			return self
@@ -1750,6 +1755,26 @@ describe("window_hints mouse selection", function()
 			end
 		end
 		return nil
+	end
+
+	local function findCanvasByText(createdCanvases, elementIndex, text)
+		for _, canvas in ipairs(createdCanvases) do
+			local element = canvas[elementIndex]
+			if element and element.text and element.text.string == text then
+				return canvas
+			end
+		end
+		return nil
+	end
+
+	local function comboCanvases(createdCanvases)
+		local canvases = {}
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas._level == 2 and not canvas._mouseCallback then
+				table.insert(canvases, canvas)
+			end
+		end
+		return canvases
 	end
 
 	local function installHsMock(targetWindow, createdCanvases)
@@ -2430,7 +2455,7 @@ describe("window_hints mouse selection", function()
 		assert.are.same({ x = 60, y = 10, w = 480, h = 480 }, logoCanvas._frame)
 
 		assert.is_true(instance.advanceJinraiModeCombo())
-		local comboCanvas = createdCanvases[#createdCanvases]
+		local comboCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/resources/jinrai1.webp")
 		local characterFrame = comboCanvas[1].frame
 		local characterCenterX = comboCanvas._frame.x + characterFrame.x + (characterFrame.w / 2)
 		local characterCenterY = comboCanvas._frame.y + characterFrame.y + (characterFrame.h / 2)
@@ -2531,15 +2556,19 @@ describe("window_hints mouse selection", function()
 			},
 		})
 
+		assert.are.equal(10, #mocks.loadedImagePaths)
+		assert.are.equal(2, #comboCanvases(createdCanvases))
 		assert.is_false(instance.advanceJinraiModeCombo())
 		assert.is_true(instance.showJinraiMode())
 		local initialComboCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/resources/jinrai0.webp")
 		assert.is_truthy(initialComboCanvas)
-		assert.is_nil(initialComboCanvas[2])
+		assert.are.equal("", initialComboCanvas[2].text)
 		local comboImagePaths = {}
 		for combo = 1, 10 do
 			assert.is_true(instance.advanceJinraiModeCombo())
-			local comboCanvas = createdCanvases[#createdCanvases]
+			local imageIndex = ((combo - 1) % 9) + 1
+			local comboCanvas =
+				findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/resources/jinrai" .. imageIndex .. ".webp")
 			comboImagePaths[combo] = comboCanvas[1].image.path
 		end
 
@@ -2555,7 +2584,7 @@ describe("window_hints mouse selection", function()
 			"./Jinrai.spoon/resources/jinrai9.webp",
 			"./Jinrai.spoon/resources/jinrai1.webp",
 		}, comboImagePaths)
-		local activeComboCanvas = createdCanvases[#createdCanvases]
+		local activeComboCanvas = findCanvasByText(createdCanvases, 2, "10")
 		assert.are.equal(0.25, activeComboCanvas[1].imageAlpha)
 		assert.are.equal("10", activeComboCanvas[2].text.string)
 		assert.are.same(
@@ -2602,19 +2631,27 @@ describe("window_hints mouse selection", function()
 		assert.are.equal(196, animatedComboLabelTextBottom)
 
 		instance.stopJinraiMode()
-		assert.is_true(activeComboCanvas._deleted)
+		assert.is_false(activeComboCanvas._shown)
+		assert.is_nil(activeComboCanvas._deleted)
 		assert.is_false(instance.advanceJinraiModeCombo())
 
 		instance.startJinraiMode()
 		assert.is_true(instance.advanceJinraiModeCombo())
-		local restartedComboCanvas = createdCanvases[#createdCanvases]
+		local restartedComboCanvas = findCanvasByText(createdCanvases, 2, "1")
 		assert.are.equal("1", restartedComboCanvas[2].text.string)
 		assert.are.equal("COMBO!", restartedComboCanvas[3].text.string)
 		assert.is_true(instance.advanceJinraiModeCombo())
-		local twoComboCanvas = createdCanvases[#createdCanvases]
+		local twoComboCanvas = findCanvasByText(createdCanvases, 2, "2")
 		assert.are.equal("2", twoComboCanvas[2].text.string)
 		assert.are.equal("COMBO!", twoComboCanvas[3].text.string)
 		assert.is_true(twoComboCanvas[2].frame.h >= twoComboCanvas[2].textSize * 1.1)
+		assert.are.equal(2, #comboCanvases(createdCanvases))
+
+		instance.teardown()
+		for _, canvas in ipairs(comboCanvases(createdCanvases)) do
+			assert.is_true(canvas._deleted)
+			assert.is_nil(canvas[1].image)
+		end
 	end)
 
 	it("JinraiMode コンボ文字は小さい画面でも上端から 16px 内側に配置する", function()
@@ -2667,7 +2704,7 @@ describe("window_hints mouse selection", function()
 
 		assert.is_true(instance.showJinraiMode())
 		assert.is_true(instance.advanceJinraiModeCombo())
-		local comboCanvas = createdCanvases[#createdCanvases]
+		local comboCanvas = findCanvasByText(createdCanvases, 1, "1")
 		local comboTextTop = comboCanvas._frame.y + comboCanvas[1].frame.y
 		assert.are.equal(16, comboTextTop)
 	end)
@@ -2698,6 +2735,8 @@ describe("window_hints mouse selection", function()
 			},
 		})
 
+		assert.are.equal(0, #mocks.loadedImagePaths)
+		assert.are.equal(0, #comboCanvases(createdCanvases))
 		assert.is_true(instance.showJinraiMode())
 		local canvasCount = #createdCanvases
 		local imageLoadCount = #mocks.loadedImagePaths
@@ -2737,7 +2776,7 @@ describe("window_hints mouse selection", function()
 		assert.is_true(instance.showJinraiMode())
 		local imageLoadCount = #mocks.loadedImagePaths
 		assert.is_true(instance.advanceJinraiModeCombo())
-		local comboCanvas = createdCanvases[#createdCanvases]
+		local comboCanvas = findCanvasByText(createdCanvases, 1, "1")
 		assert.are.equal("text", comboCanvas[1].type)
 		assert.are.equal("1", comboCanvas[1].text.string)
 		assert.are.equal("COMBO!", comboCanvas[2].text.string)
@@ -2781,7 +2820,7 @@ describe("window_hints mouse selection", function()
 		assert.are.equal(0.35, comboCanvas[1].imageAlpha)
 		assert.is_nil(comboCanvas[2])
 		assert.is_true(instance.advanceJinraiModeCombo())
-		local firstComboCanvas = createdCanvases[#createdCanvases]
+		local firstComboCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/resources/jinrai1.webp")
 		assert.are.equal("./Jinrai.spoon/resources/jinrai1.webp", firstComboCanvas[1].image.path)
 		assert.is_nil(firstComboCanvas[2])
 	end)
