@@ -204,9 +204,6 @@ local DEFAULT_CONFIG = {
 		},
 	},
 	navigation = {
-		activeWindow = {
-			key = nil,
-		},
 		focusBack = {
 			key = nil,
 		},
@@ -604,7 +601,6 @@ end
 
 local function buildReservedHintCharLookup(
 	directionKeyLookup,
-	activeWindowKey,
 	focusBackKey,
 	jinraiModeKey,
 	spaceKeys,
@@ -621,7 +617,6 @@ local function buildReservedHintCharLookup(
 	for key, _ in pairs(directionKeyLookup or {}) do
 		addKey(key)
 	end
-	addKey(activeWindowKey)
 	addKey(focusBackKey)
 	addKey(jinraiModeKey)
 	addKey(prevSpaceKey)
@@ -899,7 +894,6 @@ function M.build(options)
 	local directionKeys = normalizeDirectionKeys(merged.navigation.direction.hints.keys, "navigation.direction.hints.keys")
 	local directionKeyLookup = buildDirectionKeyLookup(directionKeys, "navigation.direction.hints.keys")
 	local directDirectionHotkeys = normalizeDirectDirectionHotkeys(merged.navigation.direction.direct)
-	local activeWindowKey = normalizeActionKey(merged.navigation.activeWindow.key, "navigation.activeWindow.key")
 	local focusBackKey = normalizeActionKey(merged.navigation.focusBack.key, "navigation.focusBack.key")
 	local jinraiMode = merged.internal.jinraiMode or {}
 	local jinraiModeWindowHints = jinraiMode.windowHints or {}
@@ -929,7 +923,6 @@ function M.build(options)
 	local hintChars = normalizeHintChars(merged.hint.chars or DEFAULT_HINT_CHARS)
 	local reservedHintCharLookup = buildReservedHintCharLookup(
 		directionKeyLookup,
-		activeWindowKey,
 		focusBackKey,
 		jinraiModeKey,
 		spaceKeys,
@@ -1065,7 +1058,6 @@ function M.build(options)
 		includeOtherSpaces = merged.behavior.candidates.includeOtherSpaces,
 		includeActiveWindow = merged.behavior.candidates.includeActiveWindow,
 		macosNativeTabs = merged.internal.macosNativeTabs,
-		activeWindowKey = activeWindowKey,
 		focusBackKey = focusBackKey,
 		jinraiModeKey = jinraiModeKey,
 		jinraiModePosition = jinraiModePosition,

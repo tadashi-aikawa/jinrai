@@ -130,9 +130,6 @@ window_hints = {
 ```lua
 window_hints = {
   navigation = {
-    activeWindow = {
-      key = "return",
-    },
     focusBack = {
       key = "tab",
     },
@@ -175,7 +172,6 @@ window_hints = {
 
 | 設定 | 説明 |
 | --- | --- |
-| `navigation.activeWindow.key` | ヒント表示中にアクティブウィンドウを選択するキーです。`nil`で無効になります。 |
 | `navigation.focusBack.key` | ヒント表示中に[Focus Back](focus-back.md)を実行するキーです。 |
 | `navigation.direction.hints.keys` | ヒント表示中に方向でウィンドウを選ぶキーです。 |
 | `navigation.direction.direct` | Window Hintsを表示せず、方向で直接フォーカスを移動するホットキーです。 |

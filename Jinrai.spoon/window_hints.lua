@@ -2048,7 +2048,6 @@ function M.new(options)
 	local directionKeys = config.directionKeys
 	local directionKeyLookup = config.directionKeyLookup or buildDirectionKeyLookup(directionKeys)
 	local directDirectionHotkeys = config.directDirectionHotkeys
-	local activeWindowKey = config.activeWindowKey
 	local focusBackKey = config.focusBackKey
 	local jinraiModeKey = config.jinraiModeKey
 	local prevSpaceKey = config.prevSpaceKey
@@ -2871,16 +2870,6 @@ function M.new(options)
 		return true
 	end
 
-	local function runActiveWindowAction(swapWithFocused)
-		for _, hint in ipairs(openHints) do
-			if hint.isActiveWindow then
-				selectWindow(hint.win, { swapWithFocused = swapWithFocused })
-				return true
-			end
-		end
-		return false
-	end
-
 	local function resolvePreviousWindowForDirection()
 		if focusHistory and focusHistory.getPreviousWindow then
 			return focusHistory:getPreviousWindow()
@@ -3013,11 +3002,6 @@ function M.new(options)
 				config.onJinraiModeStart()
 			end
 			return
-		end
-		if activeWindowKey and key == activeWindowKey then
-			if runActiveWindowAction(swapWithFocused) then
-				return
-			end
 		end
 		if focusBackKey and key == focusBackKey then
 			if runFocusBackAction(swapWithFocused) then
