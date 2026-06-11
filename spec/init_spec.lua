@@ -339,7 +339,6 @@ describe("init", function()
 		assert.are.equal(0.5, calls.new.window_hints.internal.jinraiMode.combo.character.alpha)
 		assert.is_false(calls.new.window_hints.internal.jinraiMode.combo.text.enabled)
 		assert.are.equal(0.7, calls.new.window_hints.internal.jinraiMode.combo.text.alpha)
-		assert.is_nil(calls.new.window_hints.internal.onJinraiModeStart)
 		assert.is_truthy(calls.new.window_hints.internal.onOpenWindowActionChooser)
 		calls.new.window_hints.internal.onOpenWindowActionChooser()
 		assert.are.equal(1, calls.openWindowActionChooserCount)
@@ -370,111 +369,6 @@ describe("init", function()
 		assert.are.equal(5, calls.advanceJinraiModeCombo)
 		assert.are.equal(2, calls.stopJinraiMode)
 		assert.are.equal(3, calls.openWindowActionChooserCount)
-	end)
-
-	it("actionFirst の JinraiMode は候補選択後にウィンドウを選んで適用する", function()
-		_G.__jinrai = nil
-		local init = dofile("./Jinrai.spoon/init.lua")
-		local calls = {
-			new = {},
-			chooserOptions = nil,
-			showJinraiMode = 0,
-			advanceJinraiModeCombo = 0,
-			appliedCandidate = nil,
-			appliedWindow = nil,
-			refreshJinraiModeLogo = 0,
-		}
-
-		_G.dofile = function(path)
-			if path:match("window_hints.lua$") then
-				return {
-					new = function(options)
-						calls.new.window_hints = options
-						return {
-							showJinraiMode = function()
-								calls.showJinraiMode = calls.showJinraiMode + 1
-							end,
-							advanceJinraiModeCombo = function()
-								calls.advanceJinraiModeCombo = calls.advanceJinraiModeCombo + 1
-							end,
-							refreshJinraiModeLogo = function()
-								calls.refreshJinraiModeLogo = calls.refreshJinraiModeLogo + 1
-							end,
-							stopJinraiMode = function() end,
-							teardown = function() end,
-						}
-					end,
-				}
-			end
-			if path:match("window_mover.lua$") then
-				return {
-					new = function(options)
-						calls.new.window_mover = options
-						return {
-							openWindowActionChooser = function(options)
-								calls.chooserOptions = options
-							end,
-							applyCandidateToWindow = function(candidate, win)
-								calls.appliedCandidate = candidate
-								calls.appliedWindow = win
-								return true
-							end,
-							teardown = function() end,
-						}
-					end,
-				}
-			end
-			if path:match("focus_border.lua$") or path:match("focus_back.lua$") or path:match("focus_history.lua$") then
-				return {
-					new = function()
-						return { teardown = function() end }
-					end,
-				}
-			end
-			return originalDofile(path)
-		end
-
-		init:setup({
-			jinrai_mode = {
-				selectionOrder = "actionFirst",
-				triggers = {
-					windowHints = { key = "space" },
-					windowMover = { key = "space" },
-				},
-			},
-			window_hints = {},
-			window_mover = {},
-		})
-
-		assert.are.equal("actionFirst", calls.new.window_mover.internal.jinraiMode.selectionOrder)
-		assert.is_truthy(calls.new.window_hints.internal.onJinraiModeStart)
-
-		calls.new.window_hints.internal.onJinraiModeStart()
-		assert.is_truthy(calls.chooserOptions.onSelect)
-		local candidate = { kind = "half", key = "A" }
-		calls.chooserOptions.onSelect(candidate)
-		assert.are.equal(1, calls.showJinraiMode)
-
-		local targetWindow = {}
-		calls.new.window_hints.internal.onJinraiModeSelect(targetWindow)
-		assert.are.same(candidate, calls.appliedCandidate)
-		assert.are.same(targetWindow, calls.appliedWindow)
-		assert.are.equal(1, calls.refreshJinraiModeLogo)
-		assert.is_truthy(calls.chooserOptions.onSelect)
-		assert.are.equal(3, calls.advanceJinraiModeCombo)
-	end)
-
-	it("JinraiMode の選択順序が不正ならエラー", function()
-		_G.__jinrai = nil
-		local init = dofile("./Jinrai.spoon/init.lua")
-
-		assert.has_error(function()
-			init:setup({
-				jinrai_mode = {
-					selectionOrder = "invalid",
-				},
-			})
-		end, "[jinrai] jinrai_mode.selectionOrder must be one of windowFirst/actionFirst")
 	end)
 
 	it("macosNativeTabs 未指定時は組み込みのデフォルト設定を注入する", function()

@@ -31,7 +31,6 @@ local DEFAULT_MACOS_NATIVE_TABS = {
 
 local DEFAULT_JINRAI_MODE = {
 	position = "activeWindow",
-	selectionOrder = "windowFirst",
 	triggers = {
 		windowHints = {
 			key = nil,
@@ -148,11 +147,7 @@ local function normalizeConfig(selfOrConfig, maybeConfig)
 end
 
 local function normalizeJinraiMode(config)
-	local normalized = deepMerge(DEFAULT_JINRAI_MODE, config)
-	if normalized.selectionOrder ~= "windowFirst" and normalized.selectionOrder ~= "actionFirst" then
-		error("[jinrai] jinrai_mode.selectionOrder must be one of windowFirst/actionFirst")
-	end
-	return normalized
+	return deepMerge(DEFAULT_JINRAI_MODE, config)
 end
 
 local function defer(callback)
@@ -167,17 +162,6 @@ function obj:setup(config)
 	config = normalizeConfig(self, config)
 	local macosNativeTabs = normalizeMacosNativeTabs(config.macosNativeTabs)
 	local jinraiMode = normalizeJinraiMode(config.jinrai_mode)
-	local pendingJinraiModeCandidate = nil
-	local function showJinraiModeAfterTransition()
-		defer(function()
-			if windowHints and windowHints.showJinraiMode then
-				if windowHints.advanceJinraiModeCombo then
-					windowHints.advanceJinraiModeCombo()
-				end
-				windowHints.showJinraiMode()
-			end
-		end)
-	end
 
 	obj:teardown()
 
@@ -214,25 +198,25 @@ function obj:setup(config)
 		local windowMoverConfig = config.window_mover
 		local internalConfig = mergeTable(windowMoverConfig.internal or {}, {
 			jinraiMode = {
-				selectionOrder = jinraiMode.selectionOrder,
 				windowMover = {
 					key = jinraiMode.triggers.windowMover.key,
 				},
 				onStart = function()
-					pendingJinraiModeCandidate = nil
 					if windowHints and windowHints.startJinraiMode then
 						windowHints.startJinraiMode()
 					end
 				end,
-				onSelect = function(candidate)
-					pendingJinraiModeCandidate = candidate
-					showJinraiModeAfterTransition()
-				end,
 				onApply = function()
-					showJinraiModeAfterTransition()
+					defer(function()
+						if windowHints and windowHints.showJinraiMode then
+							if windowHints.advanceJinraiModeCombo then
+								windowHints.advanceJinraiModeCombo()
+							end
+							windowHints.showJinraiMode()
+						end
+					end)
 				end,
 				onCancel = function()
-					pendingJinraiModeCandidate = nil
 					if windowHints and windowHints.stopJinraiMode then
 						windowHints.stopJinraiMode()
 					end
@@ -278,39 +262,28 @@ function obj:setup(config)
 		})
 		windowHintsConfig = mergeTable(windowHintsConfig, { internal = jinraiModeInternalConfig })
 		if windowMover then
-			local function openJinraiModeWindowActionChooser(options)
-				options = options or {}
+			local function openJinraiModeWindowActionChooser()
 				if windowHints and windowHints.advanceJinraiModeCombo then
 					windowHints.advanceJinraiModeCombo()
 				end
 				windowMover.openWindowActionChooser({
 					jinraiMode = true,
-					onSelect = options.onSelect,
 					onApply = function()
-						showJinraiModeAfterTransition()
+						defer(function()
+							if windowHints and windowHints.showJinraiMode then
+								if windowHints.advanceJinraiModeCombo then
+									windowHints.advanceJinraiModeCombo()
+								end
+								windowHints.showJinraiMode()
+							end
+						end)
 					end,
 					onCancel = function()
-						pendingJinraiModeCandidate = nil
 						if windowHints and windowHints.stopJinraiMode then
 							windowHints.stopJinraiMode()
 						end
 					end,
 				})
-			end
-			local function openActionFirstChooser()
-				openJinraiModeWindowActionChooser({
-					onSelect = function(candidate)
-						pendingJinraiModeCandidate = candidate
-						showJinraiModeAfterTransition()
-					end,
-				})
-			end
-			local onJinraiModeStart = nil
-			if jinraiMode.selectionOrder == "actionFirst" then
-				onJinraiModeStart = function()
-					pendingJinraiModeCandidate = nil
-					openActionFirstChooser()
-				end
 			end
 			local internalConfig = mergeTable(windowHintsConfig.internal or {}, {
 				onOpenWindowActionChooser = function(ctx)
@@ -318,36 +291,16 @@ function obj:setup(config)
 						return
 					end
 					if ctx and ctx.jinraiMode then
-						if jinraiMode.selectionOrder == "actionFirst" then
-							openActionFirstChooser()
-						else
-							openJinraiModeWindowActionChooser()
-						end
+						openJinraiModeWindowActionChooser()
 						return
 					end
 					windowMover.openWindowActionChooser()
 				end,
-				onJinraiModeStart = onJinraiModeStart,
-				onJinraiModeSelect = function(win)
+				onJinraiModeSelect = function()
 					if not windowMover or not windowMover.openWindowActionChooser then
 						return
 					end
-					if jinraiMode.selectionOrder == "actionFirst" then
-						local candidate = pendingJinraiModeCandidate
-						pendingJinraiModeCandidate = nil
-						local applied = false
-						if candidate and windowMover.applyCandidateToWindow then
-							applied = windowMover.applyCandidateToWindow(candidate, win)
-						end
-						defer(function()
-							if applied and windowHints and windowHints.refreshJinraiModeLogo then
-								windowHints.refreshJinraiModeLogo()
-							end
-							openActionFirstChooser()
-						end)
-					else
-						openJinraiModeWindowActionChooser()
-					end
+					openJinraiModeWindowActionChooser()
 				end,
 			})
 			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })

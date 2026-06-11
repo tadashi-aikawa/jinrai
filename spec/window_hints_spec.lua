@@ -2256,53 +2256,6 @@ describe("window_hints mouse selection", function()
 		assert.are.equal(1, jinraiModeSelectCount)
 	end)
 
-	it("JinraiMode 開始コールバックがあればヒントを閉じて通知する", function()
-		local createdCanvases = {}
-		local focusCounter = { count = 0 }
-		local targetWindow = makeWindow(1, "Target", focusCounter)
-		local mocks = installHsMock(targetWindow, createdCanvases)
-		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
-		local startCount = 0
-
-		local instance = windowHints.new({
-			hint = {
-				chars = { "A", "S" },
-				title = {
-					show = false,
-				},
-			},
-			behavior = {
-				cursor = {
-					onStart = false,
-					onSelect = false,
-				},
-			},
-			internal = {
-				jinraiMode = {
-					windowHints = {
-						key = "space",
-					},
-				},
-				onJinraiModeStart = function()
-					startCount = startCount + 1
-				end,
-			},
-		})
-		assert.is_true(instance.show())
-
-		mocks.keyBlocker.callback({
-			getKeyCode = function()
-				return 49
-			end,
-			getFlags = function()
-				return {}
-			end,
-		})
-
-		assert.are.equal(1, startCount)
-		assert.is_false(mocks.keyBlocker.started)
-	end)
-
 	it("JinraiMode 中はロゴをアクティブ画面中央に表示し選択後も維持する", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
@@ -2539,34 +2492,6 @@ describe("window_hints mouse selection", function()
 
 		activeWindowFrame = { x = 800, y = 300, w = 1000, h = 700 }
 		assert.is_true(instance.showJinraiMode())
-		assert.are.same({ x = 1060, y = 410, w = 480, h = 480 }, logoCanvas._frame)
-	end)
-
-	it("refreshJinraiModeLogo は最新のウィンドウ中央へロゴを移動する", function()
-		local createdCanvases = {}
-		local focusCounter = { count = 0 }
-		local targetWindow = makeWindow(1, "Target", focusCounter)
-		local activeWindowFrame = { x = 100, y = 100, w = 400, h = 300 }
-		targetWindow.frame = function()
-			return activeWindowFrame
-		end
-		installHsMock(targetWindow, createdCanvases)
-		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
-		local instance = windowHints.new({
-			internal = {
-				jinraiMode = {
-					position = "activeWindow",
-				},
-			},
-		})
-
-		instance.startJinraiMode()
-		local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
-		assert.are.same({ x = 60, y = 10, w = 480, h = 480 }, logoCanvas._frame)
-
-		activeWindowFrame = { x = 800, y = 300, w = 1000, h = 700 }
-		instance.refreshJinraiModeLogo()
-
 		assert.are.same({ x = 1060, y = 410, w = 480, h = 480 }, logoCanvas._frame)
 	end)
 

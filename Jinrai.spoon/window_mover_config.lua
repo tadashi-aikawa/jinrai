@@ -244,12 +244,10 @@ local DEFAULT_CONFIG = {
 	},
 	internal = {
 		jinraiMode = {
-			selectionOrder = "windowFirst",
 			windowMover = {
 				key = nil,
 			},
 			onStart = nil,
-			onSelect = nil,
 			onApply = nil,
 			onCancel = nil,
 		},
@@ -472,13 +470,6 @@ local function normalizeJinraiModeKey(key)
 	return string.lower(key)
 end
 
-local function normalizeJinraiModeSelectionOrder(value)
-	if value ~= "windowFirst" and value ~= "actionFirst" then
-		error("[jinrai.window_mover] jinrai_mode.selectionOrder must be one of windowFirst/actionFirst")
-	end
-	return value
-end
-
 local function normalizeCycleRatios(ratios, path)
 	if type(ratios) ~= "table" or not isArrayTable(ratios) then
 		error("[jinrai.window_mover] " .. path .. " must be a non-empty array")
@@ -575,7 +566,6 @@ function M.build(options)
 	local selectedAreaDefault = normalizeSelectedAreaDefault(merged.selectedArea.defaultScreen, selectedAreaScreens)
 	local selectedAreaWindowHintsKey = normalizeSelectedAreaWindowHintsKey(merged.selectedArea.windowHints)
 	local jinraiModeKey = normalizeJinraiModeKey(merged.internal.jinraiMode.windowMover.key)
-	local jinraiModeSelectionOrder = normalizeJinraiModeSelectionOrder(merged.internal.jinraiMode.selectionOrder)
 	local cycleHorizontalRatios = normalizeCycleRatios(merged.behavior.cycle.horizontalRatios, "behavior.cycle.horizontalRatios")
 	local cycleVerticalRatios = normalizeCycleRatios(merged.behavior.cycle.verticalRatios, "behavior.cycle.verticalRatios")
 	validateSelectedAreaActionKeysDoNotConflict(selectedAreaActions, selectedAreaScreens)
@@ -616,9 +606,7 @@ function M.build(options)
 		selectedAreaHintsShow = merged.selectedArea.hints.show,
 		selectedAreaAppearance = merged.selectedArea.appearance,
 		jinraiModeKey = jinraiModeKey,
-		jinraiModeSelectionOrder = jinraiModeSelectionOrder,
 		onJinraiModeStart = merged.internal.jinraiMode.onStart,
-		onJinraiModeSelect = merged.internal.jinraiMode.onSelect,
 		onJinraiModeApply = merged.internal.jinraiMode.onApply,
 		onJinraiModeCancel = merged.internal.jinraiMode.onCancel,
 		onOpenWindowHints = merged.internal.jinraiMode.onOpenWindowHints,

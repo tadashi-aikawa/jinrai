@@ -477,7 +477,6 @@ function M.new(options)
 	local areaMouseClickWatcher = nil
 	local areaChooserShowing = false
 	local areaApplyCallback = nil
-	local areaSelectCallback = nil
 	local areaCancelCallback = nil
 	local areaJinraiModeActive = false
 	local areaJinraiModeContext = false
@@ -749,7 +748,6 @@ function M.new(options)
 		areaCurrentInput = ""
 		areaCandidateByKey = {}
 		areaApplyCallback = nil
-		areaSelectCallback = nil
 		areaCancelCallback = nil
 		areaJinraiModeActive = false
 		areaJinraiModeContext = false
@@ -766,9 +764,14 @@ function M.new(options)
 		end
 	end
 
-	local function applyAreaCandidateToWindow(candidate, win)
-		if not candidate or not candidate.frame or not win then
-			return false
+	local function applyAreaCandidate(candidate)
+		if not candidate or not candidate.frame or not hs or not hs.window or not hs.window.focusedWindow then
+			return
+		end
+		local win = hs.window.focusedWindow()
+		if not win then
+			closeAreaChooser(true, { cancel = true })
+			return
 		end
 		local targetFrame
 		if candidate.dynamicArea == "freeArea" then
@@ -777,45 +780,13 @@ function M.new(options)
 			targetFrame = cloneFrame(candidate.frame)
 		end
 		if not targetFrame then
-			return false
-		end
-		win:setFrame(targetFrame, 0)
-		activateWindow(win)
-		return true
-	end
-
-	local function applyActionCandidateToWindow(candidate, win)
-		if not candidate or not candidate.action or not win then
-			return false
-		end
-		if candidate.action == "closeWindow" and win.close then
-			return win:close() == true
-		end
-		return false
-	end
-
-	local function applyCandidateToWindow(candidate, win)
-		if candidate and candidate.action then
-			return applyActionCandidateToWindow(candidate, win)
-		end
-		return applyAreaCandidateToWindow(candidate, win)
-	end
-
-	local function applyAreaCandidate(candidate)
-		if not candidate or not hs or not hs.window or not hs.window.focusedWindow then
-			return
-		end
-		local win = hs.window.focusedWindow()
-		if not win then
-			closeAreaChooser(true, { cancel = true })
 			return
 		end
 		local onApply = areaApplyCallback
 		local onJinraiModeApply = areaJinraiModeActive and config.onJinraiModeApply or nil
-		if not applyAreaCandidateToWindow(candidate, win) then
-			return
-		end
 		closeAreaChooser(true)
+		win:setFrame(targetFrame, 0)
+		activateWindow(win)
 		if onApply then
 			onApply(win, candidate)
 		end
@@ -836,7 +807,12 @@ function M.new(options)
 		local onApply = areaApplyCallback
 		local onJinraiModeApply = areaJinraiModeActive and config.onJinraiModeApply or nil
 		closeAreaChooser(true)
-		if not applyActionCandidateToWindow(candidate, win) then
+		if candidate.action == "closeWindow" and win.close then
+			local ok = win:close()
+			if not ok then
+				return
+			end
+		else
 			return
 		end
 		if onApply then
@@ -844,25 +820,6 @@ function M.new(options)
 		end
 		if onJinraiModeApply then
 			onJinraiModeApply(win, candidate)
-		end
-	end
-
-	local function selectAreaCandidate(candidate)
-		local onSelect = areaSelectCallback
-		if
-			not onSelect
-			and (areaJinraiModeContext or areaJinraiModeActive)
-			and config.jinraiModeSelectionOrder == "actionFirst"
-		then
-			onSelect = config.onJinraiModeSelect
-		end
-		if onSelect then
-			closeAreaChooser(true)
-			onSelect(candidate)
-		elseif candidate.action then
-			applyActionCandidate(candidate)
-		else
-			applyAreaCandidate(candidate)
 		end
 	end
 
@@ -1450,7 +1407,11 @@ function M.new(options)
 			areaCurrentInput = areaCurrentInput .. hintChar
 			local exact = areaCandidateByKey[areaCurrentInput]
 			if exact then
-				selectAreaCandidate(exact)
+				if exact.action then
+					applyActionCandidate(exact)
+				else
+					applyAreaCandidate(exact)
+				end
 				return true
 			end
 
@@ -1468,7 +1429,12 @@ function M.new(options)
 
 			areaCurrentInput = hintChar
 			if areaCandidateByKey[areaCurrentInput] then
-				selectAreaCandidate(areaCandidateByKey[areaCurrentInput])
+				local candidate = areaCandidateByKey[areaCurrentInput]
+				if candidate.action then
+					applyActionCandidate(candidate)
+				else
+					applyAreaCandidate(candidate)
+				end
 				return true
 			end
 			updateAreaCandidateActiveState()
@@ -2078,7 +2044,6 @@ button:active {
 		options = options or {}
 		local startJinraiMode = options.startJinraiMode == true
 		areaApplyCallback = options.onApply
-		areaSelectCallback = options.onSelect
 		areaCancelCallback = options.onCancel
 		areaJinraiModeActive = false
 		areaJinraiModeContext = options.jinraiMode == true
@@ -2407,7 +2372,6 @@ button:active {
 		moveToNextDisplay = moveToNextDisplay,
 		moveToActiveDisplayFreeArea = moveToActiveDisplayFreeArea,
 		openWindowActionChooser = openWindowActionChooser,
-		applyCandidateToWindow = applyCandidateToWindow,
 		minimizeWindow = minimizeWindow,
 		maximizeWindow = maximizeWindow,
 		cycleLeft = cycleLeft,

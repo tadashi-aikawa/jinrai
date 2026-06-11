@@ -19,7 +19,6 @@ JinraiModeは次の方法で開始できます。
 ```lua
 jinrai_mode = {
   position = "activeWindow",
-  selectionOrder = "windowFirst",
   triggers = {
     windowHints = {
       key = "space",
@@ -49,7 +48,6 @@ jinrai_mode = {
 | 設定 | 説明 |
 | --- | --- |
 | `position` | ロゴ・キャラクター・COMBOテキストの中心位置です。`activeDisplay`（アクティブディスプレイ中央）または`activeWindow`（アクティブウィンドウ中央、デフォルト）を指定します。 |
-| `selectionOrder` | 操作順序です。`windowFirst`（ウィンドウ→移動先/アクション、デフォルト）または`actionFirst`（移動先/アクション→ウィンドウ）を指定します。 |
 | `triggers.windowHints.key` | [Window Hints](window-hints.md)の表示中にJinraiModeを開始するキーです。 |
 | `triggers.windowMover.key` | 移動先の選択中にJinraiModeを開始するキーです。 |
 | `logo.enabled` | JinraiMode中にJINRAIロゴを表示するかを指定します。 |
@@ -59,26 +57,6 @@ jinrai_mode = {
 | `combo.character.alpha` | キャラクター画像の透明度です。 |
 | `combo.text.enabled` | 継続回数をCOMBOテキストで表示するかを指定します。 |
 | `combo.text.alpha` | COMBOテキストの透明度です。 |
-
-### 移動先やアクションを先に選ぶ
-
-Vimのオペレータのように、移動先やアクションを決めてから対象ウィンドウを選ぶ場合は`actionFirst`を指定します。
-
-```lua
-jinrai_mode = {
-  selectionOrder = "actionFirst",
-  triggers = {
-    windowHints = {
-      key = "space",
-    },
-    windowMover = {
-      key = "space",
-    },
-  },
-}
-```
-
-JinraiModeを開始すると、最初にWindow Moverの候補が開きます。移動先またはアクションを選ぶとWindow Hintsへ切り替わり、選択したウィンドウへ操作を適用した後、次の移動先またはアクション選択へ戻ります。
 
 ### 機能間を直接移動
 
