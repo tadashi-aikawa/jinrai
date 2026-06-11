@@ -212,7 +212,8 @@ function obj:setup(config)
 							if windowHints.advanceJinraiModeCombo then
 								windowHints.advanceJinraiModeCombo()
 							end
-							windowHints.showJinraiMode()
+							local show = windowHints.showJinraiModeAsync or windowHints.showJinraiMode
+							show()
 						end
 					end)
 				end,
@@ -274,7 +275,8 @@ function obj:setup(config)
 								if windowHints.advanceJinraiModeCombo then
 									windowHints.advanceJinraiModeCombo()
 								end
-								windowHints.showJinraiMode()
+								local show = windowHints.showJinraiModeAsync or windowHints.showJinraiMode
+								show()
 							end
 						end)
 					end,

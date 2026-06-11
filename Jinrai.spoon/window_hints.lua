@@ -1,4 +1,5 @@
 local M = {}
+local ASYNC_HINT_CANVAS_BUDGET_MS = 8
 
 local function resourcePath(fileName)
 	if not hs or not hs.spoons or not hs.spoons.resourcePath then
@@ -2081,6 +2082,8 @@ function M.new(options)
 	local activeOverlayCanvases = {}
 	local snapshotTimer = nil
 	local previewFadeTimer = nil
+	local preparationTimer = nil
+	local preparationGeneration = 0
 	local allowedPrefixes = {}
 	local hintCharOrder = {}
 	for i, char in ipairs(hintChars) do
@@ -2791,6 +2794,13 @@ function M.new(options)
 
 	local function closeHints(stopKeyBlocker, opts)
 		opts = opts or {}
+		if not opts.keepPreparation then
+			preparationGeneration = preparationGeneration + 1
+			if preparationTimer then
+				preparationTimer:stop()
+				preparationTimer = nil
+			end
+		end
 		if (isShowing or isPreparing) and stopKeyBlocker and keyBlocker then
 			keyBlocker:stop()
 		end
@@ -2798,11 +2808,15 @@ function M.new(options)
 			mouseClickWatcher:stop()
 		end
 		isShowing = false
-		isPreparing = false
+		if not opts.keepPreparation then
+			isPreparing = false
+		end
 		if not opts.keepJinraiMode then
 			stopJinraiMode()
 		end
-		pendingKeys = {}
+		if not opts.keepPendingKeys then
+			pendingKeys = {}
+		end
 		if snapshotTimer then
 			snapshotTimer:stop()
 			snapshotTimer = nil
@@ -3058,6 +3072,10 @@ function M.new(options)
 			end
 
 			if isPreparing then
+				if key == "escape" then
+					closeHints(true)
+					return true
+				end
 				table.insert(pendingKeys, { key = key, modifiers = modifiers })
 				return true
 			end
@@ -3309,7 +3327,8 @@ function M.new(options)
 		isOffSpace,
 		spaceNumber,
 		scale,
-		isActiveWindow
+		isActiveWindow,
+		showImmediately
 	)
 		scale = scale or 1
 		local canvas = hs.canvas
@@ -3571,7 +3590,9 @@ function M.new(options)
 			canvas[i].trackMouseUp = true
 		end
 
-		canvas:show()
+		if showImmediately ~= false then
+			canvas:show()
+		end
 		return canvas,
 			keyBoxFrame,
 			keyTextHeight,
@@ -3619,7 +3640,7 @@ function M.new(options)
 		return width, height, keyBoxWidth, scale, minWidth
 	end
 
-	local function placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale)
+	local function placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale, showImmediately)
 		local bundleID = hint.app and hint.app:bundleID() or nil
 		local icon = bundleID and hs.image.imageFromAppBundle(bundleID) or nil
 		local canvas, keyBoxFrame, keyTextHeight, iconIdx, keyPrefixIdx, keyRestIdx, titleIdx, fSize, overlayFillIdx, overlayBorderIdx, offSpaceBadgeFillIdx, offSpaceBadgeStrokeIdx, offSpaceBadgeTextIdx, previewIdx =
@@ -3635,7 +3656,8 @@ function M.new(options)
 				hint.isOffSpace,
 				hint.spaceNumber,
 				scale,
-				hint.isActiveWindow
+				hint.isActiveWindow,
+				showImmediately
 			)
 		hint.canvas = canvas
 		hint.canvasFrame = canvasFrame
@@ -3700,22 +3722,61 @@ function M.new(options)
 
 	local function showHints(opts)
 		opts = opts or {}
-		-- Start key blocker early to capture keys pressed during rendering
-		isPreparing = true
-		if opts.jinraiMode then
-			isJinraiMode = true
-			showJinraiModeLogo()
+		local asyncPreparation = opts.asyncCanvasPreparation == true
+		local generation = opts._generation
+
+		if not opts._resume then
+			preparationGeneration = preparationGeneration + 1
+			generation = preparationGeneration
+			if preparationTimer then
+				preparationTimer:stop()
+				preparationTimer = nil
+			end
+			-- Start key blocker early to capture keys pressed during rendering.
+			isPreparing = true
+			if opts.jinraiMode then
+				isJinraiMode = true
+				showJinraiModeLogo()
+			end
+			pendingKeys = {}
+			ensureKeyBlocker()
+			ensureMouseClickWatcher()
+			keyBlocker:start()
+			mouseClickWatcher:start()
+
+			if asyncPreparation and hs.timer and hs.timer.doAfter then
+				preparationTimer = hs.timer.doAfter(0, function()
+					preparationTimer = nil
+					if generation ~= preparationGeneration or not isPreparing then
+						return
+					end
+					local ok, err = pcall(showHints, {
+						jinraiMode = opts.jinraiMode,
+						asyncCanvasPreparation = true,
+						_resume = true,
+						_generation = generation,
+					})
+					if not ok then
+						closeHints(true)
+						if config.onError then
+							config.onError(err)
+						end
+					end
+				end)
+				return
+			end
+		elseif generation ~= preparationGeneration or not isPreparing then
+			return
 		end
-		pendingKeys = {}
-		ensureKeyBlocker()
-		ensureMouseClickWatcher()
-		keyBlocker:start()
-		mouseClickWatcher:start()
 
 		local entries = collectEntries()
 		local hintEntries = buildHintEntries(entries)
 
-		closeHints(false, { keepJinraiMode = opts.jinraiMode == true })
+		closeHints(false, {
+			keepJinraiMode = opts.jinraiMode == true,
+			keepPendingKeys = true,
+			keepPreparation = true,
+		})
 		if opts.jinraiMode then
 			isJinraiMode = true
 			showJinraiModeLogo()
@@ -3723,7 +3784,9 @@ function M.new(options)
 				showJinraiModeCombo()
 			end
 		end
-		showActiveOverlay()
+		if not asyncPreparation then
+			showActiveOverlay()
+		end
 
 		if config.centerCursorOnStart then
 			local focusedWin = hs.window.focusedWindow()
@@ -3734,7 +3797,10 @@ function M.new(options)
 		end
 
 		if #hintEntries == 0 then
-			-- No hints to show; auto-dismiss overlay after a short delay
+			if asyncPreparation then
+				showActiveOverlay()
+			end
+			-- No hints to show; auto-dismiss overlay after a short delay.
 			isPreparing = false
 			keyBlocker:stop()
 			mouseClickWatcher:stop()
@@ -3749,6 +3815,27 @@ function M.new(options)
 			return
 		end
 
+		local placementTasks = {}
+		local placementCount = 0
+		local function queueHintPlacement(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale)
+			placementCount = placementCount + 1
+			if not asyncPreparation then
+				placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale, true)
+				return
+			end
+			table.insert(placementTasks, function(showImmediately)
+				placeHint(
+					hint,
+					canvasFrame,
+					previewImage,
+					previewHeight,
+					keyBoxWidth,
+					scale,
+					showImmediately
+				)
+			end)
+		end
+
 		local visibleHints = {}
 		local occludedHints = {}
 		for _, hint in ipairs(hintEntries) do
@@ -3759,7 +3846,7 @@ function M.new(options)
 			end
 		end
 
-		-- Place visible (front) hints at uncovered area of window
+		-- Place visible (front) hints at uncovered area of window.
 		local takenRectsByScreen = {}
 		local avoidFramesByScreen = {}
 		for _, hint in ipairs(visibleHints) do
@@ -3767,12 +3854,8 @@ function M.new(options)
 			local windowFrame = hint.win:frame()
 			if screen then
 				local screenKey = tostring(screen:id())
-				if not takenRectsByScreen[screenKey] then
-					takenRectsByScreen[screenKey] = {}
-				end
-				if not avoidFramesByScreen[screenKey] then
-					avoidFramesByScreen[screenKey] = {}
-				end
+				takenRectsByScreen[screenKey] = takenRectsByScreen[screenKey] or {}
+				avoidFramesByScreen[screenKey] = avoidFramesByScreen[screenKey] or {}
 				local width, height, keyBoxWidth = computeHintSize(hint)
 				local baseCx, baseCy = findUncoveredCenter(windowFrame, hint.coveringFrames)
 				local center =
@@ -3783,25 +3866,22 @@ function M.new(options)
 					w = width,
 					h = height,
 				}
-				placeHint(hint, canvasFrame, nil, 0, keyBoxWidth)
+				queueHintPlacement(hint, canvasFrame, nil, 0, keyBoxWidth)
 				table.insert(takenRectsByScreen[screenKey], { x = center.x, y = center.y, w = width, h = height })
 				table.insert(avoidFramesByScreen[screenKey], canvasFrame)
 			end
 		end
 
-		-- Place occluded (background) hints in a dock at each screen's bottom
+		-- Place occluded (background) hints in a dock at each screen's bottom.
 		local deferredPreviewItems = {}
 		if #occludedHints > 0 then
 			local scale = config.occludedScale or 1
-			-- Group by screen and prepare sizes (without snapshots)
 			local screenGroups = {}
 			for _, hint in ipairs(occludedHints) do
 				local screen = hint.win:screen()
 				if screen then
 					local screenKey = tostring(screen:id())
-					if not screenGroups[screenKey] then
-						screenGroups[screenKey] = { screen = screen, items = {} }
-					end
+					screenGroups[screenKey] = screenGroups[screenKey] or { screen = screen, items = {} }
 					local width, height, keyBoxWidth, _, minWidth = computeHintSize(hint, scale)
 					local previewHeight = 0
 					if config.showPreviewForOccluded then
@@ -3823,8 +3903,6 @@ function M.new(options)
 						end
 					end
 					local winFrame = hint.win:frame()
-					local windowCenterX = winFrame.x + (winFrame.w / 2)
-					local windowCenterY = winFrame.y + (winFrame.h / 2)
 					local item = {
 						hint = hint,
 						width = width,
@@ -3833,8 +3911,8 @@ function M.new(options)
 						keyBoxWidth = keyBoxWidth,
 						previewImage = nil,
 						previewHeight = previewHeight,
-						windowCenterX = windowCenterX,
-						windowCenterY = windowCenterY,
+						windowCenterX = winFrame.x + (winFrame.w / 2),
+						windowCenterY = winFrame.y + (winFrame.h / 2),
 					}
 					table.insert(screenGroups[screenKey].items, item)
 					if config.showPreviewForOccluded and previewHeight > 0 then
@@ -3843,47 +3921,29 @@ function M.new(options)
 				end
 			end
 
-			-- Layout dock per screen
 			for _, group in pairs(screenGroups) do
 				if config.dockWindowXBlend > 0 then
 					table.sort(group.items, function(a, b)
 						if a.windowCenterX ~= b.windowCenterX then
 							return a.windowCenterX < b.windowCenterX
 						end
-						if a.hint.key ~= b.hint.key then
-							return a.hint.key < b.hint.key
-						end
-						return false
+						return a.hint.key < b.hint.key
 					end)
 				end
 				local screenFrame = group.screen:frame()
 				local screenKey = tostring(group.screen:id())
-				if not avoidFramesByScreen[screenKey] then
-					avoidFramesByScreen[screenKey] = {}
-				end
-
+				avoidFramesByScreen[screenKey] = avoidFramesByScreen[screenKey] or {}
 				local needsMultiRow = shrinkDockItemWidths(group.items, screenFrame.w, config.dockItemGap)
-				local rows
-				if needsMultiRow then
-					rows = splitDockItemsIntoRows(group.items, screenFrame.w, config.dockItemGap)
-				else
-					rows = { group.items }
-				end
-
+				local rows = needsMultiRow and splitDockItemsIntoRows(group.items, screenFrame.w, config.dockItemGap)
+					or { group.items }
 				local rowBottomY = screenFrame.y + screenFrame.h - config.dockBottomMargin
 				for _, rowItems in ipairs(rows) do
 					local maxHeight = 0
 					local totalWidth = 0
 					for i, item in ipairs(rowItems) do
-						totalWidth = totalWidth + item.width
-						if i > 1 then
-							totalWidth = totalWidth + config.dockItemGap
-						end
-						if item.height > maxHeight then
-							maxHeight = item.height
-						end
+						totalWidth = totalWidth + item.width + (i > 1 and config.dockItemGap or 0)
+						maxHeight = math.max(maxHeight, item.height)
 					end
-
 					local startX = resolveOccludedDockStartX(screenFrame, totalWidth)
 					local dockY = rowBottomY - maxHeight
 					local centeredX = startX
@@ -3893,9 +3953,7 @@ function M.new(options)
 					end
 					local itemXs =
 						resolveOccludedDockItemXs(screenFrame, rowItems, config.dockItemGap, config.dockWindowXBlend)
-
 					for i, item in ipairs(rowItems) do
-						local itemX = itemXs[i]
 						local centeredY = dockY + (maxHeight - item.height)
 						local itemY = resolveOccludedDockItemY(
 							screenFrame,
@@ -3905,19 +3963,13 @@ function M.new(options)
 							config.dockWindowYBlend,
 							config.dockBottomMargin
 						)
-						local canvasFrame = {
-							x = itemX,
-							y = itemY,
-							w = item.width,
-							h = item.height,
-						}
-						canvasFrame = resolveOccludedDockFrameAvoidingRects(
+						local canvasFrame = resolveOccludedDockFrameAvoidingRects(
 							screenFrame,
-							canvasFrame,
+							{ x = itemXs[i], y = itemY, w = item.width, h = item.height },
 							avoidFramesByScreen[screenKey],
 							config.dockItemGap
 						)
-						placeHint(
+						queueHintPlacement(
 							item.hint,
 							canvasFrame,
 							item.previewImage,
@@ -3927,85 +3979,141 @@ function M.new(options)
 						)
 						table.insert(avoidFramesByScreen[screenKey], canvasFrame)
 					end
-
 					rowBottomY = dockY - config.dockItemGap
 				end
 			end
 		end
 
-		if #openHints == 0 then
+		local function finishHintDisplay(showPreparedCanvases)
+			if generation ~= preparationGeneration or not isPreparing then
+				return
+			end
+			if #openHints == 0 then
+				closeHints(true)
+				return
+			end
+			if asyncPreparation then
+				showActiveOverlay()
+			end
+			if showPreparedCanvases then
+				for _, hint in ipairs(openHints) do
+					if hint.canvas then
+						hint.canvas:show()
+					end
+				end
+			end
+			isShowing = true
 			isPreparing = false
-			keyBlocker:stop()
-			mouseClickWatcher:stop()
-			pendingKeys = {}
-			clearHints()
-			stopJinraiMode()
+			currentInput = ""
+			refreshHighlights()
+			replayPendingKeys()
+
+			-- Phase 2: snapshot を遅延取得してプレビュー画像をフェードインで差し込む.
+			if #deferredPreviewItems > 0 then
+				snapshotTimer = hs.timer.doAfter(0, function()
+					snapshotTimer = nil
+					local fadingHints = {}
+					for _, item in ipairs(deferredPreviewItems) do
+						if not isShowing then
+							return
+						end
+						local hint = item.hint
+						if hint.canvas and hint.previewIdx then
+							local ok, snapshot = pcall(function()
+								return hint.win:snapshot()
+							end)
+							if ok and snapshot then
+								local imgSize = snapshot:size()
+								if imgSize and imgSize.w > 0 and imgSize.h > 0 then
+									hint.canvas[hint.previewIdx].image = snapshot
+									hint.canvas[hint.previewIdx].imageAlpha = 0
+									table.insert(fadingHints, hint)
+								end
+							end
+						end
+					end
+					deferredPreviewItems = {}
+					if #fadingHints > 0 and isShowing then
+						local targetAlpha = config.occludedPreviewAlpha or 0.64
+						local fadeSteps = 8
+						local currentStep = 0
+						previewFadeTimer = hs.timer.doEvery(0.02, function()
+							currentStep = currentStep + 1
+							if not isShowing or currentStep >= fadeSteps then
+								if previewFadeTimer then
+									previewFadeTimer:stop()
+									previewFadeTimer = nil
+								end
+								for _, hint in ipairs(fadingHints) do
+									if hint.canvas and hint.previewIdx then
+										hint.canvas[hint.previewIdx].imageAlpha = targetAlpha
+									end
+								end
+								fadingHints = {}
+								return
+							end
+							local alpha = targetAlpha * (currentStep / fadeSteps)
+							for _, hint in ipairs(fadingHints) do
+								if hint.canvas and hint.previewIdx then
+									hint.canvas[hint.previewIdx].imageAlpha = alpha
+								end
+							end
+						end)
+					end
+				end)
+			end
+		end
+
+		if placementCount == 0 then
+			closeHints(true)
 			return
 		end
 
-		isShowing = true
-		isPreparing = false
-		currentInput = ""
-		refreshHighlights()
-
-		replayPendingKeys()
-
-		-- Phase 2: snapshot を遅延取得してプレビュー画像をフェードインで差し込む
-		if #deferredPreviewItems > 0 then
-			snapshotTimer = hs.timer.doAfter(0, function()
-				snapshotTimer = nil
-				local fadingHints = {}
-				for _, item in ipairs(deferredPreviewItems) do
-					if not isShowing then
-						return
-					end
-					local hint = item.hint
-					if hint.canvas and hint.previewIdx then
-						local ok, snapshot = pcall(function()
-							return hint.win:snapshot()
-						end)
-						if ok and snapshot then
-							local imgSize = snapshot:size()
-							if imgSize and imgSize.w > 0 and imgSize.h > 0 then
-								hint.canvas[hint.previewIdx].image = snapshot
-								hint.canvas[hint.previewIdx].imageAlpha = 0
-								table.insert(fadingHints, hint)
-							end
-							snapshot = nil
-						end
-					end
+		if not asyncPreparation or not hs.timer or not hs.timer.doAfter then
+			if asyncPreparation then
+				for _, task in ipairs(placementTasks) do
+					task(true)
 				end
-				deferredPreviewItems = {}
-				-- フェードインアニメーション
-				if #fadingHints > 0 and isShowing then
-					local targetAlpha = config.occludedPreviewAlpha or 0.64
-					local fadeSteps = 8
-					local currentStep = 0
-					previewFadeTimer = hs.timer.doEvery(0.02, function()
-						currentStep = currentStep + 1
-						if not isShowing or currentStep >= fadeSteps then
-							if previewFadeTimer then
-								previewFadeTimer:stop()
-								previewFadeTimer = nil
-							end
-							for _, hint in ipairs(fadingHints) do
-								if hint.canvas and hint.previewIdx then
-									hint.canvas[hint.previewIdx].imageAlpha = targetAlpha
-								end
-							end
-							fadingHints = {}
-							return
-						end
-						local alpha = targetAlpha * (currentStep / fadeSteps)
-						for _, hint in ipairs(fadingHints) do
-							if hint.canvas and hint.previewIdx then
-								hint.canvas[hint.previewIdx].imageAlpha = alpha
-							end
-						end
-					end)
+			end
+			finishHintDisplay(false)
+			return
+		end
+
+		local nextTaskIndex = 1
+		local function nowMilliseconds()
+			if hs.timer.absoluteTime then
+				return hs.timer.absoluteTime() / 1000000
+			end
+			return os.clock() * 1000
+		end
+		local function runPlacementBatch()
+			if generation ~= preparationGeneration or not isPreparing then
+				return
+			end
+			local startedAt = nowMilliseconds()
+			repeat
+				placementTasks[nextTaskIndex](false)
+				nextTaskIndex = nextTaskIndex + 1
+			until nextTaskIndex > #placementTasks
+				or nowMilliseconds() - startedAt >= ASYNC_HINT_CANVAS_BUDGET_MS
+
+			if nextTaskIndex > #placementTasks then
+				preparationTimer = nil
+				finishHintDisplay(true)
+				return
+			end
+			preparationTimer = hs.timer.doAfter(0, function()
+				preparationTimer = nil
+				local ok, err = pcall(runPlacementBatch)
+				if not ok then
+					closeHints(true)
+					if config.onError then
+						config.onError(err)
+					end
 				end
 			end)
 		end
+		runPlacementBatch()
 	end
 
 	local function invokeShowHints(opts)
@@ -4072,6 +4180,9 @@ function M.new(options)
 		startJinraiMode = startJinraiMode,
 		showJinraiMode = function()
 			return invokeShowHints({ jinraiMode = true })
+		end,
+		showJinraiModeAsync = function()
+			return invokeShowHints({ jinraiMode = true, asyncCanvasPreparation = true })
 		end,
 		advanceJinraiModeCombo = advanceJinraiModeCombo,
 		stopJinraiMode = stopJinraiMode,

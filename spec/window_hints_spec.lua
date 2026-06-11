@@ -1777,7 +1777,29 @@ describe("window_hints mouse selection", function()
 		return canvases
 	end
 
-	local function installHsMock(targetWindow, createdCanvases)
+	local function hintCanvases(createdCanvases)
+		local canvases = {}
+		for _, canvas in ipairs(createdCanvases) do
+			if canvas._mouseCallback then
+				table.insert(canvases, canvas)
+			end
+		end
+		return canvases
+	end
+
+	local function runNextDelayedTimer(delayedTimers)
+		while #delayedTimers > 0 do
+			local timer = table.remove(delayedTimers, 1)
+			if not timer.stopped then
+				timer.callback()
+				return true
+			end
+		end
+		return false
+	end
+
+	local function installHsMock(targetWindow, createdCanvases, options)
+		options = options or {}
 		_G.utf8 = {
 			len = function(text)
 				return string.len(text)
@@ -1804,6 +1826,9 @@ describe("window_hints mouse selection", function()
 		}
 		local loadedImagePaths = {}
 		local repeatingTimers = {}
+		local delayedTimers = {}
+		local windows = options.windows or { targetWindow }
+		local absoluteTime = 0
 		_G.hs = {
 			spoons = {
 				resourcePath = function(fileName)
@@ -1850,10 +1875,10 @@ describe("window_hints mouse selection", function()
 					return targetWindow
 				end,
 				orderedWindows = function()
-					return { targetWindow }
+					return windows
 				end,
 				visibleWindows = function()
-					return { targetWindow }
+					return windows
 				end,
 			},
 			canvas = makeCanvasMock(createdCanvases),
@@ -1879,11 +1904,25 @@ describe("window_hints mouse selection", function()
 			},
 			timer = {
 				doAfter = function(_, callback)
+					if options.deferDoAfter then
+						local timer = {
+							callback = callback,
+							stop = function(self)
+								self.stopped = true
+							end,
+						}
+						table.insert(delayedTimers, timer)
+						return timer
+					end
 					callback()
 					return {
 						stop = function() end,
 					}
 				end,
+				absoluteTime = options.elapsedPerClockCall and function()
+					absoluteTime = absoluteTime + options.elapsedPerClockCall
+					return absoluteTime
+				end or nil,
 				doEvery = function(_, callback)
 					local timer = {
 						callback = callback,
@@ -1902,6 +1941,7 @@ describe("window_hints mouse selection", function()
 			mouseClickWatcher = mouseClickWatcher,
 			loadedImagePaths = loadedImagePaths,
 			repeatingTimers = repeatingTimers,
+			delayedTimers = delayedTimers,
 		}
 	end
 
@@ -2254,6 +2294,109 @@ describe("window_hints mouse selection", function()
 		hintCanvas._mouseCallback(hintCanvas, "mouseUp")
 
 		assert.are.equal(1, jinraiModeSelectCount)
+	end)
+
+	it("showJinraiModeAsync は Canvas を分割準備して完成後に一斉表示する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local windows = {
+			makeWindow(1, "First", focusCounter),
+			makeWindow(2, "Second", focusCounter),
+			makeWindow(3, "Third", focusCounter),
+		}
+		local mocks = installHsMock(windows[1], createdCanvases, {
+			windows = windows,
+			deferDoAfter = true,
+			elapsedPerClockCall = 9000000,
+		})
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiModeAsync())
+		assert.are.equal(0, #hintCanvases(createdCanvases))
+		assert.is_true(mocks.keyBlocker.started)
+
+		assert.is_true(runNextDelayedTimer(mocks.delayedTimers))
+		local prepared = hintCanvases(createdCanvases)
+		assert.are.equal(1, #prepared)
+		assert.is_nil(prepared[1]._shown)
+
+		assert.is_true(runNextDelayedTimer(mocks.delayedTimers))
+		prepared = hintCanvases(createdCanvases)
+		assert.are.equal(2, #prepared)
+		assert.is_nil(prepared[1]._shown)
+		assert.is_nil(prepared[2]._shown)
+
+		assert.is_true(runNextDelayedTimer(mocks.delayedTimers))
+		prepared = hintCanvases(createdCanvases)
+		assert.are.equal(3, #prepared)
+		for _, canvas in ipairs(prepared) do
+			assert.is_true(canvas._shown)
+		end
+	end)
+
+	it("showJinraiModeAsync は準備中の Escape で予約処理と Canvas を破棄する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local windows = {
+			makeWindow(1, "First", focusCounter),
+			makeWindow(2, "Second", focusCounter),
+		}
+		local mocks = installHsMock(windows[1], createdCanvases, {
+			windows = windows,
+			deferDoAfter = true,
+			elapsedPerClockCall = 9000000,
+		})
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			behavior = {
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiModeAsync())
+		assert.is_true(runNextDelayedTimer(mocks.delayedTimers))
+		local prepared = hintCanvases(createdCanvases)
+		assert.are.equal(1, #prepared)
+		assert.is_nil(prepared[1]._shown)
+
+		assert.is_true(mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 53
+			end,
+			getFlags = function()
+				return {}
+			end,
+		}))
+		assert.is_true(prepared[1]._deleted)
+		assert.is_false(mocks.keyBlocker.started)
+		assert.is_false(runNextDelayedTimer(mocks.delayedTimers))
+		assert.are.equal(1, #hintCanvases(createdCanvases))
 	end)
 
 	it("JinraiMode 中はロゴをアクティブ画面中央に表示し選択後も維持する", function()

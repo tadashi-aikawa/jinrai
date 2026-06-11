@@ -12,6 +12,7 @@ module.exports = {
           { type: "feat", release: "minor" },
           { type: "build", release: "minor" },
           { type: "style", release: "minor" },
+          { type: "perf", release: "minor" },
 
           { type: "fix", release: "patch" },
           { type: "refactor", release: "patch" },
@@ -29,6 +30,7 @@ module.exports = {
             { type: "style", section: "🎨 Styles" },
             { type: "fix", section: "🛡️ Bug Fixes" },
             { type: "build", section: "🤖 Build" },
+            { type: "perf", section: "⚡ Performance" },
             { type: "docs", hidden: true },
             { type: "refactor", hidden: true },
             { type: "test", hidden: true },

@@ -248,6 +248,7 @@ describe("init", function()
 			startJinraiMode = 0,
 			show = 0,
 			showJinraiMode = 0,
+			showJinraiModeAsync = 0,
 			advanceJinraiModeCombo = 0,
 			stopJinraiMode = 0,
 		}
@@ -266,6 +267,9 @@ describe("init", function()
 							end,
 							showJinraiMode = function()
 								calls.showJinraiMode = calls.showJinraiMode + 1
+							end,
+							showJinraiModeAsync = function()
+								calls.showJinraiModeAsync = calls.showJinraiModeAsync + 1
 							end,
 							advanceJinraiModeCombo = function()
 								calls.advanceJinraiModeCombo = calls.advanceJinraiModeCombo + 1
@@ -365,7 +369,8 @@ describe("init", function()
 
 		assert.are.equal(1, calls.startJinraiMode)
 		assert.are.equal(1, calls.show)
-		assert.are.equal(3, calls.showJinraiMode)
+		assert.are.equal(1, calls.showJinraiMode)
+		assert.are.equal(2, calls.showJinraiModeAsync)
 		assert.are.equal(5, calls.advanceJinraiModeCombo)
 		assert.are.equal(2, calls.stopJinraiMode)
 		assert.are.equal(3, calls.openWindowActionChooserCount)
