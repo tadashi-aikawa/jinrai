@@ -201,15 +201,33 @@ describe("window_hints_config", function()
 						enabled = true,
 						size = 480,
 						alpha = 0.3,
+						animation = {
+							fade = false,
+							scale = 0.8,
+							duration = 0.4,
+							easing = "easeOut",
+						},
 					},
 					combo = {
 						character = {
 							enabled = true,
 							alpha = 0.25,
+							animation = {
+								fade = true,
+								scale = 1.3,
+								duration = 0.2,
+								easing = "easeInOut",
+							},
 						},
 						text = {
 							enabled = false,
 							alpha = 0.75,
+							animation = {
+								fade = false,
+								scale = 0.9,
+								duration = 0,
+								easing = "linear",
+							},
 						},
 					},
 				},
@@ -280,10 +298,19 @@ describe("window_hints_config", function()
 		assert.is_true(built.jinraiModeLogo.enabled)
 		assert.are.equal(480, built.jinraiModeLogo.size)
 		assert.are.equal(0.3, built.jinraiModeLogo.alpha)
+		assert.are.same({ fade = false, scale = 0.8, duration = 0.4, easing = "easeOut" }, built.jinraiModeLogo.animation)
 		assert.is_true(built.jinraiModeCombo.character.enabled)
 		assert.are.equal(0.25, built.jinraiModeCombo.character.alpha)
+		assert.are.same(
+			{ fade = true, scale = 1.3, duration = 0.2, easing = "easeInOut" },
+			built.jinraiModeCombo.character.animation
+		)
 		assert.is_false(built.jinraiModeCombo.text.enabled)
 		assert.are.equal(0.75, built.jinraiModeCombo.text.alpha)
+		assert.are.same(
+			{ fade = false, scale = 0.9, duration = 0, easing = "linear" },
+			built.jinraiModeCombo.text.animation
+		)
 		assert.are.same({ "shift" }, built.swapWindowFrameSelectModifiers)
 		assert.are.equal(300, built.cardinalOverlapTieThresholdPx)
 		assert.are.equal(0.15, built.maxPrimaryOverlapRatioForDetached)
@@ -345,10 +372,22 @@ describe("window_hints_config", function()
 		assert.are.equal(1, built.dockWindowYBlend)
 		assert.are.equal("activeWindow", built.jinraiModePosition)
 		assert.are.equal(0.4, built.jinraiModeLogo.alpha)
+		assert.are.same(
+			{ fade = true, scale = 1.0, duration = 0.16, easing = "linear" },
+			built.jinraiModeLogo.animation
+		)
 		assert.is_false(built.jinraiModeCombo.character.enabled)
 		assert.are.equal(0.5, built.jinraiModeCombo.character.alpha)
+		assert.are.same(
+			{ fade = true, scale = 1.18, duration = 0.16, easing = "linear" },
+			built.jinraiModeCombo.character.animation
+		)
 		assert.is_false(built.jinraiModeCombo.text.enabled)
 		assert.are.equal(0.7, built.jinraiModeCombo.text.alpha)
+		assert.are.same(
+			{ fade = true, scale = 1.0, duration = 0.16, easing = "linear" },
+			built.jinraiModeCombo.text.animation
+		)
 	end)
 
 	it("JinraiMode position は activeDisplay または activeWindow のみ許可する", function()
@@ -391,6 +430,60 @@ describe("window_hints_config", function()
 				},
 			})
 		end, "[jinrai.window_hints] jinrai_mode.combo.text.alpha must be a number")
+	end)
+
+	it("JinraiMode アニメーション設定を検証する", function()
+		assert.has_error(function()
+			mod.build({
+				internal = {
+					jinraiMode = {
+						logo = {
+							animation = { fade = "yes" },
+						},
+					},
+				},
+			})
+		end, "[jinrai.window_hints] jinrai_mode.logo.animation.fade must be a boolean")
+
+		assert.has_error(function()
+			mod.build({
+				internal = {
+					jinraiMode = {
+						combo = {
+							character = {
+								animation = { scale = 0 },
+							},
+						},
+					},
+				},
+			})
+		end, "[jinrai.window_hints] jinrai_mode.combo.character.animation.scale must be > 0")
+
+		assert.has_error(function()
+			mod.build({
+				internal = {
+					jinraiMode = {
+						combo = {
+							text = {
+								animation = { duration = -0.1 },
+							},
+						},
+					},
+				},
+			})
+		end, "[jinrai.window_hints] jinrai_mode.combo.text.animation.duration must be >= 0")
+
+		assert.has_error(function()
+			mod.build({
+				internal = {
+					jinraiMode = {
+						logo = {
+							animation = { easing = "spring" },
+						},
+					},
+				},
+			})
+		end, "[jinrai.window_hints] jinrai_mode.logo.animation.easing must be one of linear/easeOut/easeInOut")
 	end)
 
 	it("focusHistory が無いと focusBackKey は無効化される", function()

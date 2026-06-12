@@ -341,8 +341,16 @@ describe("init", function()
 		assert.are.equal("j", calls.new.window_mover.internal.jinraiMode.windowMover.key)
 		assert.is_false(calls.new.window_hints.internal.jinraiMode.combo.character.enabled)
 		assert.are.equal(0.5, calls.new.window_hints.internal.jinraiMode.combo.character.alpha)
+		assert.are.same(
+			{ fade = true, scale = 1.18, duration = 0.16, easing = "linear" },
+			calls.new.window_hints.internal.jinraiMode.combo.character.animation
+		)
 		assert.is_false(calls.new.window_hints.internal.jinraiMode.combo.text.enabled)
 		assert.are.equal(0.7, calls.new.window_hints.internal.jinraiMode.combo.text.alpha)
+		assert.are.same(
+			{ fade = true, scale = 1.0, duration = 0.16, easing = "linear" },
+			calls.new.window_hints.internal.jinraiMode.combo.text.animation
+		)
 		assert.is_truthy(calls.new.window_hints.internal.onOpenWindowActionChooser)
 		calls.new.window_hints.internal.onOpenWindowActionChooser()
 		assert.are.equal(1, calls.openWindowActionChooserCount)

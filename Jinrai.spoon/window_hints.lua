@@ -2070,14 +2070,17 @@ function M.new(options)
 	local isJinraiMode = false
 	local jinraiModeLogoCanvas = nil
 	local jinraiModeLogoImage = nil
-	local jinraiModeLogoFadeTimer = nil
+	local jinraiModeLogoAnimationTimer = nil
 	local jinraiModeComboCount = 0
-	local jinraiModeComboCanvas = nil
 	local jinraiModeComboImages = {}
-	local jinraiModeComboCanvases = {}
-	local jinraiModeComboCanvasElements = {}
-	local jinraiModePreviousComboCanvas = nil
-	local jinraiModeComboAnimationTimer = nil
+	local jinraiModeCharacterCanvases = {}
+	local jinraiModeCharacterCanvas = nil
+	local jinraiModePreviousCharacterCanvas = nil
+	local jinraiModeCharacterAnimationTimer = nil
+	local jinraiModeTextCanvases = {}
+	local jinraiModeTextCanvas = nil
+	local jinraiModePreviousTextCanvas = nil
+	local jinraiModeTextAnimationTimer = nil
 	local pendingKeys = {}
 	local activeOverlayCanvases = {}
 	local snapshotTimer = nil
@@ -2105,6 +2108,27 @@ function M.new(options)
 		end
 	end
 
+	local function animationProgress(progress, easing)
+		if easing == "easeOut" then
+			return 1 - ((1 - progress) ^ 3)
+		end
+		if easing == "easeInOut" then
+			if progress < 0.5 then
+				return 4 * progress * progress * progress
+			end
+			return 1 - (((-2 * progress) + 2) ^ 3) / 2
+		end
+		return progress
+	end
+
+	local function animationStepConfig(duration)
+		if duration <= 0 then
+			return 0, 0
+		end
+		local steps = math.max(1, math.ceil(duration / 0.02))
+		return steps, duration / steps
+	end
+
 	local function clearHints()
 		for _, hint in ipairs(openHints) do
 			if hint.canvas then
@@ -2124,9 +2148,9 @@ function M.new(options)
 	end
 
 	local function clearJinraiModeLogo()
-		if jinraiModeLogoFadeTimer then
-			jinraiModeLogoFadeTimer:stop()
-			jinraiModeLogoFadeTimer = nil
+		if jinraiModeLogoAnimationTimer then
+			jinraiModeLogoAnimationTimer:stop()
+			jinraiModeLogoAnimationTimer = nil
 		end
 		if jinraiModeLogoCanvas then
 			releaseCanvasImages(jinraiModeLogoCanvas)
@@ -2147,15 +2171,24 @@ function M.new(options)
 	end
 
 	local function clearJinraiModeCombo()
-		if jinraiModeComboAnimationTimer then
-			jinraiModeComboAnimationTimer:stop()
-			jinraiModeComboAnimationTimer = nil
+		if jinraiModeCharacterAnimationTimer then
+			jinraiModeCharacterAnimationTimer:stop()
+			jinraiModeCharacterAnimationTimer = nil
 		end
-		for _, canvas in ipairs(jinraiModeComboCanvases) do
+		if jinraiModeTextAnimationTimer then
+			jinraiModeTextAnimationTimer:stop()
+			jinraiModeTextAnimationTimer = nil
+		end
+		for _, canvas in ipairs(jinraiModeCharacterCanvases) do
 			hideJinraiModeComboCanvas(canvas)
 		end
-		jinraiModeComboCanvas = nil
-		jinraiModePreviousComboCanvas = nil
+		for _, canvas in ipairs(jinraiModeTextCanvases) do
+			hideJinraiModeComboCanvas(canvas)
+		end
+		jinraiModeCharacterCanvas = nil
+		jinraiModePreviousCharacterCanvas = nil
+		jinraiModeTextCanvas = nil
+		jinraiModePreviousTextCanvas = nil
 	end
 
 	local function loadJinraiModeComboImage(index)
@@ -2237,15 +2270,27 @@ function M.new(options)
 			return
 		end
 		local size = logo.size
-		local logoFrame = {
-			x = displayContext.centerX - (size / 2),
-			y = displayContext.centerY - (size / 2),
-			w = size,
-			h = size,
-		}
+		local animation = logo.animation
+		local function logoFrame(scale)
+			local scaledSize = size * scale
+			return {
+				x = displayContext.centerX - (scaledSize / 2),
+				y = displayContext.centerY - (scaledSize / 2),
+				w = scaledSize,
+				h = scaledSize,
+			}
+		end
+		local targetFrame = logoFrame(1)
 		if jinraiModeLogoCanvas then
+			if jinraiModeLogoAnimationTimer then
+				jinraiModeLogoAnimationTimer:stop()
+				jinraiModeLogoAnimationTimer = nil
+			end
 			if jinraiModeLogoCanvas.frame then
-				jinraiModeLogoCanvas:frame(logoFrame)
+				jinraiModeLogoCanvas:frame(targetFrame)
+			end
+			if jinraiModeLogoCanvas.alpha then
+				jinraiModeLogoCanvas:alpha(1)
 			end
 			if jinraiModeLogoCanvas[1] then
 				jinraiModeLogoCanvas[1].image = image
@@ -2256,42 +2301,56 @@ function M.new(options)
 		end
 
 		clearJinraiModeLogo()
-		local canvas = hs.canvas.new(logoFrame)
+		local canvas = hs.canvas.new(logoFrame(animation.scale))
 		canvas:level(hs.canvas.windowLevels.overlay)
 		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
 		canvas:appendElements({
 			type = "image",
 			image = image,
 			imageAlpha = logo.alpha,
-			frame = { x = 0, y = 0, w = size, h = size },
+			frame = { x = 0, y = 0, w = size * animation.scale, h = size * animation.scale },
 		})
 		if canvas.alpha then
-			canvas:alpha(0)
+			canvas:alpha(animation.fade and 0 or 1)
 		end
 		canvas:show()
 		jinraiModeLogoCanvas = canvas
 
-		if canvas.alpha and hs.timer and hs.timer.doEvery then
-			local fadeSteps = 8
+		local animationSteps, stepInterval = animationStepConfig(animation.duration)
+		local shouldAnimate = animationSteps > 0 and (animation.fade or animation.scale ~= 1)
+		if shouldAnimate and canvas.alpha and hs.timer and hs.timer.doEvery then
 			local currentStep = 0
-			jinraiModeLogoFadeTimer = hs.timer.doEvery(0.02, function()
+			jinraiModeLogoAnimationTimer = hs.timer.doEvery(stepInterval, function()
 				currentStep = currentStep + 1
 				if not jinraiModeLogoCanvas then
-					if jinraiModeLogoFadeTimer then
-						jinraiModeLogoFadeTimer:stop()
-						jinraiModeLogoFadeTimer = nil
+					if jinraiModeLogoAnimationTimer then
+						jinraiModeLogoAnimationTimer:stop()
+						jinraiModeLogoAnimationTimer = nil
 					end
 					return
 				end
-				local nextAlpha = logo.alpha * math.min(1, currentStep / fadeSteps)
-				jinraiModeLogoCanvas:alpha(nextAlpha)
-				if currentStep >= fadeSteps then
-					jinraiModeLogoFadeTimer:stop()
-					jinraiModeLogoFadeTimer = nil
+				local progress = animationProgress(math.min(1, currentStep / animationSteps), animation.easing)
+				jinraiModeLogoCanvas:alpha(animation.fade and progress or 1)
+				if jinraiModeLogoCanvas.frame then
+					local scale = animation.scale + ((1 - animation.scale) * progress)
+					local frame = logoFrame(scale)
+					jinraiModeLogoCanvas:frame(frame)
+					jinraiModeLogoCanvas[1].frame = { x = 0, y = 0, w = frame.w, h = frame.h }
+				end
+				if currentStep >= animationSteps then
+					jinraiModeLogoCanvas:alpha(1)
+					jinraiModeLogoCanvas:frame(targetFrame)
+					jinraiModeLogoCanvas[1].frame = { x = 0, y = 0, w = size, h = size }
+					jinraiModeLogoAnimationTimer:stop()
+					jinraiModeLogoAnimationTimer = nil
 				end
 			end)
-		elseif canvas.alpha then
-			canvas:alpha(logo.alpha)
+		else
+			if canvas.alpha then
+				canvas:alpha(1)
+			end
+			canvas:frame(targetFrame)
+			canvas[1].frame = { x = 0, y = 0, w = size, h = size }
 		end
 	end
 
@@ -2357,24 +2416,6 @@ function M.new(options)
 		}
 	end
 
-	local function updateComboCanvasLayout(
-		canvas,
-		layout,
-		imageElementIndex,
-		numberTextElementIndex,
-		comboTextElementIndex
-	)
-		if imageElementIndex then
-			canvas[imageElementIndex].frame = layout.characterFrame
-		end
-		if numberTextElementIndex then
-			canvas[numberTextElementIndex].frame = layout.numberTextFrame
-		end
-		if comboTextElementIndex then
-			canvas[comboTextElementIndex].frame = layout.comboTextFrame
-		end
-	end
-
 	local function comboStyledText(text, fontSize, alpha, color, strokeWidth)
 		if not hs or not hs.styledtext or not hs.styledtext.new then
 			return text
@@ -2390,50 +2431,27 @@ function M.new(options)
 		})
 	end
 
-	local function createJinraiModeComboCanvas()
-		local combo = config.jinraiModeCombo
-		local character = combo and combo.character or nil
-		local text = combo and combo.text or nil
-		local characterEnabled = character and character.enabled
-		local textEnabled = text and text.enabled
-		if not hs or not hs.canvas or (not characterEnabled and not textEnabled) then
-			return nil
-		end
-
+	local function createJinraiModeCharacterCanvas(character)
 		local canvas = hs.canvas.new({ x = 0, y = 0, w = 1, h = 1 })
 		canvas:level(hs.canvas.windowLevels.overlay + 1)
 		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
-		local imageElementIndex = nil
-		if characterEnabled then
-			imageElementIndex = 1
-			canvas:appendElements({
-				type = "image",
-				image = jinraiModeComboImages[0],
-				imageAlpha = character.alpha,
-				imageScaling = "scaleProportionally",
-				frame = { x = 0, y = 0, w = 1, h = 1 },
-			})
-		end
-		local numberTextElementIndex = nil
-		local comboTextElementIndex = nil
-		if textEnabled then
-			numberTextElementIndex = imageElementIndex and 2 or 1
-			canvas:appendElements({
-				type = "text",
-				text = "",
-				textAlignment = "center",
-				textColor = {
-					red = COMBO_TEXT_COLOR.red,
-					green = COMBO_TEXT_COLOR.green,
-					blue = COMBO_TEXT_COLOR.blue,
-					alpha = text.alpha,
-				},
-				textFont = COMBO_TEXT_FONT,
-				textSize = 1,
-				textLineBreak = "clip",
-				frame = { x = 0, y = 0, w = 1, h = 1 },
-			})
-			comboTextElementIndex = numberTextElementIndex + 1
+		canvas:appendElements({
+			type = "image",
+			image = jinraiModeComboImages[0],
+			imageAlpha = character.alpha,
+			imageScaling = "scaleProportionally",
+			frame = { x = 0, y = 0, w = 1, h = 1 },
+		})
+		canvas:alpha(0)
+		canvas:hide()
+		return canvas
+	end
+
+	local function createJinraiModeTextCanvas(text)
+		local canvas = hs.canvas.new({ x = 0, y = 0, w = 1, h = 1 })
+		canvas:level(hs.canvas.windowLevels.overlay + 1)
+		canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
+		for _ = 1, 2 do
 			canvas:appendElements({
 				type = "text",
 				text = "",
@@ -2450,17 +2468,8 @@ function M.new(options)
 				frame = { x = 0, y = 0, w = 1, h = 1 },
 			})
 		end
-		if canvas.alpha then
-			canvas:alpha(0)
-		end
-		if canvas.hide then
-			canvas:hide()
-		end
-		jinraiModeComboCanvasElements[canvas] = {
-			image = imageElementIndex,
-			numberText = numberTextElementIndex,
-			comboText = comboTextElementIndex,
-		}
+		canvas:alpha(0)
+		canvas:hide()
 		return canvas
 	end
 
@@ -2469,25 +2478,180 @@ function M.new(options)
 		local combo = config.jinraiModeCombo
 		local character = combo and combo.character or nil
 		local text = combo and combo.text or nil
-		if not (character and character.enabled) and not (text and text.enabled) then
+		if not hs or not hs.canvas then
 			return
 		end
-		for _ = 1, 2 do
-			local canvas = createJinraiModeComboCanvas()
-			if canvas then
-				table.insert(jinraiModeComboCanvases, canvas)
+		if character and character.enabled then
+			for _ = 1, 2 do
+				table.insert(jinraiModeCharacterCanvases, createJinraiModeCharacterCanvas(character))
+			end
+		end
+		if text and text.enabled then
+			for _ = 1, 2 do
+				table.insert(jinraiModeTextCanvases, createJinraiModeTextCanvas(text))
 			end
 		end
 	end
 
-	local function nextJinraiModeComboCanvas()
-		if #jinraiModeComboCanvases == 0 then
+	local function nextJinraiModeCanvas(canvases, currentCanvas)
+		if #canvases == 0 then
 			return nil
 		end
-		if jinraiModeComboCanvas == jinraiModeComboCanvases[1] then
-			return jinraiModeComboCanvases[2] or jinraiModeComboCanvases[1]
+		if currentCanvas == canvases[1] then
+			return canvases[2] or canvases[1]
 		end
-		return jinraiModeComboCanvases[1]
+		return canvases[1]
+	end
+
+	local function animateJinraiModeCanvas(canvas, previousCanvas, animation, applyProgress, setTimer, complete)
+		local steps, interval = animationStepConfig(animation.duration)
+		local shouldAnimate = steps > 0 and (animation.fade or animation.scale ~= 1)
+		if not animation.fade and previousCanvas then
+			hideJinraiModeComboCanvas(previousCanvas)
+			previousCanvas = nil
+		end
+		canvas:alpha(animation.fade and shouldAnimate and 0 or 1)
+		canvas:show()
+		if not shouldAnimate or not hs.timer or not hs.timer.doEvery then
+			if previousCanvas then
+				hideJinraiModeComboCanvas(previousCanvas)
+			end
+			canvas:alpha(1)
+			applyProgress(1)
+			complete()
+			return
+		end
+		local currentStep = 0
+		local timer
+		timer = hs.timer.doEvery(interval, function()
+			currentStep = currentStep + 1
+			local progress = animationProgress(math.min(1, currentStep / steps), animation.easing)
+			if previousCanvas and previousCanvas.alpha then
+				previousCanvas:alpha(1 - progress)
+			end
+			canvas:alpha(animation.fade and progress or 1)
+			applyProgress(progress)
+			if currentStep >= steps then
+				if previousCanvas then
+					hideJinraiModeComboCanvas(previousCanvas)
+				end
+				canvas:alpha(1)
+				applyProgress(1)
+				timer:stop()
+				setTimer(nil)
+				complete()
+			end
+		end)
+		setTimer(timer)
+	end
+
+	local function comboTextLayoutData(displayContext, logoSize, comboCountText, scale)
+		local screenFrame = displayContext.screenFrame
+		local baseSize = math.min(560, screenFrame.w * 0.46, screenFrame.h * 0.7)
+		local numberTextSize = math.max(72, math.floor(baseSize * 0.18)) * scale
+		local comboTextSize = math.max(34, math.floor(baseSize * 0.075)) * scale
+		local numberTextMetrics = {
+			size = numberTextSize,
+			width = math.ceil(math.max(1, #comboCountText) * numberTextSize * 0.92),
+			height = math.ceil(numberTextSize * 1.15),
+		}
+		local comboTextMetrics = {
+			size = comboTextSize,
+			width = math.ceil(comboTextSize * 4.7),
+			height = math.ceil(comboTextSize * 1.25),
+		}
+		return comboCanvasLayout(displayContext, scale, logoSize, numberTextMetrics, comboTextMetrics),
+			numberTextSize,
+			comboTextSize
+	end
+
+	local function showJinraiModeCharacter(displayContext, logoSize, character)
+		if jinraiModeCharacterAnimationTimer then
+			jinraiModeCharacterAnimationTimer:stop()
+			jinraiModeCharacterAnimationTimer = nil
+		end
+		if jinraiModePreviousCharacterCanvas then
+			hideJinraiModeComboCanvas(jinraiModePreviousCharacterCanvas)
+		end
+		local imageIndex = jinraiModeComboCount <= 0 and 0 or ((jinraiModeComboCount - 1) % 9) + 1
+		local image = loadJinraiModeComboImage(imageIndex)
+		local canvas = nextJinraiModeCanvas(jinraiModeCharacterCanvases, jinraiModeCharacterCanvas)
+		if not image or not canvas then
+			return
+		end
+		local previousCanvas = jinraiModeCharacterCanvas
+		jinraiModePreviousCharacterCanvas = previousCanvas
+		jinraiModeCharacterCanvas = canvas
+		canvas[1].image = image
+		canvas[1].imageAlpha = character.alpha
+		local function applyProgress(progress)
+			local scale = character.animation.scale + ((1 - character.animation.scale) * progress)
+			local layout = comboCanvasLayout(
+				displayContext,
+				scale,
+				logoSize,
+				{ size = 0, width = 0, height = 0 },
+				{ size = 0, width = 0, height = 0 }
+			)
+			canvas:frame(layout.canvasFrame)
+			canvas[1].frame = layout.characterFrame
+		end
+		applyProgress(0)
+		animateJinraiModeCanvas(
+			canvas,
+			previousCanvas,
+			character.animation,
+			applyProgress,
+			function(timer)
+				jinraiModeCharacterAnimationTimer = timer
+			end,
+			function()
+				jinraiModePreviousCharacterCanvas = nil
+			end
+		)
+	end
+
+	local function showJinraiModeText(displayContext, logoSize, text)
+		if jinraiModeTextAnimationTimer then
+			jinraiModeTextAnimationTimer:stop()
+			jinraiModeTextAnimationTimer = nil
+		end
+		if jinraiModePreviousTextCanvas then
+			hideJinraiModeComboCanvas(jinraiModePreviousTextCanvas)
+		end
+		local canvas = nextJinraiModeCanvas(jinraiModeTextCanvases, jinraiModeTextCanvas)
+		if not canvas then
+			return
+		end
+		local previousCanvas = jinraiModeTextCanvas
+		jinraiModePreviousTextCanvas = previousCanvas
+		jinraiModeTextCanvas = canvas
+		local comboCountText = tostring(jinraiModeComboCount)
+		local function applyProgress(progress)
+			local scale = text.animation.scale + ((1 - text.animation.scale) * progress)
+			local layout, numberTextSize, comboTextSize =
+				comboTextLayoutData(displayContext, logoSize, comboCountText, scale)
+			canvas:frame(layout.canvasFrame)
+			canvas[1].text = comboStyledText(comboCountText, numberTextSize, text.alpha, COMBO_TEXT_COLOR, -5)
+			canvas[1].textSize = numberTextSize
+			canvas[1].frame = layout.numberTextFrame
+			canvas[2].text = comboStyledText("COMBO!", comboTextSize, text.alpha, COMBO_TEXT_COLOR, -4)
+			canvas[2].textSize = comboTextSize
+			canvas[2].frame = layout.comboTextFrame
+		end
+		applyProgress(0)
+		animateJinraiModeCanvas(
+			canvas,
+			previousCanvas,
+			text.animation,
+			applyProgress,
+			function(timer)
+				jinraiModeTextAnimationTimer = timer
+			end,
+			function()
+				jinraiModePreviousTextCanvas = nil
+			end
+		)
 	end
 
 	local function showJinraiModeCombo()
@@ -2504,148 +2668,19 @@ function M.new(options)
 			clearJinraiModeCombo()
 			return
 		end
-		if not hs or not hs.canvas then
-			return
-		end
 		local displayContext = jinraiModeDisplayContext()
 		if not displayContext then
 			return
 		end
-		local screenFrame = displayContext.screenFrame
-
-		if jinraiModeComboAnimationTimer then
-			jinraiModeComboAnimationTimer:stop()
-			jinraiModeComboAnimationTimer = nil
-		end
-		if jinraiModePreviousComboCanvas then
-			hideJinraiModeComboCanvas(jinraiModePreviousComboCanvas)
-			jinraiModePreviousComboCanvas = nil
-		end
-
-		local imageIndex = jinraiModeComboCount <= 0 and 0 or ((jinraiModeComboCount - 1) % 9) + 1
-		local image = characterEnabled and loadJinraiModeComboImage(imageIndex) or nil
-		if not image and not textEnabled then
-			clearJinraiModeCombo()
-			return
-		end
-		local previousCanvas = jinraiModeComboCanvas
-		jinraiModePreviousComboCanvas = previousCanvas
 		local logoSize = config.jinraiModeLogo and config.jinraiModeLogo.size or 480
-		local baseSize = math.min(560, screenFrame.w * 0.46, screenFrame.h * 0.7)
-		local numberTextSize = math.max(72, math.floor(baseSize * 0.18))
-		local comboTextSize = math.max(34, math.floor(baseSize * 0.075))
-		local comboCountText = tostring(jinraiModeComboCount)
-		local numberTextMetrics = {
-			size = numberTextSize,
-			width = math.ceil(math.max(1, #comboCountText) * numberTextSize * 0.92),
-			height = math.ceil(numberTextSize * 1.15),
-		}
-		local comboTextMetrics = {
-			size = comboTextSize,
-			width = math.ceil(comboTextSize * 4.7),
-			height = math.ceil(comboTextSize * 1.25),
-		}
-		local startLayout = comboCanvasLayout(displayContext, 1.18, logoSize, numberTextMetrics, comboTextMetrics)
-		local targetLayout = comboCanvasLayout(displayContext, 1, logoSize, numberTextMetrics, comboTextMetrics)
-		local canvas = nextJinraiModeComboCanvas()
-		if not canvas then
-			return
+		if characterEnabled then
+			showJinraiModeCharacter(displayContext, logoSize, character)
 		end
-		local canvasElements = jinraiModeComboCanvasElements[canvas] or {}
-		local imageElementIndex = canvasElements.image
-		local numberTextElementIndex = canvasElements.numberText
-		local comboTextElementIndex = canvasElements.comboText
-		canvas:frame(startLayout.canvasFrame)
-		if imageElementIndex then
-			canvas[imageElementIndex].image = image
-			canvas[imageElementIndex].imageAlpha = character.alpha
-			canvas[imageElementIndex].frame = startLayout.characterFrame
-		end
-		if numberTextElementIndex then
-			local numberText = textEnabled
-					and comboStyledText(comboCountText, numberTextSize, text.alpha, COMBO_TEXT_COLOR, -5)
-				or ""
-			canvas[numberTextElementIndex].text = numberText
-			canvas[numberTextElementIndex].textSize = numberTextSize
-			canvas[numberTextElementIndex].frame = startLayout.numberTextFrame
-		end
-		if comboTextElementIndex then
-			local comboText = textEnabled and comboStyledText("COMBO!", comboTextSize, text.alpha, COMBO_TEXT_COLOR, -4)
-				or ""
-			canvas[comboTextElementIndex].text = comboText
-			canvas[comboTextElementIndex].textSize = comboTextSize
-			canvas[comboTextElementIndex].frame = startLayout.comboTextFrame
-		end
-		if canvas.alpha then
-			canvas:alpha(0)
-		end
-		canvas:show()
-		jinraiModeComboCanvas = canvas
-
-		if canvas.alpha and hs.timer and hs.timer.doEvery then
-			local animationSteps = 8
-			local currentStep = 0
-			jinraiModeComboAnimationTimer = hs.timer.doEvery(0.02, function()
-				currentStep = currentStep + 1
-				local progress = math.min(1, currentStep / animationSteps)
-				if previousCanvas and previousCanvas.alpha then
-					previousCanvas:alpha(1 - progress)
-				end
-				if jinraiModeComboCanvas == canvas then
-					canvas:alpha(progress)
-					if canvas.frame then
-						local scale = 1.18 - (0.18 * progress)
-						local animationLayout =
-							comboCanvasLayout(displayContext, scale, logoSize, numberTextMetrics, comboTextMetrics)
-						canvas:frame(animationLayout.canvasFrame)
-						updateComboCanvasLayout(
-							canvas,
-							animationLayout,
-							imageElementIndex,
-							numberTextElementIndex,
-							comboTextElementIndex
-						)
-					end
-				end
-				if currentStep >= animationSteps then
-					if previousCanvas then
-						hideJinraiModeComboCanvas(previousCanvas)
-						previousCanvas = nil
-						jinraiModePreviousComboCanvas = nil
-					end
-					canvas:alpha(1)
-					if canvas.frame then
-						canvas:frame(targetLayout.canvasFrame)
-						updateComboCanvasLayout(
-							canvas,
-							targetLayout,
-							imageElementIndex,
-							numberTextElementIndex,
-							comboTextElementIndex
-						)
-					end
-					jinraiModeComboAnimationTimer:stop()
-					jinraiModeComboAnimationTimer = nil
-				end
-			end)
-		else
-			if previousCanvas then
-				hideJinraiModeComboCanvas(previousCanvas)
-				jinraiModePreviousComboCanvas = nil
-			end
-			if canvas.alpha then
-				canvas:alpha(1)
-			end
-			if canvas.frame then
-				canvas:frame(targetLayout.canvasFrame)
-				updateComboCanvasLayout(
-					canvas,
-					targetLayout,
-					imageElementIndex,
-					numberTextElementIndex,
-					comboTextElementIndex
-				)
-			end
+		if textEnabled then
+			showJinraiModeText(displayContext, logoSize, text)
+		elseif jinraiModeTextCanvas then
+			hideJinraiModeComboCanvas(jinraiModeTextCanvas)
+			jinraiModeTextCanvas = nil
 		end
 	end
 
@@ -4146,12 +4181,15 @@ function M.new(options)
 			mouseClickWatcher:stop()
 			mouseClickWatcher = nil
 		end
-		for _, canvas in ipairs(jinraiModeComboCanvases) do
+		for _, canvas in ipairs(jinraiModeCharacterCanvases) do
 			releaseCanvasImages(canvas)
 			canvas:delete()
 		end
-		jinraiModeComboCanvases = {}
-		jinraiModeComboCanvasElements = {}
+		for _, canvas in ipairs(jinraiModeTextCanvases) do
+			canvas:delete()
+		end
+		jinraiModeCharacterCanvases = {}
+		jinraiModeTextCanvases = {}
 		jinraiModeComboImages = {}
 	end
 

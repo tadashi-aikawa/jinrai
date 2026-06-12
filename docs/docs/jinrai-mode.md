@@ -31,15 +31,33 @@ jinrai_mode = {
     enabled = true,
     size = 480,
     alpha = 0.4,
+    animation = {
+      fade = true,
+      scale = 1.0,
+      duration = 0.16,
+      easing = "linear",
+    },
   },
   combo = {
     character = {
       enabled = false,
       alpha = 0.5,
+      animation = {
+        fade = true,
+        scale = 1.18,
+        duration = 0.16,
+        easing = "linear",
+      },
     },
     text = {
       enabled = false,
       alpha = 0.7,
+      animation = {
+        fade = true,
+        scale = 1.0,
+        duration = 0.16,
+        easing = "linear",
+      },
     },
   },
 }
@@ -53,10 +71,22 @@ jinrai_mode = {
 | `logo.enabled` | JinraiMode中にJINRAIロゴを表示するかを指定します。 |
 | `logo.size` | ロゴの大きさです。 |
 | `logo.alpha` | ロゴの透明度です。 |
+| `logo.animation.*` | ロゴ表示時のアニメーションを指定します。 |
 | `combo.character.enabled` | 操作を続けた回数に応じたキャラクター画像を表示するかを指定します。 |
 | `combo.character.alpha` | キャラクター画像の透明度です。 |
+| `combo.character.animation.*` | キャラクター切り替え時のアニメーションを指定します。 |
 | `combo.text.enabled` | 継続回数をCOMBOテキストで表示するかを指定します。 |
 | `combo.text.alpha` | COMBOテキストの透明度です。 |
+| `combo.text.animation.*` | COMBOテキスト切り替え時のアニメーションを指定します。 |
+
+各`animation`には次の設定を指定できます。
+
+| 設定 | 説明 |
+| --- | --- |
+| `fade` | `true`の場合は新しい表示をフェードインし、切り替え前の表示をフェードアウトします。 |
+| `scale` | アニメーション開始時の倍率です。`1.0`へ変化します。0より大きい値を指定します。 |
+| `duration` | アニメーション時間（秒）です。`0`を指定すると即時に最終状態を表示します。 |
+| `easing` | 補間方式です。`linear`、`easeOut`、`easeInOut`から指定します。 |
 
 ### 機能間を直接移動
 

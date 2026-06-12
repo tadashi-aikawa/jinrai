@@ -2606,8 +2606,9 @@ describe("window_hints mouse selection", function()
 		assert.are.equal(250, characterCenterY)
 		assert.are.equal(651.36, characterFrame.w)
 
-		local textLeft = comboCanvas._frame.x + comboCanvas[2].frame.x
-		local textRight = comboCanvas._frame.x + comboCanvas[3].frame.x + comboCanvas[3].frame.w
+		local textCanvas = findCanvasByText(createdCanvases, 1, "1")
+		local textLeft = textCanvas._frame.x + textCanvas[1].frame.x
+		local textRight = textCanvas._frame.x + textCanvas[2].frame.x + textCanvas[2].frame.w
 		assert.are.equal(300, (textLeft + textRight) / 2)
 	end)
 
@@ -2658,6 +2659,129 @@ describe("window_hints mouse selection", function()
 		assert.are.same({ x = 360, y = 160, w = 480, h = 480 }, logoCanvas._frame)
 	end)
 
+	it("JinraiMode ロゴは指定したイージングでフェードと倍率を補間する", function()
+		local cases = {
+			{ easing = "linear", progress = 0.5 },
+			{ easing = "easeOut", progress = 0.875 },
+			{ easing = "easeInOut", progress = 0.5 },
+		}
+		for _, case in ipairs(cases) do
+			local createdCanvases = {}
+			local focusCounter = { count = 0 }
+			local targetWindow = makeWindow(1, "Target", focusCounter)
+			local mocks = installHsMock(targetWindow, createdCanvases)
+			local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+			local instance = windowHints.new({
+				internal = {
+					jinraiMode = {
+						logo = {
+							animation = {
+								fade = true,
+								scale = 0.5,
+								duration = 0.04,
+								easing = case.easing,
+							},
+						},
+					},
+				},
+			})
+
+			instance.startJinraiMode()
+			local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
+			assert.are.equal(240, logoCanvas._frame.w)
+			assert.are.equal(0, logoCanvas._alpha)
+			local timer = mocks.repeatingTimers[#mocks.repeatingTimers]
+			timer.callback()
+			assert.are.equal(240 + (240 * case.progress), logoCanvas._frame.w)
+			assert.are.equal(case.progress, logoCanvas._alpha)
+			timer.callback()
+			assert.are.equal(480, logoCanvas._frame.w)
+			assert.are.equal(1, logoCanvas._alpha)
+			assert.is_true(timer.stopped)
+			instance.teardown()
+		end
+	end)
+
+	it("JinraiMode キャラクターと文字は個別の時間でアニメーションする", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			internal = {
+				jinraiMode = {
+					logo = { enabled = false },
+					combo = {
+						character = {
+							enabled = true,
+							animation = { duration = 0.04 },
+						},
+						text = {
+							enabled = true,
+							animation = { duration = 0.08 },
+						},
+					},
+				},
+			},
+		})
+
+		instance.startJinraiMode()
+		assert.is_true(instance.advanceJinraiModeCombo())
+		local characterTimer = mocks.repeatingTimers[#mocks.repeatingTimers - 1]
+		local textTimer = mocks.repeatingTimers[#mocks.repeatingTimers]
+		characterTimer.callback()
+		characterTimer.callback()
+		assert.is_true(characterTimer.stopped)
+		assert.is_nil(textTimer.stopped)
+		for _ = 1, 4 do
+			textTimer.callback()
+		end
+		assert.is_true(textTimer.stopped)
+		instance.teardown()
+	end)
+
+	it("JinraiMode の fade=false と duration=0 は即時に最終表示する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			internal = {
+				jinraiMode = {
+					logo = {
+						animation = { fade = false, scale = 0.5, duration = 0 },
+					},
+					combo = {
+						character = {
+							enabled = true,
+							animation = { fade = false, scale = 1.3, duration = 0 },
+						},
+						text = {
+							enabled = true,
+							animation = { fade = false, scale = 0.8, duration = 0 },
+						},
+					},
+				},
+			},
+		})
+
+		instance.startJinraiMode()
+		assert.is_true(instance.advanceJinraiModeCombo())
+		assert.are.equal(0, #mocks.repeatingTimers)
+		local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
+		local characterCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/resources/jinrai1.webp")
+		local textCanvas = findCanvasByText(createdCanvases, 1, "1")
+		assert.are.equal(480, logoCanvas._frame.w)
+		assert.are.equal(1, logoCanvas._alpha)
+		assert.are.equal(552, characterCanvas[1].frame.w)
+		assert.are.equal(1, characterCanvas._alpha)
+		assert.are.equal(99, textCanvas[1].textSize)
+		assert.are.equal(1, textCanvas._alpha)
+		instance.teardown()
+	end)
+
 	it("JinraiMode 中の遷移だけコンボを加算し画像を循環表示する", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
@@ -2700,12 +2824,12 @@ describe("window_hints mouse selection", function()
 		})
 
 		assert.are.equal(10, #mocks.loadedImagePaths)
-		assert.are.equal(2, #comboCanvases(createdCanvases))
+		assert.are.equal(4, #comboCanvases(createdCanvases))
 		assert.is_false(instance.advanceJinraiModeCombo())
 		assert.is_true(instance.showJinraiMode())
 		local initialComboCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/resources/jinrai0.webp")
 		assert.is_truthy(initialComboCanvas)
-		assert.are.equal("", initialComboCanvas[2].text)
+		assert.is_nil(initialComboCanvas[2])
 		local comboImagePaths = {}
 		for combo = 1, 10 do
 			assert.is_true(instance.advanceJinraiModeCombo())
@@ -2727,49 +2851,50 @@ describe("window_hints mouse selection", function()
 			"./Jinrai.spoon/resources/jinrai9.webp",
 			"./Jinrai.spoon/resources/jinrai1.webp",
 		}, comboImagePaths)
-		local activeComboCanvas = findCanvasByText(createdCanvases, 2, "10")
-		assert.are.equal(0.25, activeComboCanvas[1].imageAlpha)
-		assert.are.equal("10", activeComboCanvas[2].text.string)
+		local activeCharacterCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/resources/jinrai1.webp")
+		local activeComboCanvas = findCanvasByText(createdCanvases, 1, "10")
+		assert.are.equal(0.25, activeCharacterCanvas[1].imageAlpha)
+		assert.are.equal("10", activeComboCanvas[1].text.string)
+		assert.are.same(
+			{ name = "Avenir Next Heavy", size = activeComboCanvas[1].textSize },
+			activeComboCanvas[1].text.attributes.font
+		)
+		assert.are.same({ red = 1, green = 0.46, blue = 0.08, alpha = 0.75 }, activeComboCanvas[1].text.attributes.color)
+		assert.are.same(
+			{ red = 0, green = 0, blue = 0, alpha = 0.75 },
+			activeComboCanvas[1].text.attributes.strokeColor
+		)
+		assert.are.equal(-5, activeComboCanvas[1].text.attributes.strokeWidth)
+		assert.are.equal("center", activeComboCanvas[1].text.attributes.paragraphStyle.alignment)
+		assert.are.equal("COMBO!", activeComboCanvas[2].text.string)
 		assert.are.same(
 			{ name = "Avenir Next Heavy", size = activeComboCanvas[2].textSize },
 			activeComboCanvas[2].text.attributes.font
 		)
 		assert.are.same({ red = 1, green = 0.46, blue = 0.08, alpha = 0.75 }, activeComboCanvas[2].text.attributes.color)
-		assert.are.same(
-			{ red = 0, green = 0, blue = 0, alpha = 0.75 },
-			activeComboCanvas[2].text.attributes.strokeColor
-		)
-		assert.are.equal(-5, activeComboCanvas[2].text.attributes.strokeWidth)
-		assert.are.equal("center", activeComboCanvas[2].text.attributes.paragraphStyle.alignment)
-		assert.are.equal("COMBO!", activeComboCanvas[3].text.string)
-		assert.are.same(
-			{ name = "Avenir Next Heavy", size = activeComboCanvas[3].textSize },
-			activeComboCanvas[3].text.attributes.font
-		)
-		assert.are.same({ red = 1, green = 0.46, blue = 0.08, alpha = 0.75 }, activeComboCanvas[3].text.attributes.color)
-		assert.are.equal(-4, activeComboCanvas[3].text.attributes.strokeWidth)
-		assert.are.same(activeComboCanvas[3].text.attributes.color, activeComboCanvas[2].text.attributes.color)
-		assert.is_true(activeComboCanvas[2].textSize > activeComboCanvas[3].textSize)
+		assert.are.equal(-4, activeComboCanvas[2].text.attributes.strokeWidth)
+		assert.are.same(activeComboCanvas[2].text.attributes.color, activeComboCanvas[1].text.attributes.color)
+		assert.is_true(activeComboCanvas[1].textSize > activeComboCanvas[2].textSize)
 		assert.are.equal(2, activeComboCanvas._level)
-		local comboNumberTextBottom = activeComboCanvas._frame.y + activeComboCanvas[2].frame.y + activeComboCanvas[2].frame.h
-		local comboLabelTextBottom = activeComboCanvas._frame.y + activeComboCanvas[3].frame.y + activeComboCanvas[3].frame.h
+		local comboNumberTextBottom = activeComboCanvas._frame.y + activeComboCanvas[1].frame.y + activeComboCanvas[1].frame.h
+		local comboLabelTextBottom = activeComboCanvas._frame.y + activeComboCanvas[2].frame.y + activeComboCanvas[2].frame.h
 		assert.are.equal(comboNumberTextBottom, comboLabelTextBottom)
 		assert.are.equal(196, comboLabelTextBottom)
-		assert.is_true(activeComboCanvas[2].frame.h >= activeComboCanvas[2].textSize * 1.1)
-		assert.is_true(activeComboCanvas[2].frame.x < activeComboCanvas[3].frame.x)
-		assert.are.equal("clip", activeComboCanvas[2].textLineBreak)
-		local comboTextTop = activeComboCanvas._frame.y + activeComboCanvas[2].frame.y
+		assert.is_true(activeComboCanvas[1].frame.h >= activeComboCanvas[1].textSize * 1.1)
+		assert.is_true(activeComboCanvas[1].frame.x < activeComboCanvas[2].frame.x)
+		assert.are.equal("clip", activeComboCanvas[1].textLineBreak)
+		local comboTextTop = activeComboCanvas._frame.y + activeComboCanvas[1].frame.y
 		assert.are.equal(82, comboTextTop)
 		local comboAnimationTimer = mocks.repeatingTimers[#mocks.repeatingTimers]
 		for _ = 1, 8 do
 			comboAnimationTimer.callback()
 		end
 		local animatedComboNumberTextBottom = activeComboCanvas._frame.y
+			+ activeComboCanvas[1].frame.y
+			+ activeComboCanvas[1].frame.h
+		local animatedComboLabelTextBottom = activeComboCanvas._frame.y
 			+ activeComboCanvas[2].frame.y
 			+ activeComboCanvas[2].frame.h
-		local animatedComboLabelTextBottom = activeComboCanvas._frame.y
-			+ activeComboCanvas[3].frame.y
-			+ activeComboCanvas[3].frame.h
 		assert.are.equal(animatedComboNumberTextBottom, animatedComboLabelTextBottom)
 		assert.are.equal(196, animatedComboLabelTextBottom)
 
@@ -2780,15 +2905,15 @@ describe("window_hints mouse selection", function()
 
 		instance.startJinraiMode()
 		assert.is_true(instance.advanceJinraiModeCombo())
-		local restartedComboCanvas = findCanvasByText(createdCanvases, 2, "1")
-		assert.are.equal("1", restartedComboCanvas[2].text.string)
-		assert.are.equal("COMBO!", restartedComboCanvas[3].text.string)
+		local restartedComboCanvas = findCanvasByText(createdCanvases, 1, "1")
+		assert.are.equal("1", restartedComboCanvas[1].text.string)
+		assert.are.equal("COMBO!", restartedComboCanvas[2].text.string)
 		assert.is_true(instance.advanceJinraiModeCombo())
-		local twoComboCanvas = findCanvasByText(createdCanvases, 2, "2")
-		assert.are.equal("2", twoComboCanvas[2].text.string)
-		assert.are.equal("COMBO!", twoComboCanvas[3].text.string)
-		assert.is_true(twoComboCanvas[2].frame.h >= twoComboCanvas[2].textSize * 1.1)
-		assert.are.equal(2, #comboCanvases(createdCanvases))
+		local twoComboCanvas = findCanvasByText(createdCanvases, 1, "2")
+		assert.are.equal("2", twoComboCanvas[1].text.string)
+		assert.are.equal("COMBO!", twoComboCanvas[2].text.string)
+		assert.is_true(twoComboCanvas[1].frame.h >= twoComboCanvas[1].textSize * 1.1)
+		assert.are.equal(4, #comboCanvases(createdCanvases))
 
 		instance.teardown()
 		for _, canvas in ipairs(comboCanvases(createdCanvases)) do

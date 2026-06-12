@@ -269,15 +269,33 @@ local DEFAULT_CONFIG = {
 				enabled = true,
 				size = 480,
 				alpha = 0.4,
+				animation = {
+					fade = true,
+					scale = 1.0,
+					duration = 0.16,
+					easing = "linear",
+				},
 			},
 			combo = {
 				character = {
 					enabled = false,
 					alpha = 0.5,
+					animation = {
+						fade = true,
+						scale = 1.18,
+						duration = 0.16,
+						easing = "linear",
+					},
 				},
 				text = {
 					enabled = false,
 					alpha = 0.7,
+					animation = {
+						fade = true,
+						scale = 1.0,
+						duration = 0.16,
+						easing = "linear",
+					},
 				},
 			},
 		},
@@ -676,6 +694,30 @@ local function normalizePositiveNumber(value, optionName)
 	return value
 end
 
+local function normalizeBoolean(value, optionName)
+	if type(value) ~= "boolean" then
+		error(string.format("[jinrai.window_hints] %s must be a boolean", optionName))
+	end
+	return value
+end
+
+local function normalizeJinraiModeAnimation(value, optionName)
+	value = value or {}
+	local easing = value.easing
+	if easing ~= "linear" and easing ~= "easeOut" and easing ~= "easeInOut" then
+		error(string.format(
+			"[jinrai.window_hints] %s.easing must be one of linear/easeOut/easeInOut",
+			optionName
+		))
+	end
+	return {
+		fade = normalizeBoolean(value.fade, optionName .. ".fade"),
+		scale = normalizePositiveNumber(value.scale, optionName .. ".scale"),
+		duration = normalizeNonNegativeNumber(value.duration, optionName .. ".duration"),
+		easing = easing,
+	}
+end
+
 local function normalizeSelectModifiers(modifiers, optionName)
 	if modifiers == nil then
 		return nil
@@ -962,6 +1004,10 @@ function M.build(options)
 		enabled = jinraiModeLogoConfig.enabled,
 		size = normalizePositiveNumber(jinraiModeLogoConfig.size, "jinrai_mode.logo.size"),
 		alpha = normalizeUnitIntervalNumber(jinraiModeLogoConfig.alpha, "jinrai_mode.logo.alpha"),
+		animation = normalizeJinraiModeAnimation(
+			jinraiModeLogoConfig.animation,
+			"jinrai_mode.logo.animation"
+		),
 	}
 	local jinraiModeCombo = {
 		character = {
@@ -970,10 +1016,18 @@ function M.build(options)
 				jinraiModeComboCharacterConfig.alpha,
 				"jinrai_mode.combo.character.alpha"
 			),
+			animation = normalizeJinraiModeAnimation(
+				jinraiModeComboCharacterConfig.animation,
+				"jinrai_mode.combo.character.animation"
+			),
 		},
 		text = {
 			enabled = jinraiModeComboTextConfig.enabled == true,
 			alpha = normalizeUnitIntervalNumber(jinraiModeComboTextConfig.alpha, "jinrai_mode.combo.text.alpha"),
+			animation = normalizeJinraiModeAnimation(
+				jinraiModeComboTextConfig.animation,
+				"jinrai_mode.combo.text.animation"
+			),
 		},
 	}
 

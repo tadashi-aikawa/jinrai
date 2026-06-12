@@ -43,15 +43,33 @@ local DEFAULT_JINRAI_MODE = {
 		enabled = true,
 		size = 480,
 		alpha = 0.4,
+		animation = {
+			fade = true,
+			scale = 1.0,
+			duration = 0.16,
+			easing = "linear",
+		},
 	},
 	combo = {
 		character = {
 			enabled = false,
 			alpha = 0.5,
+			animation = {
+				fade = true,
+				scale = 1.18,
+				duration = 0.16,
+				easing = "linear",
+			},
 		},
 		text = {
 			enabled = false,
 			alpha = 0.7,
+			animation = {
+				fade = true,
+				scale = 1.0,
+				duration = 0.16,
+				easing = "linear",
+			},
 		},
 	},
 }
