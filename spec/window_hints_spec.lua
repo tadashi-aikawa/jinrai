@@ -2268,6 +2268,7 @@ describe("window_hints mouse selection", function()
 			navigation = {
 				applicationHints = {
 					key = "f20",
+					jinraiMode = true,
 				},
 			},
 			behavior = {
@@ -2320,7 +2321,69 @@ describe("window_hints mouse selection", function()
 		}))
 
 		assert.is_true(openApplicationHintsContext.jinraiMode)
+		assert.is_true(openApplicationHintsContext.advanceJinraiModeCombo)
 		assert.is_nil(logoCanvas._deleted)
+		assert.is_false(mocks.keyBlocker.started)
+	end)
+
+	it("設定によりApplication HintsをJinraiModeで開く", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local openApplicationHintsContext
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			navigation = {
+				applicationHints = {
+					key = "f20",
+					jinraiMode = true,
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					logo = {
+						enabled = true,
+						size = 480,
+						alpha = 0.3,
+					},
+				},
+				onOpenApplicationHints = function(ctx)
+					openApplicationHintsContext = ctx
+				end,
+			},
+		})
+		assert.is_true(instance.show())
+
+		assert.is_true(mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 42
+			end,
+			getFlags = function()
+				return {}
+			end,
+		}))
+
+		assert.is_true(openApplicationHintsContext.jinraiMode)
+		assert.is_false(openApplicationHintsContext.advanceJinraiModeCombo)
+		assert.is_truthy(findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg"))
 		assert.is_false(mocks.keyBlocker.started)
 	end)
 

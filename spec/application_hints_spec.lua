@@ -585,6 +585,33 @@ describe("application_hints", function()
 		assert.are.same({ "combo", "canvas" }, events)
 	end)
 
+	it("JinraiMode開始直後はCOMBO表示を進めずカードを表示する", function()
+		local events = {}
+		installHsMock(nil, {
+			onCanvasShow = function()
+				table.insert(events, "canvas")
+			end,
+		})
+		local mod = dofile("./Jinrai.spoon/application_hints.lua")
+		local instance = mod.new({
+			apps = {
+				{ bundleID = "com.example.app", key = "C" },
+			},
+			internal = {
+				onShowInJinraiMode = function()
+					table.insert(events, "combo")
+				end,
+			},
+		})
+
+		assert.is_true(instance.show({
+			jinraiMode = true,
+			advanceJinraiModeCombo = false,
+		}))
+
+		assert.are.same({ "canvas" }, events)
+	end)
+
 	it("JinraiModeの表示より前面のlevelを使用する", function()
 		local mocks = installHsMock(nil)
 		local mod = dofile("./Jinrai.spoon/application_hints.lua")

@@ -168,6 +168,7 @@ window_hints = {
     },
     applicationHints = {
       key = ";",
+      jinraiMode = true,
     },
   },
 }
@@ -183,6 +184,7 @@ window_hints = {
 | `navigation.spaces.next.key` | 次のSpaceへ移動するキーです。 |
 | `navigation.windowMover.moveToSelectedArea.key` | Window Hintsを閉じ、[Window Mover](window-mover.md)のエリア選択を開くキーです。 |
 | `navigation.applicationHints.key` | Window Hintsを閉じ、[Application Hints](application-hints.md)を開くキーです。 |
+| `navigation.applicationHints.jinraiMode` | `true`の場合、Application Hintsを[JinraiMode](jinrai-mode.md)として開きます。デフォルトは`false`です。 |
 
 ヒント表示中のナビゲーションキーと`hint.chars`が重複した場合は、ナビゲーションキーが優先されます。方向移動は現在のSpaceにあるウィンドウを対象にします。
 

@@ -3039,9 +3039,16 @@ function M.new(options)
 		if not config.onOpenApplicationHints then
 			return
 		end
+		local advanceJinraiModeCombo = isJinraiMode
+		if config.openApplicationHintsInJinraiMode and not isJinraiMode then
+			startJinraiMode()
+		end
 		local jinraiMode = isJinraiMode
 		closeHints(true, { keepJinraiMode = jinraiMode })
-		config.onOpenApplicationHints({ jinraiMode = jinraiMode })
+		config.onOpenApplicationHints({
+			jinraiMode = jinraiMode,
+			advanceJinraiModeCombo = advanceJinraiModeCombo,
+		})
 	end
 
 	local function handleInputKey(key, inputModifiers)

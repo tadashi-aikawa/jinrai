@@ -681,6 +681,7 @@ describe("init", function()
 								if
 									calls.applicationShowResult
 									and opts.jinraiMode
+									and opts.advanceJinraiModeCombo ~= false
 									and calls.applicationHintsOptions.internal.onShowInJinraiMode
 								then
 									calls.applicationHintsOptions.internal.onShowInJinraiMode()
@@ -766,10 +767,15 @@ describe("init", function()
 		assert.is_truthy(calls.windowHintsOptions.internal.onOpenApplicationHints)
 		calls.windowHintsOptions.internal.onOpenApplicationHints({ jinraiMode = true })
 		assert.is_true(calls.applicationShow.jinraiMode)
+		assert.is_true(calls.applicationShow.advanceJinraiModeCombo)
 		assert.is_true(calls.applicationShow.returnToWindowHints)
 		assert.are.equal(1, calls.windowHintsAdvanceJinraiModeCombo)
 
-		calls.windowHintsOptions.internal.onOpenApplicationHints({ jinraiMode = false })
+		calls.windowHintsOptions.internal.onOpenApplicationHints({
+			jinraiMode = true,
+			advanceJinraiModeCombo = false,
+		})
+		assert.is_false(calls.applicationShow.advanceJinraiModeCombo)
 		assert.are.equal(1, calls.windowHintsAdvanceJinraiModeCombo)
 
 		calls.applicationHintsOptions.internal.onOpenWindowHints({ jinraiMode = false })

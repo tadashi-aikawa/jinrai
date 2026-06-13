@@ -387,6 +387,7 @@ function obj:setup(config)
 				onOpenApplicationHints = function(ctx)
 					local shown = applicationHints.show({
 						jinraiMode = ctx and ctx.jinraiMode == true,
+						advanceJinraiModeCombo = not ctx or ctx.advanceJinraiModeCombo ~= false,
 						returnToWindowHints = true,
 					})
 					if not shown then

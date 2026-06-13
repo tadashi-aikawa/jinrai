@@ -163,6 +163,7 @@ describe("window_hints_config", function()
 				},
 				applicationHints = {
 					key = ";",
+					jinraiMode = true,
 				},
 			},
 			dock = {
@@ -299,6 +300,7 @@ describe("window_hints_config", function()
 		assert.are.equal("activeWindow", built.jinraiModePosition)
 		assert.are.equal("m", built.openWindowActionChooserKey)
 		assert.are.equal(";", built.openApplicationHintsKey)
+		assert.is_true(built.openApplicationHintsInJinraiMode)
 		assert.is_true(built.jinraiModeLogo.enabled)
 		assert.are.equal(480, built.jinraiModeLogo.size)
 		assert.are.equal(0.3, built.jinraiModeLogo.alpha)
@@ -502,6 +504,7 @@ describe("window_hints_config", function()
 			},
 		})
 		assert.are.equal(nil, built.focusBackKey)
+		assert.is_false(built.openApplicationHintsInJinraiMode)
 	end)
 
 	it("jinraiModeKey はヒント文字から除外される", function()
@@ -560,6 +563,22 @@ describe("window_hints_config", function()
 
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("navigation%.windowMover%.moveToSelectedArea%.key must not be empty"))
+	end)
+
+	it("applicationHints.jinraiMode はbooleanだけを許可する", function()
+		local ok, err = pcall(function()
+			mod.build({
+				navigation = {
+					applicationHints = {
+						key = ";",
+						jinraiMode = "true",
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("navigation%.applicationHints%.jinraiMode must be a boolean"))
 	end)
 
 	it("旧 navigation.windowMover.openWindowActionChooser はエラー", function()

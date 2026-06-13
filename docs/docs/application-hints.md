@@ -75,6 +75,7 @@ window_hints = {
   navigation = {
     applicationHints = {
       key = ";",
+      jinraiMode = true,
     },
   },
 }
@@ -82,7 +83,7 @@ window_hints = {
 
 Window Hints表示中に設定キーを押すとApplication Hintsへ切り替わります。同じキーをもう一度押すとWindow Hintsへ戻り、`escape`で閉じます。
 
-JinraiMode中は表示を維持したまま切り替わり、切り替えるたびにCOMBO数が1増えます。アプリを選択すると、作成したウィンドウの移動先を続けて選択できます。
+`jinraiMode = true`を指定すると、Window Hintsが通常表示中でもJinraiModeを開始してApplication Hintsへ切り替わります。
 
 ## JinraiModeを開始
 

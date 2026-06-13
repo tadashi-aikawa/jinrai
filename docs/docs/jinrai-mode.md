@@ -8,6 +8,7 @@ JinraiModeは次の方法で開始できます。
 
 - [Window Hints](window-hints.md)の表示中に`triggers.windowHints.key`を押す
 - [Application Hints](application-hints.md)の表示中に`triggers.applicationHints.key`を押す
+- [Window Hints](window-hints.md)の`navigation.applicationHints.jinraiMode`を有効にしてApplication Hintsを開く
 - [Window Mover](window-mover.md)のエリア選択中に`triggers.windowMover.key`を押す
 - [Window Mover](window-mover.md)の`moveToSelectedAreaInJinraiMode`ホットキーを押す
 

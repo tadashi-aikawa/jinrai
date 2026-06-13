@@ -239,6 +239,7 @@ local DEFAULT_CONFIG = {
 		},
 		applicationHints = {
 			key = nil,
+			jinraiMode = false,
 		},
 	},
 	behavior = {
@@ -958,6 +959,10 @@ function M.build(options)
 	)
 	local openApplicationHintsKey =
 		normalizeActionKey(merged.navigation.applicationHints.key, "navigation.applicationHints.key")
+	local openApplicationHintsInJinraiMode = normalizeBoolean(
+		merged.navigation.applicationHints.jinraiMode,
+		"navigation.applicationHints.jinraiMode"
+	)
 	local swapSelectModifiers = normalizeSelectModifiers(
 		merged.behavior.selection.swapWindowFrame.modifiers,
 		"behavior.selection.swapWindowFrame.modifiers"
@@ -1141,6 +1146,7 @@ function M.build(options)
 		nextSpaceKey = nextSpaceKey,
 		openWindowActionChooserKey = openWindowActionChooserKey,
 		openApplicationHintsKey = openApplicationHintsKey,
+		openApplicationHintsInJinraiMode = openApplicationHintsInJinraiMode,
 		swapWindowFrameSelectModifiers = swapSelectModifiers,
 		focusHistory = focusHistory,
 	}

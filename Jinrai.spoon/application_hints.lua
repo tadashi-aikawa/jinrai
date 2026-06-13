@@ -446,6 +446,7 @@ function M.new(options)
 		end
 		showContext = {
 			jinraiMode = opts.jinraiMode == true,
+			advanceJinraiModeCombo = opts.advanceJinraiModeCombo ~= false,
 			returnToWindowHints = opts.returnToWindowHints == true,
 		}
 		local columns = math.min(config.columns, #config.apps)
@@ -513,7 +514,7 @@ function M.new(options)
 			table.insert(canvases, canvas)
 			hintByKey[entry.key] = { entry = entry, canvas = canvas }
 		end
-		if showContext.jinraiMode and config.onShowInJinraiMode then
+		if showContext.jinraiMode and showContext.advanceJinraiModeCombo and config.onShowInJinraiMode then
 			config.onShowInJinraiMode()
 		end
 		for _, canvas in ipairs(canvases) do
