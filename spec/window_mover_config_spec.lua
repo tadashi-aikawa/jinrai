@@ -225,7 +225,9 @@ describe("window_mover_config", function()
 					},
 				},
 				actions = {
-					closeWindow = "x",
+					closeWindow = "x1",
+					minimizeWindow = "x2",
+					quitApplication = "x3",
 				},
 				hints = {
 					show = false,
@@ -338,7 +340,9 @@ describe("window_mover_config", function()
 			},
 		}, built.selectedAreaScreens)
 		assert.are.same({
-			closeWindow = "X",
+			closeWindow = "X1",
+			minimizeWindow = "X2",
+			quitApplication = "X3",
 		}, built.selectedAreaActions)
 		assert.are.equal(4, built.selectedAreaAppearance.borderWidth)
 		assert.are.equal(10, built.selectedAreaAppearance.cornerRadius)
@@ -534,11 +538,17 @@ describe("window_mover_config", function()
 			selectedArea = {
 				actions = {
 					closeWindow = "x12",
+					minimizeWindow = "m12",
+					quitApplication = "q12",
 				},
 			},
 		})
 
-		assert.are.same({ closeWindow = "X12" }, built.selectedAreaActions)
+		assert.are.same({
+			closeWindow = "X12",
+			minimizeWindow = "M12",
+			quitApplication = "Q12",
+		}, built.selectedAreaActions)
 	end)
 
 	it("selectedArea.windowHints.key を設定できる", function()
@@ -606,6 +616,22 @@ describe("window_mover_config", function()
 
 		assert.is_false(ok)
 		assert.is_truthy(tostring(err):match("selectedArea%.actions%.closeWindow key 'A' conflicts"))
+	end)
+
+	it("selectedArea.actions 同士の prefix 衝突キーはエラー", function()
+		local ok, err = pcall(function()
+			mod.build({
+				selectedArea = {
+					actions = {
+						closeWindow = "A",
+						minimizeWindow = "AX",
+					},
+				},
+			})
+		end)
+
+		assert.is_false(ok)
+		assert.is_truthy(tostring(err):match("selectedArea%.actions has prefix%-conflicting key"))
 	end)
 
 	it("selectedArea.windowHints.key が不正ならエラー", function()

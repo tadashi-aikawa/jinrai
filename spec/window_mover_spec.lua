@@ -36,11 +36,18 @@ describe("window_mover", function()
 	end
 
 	local function newWindow(screen, frame)
+		local app = {
+			killCalls = 0,
+		}
+		function app:kill()
+			self.killCalls = self.killCalls + 1
+		end
 		local win = {
 			_screen = screen,
 			_frame = frame or { x = 0, y = 0, w = 100, h = 100 },
 			_id = nil,
 			_standard = true,
+			_app = app,
 			setFrameCalls = {},
 			moveToScreenCalls = {},
 			maximizeCalls = {},
@@ -78,6 +85,9 @@ describe("window_mover", function()
 			self.closeCalls = self.closeCalls + 1
 			return true
 		end
+		function win:application()
+			return self._app
+		end
 		function win:raise()
 			self.raiseCalls = self.raiseCalls + 1
 		end
@@ -89,6 +99,7 @@ describe("window_mover", function()
 
 	local function installHsMock(focusedWindow)
 		local state = {
+			focusedWindow = focusedWindow,
 			hotkeys = {},
 			mousePositions = {},
 			visibleWindows = {},
@@ -220,7 +231,7 @@ describe("window_mover", function()
 			},
 			window = {
 				focusedWindow = function()
-					return focusedWindow
+					return state.focusedWindow
 				end,
 				visibleWindows = function()
 					return state.visibleWindows
@@ -1357,6 +1368,90 @@ describe("window_mover", function()
 		assert.are.equal(0, cancelCount)
 	end)
 
+	it("openWindowActionChooser で minimizeWindow action を実行できる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				minimizeWindow = "M",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local appliedCandidate
+
+		instance.openWindowActionChooser({
+			onApply = function(_, candidate)
+				appliedCandidate = candidate
+			end,
+		})
+		sendKey(state, "m")
+
+		assert.are.equal(1, win.minimizeCalls)
+		assert.are.equal(0, #win.setFrameCalls)
+		assert.are.equal("action", appliedCandidate.kind)
+		assert.are.equal("minimizeWindow", appliedCandidate.action)
+		assert.are.equal("M", appliedCandidate.key)
+	end)
+
+	it("openWindowActionChooser で quitApplication action を実行できる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				quitApplication = "Q",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local appliedCandidate
+
+		instance.openWindowActionChooser({
+			onApply = function(_, candidate)
+				appliedCandidate = candidate
+			end,
+		})
+		sendKey(state, "q")
+
+		assert.are.equal(1, win._app.killCalls)
+		assert.are.equal(0, #win.setFrameCalls)
+		assert.are.equal("action", appliedCandidate.kind)
+		assert.are.equal("quitApplication", appliedCandidate.action)
+		assert.are.equal("Q", appliedCandidate.key)
+	end)
+
+	it("quitApplication でアプリケーションを取得できない場合は onApply を呼ばない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		win._app = nil
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				quitApplication = "Q",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local applyCount = 0
+
+		instance.openWindowActionChooser({
+			onApply = function()
+				applyCount = applyCount + 1
+			end,
+		})
+		sendKey(state, "q")
+
+		assert.are.equal(0, applyCount)
+	end)
+
 	it("openWindowActionChooser で selectedArea.windowHints.key を実行できる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
@@ -1590,6 +1685,150 @@ describe("window_mover", function()
 
 		assert.are.equal(1, startCount)
 		assert.are.equal(1, applyCount)
+	end)
+
+	it("JinraiMode 中の minimizeWindow action 適用後に継続コールバックを呼ぶ", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local nextWin = newWindow(screen, { x = 400, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				minimizeWindow = "M",
+			},
+		})
+		local applyCount = 0
+		options.internal = {
+			jinraiMode = {
+				onApply = function()
+					applyCount = applyCount + 1
+				end,
+			},
+		}
+		local state, instance = newWindowMoverWithMock(options, win, { win, nextWin }, { win, nextWin })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser({ startJinraiMode = true })
+		sendKey(state, "m")
+
+		assert.are.equal(1, win.minimizeCalls)
+		assert.are.equal(0, applyCount)
+		assert.are.equal(0.05, state.delayTimers[#state.delayTimers].interval)
+
+		state.delayTimers[#state.delayTimers].callback()
+		assert.are.equal(1, nextWin.focusCalls)
+		assert.are.equal(0, applyCount)
+
+		state.focusedWindow = nextWin
+		state.delayTimers[#state.delayTimers].callback()
+
+		assert.are.equal(1, applyCount)
+	end)
+
+	it("jinraiMode context の minimizeWindow action はフォーカス移動後に onApply を呼ぶ", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local nextWin = newWindow(screen, { x = 400, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				minimizeWindow = "M",
+			},
+		}), win, { win, nextWin }, { win, nextWin })
+		state.screens = { screen }
+		local applyCount = 0
+
+		instance.openWindowActionChooser({
+			jinraiMode = true,
+			onApply = function()
+				applyCount = applyCount + 1
+			end,
+		})
+		sendKey(state, "m")
+
+		assert.are.equal(0, applyCount)
+		state.delayTimers[#state.delayTimers].callback()
+		assert.are.equal(1, nextWin.focusCalls)
+		assert.are.equal(0, applyCount)
+
+		state.focusedWindow = nextWin
+		state.delayTimers[#state.delayTimers].callback()
+
+		assert.are.equal(1, applyCount)
+	end)
+
+	it("minimizeWindow action はフォールバック対象がなければ JinraiMode を終了する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				minimizeWindow = "M",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local applyCount = 0
+		local cancelCount = 0
+
+		instance.openWindowActionChooser({
+			jinraiMode = true,
+			onApply = function()
+				applyCount = applyCount + 1
+			end,
+			onCancel = function()
+				cancelCount = cancelCount + 1
+			end,
+		})
+		sendKey(state, "m")
+
+		state.delayTimers[#state.delayTimers].callback()
+
+		assert.are.equal(0, applyCount)
+		assert.are.equal(1, cancelCount)
+	end)
+
+	it("JinraiMode 中の minimizeWindow action はフォールバック対象がなければ終了する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local options = selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				minimizeWindow = "M",
+			},
+		})
+		local applyCount = 0
+		local cancelCount = 0
+		options.internal = {
+			jinraiMode = {
+				onApply = function()
+					applyCount = applyCount + 1
+				end,
+				onCancel = function()
+					cancelCount = cancelCount + 1
+				end,
+			},
+		}
+		local state, instance = newWindowMoverWithMock(options, win, { win }, { win })
+		state.screens = { screen }
+
+		instance.openWindowActionChooser({ startJinraiMode = true })
+		sendKey(state, "m")
+		state.delayTimers[#state.delayTimers].callback()
+
+		assert.are.equal(0, applyCount)
+		assert.are.equal(1, cancelCount)
 	end)
 
 	it("moveToSelectedAreaInJinraiMode hotkey は最初から JinraiMode として chooser を開く", function()

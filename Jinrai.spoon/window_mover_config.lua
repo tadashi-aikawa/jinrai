@@ -185,6 +185,8 @@ local DEFAULT_CONFIG = {
 		screens = {},
 		actions = {
 			closeWindow = nil,
+			minimizeWindow = nil,
+			quitApplication = nil,
 		},
 		windowHints = {
 			key = nil,
@@ -420,9 +422,14 @@ local function normalizeSelectedAreaActions(actions)
 		error("[jinrai.window_mover] selectedArea.actions must be a table keyed by action name")
 	end
 
+	local supportedActions = {
+		closeWindow = true,
+		minimizeWindow = true,
+		quitApplication = true,
+	}
 	local normalized = {}
 	for actionName, key in pairs(actions) do
-		if actionName ~= "closeWindow" then
+		if not supportedActions[actionName] then
 			error("[jinrai.window_mover] unsupported selectedArea action '" .. tostring(actionName) .. "'")
 		end
 		if key ~= nil then

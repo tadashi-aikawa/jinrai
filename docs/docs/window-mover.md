@@ -153,6 +153,8 @@ window_mover = {
     },
     actions = {
       closeWindow = "C",
+      minimizeWindow = "N",
+      quitApplication = "Q",
     },
     windowHints = {
       key = "H",
@@ -169,6 +171,8 @@ window_mover = {
 | `selectedArea.screens` | ディスプレイUUIDごとに、エリア名と選択キーを指定します。 |
 | `selectedArea.defaultScreen` | 設定がないディスプレイへ流用するキーマップのUUIDです。 |
 | `selectedArea.actions.closeWindow` | エリア選択中にアクティブウィンドウを閉じるキーです。 |
+| `selectedArea.actions.minimizeWindow` | エリア選択中にアクティブウィンドウを最小化するキーです。 |
+| `selectedArea.actions.quitApplication` | エリア選択中にアクティブウィンドウのアプリケーションを通常終了するキーです。 |
 | `selectedArea.windowHints.key` | エリア選択を閉じ、[Window Hints](window-hints.md)を開くキーです。 |
 | `selectedArea.hints.show` | エリアとキーを画面上に表示するかを指定します。`false`でもキー入力は有効です。 |
 

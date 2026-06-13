@@ -29,6 +29,8 @@ local AREA_DETAIL_TEXT_SIZE = 13
 local AREA_INFO_WIDTH = 420
 local AREA_INFO_HEIGHT = 480
 local SELECTED_AREA_PREWARM_DELAY = 0.2
+local MINIMIZE_FOCUS_POLL_INTERVAL = 0.05
+local MINIMIZE_FOCUS_POLL_LIMIT = 10
 local AREA_ORDER = {
 	"freeArea",
 	"full",
@@ -480,6 +482,7 @@ function M.new(options)
 	local areaCancelCallback = nil
 	local areaJinraiModeActive = false
 	local areaJinraiModeContext = false
+	local minimizeFocusTimer = nil
 	local lastCycleState = nil
 
 	local function selectedAreaState(active)
@@ -805,22 +808,100 @@ function M.new(options)
 			return
 		end
 		local onApply = areaApplyCallback
+		local onCancel = areaCancelCallback
 		local onJinraiModeApply = areaJinraiModeActive and config.onJinraiModeApply or nil
+		local onJinraiModeCancel = areaJinraiModeActive and config.onJinraiModeCancel or nil
+		local delayOnApply = candidate.action == "minimizeWindow" and areaJinraiModeContext
+		local delayOnJinraiModeApply = candidate.action == "minimizeWindow" and onJinraiModeApply ~= nil
+		local fallbackWindow = nil
+		if candidate.action == "minimizeWindow" and (delayOnApply or delayOnJinraiModeApply) and hs.window.orderedWindows then
+			local ok, orderedWindows = pcall(function()
+				return hs.window.orderedWindows()
+			end)
+			if ok and type(orderedWindows) == "table" then
+				for _, orderedWindow in ipairs(orderedWindows) do
+					if
+						orderedWindow
+						and not sameWindow(win, orderedWindow)
+						and isStandardWindow(orderedWindow)
+						and orderedWindow.focus
+					then
+						fallbackWindow = orderedWindow
+						break
+					end
+				end
+			end
+		end
 		closeAreaChooser(true)
 		if candidate.action == "closeWindow" and win.close then
 			local ok = win:close()
 			if not ok then
 				return
 			end
+		elseif candidate.action == "minimizeWindow" and win.minimize then
+			win:minimize()
+		elseif candidate.action == "quitApplication" and win.application then
+			local app = win:application()
+			if not app or not app.kill then
+				return
+			end
+			app:kill()
 		else
 			return
 		end
-		if onApply then
+		if onApply and not delayOnApply then
 			onApply(win, candidate)
 		end
-		if onJinraiModeApply then
+		if onJinraiModeApply and not delayOnJinraiModeApply then
 			onJinraiModeApply(win, candidate)
 		end
+		if not delayOnApply and not delayOnJinraiModeApply then
+			return
+		end
+
+		local pollCount = 0
+		local function isOriginalWindow(focusedWin)
+			return sameWindow(focusedWin, win)
+		end
+		local function finishJinraiModeApply()
+			minimizeFocusTimer = nil
+			if delayOnApply and onApply then
+				onApply(win, candidate)
+			end
+			if delayOnJinraiModeApply and onJinraiModeApply then
+				onJinraiModeApply(win, candidate)
+			end
+		end
+		local function cancelJinraiModeApply()
+			minimizeFocusTimer = nil
+			if delayOnApply and onCancel then
+				onCancel()
+			end
+			if delayOnJinraiModeApply and onJinraiModeCancel then
+				onJinraiModeCancel()
+			end
+		end
+		local function pollFocus()
+			pollCount = pollCount + 1
+			local focusedWin = hs.window.focusedWindow()
+			if focusedWin and not isOriginalWindow(focusedWin) then
+				finishJinraiModeApply()
+				return
+			end
+			if not fallbackWindow then
+				cancelJinraiModeApply()
+				return
+			end
+			local focusOk, focusResult = pcall(function()
+				return fallbackWindow:focus()
+			end)
+			if not focusOk or focusResult == false or pollCount >= MINIMIZE_FOCUS_POLL_LIMIT then
+				cancelJinraiModeApply()
+				return
+			end
+			minimizeFocusTimer = hs.timer.doAfter(MINIMIZE_FOCUS_POLL_INTERVAL, pollFocus)
+		end
+		minimizeFocusTimer = hs.timer.doAfter(MINIMIZE_FOCUS_POLL_INTERVAL, pollFocus)
 	end
 
 	local function addAreaCandidate(candidates, seenByScreen, screen, frame, kind, icon, key, detailLabel)
@@ -856,6 +937,8 @@ function M.new(options)
 		}
 		local detailLabels = {
 			closeWindow = "Close",
+			minimizeWindow = "Minimize",
+			quitApplication = "Quit Application",
 		}
 		table.insert(candidates, {
 			screen = screen,
@@ -2357,6 +2440,10 @@ button:active {
 	scheduleAreaCanvasPrewarm()
 
 	local function teardown()
+		if minimizeFocusTimer then
+			minimizeFocusTimer:stop()
+			minimizeFocusTimer = nil
+		end
 		if areaCanvasPrewarmTimer then
 			areaCanvasPrewarmTimer:stop()
 			areaCanvasPrewarmTimer = nil
