@@ -2251,6 +2251,79 @@ describe("window_hints mouse selection", function()
 		assert.is_false(mocks.keyBlocker.started)
 	end)
 
+	it("JinraiMode中にApplication Hintsを開いてもロゴ表示を維持する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local mocks = installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local openApplicationHintsContext
+
+		local instance = windowHints.new({
+			hint = {
+				title = {
+					show = false,
+				},
+			},
+			navigation = {
+				applicationHints = {
+					key = "f20",
+				},
+			},
+			behavior = {
+				callbacks = {
+					onError = function(err)
+						error(err)
+					end,
+				},
+				cursor = {
+					onStart = false,
+					onSelect = false,
+				},
+			},
+			internal = {
+				jinraiMode = {
+					windowHints = {
+						key = "space",
+					},
+					logo = {
+						enabled = true,
+						size = 480,
+						alpha = 0.3,
+					},
+				},
+				onOpenApplicationHints = function(ctx)
+					openApplicationHintsContext = ctx
+				end,
+			},
+		})
+		assert.is_true(instance.show())
+
+		assert.is_true(mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 49
+			end,
+			getFlags = function()
+				return {}
+			end,
+		}))
+		local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
+		assert.is_truthy(logoCanvas)
+
+		assert.is_true(mocks.keyBlocker.callback({
+			getKeyCode = function()
+				return 42
+			end,
+			getFlags = function()
+				return {}
+			end,
+		}))
+
+		assert.is_true(openApplicationHintsContext.jinraiMode)
+		assert.is_nil(logoCanvas._deleted)
+		assert.is_false(mocks.keyBlocker.started)
+	end)
+
 	it("showJinraiMode は追加キーなしで内部コールバックへ通知する", function()
 		local createdCanvases = {}
 		local focusCounter = { count = 0 }
@@ -2636,6 +2709,33 @@ describe("window_hints mouse selection", function()
 
 		activeWindowFrame = { x = 800, y = 300, w = 1000, h = 700 }
 		assert.is_true(instance.showJinraiMode())
+		assert.are.same({ x = 1060, y = 410, w = 480, h = 480 }, logoCanvas._frame)
+	end)
+
+	it("activeWindow 指定時はコンボ加算で最新のウィンドウ中央へロゴを移動する", function()
+		local createdCanvases = {}
+		local focusCounter = { count = 0 }
+		local targetWindow = makeWindow(1, "Target", focusCounter)
+		local activeWindowFrame = { x = 100, y = 100, w = 400, h = 300 }
+		targetWindow.frame = function()
+			return activeWindowFrame
+		end
+		installHsMock(targetWindow, createdCanvases)
+		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+		local instance = windowHints.new({
+			internal = {
+				jinraiMode = {
+					position = "activeWindow",
+				},
+			},
+		})
+
+		assert.is_true(instance.showJinraiMode())
+		local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
+		assert.are.same({ x = 60, y = 10, w = 480, h = 480 }, logoCanvas._frame)
+
+		activeWindowFrame = { x = 800, y = 300, w = 1000, h = 700 }
+		assert.is_true(instance.advanceJinraiModeCombo())
 		assert.are.same({ x = 1060, y = 410, w = 480, h = 480 }, logoCanvas._frame)
 	end)
 

@@ -7,6 +7,7 @@ JinraiModeは、[Window Hints](window-hints.md)によるウィンドウ選択と
 JinraiModeは次の方法で開始できます。
 
 - [Window Hints](window-hints.md)の表示中に`triggers.windowHints.key`を押す
+- [Application Hints](application-hints.md)の表示中に`triggers.applicationHints.key`を押す
 - [Window Mover](window-mover.md)のエリア選択中に`triggers.windowMover.key`を押す
 - [Window Mover](window-mover.md)の`moveToSelectedAreaInJinraiMode`ホットキーを押す
 
@@ -21,6 +22,9 @@ jinrai_mode = {
   position = "activeWindow",
   triggers = {
     windowHints = {
+      key = "space",
+    },
+    applicationHints = {
       key = "space",
     },
     windowMover = {
@@ -67,6 +71,7 @@ jinrai_mode = {
 | --- | --- |
 | `position` | ロゴ・キャラクター・COMBOテキストの中心位置です。`activeDisplay`（アクティブディスプレイ中央）または`activeWindow`（アクティブウィンドウ中央、デフォルト）を指定します。 |
 | `triggers.windowHints.key` | [Window Hints](window-hints.md)の表示中にJinraiModeを開始するキーです。 |
+| `triggers.applicationHints.key` | [Application Hints](application-hints.md)の表示中にJinraiModeを開始するキーです。 |
 | `triggers.windowMover.key` | 移動先の選択中にJinraiModeを開始するキーです。 |
 | `logo.enabled` | JinraiMode中にJINRAIロゴを表示するかを指定します。 |
 | `logo.size` | ロゴの大きさです。 |

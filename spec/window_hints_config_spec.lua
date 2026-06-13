@@ -161,6 +161,9 @@ describe("window_hints_config", function()
 						key = "m",
 					},
 				},
+				applicationHints = {
+					key = ";",
+				},
 			},
 			dock = {
 				windowBlend = {
@@ -295,6 +298,7 @@ describe("window_hints_config", function()
 		assert.are.equal("space", built.jinraiModeKey)
 		assert.are.equal("activeWindow", built.jinraiModePosition)
 		assert.are.equal("m", built.openWindowActionChooserKey)
+		assert.are.equal(";", built.openApplicationHintsKey)
 		assert.is_true(built.jinraiModeLogo.enabled)
 		assert.are.equal(480, built.jinraiModeLogo.size)
 		assert.are.equal(0.3, built.jinraiModeLogo.alpha)

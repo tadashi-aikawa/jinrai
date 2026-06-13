@@ -13,12 +13,14 @@ end
 
 local focusBorderModule = nil
 local windowHintsModule = nil
+local applicationHintsModule = nil
 local focusBackModule = nil
 local focusHistoryModule = nil
 local windowMoverModule = nil
 local updaterModule = nil
 local focusBorder = nil
 local windowHints = nil
+local applicationHints = nil
 local focusBack = nil
 local focusHistory = nil
 local windowMover = nil
@@ -33,6 +35,9 @@ local DEFAULT_JINRAI_MODE = {
 	position = "activeWindow",
 	triggers = {
 		windowHints = {
+			key = nil,
+		},
+		applicationHints = {
 			key = nil,
 		},
 		windowMover = {
@@ -189,6 +194,9 @@ function obj:setup(config)
 	if windowHintsModule == nil then
 		windowHintsModule = dofile(resourcePath("window_hints.lua"))
 	end
+	if applicationHintsModule == nil then
+		applicationHintsModule = dofile(resourcePath("application_hints.lua"))
+	end
 	if focusBackModule == nil then
 		focusBackModule = dofile(resourcePath("focus_back.lua"))
 	end
@@ -267,6 +275,79 @@ function obj:setup(config)
 		})
 	end
 
+	local function openJinraiModeWindowActionChooser()
+		if not windowMover or not windowMover.openWindowActionChooser then
+			return
+		end
+		if windowHints and windowHints.advanceJinraiModeCombo then
+			windowHints.advanceJinraiModeCombo()
+		end
+		windowMover.openWindowActionChooser({
+			jinraiMode = true,
+			onApply = function()
+				defer(function()
+					if windowHints and windowHints.showJinraiMode then
+						if windowHints.advanceJinraiModeCombo then
+							windowHints.advanceJinraiModeCombo()
+						end
+						local show = windowHints.showJinraiModeAsync or windowHints.showJinraiMode
+						show()
+					end
+				end)
+			end,
+			onCancel = function()
+				if windowHints and windowHints.stopJinraiMode then
+					windowHints.stopJinraiMode()
+				end
+			end,
+		})
+	end
+
+	if config.application_hints then
+		local applicationHintsConfig = config.application_hints
+		local windowHintsNavigation = config.window_hints and config.window_hints.navigation or {}
+		local applicationHintsNavigation = windowHintsNavigation.applicationHints or {}
+		local internalConfig = mergeTable(applicationHintsConfig.internal or {}, {
+			windowHintsKey = applicationHintsNavigation.key,
+			jinraiModeKey = jinraiMode.triggers.applicationHints.key,
+			onOpenWindowHints = function(ctx)
+				defer(function()
+					if not windowHints then
+						return
+					end
+					if ctx and ctx.jinraiMode and windowHints.showJinraiMode then
+						if windowHints.advanceJinraiModeCombo then
+							windowHints.advanceJinraiModeCombo()
+						end
+						windowHints.showJinraiMode()
+					elseif windowHints.show then
+						windowHints.show()
+					end
+				end)
+			end,
+			onShowInJinraiMode = function()
+				if windowHints and windowHints.advanceJinraiModeCombo then
+					windowHints.advanceJinraiModeCombo()
+				end
+			end,
+			onStartJinraiMode = function()
+				if windowHints and windowHints.startJinraiMode then
+					windowHints.startJinraiMode()
+				end
+			end,
+			onSelectInJinraiMode = function()
+				openJinraiModeWindowActionChooser()
+			end,
+			onCancelJinraiMode = function()
+				if windowHints and windowHints.stopJinraiMode then
+					windowHints.stopJinraiMode()
+				end
+			end,
+		})
+		applicationHintsConfig = mergeTable(applicationHintsConfig, { internal = internalConfig })
+		applicationHints = applicationHintsModule.new(applicationHintsConfig)
+	end
+
 	if config.window_hints then
 		local windowHintsConfig = config.window_hints
 		local jinraiModeInternalConfig = mergeTable(windowHintsConfig.internal or {}, {
@@ -281,30 +362,6 @@ function obj:setup(config)
 		})
 		windowHintsConfig = mergeTable(windowHintsConfig, { internal = jinraiModeInternalConfig })
 		if windowMover then
-			local function openJinraiModeWindowActionChooser()
-				if windowHints and windowHints.advanceJinraiModeCombo then
-					windowHints.advanceJinraiModeCombo()
-				end
-				windowMover.openWindowActionChooser({
-					jinraiMode = true,
-					onApply = function()
-						defer(function()
-							if windowHints and windowHints.showJinraiMode then
-								if windowHints.advanceJinraiModeCombo then
-									windowHints.advanceJinraiModeCombo()
-								end
-								local show = windowHints.showJinraiModeAsync or windowHints.showJinraiMode
-								show()
-							end
-						end)
-					end,
-					onCancel = function()
-						if windowHints and windowHints.stopJinraiMode then
-							windowHints.stopJinraiMode()
-						end
-					end,
-				})
-			end
 			local internalConfig = mergeTable(windowHintsConfig.internal or {}, {
 				onOpenWindowActionChooser = function(ctx)
 					if not windowMover or not windowMover.openWindowActionChooser then
@@ -321,6 +378,26 @@ function obj:setup(config)
 						return
 					end
 					openJinraiModeWindowActionChooser()
+				end,
+			})
+			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })
+		end
+		if applicationHints then
+			local internalConfig = mergeTable(windowHintsConfig.internal or {}, {
+				onOpenApplicationHints = function(ctx)
+					local shown = applicationHints.show({
+						jinraiMode = ctx and ctx.jinraiMode == true,
+						returnToWindowHints = true,
+					})
+					if not shown then
+						defer(function()
+							if ctx and ctx.jinraiMode and windowHints.showJinraiMode then
+								windowHints.showJinraiMode()
+							elseif windowHints.show then
+								windowHints.show()
+							end
+						end)
+					end
 				end,
 			})
 			windowHintsConfig = mergeTable(windowHintsConfig, { internal = internalConfig })
@@ -353,6 +430,9 @@ function obj:teardown()
 	if windowMover and windowMover.teardown then
 		windowMover.teardown()
 	end
+	if applicationHints and applicationHints.teardown then
+		applicationHints.teardown()
+	end
 	if focusBack and focusBack.teardown then
 		focusBack.teardown()
 	end
@@ -367,6 +447,7 @@ function obj:teardown()
 	end
 	focusBack = nil
 	windowHints = nil
+	applicationHints = nil
 	focusHistory = nil
 	focusBorder = nil
 	windowMover = nil

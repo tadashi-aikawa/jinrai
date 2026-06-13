@@ -654,6 +654,141 @@ describe("init", function()
 		assert.are.same({ "window_mover", "focus_back", "window_hints", "focus_history", "focus_border" }, order)
 	end)
 
+	it("Application Hints は Window Hints と JinraiMode に接続される", function()
+		_G.__jinrai = nil
+		local init = dofile("./Jinrai.spoon/init.lua")
+		local calls = {
+			windowHintsOptions = nil,
+			applicationHintsOptions = nil,
+			applicationShow = nil,
+			windowHintsShow = 0,
+			windowHintsShowJinraiMode = 0,
+			windowHintsStartJinraiMode = 0,
+			windowHintsAdvanceJinraiModeCombo = 0,
+			windowMoverOptions = nil,
+			applicationShowResult = true,
+		}
+
+		_G.dofile = function(path)
+			if path:match("application_hints.lua$") then
+				return {
+					new = function(options)
+						calls.applicationHintsOptions = options
+						return {
+							show = function(opts)
+								calls.applicationShow = opts
+								if
+									calls.applicationShowResult
+									and opts.jinraiMode
+									and calls.applicationHintsOptions.internal.onShowInJinraiMode
+								then
+									calls.applicationHintsOptions.internal.onShowInJinraiMode()
+								end
+								return calls.applicationShowResult
+							end,
+							teardown = function() end,
+						}
+					end,
+				}
+			end
+			if path:match("window_hints.lua$") then
+				return {
+					new = function(options)
+						calls.windowHintsOptions = options
+						return {
+							show = function()
+								calls.windowHintsShow = calls.windowHintsShow + 1
+							end,
+							showJinraiMode = function()
+								calls.windowHintsShowJinraiMode = calls.windowHintsShowJinraiMode + 1
+							end,
+							startJinraiMode = function()
+								calls.windowHintsStartJinraiMode = calls.windowHintsStartJinraiMode + 1
+							end,
+							advanceJinraiModeCombo = function()
+								calls.windowHintsAdvanceJinraiModeCombo =
+									calls.windowHintsAdvanceJinraiModeCombo + 1
+							end,
+							stopJinraiMode = function() end,
+							teardown = function() end,
+						}
+					end,
+				}
+			end
+			if path:match("window_mover.lua$") then
+				return {
+					new = function()
+						return {
+							openWindowActionChooser = function(opts)
+								calls.windowMoverOptions = opts
+							end,
+							teardown = function() end,
+						}
+					end,
+				}
+			end
+			if path:match("focus_border.lua$") or path:match("focus_back.lua$") then
+				return { new = function() return { teardown = function() end } end }
+			end
+			if path:match("focus_history.lua$") then
+				return { new = function() return { teardown = function() end } end }
+			end
+			return originalDofile(path)
+		end
+
+		init:setup({
+			application_hints = {
+				apps = {
+					{ bundleID = "com.example.app", key = "A" },
+				},
+			},
+			window_hints = {
+				navigation = {
+					applicationHints = {
+						key = ";",
+					},
+				},
+			},
+			window_mover = {},
+			jinrai_mode = {
+				triggers = {
+					applicationHints = {
+						key = "space",
+					},
+				},
+			},
+		})
+
+		assert.are.equal(";", calls.applicationHintsOptions.internal.windowHintsKey)
+		assert.are.equal("space", calls.applicationHintsOptions.internal.jinraiModeKey)
+		assert.is_truthy(calls.applicationHintsOptions.internal.onShowInJinraiMode)
+		assert.is_truthy(calls.windowHintsOptions.internal.onOpenApplicationHints)
+		calls.windowHintsOptions.internal.onOpenApplicationHints({ jinraiMode = true })
+		assert.is_true(calls.applicationShow.jinraiMode)
+		assert.is_true(calls.applicationShow.returnToWindowHints)
+		assert.are.equal(1, calls.windowHintsAdvanceJinraiModeCombo)
+
+		calls.windowHintsOptions.internal.onOpenApplicationHints({ jinraiMode = false })
+		assert.are.equal(1, calls.windowHintsAdvanceJinraiModeCombo)
+
+		calls.applicationHintsOptions.internal.onOpenWindowHints({ jinraiMode = false })
+		assert.are.equal(1, calls.windowHintsShow)
+		assert.are.equal(1, calls.windowHintsAdvanceJinraiModeCombo)
+		calls.applicationHintsOptions.internal.onOpenWindowHints({ jinraiMode = true })
+		assert.are.equal(1, calls.windowHintsShowJinraiMode)
+		assert.are.equal(2, calls.windowHintsAdvanceJinraiModeCombo)
+
+		calls.applicationShowResult = false
+		calls.windowHintsOptions.internal.onOpenApplicationHints({ jinraiMode = true })
+		assert.are.equal(2, calls.windowHintsAdvanceJinraiModeCombo)
+
+		calls.applicationHintsOptions.internal.onStartJinraiMode()
+		assert.are.equal(1, calls.windowHintsStartJinraiMode)
+
+		calls.applicationHintsOptions.internal.onSelectInJinraiMode()
+		assert.is_true(calls.windowMoverOptions.jinraiMode)
+	end)
+
 	it("setup で updater を開始し teardown で破棄する", function()
 		_G.__jinrai = nil
 		local init = dofile("./Jinrai.spoon/init.lua")

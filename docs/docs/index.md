@@ -25,6 +25,9 @@ JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択
     - アプリアイコンとキーヒントからウィンドウを選択
     - 別のSpaceや他のウィンドウに隠れたウィンドウも候補として表示
     - キー入力、方向キー、マウスクリックによる選択
+- **[Application Hints](application-hints.md)**
+    - 固定キーからアプリを起動、または新しいウィンドウを作成
+    - JinraiModeで作成したウィンドウを続けて配置
 - **[Window Mover](window-mover.md)**
     - ウィンドウを別ディスプレイ、空き領域、指定した画面領域へ移動
     - 最大化、最小化、画面分割レイアウトへの配置
@@ -42,6 +45,7 @@ JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択
 各機能の使い方や設定は、次のページを参照してください。
 
 - [Window Hints](window-hints.md)
+- [Application Hints](application-hints.md)
 - [Window Mover](window-mover.md)
 - [JinraiMode](jinrai-mode.md)
 - [Focus Border](focus-border.md)

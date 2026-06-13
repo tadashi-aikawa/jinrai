@@ -49,6 +49,7 @@ nav = [
   { "セットアップ" = "setup.md" },
   { "機能" = [
     { "Window Hints" = "window-hints.md" },
+    { "Application Hints" = "application-hints.md" },
     { "Window Mover" = "window-mover.md" },
     { "JinraiMode" = "jinrai-mode.md" },
     { "Focus Border" = "focus-border.md" },

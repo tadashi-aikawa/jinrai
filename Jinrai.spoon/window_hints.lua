@@ -2054,6 +2054,7 @@ function M.new(options)
 	local prevSpaceKey = config.prevSpaceKey
 	local nextSpaceKey = config.nextSpaceKey
 	local openWindowActionChooserKey = config.openWindowActionChooserKey
+	local openApplicationHintsKey = config.openApplicationHintsKey
 	local swapWindowFrameSelectModifiers = config.swapWindowFrameSelectModifiers
 	local hintChars = config.hintChars
 
@@ -2704,6 +2705,7 @@ function M.new(options)
 			return false
 		end
 		jinraiModeComboCount = jinraiModeComboCount + 1
+		showJinraiModeLogo()
 		showJinraiModeCombo()
 		return true
 	end
@@ -3033,11 +3035,24 @@ function M.new(options)
 		onOpenWindowActionChooser({ jinraiMode = jinraiMode })
 	end
 
+	local function runOpenApplicationHintsAction()
+		if not config.onOpenApplicationHints then
+			return
+		end
+		local jinraiMode = isJinraiMode
+		closeHints(true, { keepJinraiMode = jinraiMode })
+		config.onOpenApplicationHints({ jinraiMode = jinraiMode })
+	end
+
 	local function handleInputKey(key, inputModifiers)
 		if not isShowing then
 			return
 		end
 		local swapWithFocused = shouldSwapWindowFrameOnSelect(swapWindowFrameSelectModifiers, inputModifiers)
+		if openApplicationHintsKey and key == openApplicationHintsKey then
+			runOpenApplicationHintsAction()
+			return
+		end
 		if openWindowActionChooserKey and key == openWindowActionChooserKey then
 			runOpenWindowActionChooserAction()
 			return

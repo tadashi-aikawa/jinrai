@@ -237,6 +237,9 @@ local DEFAULT_CONFIG = {
 				key = nil,
 			},
 		},
+		applicationHints = {
+			key = nil,
+		},
 	},
 	behavior = {
 		selection = {
@@ -301,6 +304,7 @@ local DEFAULT_CONFIG = {
 		},
 		onJinraiModeSelect = nil,
 		onOpenWindowActionChooser = nil,
+		onOpenApplicationHints = nil,
 	},
 }
 
@@ -623,7 +627,8 @@ local function buildReservedHintCharLookup(
 	spaceKeys,
 	prevSpaceKey,
 	nextSpaceKey,
-	openWindowActionChooserKey
+	openWindowActionChooserKey,
+	openApplicationHintsKey
 )
 	local reserved = {}
 	local function addKey(key)
@@ -639,6 +644,7 @@ local function buildReservedHintCharLookup(
 	addKey(prevSpaceKey)
 	addKey(nextSpaceKey)
 	addKey(openWindowActionChooserKey)
+	addKey(openApplicationHintsKey)
 	if spaceKeys then
 		for i = 1, 9 do
 			reserved[tostring(i)] = true
@@ -950,6 +956,8 @@ function M.build(options)
 		merged.navigation.windowMover.moveToSelectedArea.key,
 		"navigation.windowMover.moveToSelectedArea.key"
 	)
+	local openApplicationHintsKey =
+		normalizeActionKey(merged.navigation.applicationHints.key, "navigation.applicationHints.key")
 	local swapSelectModifiers = normalizeSelectModifiers(
 		merged.behavior.selection.swapWindowFrame.modifiers,
 		"behavior.selection.swapWindowFrame.modifiers"
@@ -969,7 +977,8 @@ function M.build(options)
 		spaceKeys,
 		prevSpaceKey,
 		nextSpaceKey,
-		openWindowActionChooserKey
+		openWindowActionChooserKey,
+		openApplicationHintsKey
 	)
 	hintChars = filterHintChars(hintChars, reservedHintCharLookup)
 	if #hintChars == 0 then
@@ -1118,6 +1127,7 @@ function M.build(options)
 		jinraiModeCombo = jinraiModeCombo,
 		onJinraiModeSelect = merged.internal.onJinraiModeSelect,
 		onOpenWindowActionChooser = merged.internal.onOpenWindowActionChooser,
+		onOpenApplicationHints = merged.internal.onOpenApplicationHints,
 		directionKeys = directionKeys,
 		directionKeyLookup = directionKeyLookup,
 		directDirectionHotkeys = directDirectionHotkeys,
@@ -1130,6 +1140,7 @@ function M.build(options)
 		prevSpaceKey = prevSpaceKey,
 		nextSpaceKey = nextSpaceKey,
 		openWindowActionChooserKey = openWindowActionChooserKey,
+		openApplicationHintsKey = openApplicationHintsKey,
 		swapWindowFrameSelectModifiers = swapSelectModifiers,
 		focusHistory = focusHistory,
 	}

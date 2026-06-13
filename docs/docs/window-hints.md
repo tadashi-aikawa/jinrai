@@ -166,6 +166,9 @@ window_hints = {
         key = "space",
       },
     },
+    applicationHints = {
+      key = ";",
+    },
   },
 }
 ```
@@ -179,6 +182,7 @@ window_hints = {
 | `navigation.spaces.prev.key` | 前のSpaceへ移動するキーです。 |
 | `navigation.spaces.next.key` | 次のSpaceへ移動するキーです。 |
 | `navigation.windowMover.moveToSelectedArea.key` | Window Hintsを閉じ、[Window Mover](window-mover.md)のエリア選択を開くキーです。 |
+| `navigation.applicationHints.key` | Window Hintsを閉じ、[Application Hints](application-hints.md)を開くキーです。 |
 
 ヒント表示中のナビゲーションキーと`hint.chars`が重複した場合は、ナビゲーションキーが優先されます。方向移動は現在のSpaceにあるウィンドウを対象にします。
 
