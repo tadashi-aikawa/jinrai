@@ -375,13 +375,13 @@ describe("window_hints_config", function()
 		assert.are.equal(0.65, built.dockWindowXBlend)
 		assert.are.equal(1, built.dockWindowYBlend)
 		assert.are.equal("activeWindow", built.jinraiModePosition)
-		assert.are.equal(0.4, built.jinraiModeLogo.alpha)
+		assert.are.equal(0.25, built.jinraiModeLogo.alpha)
 		assert.are.same(
 			{ fade = true, scale = 1.0, duration = 0.16, easing = "linear" },
 			built.jinraiModeLogo.animation
 		)
 		assert.is_false(built.jinraiModeCombo.character.enabled)
-		assert.are.equal(0.5, built.jinraiModeCombo.character.alpha)
+		assert.are.equal(0.7, built.jinraiModeCombo.character.alpha)
 		assert.are.same(
 			{ fade = true, scale = 1.18, duration = 0.16, easing = "linear" },
 			built.jinraiModeCombo.character.animation

@@ -339,8 +339,9 @@ describe("init", function()
 		assert.are.equal("activeWindow", calls.new.window_hints.internal.jinraiMode.position)
 		assert.are.equal("space", calls.new.window_hints.internal.jinraiMode.windowHints.key)
 		assert.are.equal("j", calls.new.window_mover.internal.jinraiMode.windowMover.key)
+		assert.are.equal(0.25, calls.new.window_hints.internal.jinraiMode.logo.alpha)
 		assert.is_false(calls.new.window_hints.internal.jinraiMode.combo.character.enabled)
-		assert.are.equal(0.5, calls.new.window_hints.internal.jinraiMode.combo.character.alpha)
+		assert.are.equal(0.7, calls.new.window_hints.internal.jinraiMode.combo.character.alpha)
 		assert.are.same(
 			{ fade = true, scale = 1.18, duration = 0.16, easing = "linear" },
 			calls.new.window_hints.internal.jinraiMode.combo.character.animation
