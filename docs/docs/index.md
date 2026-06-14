@@ -6,12 +6,9 @@
     <div>思考の速度で素早くウィンドウの切り替えや認識を行うためのHammerspoonスクリプト</div>
     </p>
     <p>
-        <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml">
-          <img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" />
-        </a>
-        <a href="https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE">
-          <img src="https://img.shields.io/github/license/tadashi-aikawa/jinrai" alt="License" />
-        </a>
+        <a href="https://github.com/tadashi-aikawa/jinrai/releases/latest"><img src="https://img.shields.io/github/release/tadashi-aikawa/jinrai" alt="release" /></a>
+        <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml"><img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+        <a href="https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE"><img src="https://img.shields.io/github/license/tadashi-aikawa/jinrai" alt="License" /></a>
     </p>
 </div>
 
