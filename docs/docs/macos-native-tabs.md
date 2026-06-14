@@ -4,6 +4,8 @@ macOSネイティブタブを使うアプリで、[Window Hints](window-hints.md
 
 GhosttyとFinderは最初から対象に含まれています。
 
+[全設定](configuration.md)に、デフォルト値と各項目の説明を掲載しています。
+
 ## 対象アプリを追加
 
 アプリ名またはbundle IDを指定します。

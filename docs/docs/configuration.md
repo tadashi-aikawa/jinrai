@@ -1,0 +1,850 @@
+# 全設定
+
+JINRAIの公開設定を、各機能を有効にした場合のデフォルト値でまとめています。
+まずこの例で設定の全体像を確認し、値の選択肢や制約は後半および各機能ページを参照してください。
+
+!!! note
+    `focus_border`、`window_hints`、`focus_back`、`window_mover`、`application_hints`は、
+    `setup`に指定した機能だけが有効になります。
+
+    `application_hints.apps`だけはデフォルト値が空であり、有効化時に1件以上の指定が必要です。
+    そのため、以下では`application_hints = nil`としてデフォルトの無効状態を示し、
+    [Application Hints](application-hints.md)に有効化例を掲載しています。
+
+## デフォルト設定
+
+```lua
+hs.loadSpoon("Jinrai")
+
+spoon.Jinrai:setup({
+  -- macOSネイティブタブを使うアプリのウィンドウ追跡を補正します。
+  macosNativeTabs = {
+    -- 組み込み対象へ追加するアプリ名またはbundle IDです。
+    apps = {
+      "com.mitchellh.ghostty",
+      "com.apple.finder",
+    },
+    -- タブ状態を同期する間隔（秒）です。
+    stateSyncInterval = 0.5,
+  },
+
+  -- Window HintsとWindow Moverを連続して操作するモードです。
+  jinrai_mode = {
+    -- ロゴなどの中心位置です。
+    position = "activeWindow",
+    triggers = {
+      -- Window Hints表示中にJinraiModeを開始するキーです。
+      windowHints = { key = nil },
+      -- Application Hints表示中にJinraiModeを開始するキーです。
+      applicationHints = { key = nil },
+      -- 移動先選択中にJinraiModeを開始するキーです。
+      windowMover = { key = nil },
+    },
+    logo = {
+      -- JinraiMode中にJINRAIロゴを表示します。
+      enabled = true,
+      -- ロゴの大きさです。
+      size = 480,
+      -- ロゴの透明度です。
+      alpha = 0.25,
+      animation = {
+        -- 表示切り替え時にフェードします。
+        fade = true,
+        -- アニメーション開始時の倍率です。
+        scale = 1.0,
+        -- アニメーション時間（秒）です。
+        duration = 0.16,
+        -- アニメーションの補間方式です。
+        easing = "linear",
+      },
+    },
+    combo = {
+      character = {
+        -- 操作回数に応じたキャラクター画像を表示します。
+        enabled = false,
+        -- キャラクター画像の透明度です。
+        alpha = 0.7,
+        animation = {
+          -- 表示切り替え時にフェードします。
+          fade = true,
+          -- アニメーション開始時の倍率です。
+          scale = 1.18,
+          -- アニメーション時間（秒）です。
+          duration = 0.16,
+          -- アニメーションの補間方式です。
+          easing = "linear",
+        },
+      },
+      text = {
+        -- 継続回数をCOMBOテキストで表示します。
+        enabled = false,
+        -- COMBOテキストの透明度です。
+        alpha = 0.7,
+        animation = {
+          -- 表示切り替え時にフェードします。
+          fade = true,
+          -- アニメーション開始時の倍率です。
+          scale = 1.0,
+          -- アニメーション時間（秒）です。
+          duration = 0.16,
+          -- アニメーションの補間方式です。
+          easing = "linear",
+        },
+      },
+    },
+  },
+
+  -- フォーカスしたウィンドウを枠線で強調します。
+  focus_border = {
+    visual = {
+      border = {
+        -- メイン枠線の太さです。
+        width = 10,
+        -- メイン枠線の色です。
+        color = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 },
+      },
+      outline = {
+        -- 外側の枠線の太さです。
+        width = 2,
+        -- 外側の枠線の色です。
+        color = { red = 0, green = 0, blue = 0, alpha = 0.70 },
+      },
+      -- フォーカス時に表示するロゴです。
+      logo = nil,
+    },
+    animation = {
+      -- 枠線が消えるまでの時間（秒）です。
+      duration = 0.5,
+      -- フェードアニメーションの分割数です。
+      fadeSteps = 18,
+      -- Space切り替え後に表示を待つ時間（秒）です。
+      spaceSwitchDelay = 0.30,
+    },
+    window = {
+      -- 枠線を表示する最小ウィンドウサイズです。
+      minSize = 480,
+    },
+  },
+
+  -- キーヒントからウィンドウを選択します。
+  window_hints = {
+    hotkey = {
+      -- Window Hintsを開く修飾キーです。
+      modifiers = { "alt" },
+      -- Window Hintsを開くキーです。
+      key = "f20",
+    },
+    hint = {
+      -- ヒントキーに使用する文字です。
+      chars = {
+        "A", "S", "D", "F", "G", "H", "J", "K", "L",
+        "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
+        "Z", "X", "C", "V", "B", "N", "M",
+      },
+      -- アプリやタイトルごとのヒント先頭文字ルールです。
+      prefixOverrides = nil,
+      -- ヒント内側の余白です。
+      padding = 12,
+      -- ヒント同士が重なった場合にずらす距離です。
+      collisionOffset = 90,
+      -- ヒント背景の角丸です。
+      cornerRadius = 12,
+      -- 隠れたウィンドウのヒント倍率です。
+      occludedScale = 0.85,
+      highlight = {
+        -- ヒントが指すウィンドウ上の枠線の太さです。
+        borderWidth = 6,
+      },
+      state = {
+        normal = {
+          -- 通常時のヒント背景色です。
+          bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 },
+          highlight = {
+            -- 通常時の対象ウィンドウ塗りつぶし色です。
+            fillColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.56 },
+            -- 通常時の対象ウィンドウ枠線色です。
+            borderColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 0.85 },
+          },
+        },
+        dimmed = {
+          -- 候補から外れたヒントの背景色です。
+          bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.14 },
+          highlight = {
+            -- 候補から外れた対象ウィンドウの枠線色です。
+            borderColor = { red = 0.45, green = 0.45, blue = 0.48, alpha = 0.30 },
+          },
+        },
+        occluded = {
+          -- 完全に隠れたウィンドウのヒント背景色です。
+          bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.70 },
+        },
+        active = {
+          -- 現在のウィンドウに表示するヒント背景色です。
+          bgColor = { red = 0.08, green = 0.05, blue = 0.03, alpha = 0.88 },
+          highlight = {
+            -- 現在のウィンドウの塗りつぶし色です。
+            fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 },
+            -- 現在のウィンドウの枠線色です。
+            borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 },
+          },
+        },
+      },
+      icon = {
+        -- アプリアイコンの大きさです。
+        size = 72,
+        state = {
+          -- 通常時のアイコン透明度です。
+          normal = { alpha = 0.95 },
+          -- 候補から外れたアイコンの透明度です。
+          dimmed = { alpha = 0.30 },
+          -- 完全に隠れたウィンドウのアイコン透明度です。
+          occluded = { alpha = 0.46 },
+          -- 現在のウィンドウのアイコン透明度です。
+          active = { alpha = 1.0 },
+        },
+      },
+      key = {
+        -- キー表示部分の高さです。
+        size = 72,
+        -- キー表示部分の最小幅です。
+        minWidth = 72,
+        -- キー表示部分の左右の余白です。
+        horizontalPadding = 10,
+        -- アイコンとキーの間隔です。
+        gap = 0,
+        -- キー表示に使うフォントです。
+        fontName = nil,
+        -- キー表示の文字サイズです。
+        fontSize = 48,
+        -- 入力済み部分を示す文字色です。
+        keyHighlightColor = { red = 0.84, green = 0.84, blue = 0.86, alpha = 0.35 },
+        state = {
+          -- 通常時のキー文字色です。
+          normal = { color = { red = 1, green = 1, blue = 1, alpha = 1 } },
+          -- 候補から外れたキー文字色です。
+          dimmed = { color = { red = 0.85, green = 0.85, blue = 0.88, alpha = 0.28 } },
+          -- 隠れたウィンドウは通常時の色を継承します。
+          occluded = {},
+          -- 現在のウィンドウのキー文字色です。
+          active = { color = { red = 1.00, green = 0.93, blue = 0.86, alpha = 1.00 } },
+        },
+      },
+      title = {
+        -- タイトルに使うフォントです。
+        fontName = nil,
+        -- タイトルの文字サイズです。
+        fontSize = 16,
+        -- キー行とタイトル行の間隔です。
+        rowGap = 8,
+        -- 表示するタイトルの最大文字数です。
+        maxSize = 72,
+        -- ウィンドウタイトルを表示します。
+        show = true,
+        state = {
+          -- 通常時のタイトル文字色です。
+          normal = { color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 1.00 } },
+          -- 候補から外れたタイトル文字色です。
+          dimmed = { color = { red = 0.90, green = 0.92, blue = 0.96, alpha = 0.30 } },
+          -- 隠れたウィンドウは通常時の色を継承します。
+          occluded = {},
+          -- 現在のウィンドウのタイトル文字色です。
+          active = { color = { red = 0.99, green = 0.90, blue = 0.78, alpha = 1.00 } },
+        },
+      },
+      spaceBadge = {
+        -- 別のSpaceにある候補へSpace番号を表示します。
+        enabled = true,
+        -- Space番号バッジの大きさです。
+        size = 32,
+        state = {
+          normal = {
+            -- 通常時のバッジ背景色です。
+            fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 },
+            -- 通常時のバッジ枠線色です。
+            strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 },
+            -- 通常時のバッジ文字色です。
+            textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+          },
+          dimmed = {
+            -- 候補から外れたバッジの背景色です。
+            fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.28 },
+            -- 候補から外れたバッジの枠線色です。
+            strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.40 },
+            -- 候補から外れたバッジの文字色です。
+            textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.35 },
+          },
+          -- 隠れたウィンドウは通常時の色を継承します。
+          occluded = {},
+          active = {
+            -- 現在のウィンドウのバッジ背景色です。
+            fillColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.56 },
+            -- 現在のウィンドウのバッジ枠線色です。
+            strokeColor = { red = 1.00, green = 0.90, blue = 0.78, alpha = 0.72 },
+            -- 現在のウィンドウのバッジ文字色です。
+            textColor = { red = 1.0, green = 0.98, blue = 0.94, alpha = 0.92 },
+          },
+        },
+        -- Space番号ごとのバッジ色です。
+        spaceColors = {
+          {
+            fillColor = { red = 0.34, green = 0.64, blue = 0.96, alpha = 0.56 },
+            strokeColor = { red = 0.98, green = 0.99, blue = 1.00, alpha = 0.72 },
+            textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+          },
+          {
+            fillColor = { red = 0.30, green = 0.78, blue = 0.47, alpha = 0.56 },
+            strokeColor = { red = 0.85, green = 1.00, blue = 0.90, alpha = 0.72 },
+            textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+          },
+          {
+            fillColor = { red = 0.95, green = 0.60, blue = 0.25, alpha = 0.56 },
+            strokeColor = { red = 1.00, green = 0.92, blue = 0.80, alpha = 0.72 },
+            textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+          },
+          {
+            fillColor = { red = 0.68, green = 0.42, blue = 0.90, alpha = 0.56 },
+            strokeColor = { red = 0.92, green = 0.85, blue = 1.00, alpha = 0.72 },
+            textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+          },
+          {
+            fillColor = { red = 0.92, green = 0.38, blue = 0.58, alpha = 0.56 },
+            strokeColor = { red = 1.00, green = 0.85, blue = 0.90, alpha = 0.72 },
+            textColor = { red = 1.0, green = 1.0, blue = 1.0, alpha = 0.92 },
+          },
+        },
+      },
+    },
+    focusedWindowHighlight = {
+      -- 現在のウィンドウを示す枠線色です。
+      borderColor = { red = 0.95, green = 0.68, blue = 0.40, alpha = 0.95 },
+      -- 現在のウィンドウを示す枠線の太さです。
+      borderWidth = 13,
+    },
+    occlusion = {
+      sampling = {
+        -- ウィンドウの隠れ具合をサンプリングで判定します。
+        enabled = true,
+        -- サンプリング密度の基準画面幅です。
+        baseWidth = 1920,
+        -- サンプリング密度の基準画面高さです。
+        baseHeight = 1080,
+        -- 横方向の最小サンプル数です。
+        minCols = 4,
+        -- 縦方向の最小サンプル数です。
+        minRows = 4,
+        -- 横方向の最大サンプル数です。
+        maxCols = 8,
+        -- 縦方向の最大サンプル数です。
+        maxRows = 8,
+      },
+      preview = {
+        -- 完全に隠れたウィンドウのプレビューを表示します。
+        enabled = true,
+        -- プレビューの表示方式です。
+        mode = "background",
+        -- プレビューの幅です。
+        width = 140,
+        -- ヒントとプレビューの間隔です。
+        padding = 6,
+        -- プレビューの透明度です。
+        alpha = 0.64,
+      },
+    },
+    dock = {
+      -- 画面下部に並べる候補の下余白です。
+      bottomMargin = 96,
+      -- 画面下部に並べる候補の間隔です。
+      itemGap = 12,
+      windowBlend = {
+        -- 候補の横位置へ元ウィンドウ位置を反映する割合です。
+        x = 0.65,
+        -- 候補の縦位置へ元ウィンドウ位置を反映する割合です。
+        y = 1,
+      },
+    },
+    navigation = {
+      focusBack = {
+        -- 表示中にFocus Backを実行するキーです。
+        key = nil,
+      },
+      direction = {
+        hints = {
+          -- 表示中に方向で候補を選ぶキーです。
+          keys = nil,
+        },
+        direct = {
+          -- Window Hintsを開かず方向移動する修飾キーです。
+          modifiers = nil,
+          -- Window Hintsを開かず方向移動するキーです。
+          keys = nil,
+        },
+        scoring = {
+          -- 上下左右の候補評価で重なりを同等とみなす差です。
+          cardinalOverlapTieThresholdPx = 720,
+          -- 離れた候補とみなす主軸方向の最大重なり率です。
+          maxPrimaryOverlapRatioForDetached = 0.2,
+          -- 候補として優先する直交方向の最小重なり率です。
+          minOrthogonalOverlapRatio = 0.5,
+          -- 可視領域を優先評価する基準割合です。
+          preferredVisibleRatio = 0.4,
+          -- 方向移動の評価情報をログへ出力します。
+          debug = false,
+        },
+      },
+      spaces = {
+        -- 数字キーで対応するSpaceへ移動します。
+        numbers = true,
+        -- 前のSpaceへ移動するキーです。
+        prev = { key = nil },
+        -- 次のSpaceへ移動するキーです。
+        next = { key = nil },
+      },
+      windowMover = {
+        moveToSelectedArea = {
+          -- Window Moverのエリア選択へ移るキーです。
+          key = nil,
+        },
+      },
+      applicationHints = {
+        -- Application Hintsへ移るキーです。
+        key = nil,
+        -- Application Hintsへの移動時にJinraiModeを開始します。
+        jinraiMode = false,
+      },
+    },
+    behavior = {
+      selection = {
+        swapWindowFrame = {
+          -- 押しながら選択すると移動元と移動先の位置・サイズを交換する修飾キーです。
+          modifiers = nil,
+        },
+      },
+      cursor = {
+        -- 選択後にカーソルを対象ウィンドウ中央へ移動します。
+        onSelect = true,
+        -- 起動時にカーソルを現在のウィンドウ中央へ移動します。
+        onStart = true,
+      },
+      candidates = {
+        -- 別のSpaceにあるウィンドウを候補に含めます。
+        includeOtherSpaces = true,
+        -- 現在のウィンドウを候補に含めます。
+        includeActiveWindow = true,
+      },
+      callbacks = {
+        -- ウィンドウ選択後に呼び出す関数です。
+        onSelect = nil,
+        -- エラー発生時に呼び出す関数です。
+        onError = nil,
+      },
+    },
+  },
+
+  -- 直前にアクティブだったウィンドウへ戻ります。
+  focus_back = {
+    hotkey = {
+      -- Focus Backを実行する修飾キーです。
+      modifiers = { "option" },
+      -- Focus Backを実行するキーです。
+      key = "w",
+    },
+    urlEvent = {
+      -- hammerspoon URLイベントから実行する場合の名前です。
+      name = nil,
+    },
+    behavior = {
+      cursor = {
+        -- 切り替え後にカーソルをウィンドウ中央へ移動します。
+        onSelect = true,
+      },
+    },
+  },
+
+  -- アクティブウィンドウを移動・リサイズします。
+  window_mover = {
+    commands = {
+      -- 次のディスプレイへ移動して最大化します。
+      moveToNextDisplay = { hotkey = { modifiers = nil, key = nil } },
+      -- 現在のディスプレイの最大空き領域へ移動します。
+      moveToActiveDisplayFreeArea = { hotkey = { modifiers = nil, key = nil } },
+      -- 移動先エリアの選択画面を開きます。
+      moveToSelectedArea = { hotkey = { modifiers = nil, key = nil } },
+      -- JinraiModeで移動先エリアの選択画面を開きます。
+      moveToSelectedAreaInJinraiMode = { hotkey = { modifiers = nil, key = nil } },
+      -- ウィンドウを最小化します。
+      minimizeWindow = { hotkey = { modifiers = nil, key = nil } },
+      -- ウィンドウを最大化します。
+      maximizeWindow = { hotkey = { modifiers = nil, key = nil } },
+      -- 左端で横幅を順番に切り替えます。
+      cycleLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 横方向中央で横幅を順番に切り替えます。
+      cycleHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 右端で横幅を順番に切り替えます。
+      cycleRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 上端で高さを順番に切り替えます。
+      cycleTop = { hotkey = { modifiers = nil, key = nil } },
+      -- 縦方向中央で高さを順番に切り替えます。
+      cycleVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 下端で高さを順番に切り替えます。
+      cycleBottom = { hotkey = { modifiers = nil, key = nil } },
+
+      -- 左半分へ移動します。
+      halfLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 横方向中央の半分へ移動します。
+      halfHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 右半分へ移動します。
+      halfRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 上半分へ移動します。
+      halfTop = { hotkey = { modifiers = nil, key = nil } },
+      -- 縦方向中央の半分へ移動します。
+      halfVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 下半分へ移動します。
+      halfBottom = { hotkey = { modifiers = nil, key = nil } },
+      -- 左3分の1へ移動します。
+      thirdLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 横方向中央の3分の1へ移動します。
+      thirdHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 右3分の1へ移動します。
+      thirdRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 上3分の1へ移動します。
+      thirdTop = { hotkey = { modifiers = nil, key = nil } },
+      -- 縦方向中央の3分の1へ移動します。
+      thirdVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 下3分の1へ移動します。
+      thirdBottom = { hotkey = { modifiers = nil, key = nil } },
+      -- 左4分の1へ移動します。
+      quarterLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 横方向左中央の4分の1へ移動します。
+      quarterHorizontalLeftCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 横方向右中央の4分の1へ移動します。
+      quarterHorizontalRightCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 右4分の1へ移動します。
+      quarterRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 上4分の1へ移動します。
+      quarterTop = { hotkey = { modifiers = nil, key = nil } },
+      -- 縦方向上中央の4分の1へ移動します。
+      quarterVerticalTopCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 縦方向下中央の4分の1へ移動します。
+      quarterVerticalBottomCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 下4分の1へ移動します。
+      quarterBottom = { hotkey = { modifiers = nil, key = nil } },
+      -- 左上4分の1へ移動します。
+      quarterTopLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 右上4分の1へ移動します。
+      quarterTopRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 左下4分の1へ移動します。
+      quarterBottomLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 右下4分の1へ移動します。
+      quarterBottomRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 左上6分の1へ移動します。
+      sixthTopLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 中央上6分の1へ移動します。
+      sixthTopCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 右上6分の1へ移動します。
+      sixthTopRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 左下6分の1へ移動します。
+      sixthBottomLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 中央下6分の1へ移動します。
+      sixthBottomCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 右下6分の1へ移動します。
+      sixthBottomRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 左側3分の2へ移動します。
+      twoThirdsLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 横方向中央の3分の2へ移動します。
+      twoThirdsHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 右側3分の2へ移動します。
+      twoThirdsRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 上側3分の2へ移動します。
+      twoThirdsTop = { hotkey = { modifiers = nil, key = nil } },
+      -- 縦方向中央の3分の2へ移動します。
+      twoThirdsVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 下側3分の2へ移動します。
+      twoThirdsBottom = { hotkey = { modifiers = nil, key = nil } },
+      -- 中央の3分の2へ移動します。
+      twoThirdsCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 左側4分の3へ移動します。
+      threeQuartersLeft = { hotkey = { modifiers = nil, key = nil } },
+      -- 横方向中央の4分の3へ移動します。
+      threeQuartersHorizontalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 右側4分の3へ移動します。
+      threeQuartersRight = { hotkey = { modifiers = nil, key = nil } },
+      -- 上側4分の3へ移動します。
+      threeQuartersTop = { hotkey = { modifiers = nil, key = nil } },
+      -- 縦方向中央の4分の3へ移動します。
+      threeQuartersVerticalCenter = { hotkey = { modifiers = nil, key = nil } },
+      -- 下側4分の3へ移動します。
+      threeQuartersBottom = { hotkey = { modifiers = nil, key = nil } },
+      -- 中央の4分の3へ移動します。
+      threeQuartersCenter = { hotkey = { modifiers = nil, key = nil } },
+    },
+    behavior = {
+      cursor = {
+        -- 移動後にカーソルをウィンドウ中央へ移動します。
+        afterMove = true,
+      },
+      cycle = {
+        -- 横幅を切り替える順番です。
+        horizontalRatios = { 1 / 2, 1 / 3, 2 / 3 },
+        -- 高さを切り替える順番です。
+        verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },
+      },
+    },
+    selectedArea = {
+      -- 未設定ディスプレイへ流用するキーマップのUUIDです。
+      defaultScreen = nil,
+      -- ディスプレイUUIDごとのエリア名と選択キーです。
+      screens = {},
+      actions = {
+        -- 選択中にウィンドウを閉じるキーです。
+        closeWindow = nil,
+        -- 選択中にウィンドウを最小化するキーです。
+        minimizeWindow = nil,
+        -- 選択中にアプリケーションを終了するキーです。
+        quitApplication = nil,
+      },
+      windowHints = {
+        -- 選択を閉じてWindow Hintsを開くキーです。
+        key = nil,
+      },
+      hints = {
+        -- エリアと選択キーを画面上に表示します。
+        show = true,
+      },
+      appearance = {
+        -- エリア枠線の太さです。
+        borderWidth = 2,
+        -- エリア枠線の角丸です。
+        cornerRadius = 6,
+        state = {
+          normal = {
+            -- 通常時のエリア背景色です。
+            bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.88 },
+            -- 通常時の選択キー文字色です。
+            textColor = { red = 0.96, green = 1.0, blue = 0.98, alpha = 1.0 },
+            -- 入力済み部分を示す文字色です。
+            typedTextColor = { red = 0.96, green = 1.0, blue = 0.98, alpha = 0.38 },
+          },
+          dimmed = {
+            -- 候補から外れたエリアの背景色です。
+            bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.30 },
+            -- 候補から外れた選択キーの文字色です。
+            textColor = { red = 0.96, green = 1.0, blue = 0.98, alpha = 0.32 },
+          },
+        },
+        styles = {
+          -- 全画面エリアの色です。
+          full = {
+            color = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 },
+            dimmedColor = { red = 0.36, green = 0.62, blue = 1.00, alpha = 0.22 },
+          },
+          -- 3分の2エリアの色です。
+          twoThirds = {
+            color = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 },
+            dimmedColor = { red = 0.50, green = 0.82, blue = 0.42, alpha = 0.22 },
+          },
+          -- 4分の3エリアの色です。
+          threeQuarters = {
+            color = { red = 0.30, green = 0.76, blue = 0.86, alpha = 0.92 },
+            dimmedColor = { red = 0.30, green = 0.76, blue = 0.86, alpha = 0.22 },
+          },
+          -- 2分割エリアの色です。
+          half = {
+            color = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.92 },
+            dimmedColor = { red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
+          },
+          -- 3分割エリアの色です。
+          third = {
+            color = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.92 },
+            dimmedColor = { red = 0.96, green = 0.66, blue = 0.28, alpha = 0.22 },
+          },
+          -- 4分割エリアの色です。
+          quarter = {
+            color = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
+            dimmedColor = { red = 0.92, green = 0.42, blue = 0.74, alpha = 0.22 },
+          },
+          -- 6分割エリアの色です。
+          sixth = {
+            color = { red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 },
+            dimmedColor = { red = 0.75, green = 0.15, blue = 0.25, alpha = 0.22 },
+          },
+          -- 空き領域の色です。
+          free = {
+            color = { red = 0.58, green = 0.64, blue = 0.70, alpha = 0.95 },
+            dimmedColor = { red = 0.58, green = 0.64, blue = 0.70, alpha = 0.22 },
+          },
+        },
+      },
+    },
+  },
+
+  -- 登録アプリが必須のため、デフォルトでは無効です。
+  application_hints = nil,
+})
+```
+
+## Application Hintsを有効にする
+
+Application Hintsは`apps`が1件以上必要なため、実行可能なデフォルト設定を定義できません。
+有効にする場合は、次の全項目例を`application_hints = nil`と置き換えてください。
+`apps`内の`bundleID`と`key`だけが利用環境に合わせて指定する必須値で、それ以外はデフォルト値です。
+
+```lua
+application_hints = {
+  hotkey = {
+    -- Application Hintsを直接開く修飾キーです。
+    modifiers = nil,
+    -- Application Hintsを直接開くキーです。
+    key = nil,
+  },
+  -- 新規ウィンドウが現れるまで待つ最大時間（秒）です。
+  windowWaitTimeout = 10,
+  apps = {
+    {
+      -- 起動するアプリのbundle IDです。
+      bundleID = "com.google.Chrome",
+      -- アプリを選択する1文字または2文字のキーです。
+      key = "C",
+      -- 画面に表示するアプリ名です。
+      name = nil,
+      newWindow = {
+        hotkey = {
+          -- 起動済みアプリで新規ウィンドウを作る修飾キーです。
+          modifiers = { "cmd" },
+          -- 起動済みアプリで新規ウィンドウを作るキーです。
+          key = "n",
+        },
+        -- ホットキーの代わりに新規ウィンドウを作る関数です。
+        callback = nil,
+      },
+    },
+  },
+  appearance = {
+    -- アプリ項目の幅です。
+    itemWidth = 220,
+    -- アプリ項目の高さです。
+    itemHeight = 112,
+    -- アプリ項目同士の間隔です。
+    gap = 12,
+    -- 1行に表示するアプリ数です。
+    columns = 3,
+    -- アプリアイコンの大きさです。
+    iconSize = 64,
+    -- アプリ項目背景の角丸です。
+    cornerRadius = 12,
+    -- 通常時の背景色です。
+    bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 },
+    -- 候補から外れた項目の背景色です。
+    dimmedBgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.30 },
+    -- 通常時の文字色です。
+    textColor = { red = 0.96, green = 0.97, blue = 1.00, alpha = 1.00 },
+    -- 候補から外れた項目の文字色です。
+    dimmedTextColor = { red = 0.82, green = 0.84, blue = 0.88, alpha = 0.30 },
+    -- OPENまたはNEWの状態表示色です。
+    stateColor = { red = 0.40, green = 0.68, blue = 0.98, alpha = 1.00 },
+  },
+  behavior = {
+    callbacks = {
+      -- エラー発生時に呼び出す関数です。
+      onError = nil,
+    },
+  },
+}
+```
+
+## 選択肢と共通ルール
+
+### 機能の有効・無効
+
+`focus_border`、`window_hints`、`focus_back`、`window_mover`は、設定テーブルを指定すると有効になります。
+`nil`または未指定の場合は無効です。
+
+`application_hints`も同様ですが、有効化する場合は`apps`へ1件以上のアプリを指定してください。
+
+### 修飾キー
+
+修飾キーには`cmd`、`alt`、`ctrl`、`shift`、`fn`を使用できます。
+一部の設定では`option`も`alt`の別名として使用できます。
+
+### 色
+
+色はHammerspoonの色テーブルで指定します。
+`red`、`green`、`blue`、`alpha`はいずれも`0`から`1`の値です。
+
+```lua
+{ red = 0.40, green = 0.68, blue = 0.98, alpha = 0.95 }
+```
+
+### コールバック
+
+`behavior.callbacks`の値には関数または`nil`を指定します。
+
+```lua
+behavior = {
+  callbacks = {
+    onSelect = function(window)
+      -- 選択後の処理
+    end,
+    onError = function(errorMessage)
+      -- エラー発生時の処理
+    end,
+  },
+}
+```
+
+コールバックの引数や発生条件は、該当する機能ページを参照してください。
+
+### JinraiModeの位置とアニメーション
+
+`jinrai_mode.position`は次の値から指定します。
+
+| 値 | 説明 |
+| --- | --- |
+| `activeWindow` | アクティブウィンドウの中央に表示します。 |
+| `activeDisplay` | アクティブディスプレイの中央に表示します。 |
+
+各`animation.easing`は`linear`、`easeOut`、`easeInOut`から指定します。
+`scale`は`0`より大きい値、`duration`は`0`以上の秒数です。
+
+### Window Hintsの状態
+
+見た目の`state`には次の状態があります。値が空の状態は`normal`の値を継承します。
+
+| 状態 | 説明 |
+| --- | --- |
+| `normal` | 選択候補になっている通常のウィンドウです。 |
+| `dimmed` | 入力したキーによって候補から外れたウィンドウです。 |
+| `occluded` | 他のウィンドウに完全に隠れたウィンドウです。 |
+| `active` | Window Hintsを開いた時点でアクティブなウィンドウです。 |
+
+`occlusion.preview.mode`は`background`または`below`から指定します。
+`background`はヒント全体の背景、`below`はタイトル下にプレビューを表示します。
+
+方向移動キー、ヒントキー、機能切り替えキーの指定方法と競合時の扱いは
+[Window Hints](window-hints.md)を参照してください。
+
+### Window Moverのエリア
+
+`selectedArea.screens`には、ディスプレイUUIDごとにエリア名と1〜3文字の選択キーを指定します。
+使用できるエリア名は[利用可能なエリア](window-mover-areas.md)を参照してください。
+
+```lua
+selectedArea = {
+  defaultScreen = "DISPLAY_UUID",
+  screens = {
+    ["DISPLAY_UUID"] = {
+      full = "A",
+      halfLeft = "S",
+      halfRight = "F",
+      ["1920x1080Center"] = "M",
+    },
+  },
+}
+```
+
+同じ選択画面で使うエリアキー、アクションキー、機能切り替えキーには、
+重複または一方がもう一方の先頭になる組み合わせを指定できません。
+
+### macOS Native Tabs
+
+`macosNativeTabs.apps`は組み込みの対象へ追加されます。
+補正を完全に無効化する場合は、テーブルではなく`macosNativeTabs = false`を指定します。

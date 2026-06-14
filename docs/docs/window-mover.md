@@ -2,6 +2,11 @@
 
 Window Moverは、アクティブウィンドウの位置や大きさをホットキーまたはエリア選択から変更する機能です。
 
+[全設定](configuration.md)に、Window Moverの全項目、デフォルト値、各項目の説明を掲載しています。
+
+<iframe width="700" height="393" src="https://www.youtube.com/embed/KPzN_dWQKaA?si=fPjtHrxLwNuRsWOF" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+
 ## ホットキーで移動する
 
 ### ホットキーを設定

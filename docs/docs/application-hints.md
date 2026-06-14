@@ -4,7 +4,12 @@ Application Hintsは、登録したアプリを固定キーから起動し、新
 
 Window Hintsとは異なり、現在存在するウィンドウではなく、起動可能なアプリを表示します。
 
+<iframe width="700" height="393" src="https://www.youtube.com/embed/UnIfdg4emzU?si=e71kGttbS3O_CBfy" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## 基本設定
+
+[全設定](configuration.md)に、Application Hintsの全項目、
+デフォルト値、各項目の説明を掲載しています。
 
 ```lua
 application_hints = {
@@ -27,7 +32,7 @@ Application Hintsを開くと、登録アプリがアクティブウィンドウ
 - `NEW`: アプリが起動済みです。選択すると新しいウィンドウを作成します。
 - 作成したウィンドウへ自動的にフォーカスします。
 
-## 折り返す件数
+## 表示をカスタマイズ
 
 `appearance.columns`で、1行に表示するアプリ数を変更できます。デフォルトは`3`です。
 
@@ -45,8 +50,6 @@ application_hints = {
 }
 ```
 
-## 背景の透明度
-
 背景色の`alpha`で、通常表示とキー入力によって候補から外れた表示の透明度を変更できます。
 
 ```lua
@@ -63,11 +66,6 @@ application_hints = {
   },
 }
 ```
-
-| 設定 | 説明 |
-| --- | --- |
-| `appearance.bgColor` | 通常表示の背景色です。`alpha`のデフォルトは`0.80`です。 |
-| `appearance.dimmedBgColor` | キー入力によって候補から外れた表示の背景色です。`alpha`のデフォルトは`0.30`です。 |
 
 ## 新規ウィンドウ作成
 

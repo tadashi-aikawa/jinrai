@@ -2,6 +2,9 @@
 
 JinraiModeは、[Window Hints](window-hints.md)によるウィンドウ選択と、[Window Mover](window-mover.md)による移動先選択を交互に繰り返すモードです。
 
+<iframe width="700" height="393" src="https://www.youtube.com/embed/nvcH4tw52tY?si=CovTRxCAiW9JzXxB" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+
 ## 使い方
 
 JinraiModeは次の方法で開始できます。
@@ -18,72 +21,10 @@ JinraiModeは次の方法で開始できます。
 
 ## 設定
 
-```lua
-jinrai_mode = {
-  position = "activeWindow",
-  triggers = {
-    windowHints = {
-      key = "space",
-    },
-    applicationHints = {
-      key = "space",
-    },
-    windowMover = {
-      key = "space",
-    },
-  },
-  logo = {
-    enabled = true,
-    size = 480,
-    alpha = 0.25,
-    animation = {
-      fade = true,
-      scale = 1.0,
-      duration = 0.16,
-      easing = "linear",
-    },
-  },
-  combo = {
-    character = {
-      enabled = false,
-      alpha = 0.7,
-      animation = {
-        fade = true,
-        scale = 1.18,
-        duration = 0.16,
-        easing = "linear",
-      },
-    },
-    text = {
-      enabled = false,
-      alpha = 0.7,
-      animation = {
-        fade = true,
-        scale = 1.0,
-        duration = 0.16,
-        easing = "linear",
-      },
-    },
-  },
-}
-```
+[全設定](configuration.md)に、JinraiModeの全項目、デフォルト値、各項目の説明を掲載しています。
 
-| 設定 | 説明 |
-| --- | --- |
-| `position` | ロゴ・キャラクター・COMBOテキストの中心位置です。`activeDisplay`（アクティブディスプレイ中央）または`activeWindow`（アクティブウィンドウ中央、デフォルト）を指定します。 |
-| `triggers.windowHints.key` | [Window Hints](window-hints.md)の表示中にJinraiModeを開始するキーです。 |
-| `triggers.applicationHints.key` | [Application Hints](application-hints.md)の表示中にJinraiModeを開始するキーです。 |
-| `triggers.windowMover.key` | 移動先の選択中にJinraiModeを開始するキーです。 |
-| `logo.enabled` | JinraiMode中にJINRAIロゴを表示するかを指定します。 |
-| `logo.size` | ロゴの大きさです。 |
-| `logo.alpha` | ロゴの透明度です。 |
-| `logo.animation.*` | ロゴ表示時のアニメーションを指定します。 |
-| `combo.character.enabled` | 操作を続けた回数に応じたキャラクター画像を表示するかを指定します。 |
-| `combo.character.alpha` | キャラクター画像の透明度です。 |
-| `combo.character.animation.*` | キャラクター切り替え時のアニメーションを指定します。 |
-| `combo.text.enabled` | 継続回数をCOMBOテキストで表示するかを指定します。 |
-| `combo.text.alpha` | COMBOテキストの透明度です。 |
-| `combo.text.animation.*` | COMBOテキスト切り替え時のアニメーションを指定します。 |
+`position`は`activeWindow`または`activeDisplay`から指定します。
+それぞれ、アクティブウィンドウ中央またはアクティブディスプレイ中央にロゴなどを表示します。
 
 各`animation`には次の設定を指定できます。
 

@@ -58,7 +58,10 @@ spoon.Jinrai:setup({
 
 設定後、Hammerspoonのメニューから`Reload Config`を実行してください。
 
-`focus_border`、`window_hints`、`focus_back`、`window_mover`は、それぞれ設定を記述した機能だけが有効になります。利用可能な設定は各機能ページを参照してください。
+`focus_border`、`window_hints`、`focus_back`、`window_mover`は、それぞれ設定を記述した機能だけが有効になります。
+
+すべての設定項目、デフォルト値、各項目の概要は[全設定](configuration.md)を参照してください。
+値の選択肢や機能固有の制約は各機能ページに記載しています。
 
 ## アップデート
 

@@ -4,28 +4,9 @@
 
 ## 設定
 
-```lua
-focus_back = {
-  hotkey = {
-    modifiers = { "option" },
-    key = "w",
-  },
-  urlEvent = {
-    name = nil,
-  },
-  behavior = {
-    cursor = {
-      onSelect = true,
-    },
-  },
-}
-```
+[全設定](configuration.md)に、Focus Backの全項目、デフォルト値、各項目の説明を掲載しています。
 
-| 設定 | 説明 |
-| --- | --- |
-| `hotkey.modifiers` | Focus Backを実行する修飾キーです。 |
-| `hotkey.key` | Focus Backを実行するキーです。`nil`でホットキーを無効にします。 |
-| `urlEvent.name` | `hammerspoon://<名前>`からFocus Backを実行する場合の名前です。 |
-| `behavior.cursor.onSelect` | 切り替え後、カーソルをウィンドウ中央へ移動するかを指定します。 |
+`hotkey.key = nil`にするとホットキーを無効にできます。
+`urlEvent.name`を指定すると、`hammerspoon://<名前>`からFocus Backを実行できます。
 
 [Window Hints](window-hints.md)の表示中にも、任意のキーからFocus Backを実行できます。

@@ -53,14 +53,17 @@ JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択
 
 補足設定やリファレンスは、次のページを参照してください。
 
+- [全設定](configuration.md)
 - [利用可能なエリア](window-mover-areas.md)
 - [macOS Native Tabs](macos-native-tabs.md)
 
 ## デモ動画
 
-[![JINRAI Demo](https://img.youtube.com/vi/clwLqNw0kXw/hqdefault.jpg)](https://youtu.be/clwLqNw0kXw?si=gdetaK7lY0Eovjpp)
+<iframe width="700" height="393" src="https://www.youtube.com/embed/clwLqNw0kXw?si=O4erjEct74Pt4Lvj" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-[![Jinrai Mode](https://utfs.io/f/nGnSqDveMsqxhHlukstMhHULDOxCZ0brc5TpPYdWQt8vJ2Bg)](https://www.youtube.com/watch?v=Dg_fxulwFok)
+<iframe width="700" height="393" src="https://www.youtube.com/embed/KPzN_dWQKaA?si=fPjtHrxLwNuRsWOF" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+<iframe width="700" height="393" src="https://www.youtube.com/embed/UnIfdg4emzU?si=e71kGttbS3O_CBfy" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## 関連リンク
 

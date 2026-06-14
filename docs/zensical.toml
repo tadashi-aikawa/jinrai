@@ -56,6 +56,7 @@ nav = [
     { "Focus Back" = "focus-back.md" },
   ] },
   { "設定・リファレンス" = [
+    { "全設定" = "configuration.md" },
     { "利用可能なエリア" = "window-mover-areas.md" },
     { "macOS Native Tabs" = "macos-native-tabs.md" },
   ] },
