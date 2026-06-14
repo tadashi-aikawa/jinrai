@@ -561,6 +561,27 @@ describe("application_hints", function()
 		assert.are.same({ x = 610, y = 394, w = 220, h = 112 }, mocks.canvasFrames[1])
 	end)
 
+	it("appearance.columnsで指定した件数ごとに折り返す", function()
+		local mocks = installHsMock(nil)
+		local mod = dofile("./Jinrai.spoon/application_hints.lua")
+		local instance = mod.new({
+			appearance = {
+				columns = 2,
+			},
+			apps = {
+				{ bundleID = "com.example.a", key = "A" },
+				{ bundleID = "com.example.b", key = "B" },
+				{ bundleID = "com.example.c", key = "C" },
+			},
+		})
+
+		assert.is_true(instance.show())
+
+		assert.are.same({ x = 494, y = 332, w = 220, h = 112 }, mocks.canvasFrames[1])
+		assert.are.same({ x = 726, y = 332, w = 220, h = 112 }, mocks.canvasFrames[2])
+		assert.are.same({ x = 494, y = 456, w = 220, h = 112 }, mocks.canvasFrames[3])
+	end)
+
 	it("JinraiModeの表示完了通知後にカードを前面表示する", function()
 		local events = {}
 		installHsMock(nil, {

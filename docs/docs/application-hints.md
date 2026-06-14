@@ -27,6 +27,24 @@ Application Hintsを開くと、登録アプリがアクティブウィンドウ
 - `NEW`: アプリが起動済みです。選択すると新しいウィンドウを作成します。
 - 作成したウィンドウへ自動的にフォーカスします。
 
+## 折り返す件数
+
+`appearance.columns`で、1行に表示するアプリ数を変更できます。デフォルトは`3`です。
+
+```lua
+application_hints = {
+  appearance = {
+    columns = 4,
+  },
+  apps = {
+    {
+      bundleID = "com.google.Chrome",
+      key = "C",
+    },
+  },
+}
+```
+
 ## 背景の透明度
 
 背景色の`alpha`で、通常表示とキー入力によって候補から外れた表示の透明度を変更できます。

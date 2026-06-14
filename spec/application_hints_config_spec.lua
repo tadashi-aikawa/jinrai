@@ -14,6 +14,7 @@ describe("application_hints_config", function()
 			},
 			windowWaitTimeout = 5,
 			appearance = {
+				columns = 2,
 				bgColor = { red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 },
 				dimmedBgColor = { red = 0.5, green = 0.6, blue = 0.7, alpha = 0.2 },
 			},
@@ -47,17 +48,19 @@ describe("application_hints_config", function()
 		assert.are.equal(callback, built.apps[1].newWindow.callback)
 		assert.are.equal(";", built.windowHintsKey)
 		assert.are.equal("SPACE", built.jinraiModeKey)
+		assert.are.equal(2, built.columns)
 		assert.are.same({ red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 }, built.bgColor)
 		assert.are.same({ red = 0.5, green = 0.6, blue = 0.7, alpha = 0.2 }, built.dimmedBgColor)
 	end)
 
-	it("背景alphaのデフォルトを使用する", function()
+	it("表示設定のデフォルトを使用する", function()
 		local built = mod.build({
 			apps = {
 				{ bundleID = "com.example.app", key = "A" },
 			},
 		})
 
+		assert.are.equal(3, built.columns)
 		assert.are.equal(0.80, built.bgColor.alpha)
 		assert.are.equal(0.30, built.dimmedBgColor.alpha)
 	end)
