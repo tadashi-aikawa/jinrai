@@ -27,6 +27,30 @@ Application Hintsを開くと、登録アプリがアクティブウィンドウ
 - `NEW`: アプリが起動済みです。選択すると新しいウィンドウを作成します。
 - 作成したウィンドウへ自動的にフォーカスします。
 
+## 背景の透明度
+
+背景色の`alpha`で、通常表示とキー入力によって候補から外れた表示の透明度を変更できます。
+
+```lua
+application_hints = {
+  appearance = {
+    bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 },
+    dimmedBgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.30 },
+  },
+  apps = {
+    {
+      bundleID = "com.google.Chrome",
+      key = "C",
+    },
+  },
+}
+```
+
+| 設定 | 説明 |
+| --- | --- |
+| `appearance.bgColor` | 通常表示の背景色です。`alpha`のデフォルトは`0.80`です。 |
+| `appearance.dimmedBgColor` | キー入力によって候補から外れた表示の背景色です。`alpha`のデフォルトは`0.30`です。 |
+
 ## 新規ウィンドウ作成
 
 起動中のアプリを選択すると、既定ではフォーカスを切り替えずに`Cmd+N`で新しいウィンドウを作成します。

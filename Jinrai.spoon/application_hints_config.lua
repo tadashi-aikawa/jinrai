@@ -14,7 +14,7 @@ local DEFAULT_CONFIG = {
 		columns = 3,
 		iconSize = 64,
 		cornerRadius = 12,
-		bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.92 },
+		bgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.80 },
 		dimmedBgColor = { red = 0.03, green = 0.03, blue = 0.04, alpha = 0.30 },
 		textColor = { red = 0.96, green = 0.97, blue = 1.00, alpha = 1.00 },
 		dimmedTextColor = { red = 0.82, green = 0.84, blue = 0.88, alpha = 0.30 },
