@@ -539,6 +539,7 @@ describe("window_mover_config", function()
 				actions = {
 					closeWindow = "x12",
 					minimizeWindow = "m12",
+					maximizeWindow = "f12",
 					quitApplication = "q12",
 				},
 			},
@@ -547,6 +548,7 @@ describe("window_mover_config", function()
 		assert.are.same({
 			closeWindow = "X12",
 			minimizeWindow = "M12",
+			maximizeWindow = "F12",
 			quitApplication = "Q12",
 		}, built.selectedAreaActions)
 	end)

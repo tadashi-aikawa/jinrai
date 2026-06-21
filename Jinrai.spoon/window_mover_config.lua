@@ -186,6 +186,7 @@ local DEFAULT_CONFIG = {
 		actions = {
 			closeWindow = nil,
 			minimizeWindow = nil,
+			maximizeWindow = nil,
 			quitApplication = nil,
 		},
 		windowHints = {
@@ -425,6 +426,7 @@ local function normalizeSelectedAreaActions(actions)
 	local supportedActions = {
 		closeWindow = true,
 		minimizeWindow = true,
+		maximizeWindow = true,
 		quitApplication = true,
 	}
 	local normalized = {}

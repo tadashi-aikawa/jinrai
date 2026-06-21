@@ -1397,6 +1397,37 @@ describe("window_mover", function()
 		assert.are.equal("M", appliedCandidate.key)
 	end)
 
+	it("openWindowActionChooser で maximizeWindow action を実行できる", function()
+		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				maximizeWindow = "F",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local appliedCandidate
+
+		instance.openWindowActionChooser({
+			onApply = function(_, candidate)
+				appliedCandidate = candidate
+			end,
+		})
+		sendKey(state, "f")
+
+		assert.are.same({ x = 10, y = 20, w = 1200, h = 800 }, win.setFrameCalls[1].frame)
+		assert.are.equal(0, win.setFrameCalls[1].duration)
+		assert.are.equal("action", appliedCandidate.kind)
+		assert.are.equal("maximizeWindow", appliedCandidate.action)
+		assert.are.equal("F", appliedCandidate.key)
+		assert.are.equal(1, win.raiseCalls)
+		assert.are.equal(1, win.focusCalls)
+	end)
+
 	it("openWindowActionChooser で quitApplication action を実行できる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })

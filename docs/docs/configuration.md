@@ -599,6 +599,8 @@ spoon.Jinrai:setup({
         closeWindow = nil,
         -- 選択中にウィンドウを最小化するキーです。
         minimizeWindow = nil,
+        -- 選択中にウィンドウを最大化するキーです。
+        maximizeWindow = nil,
         -- 選択中にアプリケーションを終了するキーです。
         quitApplication = nil,
       },

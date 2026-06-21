@@ -840,6 +840,17 @@ function M.new(options)
 			end
 		elseif candidate.action == "minimizeWindow" and win.minimize then
 			win:minimize()
+		elseif candidate.action == "maximizeWindow" and win.setFrame then
+			local screen = screenOf(win)
+			if not screen or not screen.frame then
+				return
+			end
+			local targetFrame = cloneFrame(screen:frame())
+			if not targetFrame then
+				return
+			end
+			win:setFrame(targetFrame, 0)
+			activateWindow(win)
 		elseif candidate.action == "quitApplication" and win.application then
 			local app = win:application()
 			if not app or not app.kill then
@@ -938,6 +949,7 @@ function M.new(options)
 		local detailLabels = {
 			closeWindow = "Close",
 			minimizeWindow = "Minimize",
+			maximizeWindow = "Maximize",
 			quitApplication = "Quit Application",
 		}
 		table.insert(candidates, {
