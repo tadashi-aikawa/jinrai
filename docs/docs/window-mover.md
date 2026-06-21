@@ -161,6 +161,7 @@ window_mover = {
       minimizeWindow = "N",
       maximizeWindow = "F",
       quitApplication = "Q",
+      detachChromeTabToNewWindow = "T",
     },
     windowHints = {
       key = "H",
@@ -180,8 +181,11 @@ window_mover = {
 | `selectedArea.actions.minimizeWindow` | エリア選択中にアクティブウィンドウを最小化するキーです。 |
 | `selectedArea.actions.maximizeWindow` | エリア選択中にアクティブウィンドウを最大化するキーです。 |
 | `selectedArea.actions.quitApplication` | エリア選択中にアクティブウィンドウのアプリケーションを通常終了するキーです。 |
+| `selectedArea.actions.detachChromeTabToNewWindow` | エリア選択中にGoogle Chromeの現在のタブを新しいChromeウィンドウとして分離するキーです。 |
 | `selectedArea.windowHints.key` | エリア選択を閉じ、[Window Hints](window-hints.md)を開くキーです。 |
 | `selectedArea.hints.show` | エリアとキーを画面上に表示するかを指定します。`false`でもキー入力は有効です。 |
+
+JinraiMode中に`detachChromeTabToNewWindow`を実行した場合は、Window Hintsには戻らず、分離したChromeウィンドウを移動できるようにWindow Moverを再表示します。
 
 選択画面は`escape`、候補外のクリック、または起動に使ったホットキーで閉じられます。
 

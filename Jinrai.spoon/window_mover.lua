@@ -29,6 +29,7 @@ local AREA_DETAIL_TEXT_SIZE = 13
 local AREA_INFO_WIDTH = 420
 local AREA_INFO_HEIGHT = 480
 local SELECTED_AREA_PREWARM_DELAY = 0.2
+local DETACH_CHROME_TAB_REOPEN_DELAY = 0.15
 local MINIMIZE_FOCUS_POLL_INTERVAL = 0.05
 local MINIMIZE_FOCUS_POLL_LIMIT = 10
 local AREA_ORDER = {
@@ -484,6 +485,7 @@ function M.new(options)
 	local areaJinraiModeContext = false
 	local minimizeFocusTimer = nil
 	local lastCycleState = nil
+	local openWindowActionChooser
 
 	local function selectedAreaState(active)
 		local states = config.selectedAreaAppearance.state
@@ -798,6 +800,74 @@ function M.new(options)
 		end
 	end
 
+	local function applicationForWindow(win)
+		if not win or not win.application then
+			return nil
+		end
+		local okApp, app = pcall(function()
+			return win:application()
+		end)
+		if not okApp then
+			return nil
+		end
+		return app
+	end
+
+	local function bundleIDForApplication(app)
+		if not app or not app.bundleID then
+			return nil
+		end
+		local okBundleID, bundleID = pcall(function()
+			return app:bundleID()
+		end)
+		if not okBundleID then
+			return nil
+		end
+		return bundleID
+	end
+
+	local function detachChromeTabToNewWindow(win)
+		local app = applicationForWindow(win)
+		if bundleIDForApplication(app) ~= "com.google.Chrome" then
+			return false
+		end
+		if not app.selectMenuItem then
+			return false
+		end
+
+		activateWindow(win)
+		local menuItems = {
+			{ "Tab", "Move Tab to New Window" },
+			{ "Window", "Move Tab to New Window" },
+			{ "タブ", "タブを新しいウィンドウに移動" },
+			{ "ウィンドウ", "タブを新しいウィンドウに移動" },
+			{ "タブ", "タブを新しいウインドウに移動" },
+			{ "ウインドウ", "タブを新しいウインドウに移動" },
+		}
+		for _, menuItem in ipairs(menuItems) do
+			local ok, selected = pcall(function()
+				return app:selectMenuItem(menuItem)
+			end)
+			if ok and selected then
+				return true
+			end
+		end
+		return false
+	end
+
+	local function reopenWindowActionChooserAfterDetach(options)
+		local callback = function()
+			if openWindowActionChooser then
+				openWindowActionChooser(options)
+			end
+		end
+		if hs and hs.timer and hs.timer.doAfter then
+			hs.timer.doAfter(DETACH_CHROME_TAB_REOPEN_DELAY, callback)
+			return
+		end
+		callback()
+	end
+
 	local function applyActionCandidate(candidate)
 		if not candidate or not candidate.action or not hs or not hs.window or not hs.window.focusedWindow then
 			return
@@ -813,6 +883,13 @@ function M.new(options)
 		local onJinraiModeCancel = areaJinraiModeActive and config.onJinraiModeCancel or nil
 		local delayOnApply = candidate.action == "minimizeWindow" and areaJinraiModeContext
 		local delayOnJinraiModeApply = candidate.action == "minimizeWindow" and onJinraiModeApply ~= nil
+		local reopenWindowMoverAfterApply = candidate.action == "detachChromeTabToNewWindow"
+			and (areaJinraiModeContext or areaJinraiModeActive)
+		local reopenWindowMoverOptions = {
+			jinraiMode = areaJinraiModeContext or areaJinraiModeActive,
+			onApply = onApply,
+			onCancel = onCancel,
+		}
 		local fallbackWindow = nil
 		if candidate.action == "minimizeWindow" and (delayOnApply or delayOnJinraiModeApply) and hs.window.orderedWindows then
 			local ok, orderedWindows = pcall(function()
@@ -857,6 +934,14 @@ function M.new(options)
 				return
 			end
 			app:kill()
+		elseif candidate.action == "detachChromeTabToNewWindow" then
+			if not detachChromeTabToNewWindow(win) then
+				return
+			end
+			if reopenWindowMoverAfterApply then
+				reopenWindowActionChooserAfterDetach(reopenWindowMoverOptions)
+				return
+			end
 		else
 			return
 		end
@@ -951,6 +1036,7 @@ function M.new(options)
 			minimizeWindow = "Minimize",
 			maximizeWindow = "Maximize",
 			quitApplication = "Quit Application",
+			detachChromeTabToNewWindow = "Detach Chrome Tab",
 		}
 		table.insert(candidates, {
 			screen = screen,
@@ -2115,7 +2201,7 @@ button:active {
 		end
 	end
 
-	local function openWindowActionChooser(options)
+	openWindowActionChooser = function(options)
 		if areaChooserShowing then
 			closeAreaChooser(true, { cancel = true })
 			return

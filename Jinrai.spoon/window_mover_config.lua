@@ -188,6 +188,7 @@ local DEFAULT_CONFIG = {
 			minimizeWindow = nil,
 			maximizeWindow = nil,
 			quitApplication = nil,
+			detachChromeTabToNewWindow = nil,
 		},
 		windowHints = {
 			key = nil,
@@ -428,6 +429,7 @@ local function normalizeSelectedAreaActions(actions)
 		minimizeWindow = true,
 		maximizeWindow = true,
 		quitApplication = true,
+		detachChromeTabToNewWindow = true,
 	}
 	local normalized = {}
 	for actionName, key in pairs(actions) do

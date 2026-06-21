@@ -603,6 +603,8 @@ spoon.Jinrai:setup({
         maximizeWindow = nil,
         -- 選択中にアプリケーションを終了するキーです。
         quitApplication = nil,
+        -- 選択中にGoogle Chromeの現在のタブを新しいChromeウィンドウとして分離するキーです。
+        detachChromeTabToNewWindow = nil,
       },
       windowHints = {
         -- 選択を閉じてWindow Hintsを開くキーです。

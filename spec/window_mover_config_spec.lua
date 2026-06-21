@@ -541,6 +541,7 @@ describe("window_mover_config", function()
 					minimizeWindow = "m12",
 					maximizeWindow = "f12",
 					quitApplication = "q12",
+					detachChromeTabToNewWindow = "t12",
 				},
 			},
 		})
@@ -550,6 +551,7 @@ describe("window_mover_config", function()
 			minimizeWindow = "M12",
 			maximizeWindow = "F12",
 			quitApplication = "Q12",
+			detachChromeTabToNewWindow = "T12",
 		}, built.selectedAreaActions)
 	end)
 

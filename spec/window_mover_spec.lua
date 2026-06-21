@@ -35,12 +35,26 @@ describe("window_mover", function()
 		return screen
 	end
 
-	local function newWindow(screen, frame)
+	local function newWindow(screen, frame, options)
+		options = options or {}
 		local app = {
 			killCalls = 0,
+			_bundleID = options.bundleID,
+			selectMenuItemCalls = {},
+			selectMenuItemResult = options.selectMenuItemResult,
 		}
 		function app:kill()
 			self.killCalls = self.killCalls + 1
+		end
+		function app:bundleID()
+			return self._bundleID
+		end
+		function app:selectMenuItem(menuItem)
+			table.insert(self.selectMenuItemCalls, menuItem)
+			if self.selectMenuItemResult == nil then
+				return true
+			end
+			return self.selectMenuItemResult
 		end
 		local win = {
 			_screen = screen,
@@ -174,6 +188,7 @@ describe("window_mover", function()
 			w = 13,
 			e = 14,
 			r = 15,
+			t = 17,
 			j = 38,
 			k = 40,
 			l = 37,
@@ -1455,6 +1470,159 @@ describe("window_mover", function()
 		assert.are.equal("action", appliedCandidate.kind)
 		assert.are.equal("quitApplication", appliedCandidate.action)
 		assert.are.equal("Q", appliedCandidate.key)
+	end)
+
+	it("openWindowActionChooser で detachChromeTabToNewWindow action を実行できる", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.google.Chrome" })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				detachChromeTabToNewWindow = "T",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local appliedCandidate
+
+		instance.openWindowActionChooser({
+			onApply = function(_, candidate)
+				appliedCandidate = candidate
+			end,
+		})
+		sendKey(state, "t")
+
+		assert.are.same({ "Tab", "Move Tab to New Window" }, win._app.selectMenuItemCalls[1])
+		assert.are.equal("action", appliedCandidate.kind)
+		assert.are.equal("detachChromeTabToNewWindow", appliedCandidate.action)
+		assert.are.equal("T", appliedCandidate.key)
+		assert.are.equal(1, win.raiseCalls)
+		assert.are.equal(1, win.focusCalls)
+	end)
+
+	it("JinraiMode context の detachChromeTabToNewWindow action は Window Mover を再表示する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.google.Chrome" })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				detachChromeTabToNewWindow = "T",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local applyCount = 0
+		local appliedCandidate
+
+		instance.openWindowActionChooser({
+			jinraiMode = true,
+			onApply = function(_, candidate)
+				applyCount = applyCount + 1
+				appliedCandidate = candidate
+			end,
+		})
+		sendKey(state, "t")
+
+		assert.are.equal(0, applyCount)
+		local reopenTimer = nil
+		for _, timer in ipairs(state.delayTimers) do
+			if timer.interval == 0.15 then
+				reopenTimer = timer
+			end
+		end
+		assert.is_truthy(reopenTimer)
+
+		reopenTimer.callback()
+		sendKey(state, "a")
+
+		assert.are.equal(1, applyCount)
+		assert.are.equal("A", appliedCandidate.key)
+		assert.are.same({ x = 0, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("detachChromeTabToNewWindow action は Chrome 以外では onApply を呼ばない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.example.app" })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				detachChromeTabToNewWindow = "T",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local applyCount = 0
+
+		instance.openWindowActionChooser({
+			onApply = function()
+				applyCount = applyCount + 1
+			end,
+		})
+		sendKey(state, "t")
+
+		assert.are.equal(0, #win._app.selectMenuItemCalls)
+		assert.are.equal(0, applyCount)
+	end)
+
+	it("detachChromeTabToNewWindow action は selectMenuItem 不在時に onApply を呼ばない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.google.Chrome" })
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				detachChromeTabToNewWindow = "T",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		win._app.selectMenuItem = nil
+		local applyCount = 0
+
+		instance.openWindowActionChooser({
+			onApply = function()
+				applyCount = applyCount + 1
+			end,
+		})
+		sendKey(state, "t")
+
+		assert.are.equal(0, applyCount)
+	end)
+
+	it("detachChromeTabToNewWindow action はメニュー選択失敗時に onApply を呼ばない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, {
+			bundleID = "com.google.Chrome",
+			selectMenuItemResult = false,
+		})
+		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
+			["uuid-a"] = {
+				halfLeft = "A",
+			},
+		}, nil, {
+			actions = {
+				detachChromeTabToNewWindow = "T",
+			},
+		}), win, { win })
+		state.screens = { screen }
+		local applyCount = 0
+
+		instance.openWindowActionChooser({
+			onApply = function()
+				applyCount = applyCount + 1
+			end,
+		})
+		sendKey(state, "t")
+
+		assert.are.equal(6, #win._app.selectMenuItemCalls)
+		assert.are.equal(0, applyCount)
 	end)
 
 	it("quitApplication でアプリケーションを取得できない場合は onApply を呼ばない", function()
