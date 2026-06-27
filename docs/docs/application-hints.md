@@ -90,6 +90,8 @@ Ghosttyのように新規ウィンドウのキーが異なるアプリは、`new
 
 ホットキーでは作成できないアプリは、`newWindow.callback`を指定できます。`callback`は`hotkey`より優先されます。
 
+`callback`の引数`app`は、アプリが起動済みなら`hs.application`オブジェクト、未起動なら`nil`です。
+
 ```lua
 application_hints = {
   apps = {
@@ -98,7 +100,7 @@ application_hints = {
       key = "E",
       newWindow = {
         callback = function(app)
-          -- アプリ固有の新規ウィンドウ作成処理
+          -- app: 起動済みならhs.applicationオブジェクト、未起動ならnil
         end,
       },
     },
@@ -106,7 +108,23 @@ application_hints = {
 }
 ```
 
-通常のキー操作でウィンドウを作成できないアプリに使用します。
+たとえば、ObsidianのURLスキームを使って特定のVaultを開くことができます。
+
+```lua
+application_hints = {
+  apps = {
+    {
+      bundleID = "md.obsidian",
+      key = "O",
+      newWindow = {
+        callback = function(app)
+          hs.urlevent.openURL("obsidian://open?path=/path/to/vault")
+        end,
+      },
+    },
+  },
+}
+```
 
 ## Window Hintsから開く
 

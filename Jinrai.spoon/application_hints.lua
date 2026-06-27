@@ -317,19 +317,17 @@ function M.new(options)
 		local app = appForBundleID(entry.bundleID)
 		local previousIds = buildWindowIdLookup(collectStandardWindows(app))
 		local ok, err
-		if app then
-			if entry.newWindow.callback then
-				ok, err = pcall(entry.newWindow.callback, app)
-			else
-				ok, err = pcall(function()
-					hs.eventtap.keyStroke(
-						entry.newWindow.hotkey.modifiers,
-						entry.newWindow.hotkey.key,
-						nil,
-						app
-					)
-				end)
-			end
+		if entry.newWindow.callback then
+			ok, err = pcall(entry.newWindow.callback, app)
+		elseif app then
+			ok, err = pcall(function()
+				hs.eventtap.keyStroke(
+					entry.newWindow.hotkey.modifiers,
+					entry.newWindow.hotkey.key,
+					nil,
+					app
+				)
+			end)
 		else
 			ok, err = pcall(function()
 				if not hs.application.launchOrFocusByBundleID(entry.bundleID) then

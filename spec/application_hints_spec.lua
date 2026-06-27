@@ -205,6 +205,34 @@ describe("application_hints", function()
 		assert.are.equal(1, focusCount.count)
 	end)
 
+	it("callback指定時にアプリ未起動ならapp=nilでcallbackを呼びlaunchしない", function()
+		local receivedApp = "not_called"
+		local mocks = installHsMock(nil)
+		local mod = dofile("./Jinrai.spoon/application_hints.lua")
+		local callbackInvoked = false
+		local instance = mod.new({
+			apps = {
+				{
+					bundleID = "com.example.app",
+					key = "C",
+					newWindow = {
+						callback = function(app)
+							callbackInvoked = true
+							receivedApp = app
+						end,
+					},
+				},
+			},
+		})
+
+		assert.is_true(instance.show())
+		mocks.keyWatcher().callback({ getKeyCode = function() return 8 end })
+
+		assert.is_true(callbackInvoked)
+		assert.is_nil(receivedApp)
+		assert.are.equal(0, #mocks.launched)
+	end)
+
 	it("newWindow未指定時はアプリをアクティブ化せず直接Cmd+Nを送る", function()
 		local focusCount = { count = 0 }
 		local windows = { newWindow(1, focusCount) }
