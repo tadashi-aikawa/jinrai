@@ -1,3 +1,4 @@
 #!/bin/bash
 betterleaks -v git --git-workers 4
+stylua Jinrai.spoon spec --check
 busted
