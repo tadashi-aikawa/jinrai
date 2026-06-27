@@ -31,6 +31,12 @@
 
 ソースから symlink で導入しておくと、`Jinrai.spoon/` 配下の変更を Hammerspoon の `Reload Config` ですぐ確認できます。
 
+### Gitフックの設定
+
+```bash
+git config core.hooksPath hooks
+```
+
 ## テスト
 
 ユニットテストは `busted` で実行します。
