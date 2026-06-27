@@ -1,0 +1,3 @@
+#!/bin/bash
+betterleaks -v git --git-workers 4
+busted

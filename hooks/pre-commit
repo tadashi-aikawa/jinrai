@@ -1,0 +1,2 @@
+#!/bin/bash
+betterleaks git -v --staged
