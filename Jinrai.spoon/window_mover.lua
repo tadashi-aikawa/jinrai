@@ -212,7 +212,13 @@ local function isStandardWindow(win)
 end
 
 local function validFrame(frame)
-	return frame and frame.x ~= nil and frame.y ~= nil and frame.w ~= nil and frame.h ~= nil and frame.w > 0 and frame.h > 0
+	return frame
+		and frame.x ~= nil
+		and frame.y ~= nil
+		and frame.w ~= nil
+		and frame.h ~= nil
+		and frame.w > 0
+		and frame.h > 0
 end
 
 local function cloneFrame(frame)
@@ -223,12 +229,7 @@ local function cloneFrame(frame)
 end
 
 local function sameFrame(a, b)
-	return validFrame(a)
-		and validFrame(b)
-		and a.x == b.x
-		and a.y == b.y
-		and a.w == b.w
-		and a.h == b.h
+	return validFrame(a) and validFrame(b) and a.x == b.x and a.y == b.y and a.w == b.w and a.h == b.h
 end
 
 local function intersectFrame(a, b)
@@ -389,10 +390,7 @@ local function pointInFrame(point, frame)
 	if not point or not frame then
 		return false
 	end
-	return point.x >= frame.x
-		and point.x <= frame.x + frame.w
-		and point.y >= frame.y
-		and point.y <= frame.y + frame.h
+	return point.x >= frame.x and point.x <= frame.x + frame.w and point.y >= frame.y and point.y <= frame.y + frame.h
 end
 
 local function cloneColor(color)
@@ -891,7 +889,11 @@ function M.new(options)
 			onCancel = onCancel,
 		}
 		local fallbackWindow = nil
-		if candidate.action == "minimizeWindow" and (delayOnApply or delayOnJinraiModeApply) and hs.window.orderedWindows then
+		if
+			candidate.action == "minimizeWindow"
+			and (delayOnApply or delayOnJinraiModeApply)
+			and hs.window.orderedWindows
+		then
 			local ok, orderedWindows = pcall(function()
 				return hs.window.orderedWindows()
 			end)
@@ -1063,308 +1065,396 @@ function M.new(options)
 				y = screenFrame.y,
 				w = screenFrame.w / 2,
 				h = screenFrame.h,
-			}, "half", { slots = 2, index = 1, axis = "horizontal" }
+			},
+				"half",
+				{ slots = 2, index = 1, axis = "horizontal" }
 		elseif areaName == "halfHorizontalCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 4),
 				y = screenFrame.y,
 				w = screenFrame.w / 2,
 				h = screenFrame.h,
-			}, "half", { slots = 4, index = 2, span = 2, axis = "horizontal" }
+			},
+				"half",
+				{ slots = 4, index = 2, span = 2, axis = "horizontal" }
 		elseif areaName == "halfRight" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 2),
 				y = screenFrame.y,
 				w = screenFrame.w / 2,
 				h = screenFrame.h,
-			}, "half", { slots = 2, index = 2, axis = "horizontal" }
+			},
+				"half",
+				{ slots = 2, index = 2, axis = "horizontal" }
 		elseif areaName == "halfTop" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w,
 				h = screenFrame.h / 2,
-			}, "half", { slots = 2, index = 1, axis = "vertical" }
+			},
+				"half",
+				{ slots = 2, index = 1, axis = "vertical" }
 		elseif areaName == "halfVerticalCenter" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 4),
 				w = screenFrame.w,
 				h = screenFrame.h / 2,
-			}, "half", { slots = 4, index = 2, span = 2, axis = "vertical" }
+			},
+				"half",
+				{ slots = 4, index = 2, span = 2, axis = "vertical" }
 		elseif areaName == "halfBottom" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 2),
 				w = screenFrame.w,
 				h = screenFrame.h / 2,
-			}, "half", { slots = 2, index = 2, axis = "vertical" }
+			},
+				"half",
+				{ slots = 2, index = 2, axis = "vertical" }
 		elseif areaName == "thirdLeft" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w / 3,
 				h = screenFrame.h,
-			}, "third", { slots = 3, index = 1, axis = "horizontal" }
+			},
+				"third",
+				{ slots = 3, index = 1, axis = "horizontal" }
 		elseif areaName == "thirdHorizontalCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 3),
 				y = screenFrame.y,
 				w = screenFrame.w / 3,
 				h = screenFrame.h,
-			}, "third", { slots = 3, index = 2, axis = "horizontal" }
+			},
+				"third",
+				{ slots = 3, index = 2, axis = "horizontal" }
 		elseif areaName == "thirdRight" then
 			return {
 				x = screenFrame.x + (screenFrame.w * 2 / 3),
 				y = screenFrame.y,
 				w = screenFrame.w / 3,
 				h = screenFrame.h,
-			}, "third", { slots = 3, index = 3, axis = "horizontal" }
+			},
+				"third",
+				{ slots = 3, index = 3, axis = "horizontal" }
 		elseif areaName == "thirdTop" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w,
 				h = screenFrame.h / 3,
-			}, "third", { slots = 3, index = 1, axis = "vertical" }
+			},
+				"third",
+				{ slots = 3, index = 1, axis = "vertical" }
 		elseif areaName == "thirdVerticalCenter" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 3),
 				w = screenFrame.w,
 				h = screenFrame.h / 3,
-			}, "third", { slots = 3, index = 2, axis = "vertical" }
+			},
+				"third",
+				{ slots = 3, index = 2, axis = "vertical" }
 		elseif areaName == "thirdBottom" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h * 2 / 3),
 				w = screenFrame.w,
 				h = screenFrame.h / 3,
-			}, "third", { slots = 3, index = 3, axis = "vertical" }
+			},
+				"third",
+				{ slots = 3, index = 3, axis = "vertical" }
 		elseif areaName == "quarterLeft" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w / 4,
 				h = screenFrame.h,
-			}, "quarter", { slots = 4, index = 1, axis = "horizontal" }
+			},
+				"quarter",
+				{ slots = 4, index = 1, axis = "horizontal" }
 		elseif areaName == "quarterHorizontalLeftCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 4),
 				y = screenFrame.y,
 				w = screenFrame.w / 4,
 				h = screenFrame.h,
-			}, "quarter", { slots = 4, index = 2, axis = "horizontal" }
+			},
+				"quarter",
+				{ slots = 4, index = 2, axis = "horizontal" }
 		elseif areaName == "quarterHorizontalRightCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 2),
 				y = screenFrame.y,
 				w = screenFrame.w / 4,
 				h = screenFrame.h,
-			}, "quarter", { slots = 4, index = 3, axis = "horizontal" }
+			},
+				"quarter",
+				{ slots = 4, index = 3, axis = "horizontal" }
 		elseif areaName == "quarterRight" then
 			return {
 				x = screenFrame.x + (screenFrame.w * 3 / 4),
 				y = screenFrame.y,
 				w = screenFrame.w / 4,
 				h = screenFrame.h,
-			}, "quarter", { slots = 4, index = 4, axis = "horizontal" }
+			},
+				"quarter",
+				{ slots = 4, index = 4, axis = "horizontal" }
 		elseif areaName == "quarterTop" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w,
 				h = screenFrame.h / 4,
-			}, "quarter", { slots = 4, index = 1, axis = "vertical" }
+			},
+				"quarter",
+				{ slots = 4, index = 1, axis = "vertical" }
 		elseif areaName == "quarterVerticalTopCenter" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 4),
 				w = screenFrame.w,
 				h = screenFrame.h / 4,
-			}, "quarter", { slots = 4, index = 2, axis = "vertical" }
+			},
+				"quarter",
+				{ slots = 4, index = 2, axis = "vertical" }
 		elseif areaName == "quarterVerticalBottomCenter" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 2),
 				w = screenFrame.w,
 				h = screenFrame.h / 4,
-			}, "quarter", { slots = 4, index = 3, axis = "vertical" }
+			},
+				"quarter",
+				{ slots = 4, index = 3, axis = "vertical" }
 		elseif areaName == "quarterBottom" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h * 3 / 4),
 				w = screenFrame.w,
 				h = screenFrame.h / 4,
-			}, "quarter", { slots = 4, index = 4, axis = "vertical" }
+			},
+				"quarter",
+				{ slots = 4, index = 4, axis = "vertical" }
 		elseif areaName == "quarterTopLeft" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w / 2,
 				h = screenFrame.h / 2,
-			}, "quarter", { cols = 2, rows = 2, col = 1, row = 1 }
+			},
+				"quarter",
+				{ cols = 2, rows = 2, col = 1, row = 1 }
 		elseif areaName == "quarterTopRight" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 2),
 				y = screenFrame.y,
 				w = screenFrame.w / 2,
 				h = screenFrame.h / 2,
-			}, "quarter", { cols = 2, rows = 2, col = 2, row = 1 }
+			},
+				"quarter",
+				{ cols = 2, rows = 2, col = 2, row = 1 }
 		elseif areaName == "quarterBottomLeft" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 2),
 				w = screenFrame.w / 2,
 				h = screenFrame.h / 2,
-			}, "quarter", { cols = 2, rows = 2, col = 1, row = 2 }
+			},
+				"quarter",
+				{ cols = 2, rows = 2, col = 1, row = 2 }
 		elseif areaName == "quarterBottomRight" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 2),
 				y = screenFrame.y + (screenFrame.h / 2),
 				w = screenFrame.w / 2,
 				h = screenFrame.h / 2,
-			}, "quarter", { cols = 2, rows = 2, col = 2, row = 2 }
+			},
+				"quarter",
+				{ cols = 2, rows = 2, col = 2, row = 2 }
 		elseif areaName == "sixthTopLeft" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w / 3,
 				h = screenFrame.h / 2,
-			}, "sixth", { cols = 3, rows = 2, col = 1, row = 1 }
+			},
+				"sixth",
+				{ cols = 3, rows = 2, col = 1, row = 1 }
 		elseif areaName == "sixthTopCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 3),
 				y = screenFrame.y,
 				w = screenFrame.w / 3,
 				h = screenFrame.h / 2,
-			}, "sixth", { cols = 3, rows = 2, col = 2, row = 1 }
+			},
+				"sixth",
+				{ cols = 3, rows = 2, col = 2, row = 1 }
 		elseif areaName == "sixthTopRight" then
 			return {
 				x = screenFrame.x + (screenFrame.w * 2 / 3),
 				y = screenFrame.y,
 				w = screenFrame.w / 3,
 				h = screenFrame.h / 2,
-			}, "sixth", { cols = 3, rows = 2, col = 3, row = 1 }
+			},
+				"sixth",
+				{ cols = 3, rows = 2, col = 3, row = 1 }
 		elseif areaName == "sixthBottomLeft" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 2),
 				w = screenFrame.w / 3,
 				h = screenFrame.h / 2,
-			}, "sixth", { cols = 3, rows = 2, col = 1, row = 2 }
+			},
+				"sixth",
+				{ cols = 3, rows = 2, col = 1, row = 2 }
 		elseif areaName == "sixthBottomCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 3),
 				y = screenFrame.y + (screenFrame.h / 2),
 				w = screenFrame.w / 3,
 				h = screenFrame.h / 2,
-			}, "sixth", { cols = 3, rows = 2, col = 2, row = 2 }
+			},
+				"sixth",
+				{ cols = 3, rows = 2, col = 2, row = 2 }
 		elseif areaName == "sixthBottomRight" then
 			return {
 				x = screenFrame.x + (screenFrame.w * 2 / 3),
 				y = screenFrame.y + (screenFrame.h / 2),
 				w = screenFrame.w / 3,
 				h = screenFrame.h / 2,
-			}, "sixth", { cols = 3, rows = 2, col = 3, row = 2 }
+			},
+				"sixth",
+				{ cols = 3, rows = 2, col = 3, row = 2 }
 		elseif areaName == "twoThirdsLeft" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w * 2 / 3,
 				h = screenFrame.h,
-			}, "twoThirds", { slots = 3, index = 1, span = 2, axis = "horizontal" }
+			},
+				"twoThirds",
+				{ slots = 3, index = 1, span = 2, axis = "horizontal" }
 		elseif areaName == "twoThirdsHorizontalCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 6),
 				y = screenFrame.y,
 				w = screenFrame.w * 2 / 3,
 				h = screenFrame.h,
-			}, "twoThirds", { slots = 6, index = 2, span = 4, axis = "horizontal" }
+			},
+				"twoThirds",
+				{ slots = 6, index = 2, span = 4, axis = "horizontal" }
 		elseif areaName == "twoThirdsRight" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 3),
 				y = screenFrame.y,
 				w = screenFrame.w * 2 / 3,
 				h = screenFrame.h,
-			}, "twoThirds", { slots = 3, index = 2, span = 2, axis = "horizontal" }
+			},
+				"twoThirds",
+				{ slots = 3, index = 2, span = 2, axis = "horizontal" }
 		elseif areaName == "twoThirdsTop" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w,
 				h = screenFrame.h * 2 / 3,
-			}, "twoThirds", { slots = 3, index = 1, span = 2, axis = "vertical" }
+			},
+				"twoThirds",
+				{ slots = 3, index = 1, span = 2, axis = "vertical" }
 		elseif areaName == "twoThirdsVerticalCenter" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 6),
 				w = screenFrame.w,
 				h = screenFrame.h * 2 / 3,
-			}, "twoThirds", { slots = 6, index = 2, span = 4, axis = "vertical" }
+			},
+				"twoThirds",
+				{ slots = 6, index = 2, span = 4, axis = "vertical" }
 		elseif areaName == "twoThirdsBottom" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 3),
 				w = screenFrame.w,
 				h = screenFrame.h * 2 / 3,
-			}, "twoThirds", { slots = 3, index = 2, span = 2, axis = "vertical" }
+			},
+				"twoThirds",
+				{ slots = 3, index = 2, span = 2, axis = "vertical" }
 		elseif areaName == "twoThirdsCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 6),
 				y = screenFrame.y + (screenFrame.h / 6),
 				w = screenFrame.w * 2 / 3,
 				h = screenFrame.h * 2 / 3,
-			}, "twoThirds", { centeredRatio = 2 / 3 }
+			},
+				"twoThirds",
+				{ centeredRatio = 2 / 3 }
 		elseif areaName == "threeQuartersLeft" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w * 3 / 4,
 				h = screenFrame.h,
-			}, "threeQuarters", { slots = 4, index = 1, span = 3, axis = "horizontal" }
+			},
+				"threeQuarters",
+				{ slots = 4, index = 1, span = 3, axis = "horizontal" }
 		elseif areaName == "threeQuartersHorizontalCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 8),
 				y = screenFrame.y,
 				w = screenFrame.w * 3 / 4,
 				h = screenFrame.h,
-			}, "threeQuarters", { slots = 8, index = 2, span = 6, axis = "horizontal" }
+			},
+				"threeQuarters",
+				{ slots = 8, index = 2, span = 6, axis = "horizontal" }
 		elseif areaName == "threeQuartersRight" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 4),
 				y = screenFrame.y,
 				w = screenFrame.w * 3 / 4,
 				h = screenFrame.h,
-			}, "threeQuarters", { slots = 4, index = 2, span = 3, axis = "horizontal" }
+			},
+				"threeQuarters",
+				{ slots = 4, index = 2, span = 3, axis = "horizontal" }
 		elseif areaName == "threeQuartersTop" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y,
 				w = screenFrame.w,
 				h = screenFrame.h * 3 / 4,
-			}, "threeQuarters", { slots = 4, index = 1, span = 3, axis = "vertical" }
+			},
+				"threeQuarters",
+				{ slots = 4, index = 1, span = 3, axis = "vertical" }
 		elseif areaName == "threeQuartersVerticalCenter" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 8),
 				w = screenFrame.w,
 				h = screenFrame.h * 3 / 4,
-			}, "threeQuarters", { slots = 8, index = 2, span = 6, axis = "vertical" }
+			},
+				"threeQuarters",
+				{ slots = 8, index = 2, span = 6, axis = "vertical" }
 		elseif areaName == "threeQuartersBottom" then
 			return {
 				x = screenFrame.x,
 				y = screenFrame.y + (screenFrame.h / 4),
 				w = screenFrame.w,
 				h = screenFrame.h * 3 / 4,
-			}, "threeQuarters", { slots = 4, index = 2, span = 3, axis = "vertical" }
+			},
+				"threeQuarters",
+				{ slots = 4, index = 2, span = 3, axis = "vertical" }
 		elseif areaName == "threeQuartersCenter" then
 			return {
 				x = screenFrame.x + (screenFrame.w / 8),
 				y = screenFrame.y + (screenFrame.h / 8),
 				w = screenFrame.w * 3 / 4,
 				h = screenFrame.h * 3 / 4,
-			}, "threeQuarters", { centeredRatio = 3 / 4 }
+			},
+				"threeQuarters",
+				{ centeredRatio = 3 / 4 }
 		else
 			local width, height = parseFixedSizeCenterArea(areaName)
 			if width and height then
@@ -1375,7 +1465,10 @@ function M.new(options)
 					y = screenFrame.y + ((screenFrame.h - height) / 2),
 					w = width,
 					h = height,
-				}, "free", { fixedSizeCenter = true }, areaName:match("^(%d+x%d+)Center$")
+				},
+					"free",
+					{ fixedSizeCenter = true },
+					areaName:match("^(%d+x%d+)Center$")
 			end
 		end
 	end
@@ -1453,7 +1546,14 @@ function M.new(options)
 					end
 					table.sort(extraAreaNames)
 					for _, areaName in ipairs(extraAreaNames) do
-						addConfiguredAreaCandidate(candidates, seenByScreen, screen, screenFrame, areaName, areaMap[areaName])
+						addConfiguredAreaCandidate(
+							candidates,
+							seenByScreen,
+							screen,
+							screenFrame,
+							areaName,
+							areaMap[areaName]
+						)
 					end
 					if #candidates > beforeCount then
 						markAreaMapKeys(areaMap, usedKeys)
@@ -1562,7 +1662,8 @@ function M.new(options)
 			end
 			if
 				key == config.openJinraiModeWindowActionChooserHotkeyKey
-				and modifierListKey(modifiers) == modifierListKey(config.openJinraiModeWindowActionChooserHotkeyModifiers)
+				and modifierListKey(modifiers)
+					== modifierListKey(config.openJinraiModeWindowActionChooserHotkeyModifiers)
 			then
 				closeAreaChooser(true, { cancel = true })
 				return true
@@ -2173,7 +2274,12 @@ button:active {
 </html>
 ]]
 			local usercontent
-			if hs.webview.usercontent and hs.webview.usercontent.new and hs.pasteboard and hs.pasteboard.writeObjects then
+			if
+				hs.webview.usercontent
+				and hs.webview.usercontent.new
+				and hs.pasteboard
+				and hs.pasteboard.writeObjects
+			then
 				usercontent = hs.webview.usercontent.new("jinraiCopyTemplate")
 				usercontent:setCallback(function(message)
 					local text = message
@@ -2187,11 +2293,13 @@ button:active {
 			end
 			local webview
 			if hs.webview.newBrowser then
-				webview = usercontent and hs.webview.newBrowser(frame, usercontent):html(html) or hs.webview.newBrowser(frame):html(html)
+				webview = usercontent and hs.webview.newBrowser(frame, usercontent):html(html)
+					or hs.webview.newBrowser(frame):html(html)
 			else
-				webview = (
-					usercontent and hs.webview.new(frame, usercontent) or hs.webview.new(frame)
-				):allowTextEntry(true):windowStyle(15):html(html)
+				webview = (usercontent and hs.webview.new(frame, usercontent) or hs.webview.new(frame))
+					:allowTextEntry(true)
+					:windowStyle(15)
+					:html(html)
 			end
 			if webview.level then
 				webview:level(hs.canvas.windowLevels.overlay)
@@ -2527,7 +2635,11 @@ button:active {
 	bindHotkey(config.minimizeWindowHotkeyModifiers, config.minimizeWindowHotkeyKey, minimizeWindow)
 	bindHotkey(config.maximizeWindowHotkeyModifiers, config.maximizeWindowHotkeyKey, maximizeWindow)
 	bindHotkey(config.cycleLeftHotkeyModifiers, config.cycleLeftHotkeyKey, cycleLeft)
-	bindHotkey(config.cycleHorizontalCenterHotkeyModifiers, config.cycleHorizontalCenterHotkeyKey, cycleHorizontalCenter)
+	bindHotkey(
+		config.cycleHorizontalCenterHotkeyModifiers,
+		config.cycleHorizontalCenterHotkeyKey,
+		cycleHorizontalCenter
+	)
 	bindHotkey(config.cycleRightHotkeyModifiers, config.cycleRightHotkeyKey, cycleRight)
 	bindHotkey(config.cycleTopHotkeyModifiers, config.cycleTopHotkeyKey, cycleTop)
 	bindHotkey(config.cycleVerticalCenterHotkeyModifiers, config.cycleVerticalCenterHotkeyKey, cycleVerticalCenter)

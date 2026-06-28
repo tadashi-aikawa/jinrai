@@ -89,14 +89,18 @@ end
 local function checkLegacyFlatKeys(options)
 	for key, _ in pairs(options) do
 		if LEGACY_FLAT_KEYS[key] then
-			error(string.format("[jinrai.focus_back] legacy flat key '%s' is no longer supported; use nested config", key))
+			error(
+				string.format("[jinrai.focus_back] legacy flat key '%s' is no longer supported; use nested config", key)
+			)
 		end
 	end
 end
 
 local function checkLegacyNestedKeys(options)
 	if type(options.behavior) == "table" and options.behavior.centerCursor ~= nil then
-		error("[jinrai.focus_back] legacy nested key 'behavior.centerCursor' is no longer supported; use 'behavior.cursor.onSelect'")
+		error(
+			"[jinrai.focus_back] legacy nested key 'behavior.centerCursor' is no longer supported; use 'behavior.cursor.onSelect'"
+		)
 	end
 end
 

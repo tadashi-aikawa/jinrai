@@ -98,7 +98,12 @@ end
 local function checkLegacyFlatKeys(options)
 	for key, _ in pairs(options) do
 		if LEGACY_FLAT_KEYS[key] then
-			error(string.format("[jinrai.focus_border] legacy flat key '%s' is no longer supported; use nested config", key))
+			error(
+				string.format(
+					"[jinrai.focus_border] legacy flat key '%s' is no longer supported; use nested config",
+					key
+				)
+			)
 		end
 	end
 end

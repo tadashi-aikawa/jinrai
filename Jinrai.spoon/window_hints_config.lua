@@ -712,10 +712,7 @@ local function normalizeJinraiModeAnimation(value, optionName)
 	value = value or {}
 	local easing = value.easing
 	if easing ~= "linear" and easing ~= "easeOut" and easing ~= "easeInOut" then
-		error(string.format(
-			"[jinrai.window_hints] %s.easing must be one of linear/easeOut/easeInOut",
-			optionName
-		))
+		error(string.format("[jinrai.window_hints] %s.easing must be one of linear/easeOut/easeInOut", optionName))
 	end
 	return {
 		fade = normalizeBoolean(value.fade, optionName .. ".fade"),
@@ -746,13 +743,7 @@ local function normalizeSelectModifiers(modifiers, optionName)
 			error(string.format("[jinrai.window_hints] %s[%d] must not be empty", optionName, i))
 		end
 		if not SELECT_MODIFIER_LOOKUP[normalized] then
-			error(
-				string.format(
-					"[jinrai.window_hints] %s[%d] must be one of cmd/alt/ctrl/shift/fn",
-					optionName,
-					i
-				)
-			)
+			error(string.format("[jinrai.window_hints] %s[%d] must be one of cmd/alt/ctrl/shift/fn", optionName, i))
 		end
 		if lookup[normalized] then
 			error(string.format("[jinrai.window_hints] %s must not contain duplicate modifiers", optionName))
@@ -811,7 +802,12 @@ end
 local function checkLegacyFlatKeys(options)
 	for key, _ in pairs(options) do
 		if LEGACY_FLAT_KEYS[key] then
-			error(string.format("[jinrai.window_hints] legacy flat key '%s' is no longer supported; use nested config", key))
+			error(
+				string.format(
+					"[jinrai.window_hints] legacy flat key '%s' is no longer supported; use nested config",
+					key
+				)
+			)
 		end
 	end
 end
@@ -836,81 +832,128 @@ local function checkLegacyNestedKeys(options)
 		)
 	end
 	if type(options.hint) == "table" and options.hint.badge ~= nil then
-		error("[jinrai.window_hints] legacy nested key 'hint.badge.*' is no longer supported; use 'hint.state.*.bgColor'")
+		error(
+			"[jinrai.window_hints] legacy nested key 'hint.badge.*' is no longer supported; use 'hint.state.*.bgColor'"
+		)
 	end
 	if type(options.hint) == "table" and options.hint.keyBox ~= nil then
 		error("[jinrai.window_hints] legacy nested key 'hint.keyBox.*' is no longer supported; use 'hint.key.*'")
 	end
 	if type(options.hint) == "table" and options.hint.text ~= nil then
-		error("[jinrai.window_hints] legacy nested key 'hint.text.*' is no longer supported; use 'hint.key.*' / 'hint.title.*'")
+		error(
+			"[jinrai.window_hints] legacy nested key 'hint.text.*' is no longer supported; use 'hint.key.*' / 'hint.title.*'"
+		)
 	end
 	if type(options.hint) == "table" and options.hint.overlay ~= nil then
-		error("[jinrai.window_hints] legacy nested key 'hint.overlay.*' is no longer supported; use 'hint.state.*.highlight'")
+		error(
+			"[jinrai.window_hints] legacy nested key 'hint.overlay.*' is no longer supported; use 'hint.state.*.highlight'"
+		)
 	end
 	if type(options.hint) == "table" and options.hint.onActiveWindow ~= nil then
-		error("[jinrai.window_hints] legacy nested key 'hint.onActiveWindow.*' is no longer supported; use 'hint.state.active.highlight'")
+		error(
+			"[jinrai.window_hints] legacy nested key 'hint.onActiveWindow.*' is no longer supported; use 'hint.state.active.highlight'"
+		)
 	end
 	if type(options.hint) == "table" and options.hint.offSpaceBadge ~= nil then
-		error("[jinrai.window_hints] legacy nested key 'hint.offSpaceBadge.*' is no longer supported; use 'hint.spaceBadge.*'")
+		error(
+			"[jinrai.window_hints] legacy nested key 'hint.offSpaceBadge.*' is no longer supported; use 'hint.spaceBadge.*'"
+		)
 	end
 	if type(options.navigation) == "table" then
 		if options.navigation.jinraiMode ~= nil then
-			error("[jinrai.window_hints] removed key 'navigation.jinraiMode' is no longer supported; use top-level 'jinrai_mode'")
+			error(
+				"[jinrai.window_hints] removed key 'navigation.jinraiMode' is no longer supported; use top-level 'jinrai_mode'"
+			)
 		end
 		if options.navigation.focusAndMove ~= nil then
-			error("[jinrai.window_hints] removed key 'navigation.focusAndMove' is no longer supported; use top-level 'jinrai_mode'")
+			error(
+				"[jinrai.window_hints] removed key 'navigation.focusAndMove' is no longer supported; use top-level 'jinrai_mode'"
+			)
 		end
-		if type(options.navigation.windowMover) == "table" and options.navigation.windowMover.openWindowActionChooser ~= nil then
+		if
+			type(options.navigation.windowMover) == "table"
+			and options.navigation.windowMover.openWindowActionChooser ~= nil
+		then
 			error(
 				"[jinrai.window_hints] removed key 'navigation.windowMover.openWindowActionChooser' is no longer supported; use 'navigation.windowMover.moveToSelectedArea'"
 			)
 		end
 		if options.navigation.focusBackKey ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'navigation.focusBackKey' is no longer supported; use 'navigation.focusBack.key'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'navigation.focusBackKey' is no longer supported; use 'navigation.focusBack.key'"
+			)
 		end
 		if options.navigation.directionKeys ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'navigation.directionKeys.*' is no longer supported; use 'navigation.direction.hints.keys.*'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'navigation.directionKeys.*' is no longer supported; use 'navigation.direction.hints.keys.*'"
+			)
 		end
 		if options.navigation.directHotkeys ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'navigation.directHotkeys.*' is no longer supported; use 'navigation.direction.direct.{modifiers,keys}'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'navigation.directHotkeys.*' is no longer supported; use 'navigation.direction.direct.{modifiers,keys}'"
+			)
 		end
 		if options.navigation.spaceKeys ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'navigation.spaceKeys' is no longer supported; use 'navigation.spaces.numbers'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'navigation.spaceKeys' is no longer supported; use 'navigation.spaces.numbers'"
+			)
 		end
 		if options.navigation.prevSpaceKey ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'navigation.prevSpaceKey' is no longer supported; use 'navigation.spaces.prev.key'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'navigation.prevSpaceKey' is no longer supported; use 'navigation.spaces.prev.key'"
+			)
 		end
 		if options.navigation.nextSpaceKey ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'navigation.nextSpaceKey' is no longer supported; use 'navigation.spaces.next.key'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'navigation.nextSpaceKey' is no longer supported; use 'navigation.spaces.next.key'"
+			)
 		end
 		if options.navigation.cardinalOverlapTieThresholdPx ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'navigation.cardinalOverlapTieThresholdPx' is no longer supported; use 'navigation.direction.scoring.cardinalOverlapTieThresholdPx'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'navigation.cardinalOverlapTieThresholdPx' is no longer supported; use 'navigation.direction.scoring.cardinalOverlapTieThresholdPx'"
+			)
 		end
 		if options.navigation.debugDirectionalNavigation ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'navigation.debugDirectionalNavigation' is no longer supported; use 'navigation.direction.scoring.debug'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'navigation.debugDirectionalNavigation' is no longer supported; use 'navigation.direction.scoring.debug'"
+			)
 		end
 		if options.navigation.swapSelectModifiers ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'navigation.swapSelectModifiers' is no longer supported; use 'behavior.selection.swapWindowFrame.modifiers'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'navigation.swapSelectModifiers' is no longer supported; use 'behavior.selection.swapWindowFrame.modifiers'"
+			)
 		end
 	end
 	if type(options.behavior) == "table" then
 		if options.behavior.onSelect ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'behavior.onSelect' is no longer supported; use 'behavior.callbacks.onSelect'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'behavior.onSelect' is no longer supported; use 'behavior.callbacks.onSelect'"
+			)
 		end
 		if options.behavior.onError ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'behavior.onError' is no longer supported; use 'behavior.callbacks.onError'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'behavior.onError' is no longer supported; use 'behavior.callbacks.onError'"
+			)
 		end
 		if options.behavior.centerCursor ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'behavior.centerCursor' is no longer supported; use 'behavior.cursor.onSelect'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'behavior.centerCursor' is no longer supported; use 'behavior.cursor.onSelect'"
+			)
 		end
 		if options.behavior.centerCursorOnStart ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'behavior.centerCursorOnStart' is no longer supported; use 'behavior.cursor.onStart'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'behavior.centerCursorOnStart' is no longer supported; use 'behavior.cursor.onStart'"
+			)
 		end
 		if options.behavior.includeOtherSpaces ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'behavior.includeOtherSpaces' is no longer supported; use 'behavior.candidates.includeOtherSpaces'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'behavior.includeOtherSpaces' is no longer supported; use 'behavior.candidates.includeOtherSpaces'"
+			)
 		end
 		if options.behavior.includeActiveWindow ~= nil then
-			error("[jinrai.window_hints] legacy nested key 'behavior.includeActiveWindow' is no longer supported; use 'behavior.candidates.includeActiveWindow'")
+			error(
+				"[jinrai.window_hints] legacy nested key 'behavior.includeActiveWindow' is no longer supported; use 'behavior.candidates.includeActiveWindow'"
+			)
 		end
 	end
 	if type(options.occlusion) == "table" and options.occlusion.hint ~= nil then
@@ -939,7 +982,8 @@ function M.build(options)
 		merged.internal.jinraiMode = deepMerge(merged.internal.jinraiMode, options.internal.jinraiMode)
 	end
 
-	local directionKeys = normalizeDirectionKeys(merged.navigation.direction.hints.keys, "navigation.direction.hints.keys")
+	local directionKeys =
+		normalizeDirectionKeys(merged.navigation.direction.hints.keys, "navigation.direction.hints.keys")
 	local directionKeyLookup = buildDirectionKeyLookup(directionKeys, "navigation.direction.hints.keys")
 	local directDirectionHotkeys = normalizeDirectDirectionHotkeys(merged.navigation.direction.direct)
 	local focusBackKey = normalizeActionKey(merged.navigation.focusBack.key, "navigation.focusBack.key")
@@ -959,10 +1003,8 @@ function M.build(options)
 	)
 	local openApplicationHintsKey =
 		normalizeActionKey(merged.navigation.applicationHints.key, "navigation.applicationHints.key")
-	local openApplicationHintsInJinraiMode = normalizeBoolean(
-		merged.navigation.applicationHints.jinraiMode,
-		"navigation.applicationHints.jinraiMode"
-	)
+	local openApplicationHintsInJinraiMode =
+		normalizeBoolean(merged.navigation.applicationHints.jinraiMode, "navigation.applicationHints.jinraiMode")
 	local swapSelectModifiers = normalizeSelectModifiers(
 		merged.behavior.selection.swapWindowFrame.modifiers,
 		"behavior.selection.swapWindowFrame.modifiers"
@@ -1018,10 +1060,7 @@ function M.build(options)
 		enabled = jinraiModeLogoConfig.enabled,
 		size = normalizePositiveNumber(jinraiModeLogoConfig.size, "jinrai_mode.logo.size"),
 		alpha = normalizeUnitIntervalNumber(jinraiModeLogoConfig.alpha, "jinrai_mode.logo.alpha"),
-		animation = normalizeJinraiModeAnimation(
-			jinraiModeLogoConfig.animation,
-			"jinrai_mode.logo.animation"
-		),
+		animation = normalizeJinraiModeAnimation(jinraiModeLogoConfig.animation, "jinrai_mode.logo.animation"),
 	}
 	local jinraiModeCombo = {
 		character = {

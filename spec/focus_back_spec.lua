@@ -25,13 +25,11 @@ describe("focus_back", function()
 		_G.hs = mock.hs
 		local focusHistory = dofile("./Jinrai.spoon/focus_history.lua").new(focusHistoryOptions or {})
 		local module = dofile("./Jinrai.spoon/focus_back.lua")
-		return mock,
-			module.new({
-				internal = {
-					focusHistory = focusHistory,
-				},
-			}),
-			focusHistory
+		return mock, module.new({
+			internal = {
+				focusHistory = focusHistory,
+			},
+		}), focusHistory
 	end
 
 	it("ホットキーで直前ウィンドウへトグルできる", function()

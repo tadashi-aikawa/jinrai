@@ -304,7 +304,10 @@ describe("window_hints_config", function()
 		assert.is_true(built.jinraiModeLogo.enabled)
 		assert.are.equal(480, built.jinraiModeLogo.size)
 		assert.are.equal(0.3, built.jinraiModeLogo.alpha)
-		assert.are.same({ fade = false, scale = 0.8, duration = 0.4, easing = "easeOut" }, built.jinraiModeLogo.animation)
+		assert.are.same(
+			{ fade = false, scale = 0.8, duration = 0.4, easing = "easeOut" },
+			built.jinraiModeLogo.animation
+		)
 		assert.is_true(built.jinraiModeCombo.character.enabled)
 		assert.are.equal(0.25, built.jinraiModeCombo.character.alpha)
 		assert.are.same(
@@ -520,7 +523,7 @@ describe("window_hints_config", function()
 						alpha = 0.3,
 					},
 					windowHints = {
-					key = "a",
+						key = "a",
 					},
 				},
 			},
@@ -700,7 +703,7 @@ describe("window_hints_config", function()
 
 		for _, options in ipairs(legacyOptions) do
 			local ok = pcall(function()
-			mod.build(options)
+				mod.build(options)
 			end)
 			assert.is_false(ok)
 		end

@@ -346,13 +346,34 @@ describe("window_mover_config", function()
 		}, built.selectedAreaActions)
 		assert.are.equal(4, built.selectedAreaAppearance.borderWidth)
 		assert.are.equal(10, built.selectedAreaAppearance.cornerRadius)
-		assert.are.same({ red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 }, built.selectedAreaAppearance.state.normal.bgColor)
-		assert.are.same({ red = 0.9, green = 0.8, blue = 0.7, alpha = 0.6 }, built.selectedAreaAppearance.state.normal.textColor)
-		assert.are.same({ red = 0.2, green = 0.4, blue = 0.6, alpha = 0.8 }, built.selectedAreaAppearance.styles.half.color)
-		assert.are.same({ red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 }, built.selectedAreaAppearance.styles.half.dimmedColor)
-		assert.are.same({ red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 }, built.selectedAreaAppearance.styles.quarter.color)
-		assert.are.same({ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 }, built.selectedAreaAppearance.styles.sixth.color)
-		assert.are.same({ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 }, built.selectedAreaAppearance.styles.twoThirds.color)
+		assert.are.same(
+			{ red = 0.1, green = 0.2, blue = 0.3, alpha = 0.4 },
+			built.selectedAreaAppearance.state.normal.bgColor
+		)
+		assert.are.same(
+			{ red = 0.9, green = 0.8, blue = 0.7, alpha = 0.6 },
+			built.selectedAreaAppearance.state.normal.textColor
+		)
+		assert.are.same(
+			{ red = 0.2, green = 0.4, blue = 0.6, alpha = 0.8 },
+			built.selectedAreaAppearance.styles.half.color
+		)
+		assert.are.same(
+			{ red = 0.62, green = 0.52, blue = 1.00, alpha = 0.22 },
+			built.selectedAreaAppearance.styles.half.dimmedColor
+		)
+		assert.are.same(
+			{ red = 0.92, green = 0.42, blue = 0.74, alpha = 0.92 },
+			built.selectedAreaAppearance.styles.quarter.color
+		)
+		assert.are.same(
+			{ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 },
+			built.selectedAreaAppearance.styles.sixth.color
+		)
+		assert.are.same(
+			{ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 },
+			built.selectedAreaAppearance.styles.twoThirds.color
+		)
 		assert.are.same(
 			{ red = 0.30, green = 0.76, blue = 0.86, alpha = 0.92 },
 			built.selectedAreaAppearance.styles.threeQuarters.color
@@ -397,9 +418,18 @@ describe("window_mover_config", function()
 		assert.is_true(built.selectedAreaHintsShow)
 		assert.are.equal(2, built.selectedAreaAppearance.borderWidth)
 		assert.are.equal(6, built.selectedAreaAppearance.cornerRadius)
-		assert.are.same({ red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 }, built.selectedAreaAppearance.styles.full.color)
-		assert.are.same({ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 }, built.selectedAreaAppearance.styles.sixth.color)
-		assert.are.same({ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 }, built.selectedAreaAppearance.styles.twoThirds.color)
+		assert.are.same(
+			{ red = 0.36, green = 0.62, blue = 1.00, alpha = 0.92 },
+			built.selectedAreaAppearance.styles.full.color
+		)
+		assert.are.same(
+			{ red = 0.75, green = 0.15, blue = 0.25, alpha = 0.92 },
+			built.selectedAreaAppearance.styles.sixth.color
+		)
+		assert.are.same(
+			{ red = 0.50, green = 0.82, blue = 0.42, alpha = 0.92 },
+			built.selectedAreaAppearance.styles.twoThirds.color
+		)
 		assert.are.same(
 			{ red = 0.30, green = 0.76, blue = 0.86, alpha = 0.92 },
 			built.selectedAreaAppearance.styles.threeQuarters.color

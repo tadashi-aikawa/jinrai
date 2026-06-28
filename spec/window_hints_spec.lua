@@ -2802,25 +2802,28 @@ describe("window_hints mouse selection", function()
 		assert.are.same({ x = 1060, y = 410, w = 480, h = 480 }, logoCanvas._frame)
 	end)
 
-	it("activeWindow 指定時にウィンドウフレームを取得できなければ画面中央へ配置する", function()
-		local createdCanvases = {}
-		local focusCounter = { count = 0 }
-		local targetWindow = makeWindow(1, "Target", focusCounter)
-		targetWindow.frame = nil
-		installHsMock(targetWindow, createdCanvases)
-		local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
-		local instance = windowHints.new({
-			internal = {
-				jinraiMode = {
-					position = "activeWindow",
+	it(
+		"activeWindow 指定時にウィンドウフレームを取得できなければ画面中央へ配置する",
+		function()
+			local createdCanvases = {}
+			local focusCounter = { count = 0 }
+			local targetWindow = makeWindow(1, "Target", focusCounter)
+			targetWindow.frame = nil
+			installHsMock(targetWindow, createdCanvases)
+			local windowHints = dofile("./Jinrai.spoon/window_hints.lua")
+			local instance = windowHints.new({
+				internal = {
+					jinraiMode = {
+						position = "activeWindow",
+					},
 				},
-			},
-		})
+			})
 
-		instance.startJinraiMode()
-		local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
-		assert.are.same({ x = 360, y = 160, w = 480, h = 480 }, logoCanvas._frame)
-	end)
+			instance.startJinraiMode()
+			local logoCanvas = findCanvasByImagePath(createdCanvases, "./Jinrai.spoon/jinrai.svg")
+			assert.are.same({ x = 360, y = 160, w = 480, h = 480 }, logoCanvas._frame)
+		end
+	)
 
 	it("JinraiMode ロゴは指定したイージングでフェードと倍率を補間する", function()
 		local cases = {
@@ -3022,7 +3025,10 @@ describe("window_hints mouse selection", function()
 			{ name = "Avenir Next Heavy", size = activeComboCanvas[1].textSize },
 			activeComboCanvas[1].text.attributes.font
 		)
-		assert.are.same({ red = 1, green = 0.46, blue = 0.08, alpha = 0.75 }, activeComboCanvas[1].text.attributes.color)
+		assert.are.same(
+			{ red = 1, green = 0.46, blue = 0.08, alpha = 0.75 },
+			activeComboCanvas[1].text.attributes.color
+		)
 		assert.are.same(
 			{ red = 0, green = 0, blue = 0, alpha = 0.75 },
 			activeComboCanvas[1].text.attributes.strokeColor
@@ -3034,13 +3040,20 @@ describe("window_hints mouse selection", function()
 			{ name = "Avenir Next Heavy", size = activeComboCanvas[2].textSize },
 			activeComboCanvas[2].text.attributes.font
 		)
-		assert.are.same({ red = 1, green = 0.46, blue = 0.08, alpha = 0.75 }, activeComboCanvas[2].text.attributes.color)
+		assert.are.same(
+			{ red = 1, green = 0.46, blue = 0.08, alpha = 0.75 },
+			activeComboCanvas[2].text.attributes.color
+		)
 		assert.are.equal(-4, activeComboCanvas[2].text.attributes.strokeWidth)
 		assert.are.same(activeComboCanvas[2].text.attributes.color, activeComboCanvas[1].text.attributes.color)
 		assert.is_true(activeComboCanvas[1].textSize > activeComboCanvas[2].textSize)
 		assert.are.equal(2, activeComboCanvas._level)
-		local comboNumberTextBottom = activeComboCanvas._frame.y + activeComboCanvas[1].frame.y + activeComboCanvas[1].frame.h
-		local comboLabelTextBottom = activeComboCanvas._frame.y + activeComboCanvas[2].frame.y + activeComboCanvas[2].frame.h
+		local comboNumberTextBottom = activeComboCanvas._frame.y
+			+ activeComboCanvas[1].frame.y
+			+ activeComboCanvas[1].frame.h
+		local comboLabelTextBottom = activeComboCanvas._frame.y
+			+ activeComboCanvas[2].frame.y
+			+ activeComboCanvas[2].frame.h
 		assert.are.equal(comboNumberTextBottom, comboLabelTextBottom)
 		assert.are.equal(196, comboLabelTextBottom)
 		assert.is_true(activeComboCanvas[1].frame.h >= activeComboCanvas[1].textSize * 1.1)

@@ -254,12 +254,7 @@ function M.new(options)
 		end
 		clearCanvases()
 		showContext = nil
-		if
-			not opts.keepJinraiMode
-			and context
-			and context.jinraiMode
-			and config.onCancelJinraiMode
-		then
+		if not opts.keepJinraiMode and context and context.jinraiMode and config.onCancelJinraiMode then
 			config.onCancelJinraiMode()
 		end
 	end
@@ -321,12 +316,7 @@ function M.new(options)
 			ok, err = pcall(entry.newWindow.callback, app)
 		elseif app then
 			ok, err = pcall(function()
-				hs.eventtap.keyStroke(
-					entry.newWindow.hotkey.modifiers,
-					entry.newWindow.hotkey.key,
-					nil,
-					app
-				)
+				hs.eventtap.keyStroke(entry.newWindow.hotkey.modifiers, entry.newWindow.hotkey.key, nil, app)
 			end)
 		else
 			ok, err = pcall(function()
@@ -468,47 +458,41 @@ function M.new(options)
 			local canvas = hs.canvas.new(frame)
 			canvas:level(hs.canvas.windowLevels.overlay + 2)
 			canvas:behavior({ "canJoinAllSpaces", "stationary", "ignoresCycle" })
-			canvas:appendElements(
-				{
-					type = "rectangle",
-					action = "fill",
-					fillColor = config.bgColor,
-					roundedRectRadii = { xRadius = config.cornerRadius, yRadius = config.cornerRadius },
-					frame = { x = 0, y = 0, w = frame.w, h = frame.h },
-				},
-				{
-					type = "image",
-					image = hs.image.imageFromAppBundle(entry.bundleID),
-					imageAlpha = 1,
-					frame = { x = 16, y = 24, w = config.iconSize, h = config.iconSize },
-				},
-				{
-					type = "text",
-					text = entry.key,
-					textColor = config.textColor,
-					textFont = "Menlo-Bold",
-					textSize = 30,
-					textAlignment = "center",
-					frame = { x = 88, y = 14, w = frame.w - 100, h = 40 },
-				},
-				{
-					type = "text",
-					text = appName(entry, app),
-					textColor = config.textColor,
-					textSize = 14,
-					textAlignment = "center",
-					textLineBreak = "truncateTail",
-					frame = { x = 88, y = 56, w = frame.w - 100, h = 24 },
-				},
-				{
-					type = "text",
-					text = app and "NEW" or "OPEN",
-					textColor = config.stateColor,
-					textSize = 12,
-					textAlignment = "center",
-					frame = { x = 88, y = 82, w = frame.w - 100, h = 18 },
-				}
-			)
+			canvas:appendElements({
+				type = "rectangle",
+				action = "fill",
+				fillColor = config.bgColor,
+				roundedRectRadii = { xRadius = config.cornerRadius, yRadius = config.cornerRadius },
+				frame = { x = 0, y = 0, w = frame.w, h = frame.h },
+			}, {
+				type = "image",
+				image = hs.image.imageFromAppBundle(entry.bundleID),
+				imageAlpha = 1,
+				frame = { x = 16, y = 24, w = config.iconSize, h = config.iconSize },
+			}, {
+				type = "text",
+				text = entry.key,
+				textColor = config.textColor,
+				textFont = "Menlo-Bold",
+				textSize = 30,
+				textAlignment = "center",
+				frame = { x = 88, y = 14, w = frame.w - 100, h = 40 },
+			}, {
+				type = "text",
+				text = appName(entry, app),
+				textColor = config.textColor,
+				textSize = 14,
+				textAlignment = "center",
+				textLineBreak = "truncateTail",
+				frame = { x = 88, y = 56, w = frame.w - 100, h = 24 },
+			}, {
+				type = "text",
+				text = app and "NEW" or "OPEN",
+				textColor = config.stateColor,
+				textSize = 12,
+				textAlignment = "center",
+				frame = { x = 88, y = 82, w = frame.w - 100, h = 18 },
+			})
 			table.insert(canvases, canvas)
 			hintByKey[entry.key] = { entry = entry, canvas = canvas }
 		end

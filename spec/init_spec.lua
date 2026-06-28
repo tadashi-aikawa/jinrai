@@ -708,8 +708,7 @@ describe("init", function()
 								calls.windowHintsStartJinraiMode = calls.windowHintsStartJinraiMode + 1
 							end,
 							advanceJinraiModeCombo = function()
-								calls.windowHintsAdvanceJinraiModeCombo =
-									calls.windowHintsAdvanceJinraiModeCombo + 1
+								calls.windowHintsAdvanceJinraiModeCombo = calls.windowHintsAdvanceJinraiModeCombo + 1
 							end,
 							stopJinraiMode = function() end,
 							teardown = function() end,
@@ -730,10 +729,18 @@ describe("init", function()
 				}
 			end
 			if path:match("focus_border.lua$") or path:match("focus_back.lua$") then
-				return { new = function() return { teardown = function() end } end }
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
 			end
 			if path:match("focus_history.lua$") then
-				return { new = function() return { teardown = function() end } end }
+				return {
+					new = function()
+						return { teardown = function() end }
+					end,
+				}
 			end
 			return originalDofile(path)
 		end

@@ -306,7 +306,8 @@ describe("window_mover", function()
 					return webview
 				end,
 				newBrowser = function(frame, usercontent)
-					local webview = setmetatable({ _frame = frame, _newBrowser = true, _usercontent = usercontent }, webviewMethods)
+					local webview =
+						setmetatable({ _frame = frame, _newBrowser = true, _usercontent = usercontent }, webviewMethods)
 					table.insert(state.webviews, webview)
 					return webview
 				end,
@@ -513,20 +514,23 @@ describe("window_mover", function()
 		}
 	end
 
-	it("フォーカスウィンドウを次ディスプレイの frame へアニメーションなしで移動する", function()
-		local currentScreen = newScreen(1, { x = 0, y = 0, w = 1440, h = 900 })
-		local nextScreen = newScreen(2, { x = 1440, y = 0, w = 1920, h = 1080 })
-		currentScreen._next = nextScreen
-		local win = newWindow(currentScreen, { x = 100, y = 100, w = 800, h = 600 })
-		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win)
+	it(
+		"フォーカスウィンドウを次ディスプレイの frame へアニメーションなしで移動する",
+		function()
+			local currentScreen = newScreen(1, { x = 0, y = 0, w = 1440, h = 900 })
+			local nextScreen = newScreen(2, { x = 1440, y = 0, w = 1920, h = 1080 })
+			currentScreen._next = nextScreen
+			local win = newWindow(currentScreen, { x = 100, y = 100, w = 800, h = 600 })
+			local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win)
 
-		instance.moveToNextDisplay()
+			instance.moveToNextDisplay()
 
-		assert.are.same({ x = 1440, y = 0, w = 1920, h = 1080 }, win.setFrameCalls[1].frame)
-		assert.are.equal(0, win.setFrameCalls[1].duration)
-		assert.are.equal(1, win.raiseCalls)
-		assert.are.equal(1, win.focusCalls)
-	end)
+			assert.are.same({ x = 1440, y = 0, w = 1920, h = 1080 }, win.setFrameCalls[1].frame)
+			assert.are.equal(0, win.setFrameCalls[1].duration)
+			assert.are.equal(1, win.raiseCalls)
+			assert.are.equal(1, win.focusCalls)
+		end
+	)
 
 	it("アクティブディスプレイの最大空き領域へ移動する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 })
@@ -542,23 +546,26 @@ describe("window_mover", function()
 		assert.are.same({ x = 300, y = 0, w = 700, h = 800 }, win.setFrameCalls[1].frame)
 	end)
 
-	it("前面ウィンドウと重なる背面ウィンドウを除外して最大空き領域へ移動する", function()
-		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
-		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local front = newWindow(screen, { x = 0, y = 0, w = 800, h = 800 })
-		local backLeft = newWindow(screen, { x = 0, y = 0, w = 600, h = 800 })
-		local backRight = newWindow(screen, { x = 600, y = 0, w = 600, h = 800 })
-		local _, instance = newWindowMoverWithMock(
-			{ behavior = { cursor = { afterMove = false } } },
-			win,
-			{ win, front, backLeft, backRight },
-			{ win, front, backLeft, backRight }
-		)
+	it(
+		"前面ウィンドウと重なる背面ウィンドウを除外して最大空き領域へ移動する",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
+			local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+			local front = newWindow(screen, { x = 0, y = 0, w = 800, h = 800 })
+			local backLeft = newWindow(screen, { x = 0, y = 0, w = 600, h = 800 })
+			local backRight = newWindow(screen, { x = 600, y = 0, w = 600, h = 800 })
+			local _, instance = newWindowMoverWithMock(
+				{ behavior = { cursor = { afterMove = false } } },
+				win,
+				{ win, front, backLeft, backRight },
+				{ win, front, backLeft, backRight }
+			)
 
-		instance.moveToActiveDisplayFreeArea()
+			instance.moveToActiveDisplayFreeArea()
 
-		assert.are.same({ x = 800, y = 0, w = 400, h = 800 }, win.setFrameCalls[1].frame)
-	end)
+			assert.are.same({ x = 800, y = 0, w = 400, h = 800 }, win.setFrameCalls[1].frame)
+		end
+	)
 
 	it("アクティブウィンドウは背面ウィンドウの除外判定でも無視する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
@@ -863,101 +870,104 @@ describe("window_mover", function()
 		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[4].frame)
 	end)
 
-	it("直接配置コマンドは指定サイズでアクティブディスプレイの各ポジションへ移動する", function()
-		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
-		local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
-		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+	it(
+		"直接配置コマンドは指定サイズでアクティブディスプレイの各ポジションへ移動する",
+		function()
+			local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
+			local win = newWindow(screen, { x = 50, y = 50, w = 500, h = 300 })
+			local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
 
-		instance.halfLeft()
-		instance.halfHorizontalCenter()
-		instance.halfRight()
-		instance.halfTop()
-		instance.halfVerticalCenter()
-		instance.halfBottom()
-		instance.thirdLeft()
-		instance.thirdHorizontalCenter()
-		instance.thirdRight()
-		instance.thirdTop()
-		instance.thirdVerticalCenter()
-		instance.thirdBottom()
-		instance.quarterLeft()
-		instance.quarterHorizontalLeftCenter()
-		instance.quarterHorizontalRightCenter()
-		instance.quarterRight()
-		instance.quarterTop()
-		instance.quarterVerticalTopCenter()
-		instance.quarterVerticalBottomCenter()
-		instance.quarterBottom()
-		instance.quarterTopLeft()
-		instance.quarterTopRight()
-		instance.quarterBottomLeft()
-		instance.quarterBottomRight()
-		instance.sixthTopLeft()
-		instance.sixthTopCenter()
-		instance.sixthTopRight()
-		instance.sixthBottomLeft()
-		instance.sixthBottomCenter()
-		instance.sixthBottomRight()
-		instance.twoThirdsLeft()
-		instance.twoThirdsHorizontalCenter()
-		instance.twoThirdsRight()
-		instance.twoThirdsTop()
-		instance.twoThirdsVerticalCenter()
-		instance.twoThirdsBottom()
-		instance.twoThirdsCenter()
-		instance.threeQuartersLeft()
-		instance.threeQuartersHorizontalCenter()
-		instance.threeQuartersRight()
-		instance.threeQuartersTop()
-		instance.threeQuartersVerticalCenter()
-		instance.threeQuartersBottom()
-		instance.threeQuartersCenter()
+			instance.halfLeft()
+			instance.halfHorizontalCenter()
+			instance.halfRight()
+			instance.halfTop()
+			instance.halfVerticalCenter()
+			instance.halfBottom()
+			instance.thirdLeft()
+			instance.thirdHorizontalCenter()
+			instance.thirdRight()
+			instance.thirdTop()
+			instance.thirdVerticalCenter()
+			instance.thirdBottom()
+			instance.quarterLeft()
+			instance.quarterHorizontalLeftCenter()
+			instance.quarterHorizontalRightCenter()
+			instance.quarterRight()
+			instance.quarterTop()
+			instance.quarterVerticalTopCenter()
+			instance.quarterVerticalBottomCenter()
+			instance.quarterBottom()
+			instance.quarterTopLeft()
+			instance.quarterTopRight()
+			instance.quarterBottomLeft()
+			instance.quarterBottomRight()
+			instance.sixthTopLeft()
+			instance.sixthTopCenter()
+			instance.sixthTopRight()
+			instance.sixthBottomLeft()
+			instance.sixthBottomCenter()
+			instance.sixthBottomRight()
+			instance.twoThirdsLeft()
+			instance.twoThirdsHorizontalCenter()
+			instance.twoThirdsRight()
+			instance.twoThirdsTop()
+			instance.twoThirdsVerticalCenter()
+			instance.twoThirdsBottom()
+			instance.twoThirdsCenter()
+			instance.threeQuartersLeft()
+			instance.threeQuartersHorizontalCenter()
+			instance.threeQuartersRight()
+			instance.threeQuartersTop()
+			instance.threeQuartersVerticalCenter()
+			instance.threeQuartersBottom()
+			instance.threeQuartersCenter()
 
-		assert.are.same({ x = 10, y = 20, w = 600, h = 900 }, win.setFrameCalls[1].frame)
-		assert.are.same({ x = 310, y = 20, w = 600, h = 900 }, win.setFrameCalls[2].frame)
-		assert.are.same({ x = 610, y = 20, w = 600, h = 900 }, win.setFrameCalls[3].frame)
-		assert.are.same({ x = 10, y = 20, w = 1200, h = 450 }, win.setFrameCalls[4].frame)
-		assert.are.same({ x = 10, y = 245, w = 1200, h = 450 }, win.setFrameCalls[5].frame)
-		assert.are.same({ x = 10, y = 470, w = 1200, h = 450 }, win.setFrameCalls[6].frame)
-		assert.are.same({ x = 10, y = 20, w = 400, h = 900 }, win.setFrameCalls[7].frame)
-		assert.are.same({ x = 410, y = 20, w = 400, h = 900 }, win.setFrameCalls[8].frame)
-		assert.are.same({ x = 810, y = 20, w = 400, h = 900 }, win.setFrameCalls[9].frame)
-		assert.are.same({ x = 10, y = 20, w = 1200, h = 300 }, win.setFrameCalls[10].frame)
-		assert.are.same({ x = 10, y = 320, w = 1200, h = 300 }, win.setFrameCalls[11].frame)
-		assert.are.same({ x = 10, y = 620, w = 1200, h = 300 }, win.setFrameCalls[12].frame)
-		assert.are.same({ x = 10, y = 20, w = 300, h = 900 }, win.setFrameCalls[13].frame)
-		assert.are.same({ x = 310, y = 20, w = 300, h = 900 }, win.setFrameCalls[14].frame)
-		assert.are.same({ x = 610, y = 20, w = 300, h = 900 }, win.setFrameCalls[15].frame)
-		assert.are.same({ x = 910, y = 20, w = 300, h = 900 }, win.setFrameCalls[16].frame)
-		assert.are.same({ x = 10, y = 20, w = 1200, h = 225 }, win.setFrameCalls[17].frame)
-		assert.are.same({ x = 10, y = 245, w = 1200, h = 225 }, win.setFrameCalls[18].frame)
-		assert.are.same({ x = 10, y = 470, w = 1200, h = 225 }, win.setFrameCalls[19].frame)
-		assert.are.same({ x = 10, y = 695, w = 1200, h = 225 }, win.setFrameCalls[20].frame)
-		assert.are.same({ x = 10, y = 20, w = 600, h = 450 }, win.setFrameCalls[21].frame)
-		assert.are.same({ x = 610, y = 20, w = 600, h = 450 }, win.setFrameCalls[22].frame)
-		assert.are.same({ x = 10, y = 470, w = 600, h = 450 }, win.setFrameCalls[23].frame)
-		assert.are.same({ x = 610, y = 470, w = 600, h = 450 }, win.setFrameCalls[24].frame)
-		assert.are.same({ x = 10, y = 20, w = 400, h = 450 }, win.setFrameCalls[25].frame)
-		assert.are.same({ x = 410, y = 20, w = 400, h = 450 }, win.setFrameCalls[26].frame)
-		assert.are.same({ x = 810, y = 20, w = 400, h = 450 }, win.setFrameCalls[27].frame)
-		assert.are.same({ x = 10, y = 470, w = 400, h = 450 }, win.setFrameCalls[28].frame)
-		assert.are.same({ x = 410, y = 470, w = 400, h = 450 }, win.setFrameCalls[29].frame)
-		assert.are.same({ x = 810, y = 470, w = 400, h = 450 }, win.setFrameCalls[30].frame)
-		assert.are.same({ x = 10, y = 20, w = 800, h = 900 }, win.setFrameCalls[31].frame)
-		assert.are.same({ x = 210, y = 20, w = 800, h = 900 }, win.setFrameCalls[32].frame)
-		assert.are.same({ x = 410, y = 20, w = 800, h = 900 }, win.setFrameCalls[33].frame)
-		assert.are.same({ x = 10, y = 20, w = 1200, h = 600 }, win.setFrameCalls[34].frame)
-		assert.are.same({ x = 10, y = 170, w = 1200, h = 600 }, win.setFrameCalls[35].frame)
-		assert.are.same({ x = 10, y = 320, w = 1200, h = 600 }, win.setFrameCalls[36].frame)
-		assert.are.same({ x = 210, y = 170, w = 800, h = 600 }, win.setFrameCalls[37].frame)
-		assert.are.same({ x = 10, y = 20, w = 900, h = 900 }, win.setFrameCalls[38].frame)
-		assert.are.same({ x = 160, y = 20, w = 900, h = 900 }, win.setFrameCalls[39].frame)
-		assert.are.same({ x = 310, y = 20, w = 900, h = 900 }, win.setFrameCalls[40].frame)
-		assert.are.same({ x = 10, y = 20, w = 1200, h = 675 }, win.setFrameCalls[41].frame)
-		assert.are.same({ x = 10, y = 132.5, w = 1200, h = 675 }, win.setFrameCalls[42].frame)
-		assert.are.same({ x = 10, y = 245, w = 1200, h = 675 }, win.setFrameCalls[43].frame)
-		assert.are.same({ x = 160, y = 132.5, w = 900, h = 675 }, win.setFrameCalls[44].frame)
-	end)
+			assert.are.same({ x = 10, y = 20, w = 600, h = 900 }, win.setFrameCalls[1].frame)
+			assert.are.same({ x = 310, y = 20, w = 600, h = 900 }, win.setFrameCalls[2].frame)
+			assert.are.same({ x = 610, y = 20, w = 600, h = 900 }, win.setFrameCalls[3].frame)
+			assert.are.same({ x = 10, y = 20, w = 1200, h = 450 }, win.setFrameCalls[4].frame)
+			assert.are.same({ x = 10, y = 245, w = 1200, h = 450 }, win.setFrameCalls[5].frame)
+			assert.are.same({ x = 10, y = 470, w = 1200, h = 450 }, win.setFrameCalls[6].frame)
+			assert.are.same({ x = 10, y = 20, w = 400, h = 900 }, win.setFrameCalls[7].frame)
+			assert.are.same({ x = 410, y = 20, w = 400, h = 900 }, win.setFrameCalls[8].frame)
+			assert.are.same({ x = 810, y = 20, w = 400, h = 900 }, win.setFrameCalls[9].frame)
+			assert.are.same({ x = 10, y = 20, w = 1200, h = 300 }, win.setFrameCalls[10].frame)
+			assert.are.same({ x = 10, y = 320, w = 1200, h = 300 }, win.setFrameCalls[11].frame)
+			assert.are.same({ x = 10, y = 620, w = 1200, h = 300 }, win.setFrameCalls[12].frame)
+			assert.are.same({ x = 10, y = 20, w = 300, h = 900 }, win.setFrameCalls[13].frame)
+			assert.are.same({ x = 310, y = 20, w = 300, h = 900 }, win.setFrameCalls[14].frame)
+			assert.are.same({ x = 610, y = 20, w = 300, h = 900 }, win.setFrameCalls[15].frame)
+			assert.are.same({ x = 910, y = 20, w = 300, h = 900 }, win.setFrameCalls[16].frame)
+			assert.are.same({ x = 10, y = 20, w = 1200, h = 225 }, win.setFrameCalls[17].frame)
+			assert.are.same({ x = 10, y = 245, w = 1200, h = 225 }, win.setFrameCalls[18].frame)
+			assert.are.same({ x = 10, y = 470, w = 1200, h = 225 }, win.setFrameCalls[19].frame)
+			assert.are.same({ x = 10, y = 695, w = 1200, h = 225 }, win.setFrameCalls[20].frame)
+			assert.are.same({ x = 10, y = 20, w = 600, h = 450 }, win.setFrameCalls[21].frame)
+			assert.are.same({ x = 610, y = 20, w = 600, h = 450 }, win.setFrameCalls[22].frame)
+			assert.are.same({ x = 10, y = 470, w = 600, h = 450 }, win.setFrameCalls[23].frame)
+			assert.are.same({ x = 610, y = 470, w = 600, h = 450 }, win.setFrameCalls[24].frame)
+			assert.are.same({ x = 10, y = 20, w = 400, h = 450 }, win.setFrameCalls[25].frame)
+			assert.are.same({ x = 410, y = 20, w = 400, h = 450 }, win.setFrameCalls[26].frame)
+			assert.are.same({ x = 810, y = 20, w = 400, h = 450 }, win.setFrameCalls[27].frame)
+			assert.are.same({ x = 10, y = 470, w = 400, h = 450 }, win.setFrameCalls[28].frame)
+			assert.are.same({ x = 410, y = 470, w = 400, h = 450 }, win.setFrameCalls[29].frame)
+			assert.are.same({ x = 810, y = 470, w = 400, h = 450 }, win.setFrameCalls[30].frame)
+			assert.are.same({ x = 10, y = 20, w = 800, h = 900 }, win.setFrameCalls[31].frame)
+			assert.are.same({ x = 210, y = 20, w = 800, h = 900 }, win.setFrameCalls[32].frame)
+			assert.are.same({ x = 410, y = 20, w = 800, h = 900 }, win.setFrameCalls[33].frame)
+			assert.are.same({ x = 10, y = 20, w = 1200, h = 600 }, win.setFrameCalls[34].frame)
+			assert.are.same({ x = 10, y = 170, w = 1200, h = 600 }, win.setFrameCalls[35].frame)
+			assert.are.same({ x = 10, y = 320, w = 1200, h = 600 }, win.setFrameCalls[36].frame)
+			assert.are.same({ x = 210, y = 170, w = 800, h = 600 }, win.setFrameCalls[37].frame)
+			assert.are.same({ x = 10, y = 20, w = 900, h = 900 }, win.setFrameCalls[38].frame)
+			assert.are.same({ x = 160, y = 20, w = 900, h = 900 }, win.setFrameCalls[39].frame)
+			assert.are.same({ x = 310, y = 20, w = 900, h = 900 }, win.setFrameCalls[40].frame)
+			assert.are.same({ x = 10, y = 20, w = 1200, h = 675 }, win.setFrameCalls[41].frame)
+			assert.are.same({ x = 10, y = 132.5, w = 1200, h = 675 }, win.setFrameCalls[42].frame)
+			assert.are.same({ x = 10, y = 245, w = 1200, h = 675 }, win.setFrameCalls[43].frame)
+			assert.are.same({ x = 160, y = 132.5, w = 900, h = 675 }, win.setFrameCalls[44].frame)
+		end
+	)
 
 	it("縦方向の cycle は 1/2、1/3、2/3 の順で高さを切り替える", function()
 		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
@@ -1026,21 +1036,24 @@ describe("window_mover", function()
 		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[3].frame)
 	end)
 
-	it("横方向の cycle は現在 frame が対象位置と比率に一致する場合に次の比率へ進む", function()
-		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
-		local win = newWindow(screen, { x = 0, y = 0, w = 600, h = 900 })
-		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+	it(
+		"横方向の cycle は現在 frame が対象位置と比率に一致する場合に次の比率へ進む",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
+			local win = newWindow(screen, { x = 0, y = 0, w = 600, h = 900 })
+			local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
 
-		instance.cycleLeft()
-		win._frame = { x = 0, y = 0, w = 400, h = 900 }
-		instance.cycleLeft()
-		win._frame = { x = 0, y = 0, w = 800, h = 900 }
-		instance.cycleLeft()
+			instance.cycleLeft()
+			win._frame = { x = 0, y = 0, w = 400, h = 900 }
+			instance.cycleLeft()
+			win._frame = { x = 0, y = 0, w = 800, h = 900 }
+			instance.cycleLeft()
 
-		assert.are.same({ x = 0, y = 0, w = 400, h = 900 }, win.setFrameCalls[1].frame)
-		assert.are.same({ x = 0, y = 0, w = 800, h = 900 }, win.setFrameCalls[2].frame)
-		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[3].frame)
-	end)
+			assert.are.same({ x = 0, y = 0, w = 400, h = 900 }, win.setFrameCalls[1].frame)
+			assert.are.same({ x = 0, y = 0, w = 800, h = 900 }, win.setFrameCalls[2].frame)
+			assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[3].frame)
+		end
+	)
 
 	it("横方向の cycle は現在 frame の位置が異なる場合に 1/2 から開始する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 })
@@ -1052,21 +1065,24 @@ describe("window_mover", function()
 		assert.are.same({ x = 0, y = 0, w = 600, h = 900 }, win.setFrameCalls[1].frame)
 	end)
 
-	it("縦方向の cycle は現在 frame が対象位置と比率に一致する場合に次の比率へ進む", function()
-		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
-		local win = newWindow(screen, { x = 10, y = 20, w = 1200, h = 450 })
-		local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
+	it(
+		"縦方向の cycle は現在 frame が対象位置と比率に一致する場合に次の比率へ進む",
+		function()
+			local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 })
+			local win = newWindow(screen, { x = 10, y = 20, w = 1200, h = 450 })
+			local _, instance = newWindowMoverWithMock({ behavior = { cursor = { afterMove = false } } }, win, { win })
 
-		instance.cycleTop()
-		win._frame = { x = 10, y = 20, w = 1200, h = 300 }
-		instance.cycleTop()
-		win._frame = { x = 10, y = 20, w = 1200, h = 600 }
-		instance.cycleTop()
+			instance.cycleTop()
+			win._frame = { x = 10, y = 20, w = 1200, h = 300 }
+			instance.cycleTop()
+			win._frame = { x = 10, y = 20, w = 1200, h = 600 }
+			instance.cycleTop()
 
-		assert.are.same({ x = 10, y = 20, w = 1200, h = 300 }, win.setFrameCalls[1].frame)
-		assert.are.same({ x = 10, y = 20, w = 1200, h = 600 }, win.setFrameCalls[2].frame)
-		assert.are.same({ x = 10, y = 20, w = 1200, h = 450 }, win.setFrameCalls[3].frame)
-	end)
+			assert.are.same({ x = 10, y = 20, w = 1200, h = 300 }, win.setFrameCalls[1].frame)
+			assert.are.same({ x = 10, y = 20, w = 1200, h = 600 }, win.setFrameCalls[2].frame)
+			assert.are.same({ x = 10, y = 20, w = 1200, h = 450 }, win.setFrameCalls[3].frame)
+		end
+	)
 
 	it("縦方向の cycle は実際の window frame が整数丸めされても次の比率へ進む", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 1000 })
@@ -1107,65 +1123,66 @@ describe("window_mover", function()
 	it("UUID一致ディスプレイは設定キーマップで候補表示される", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				full = "A",
-				halfLeft = "S",
-				halfHorizontalCenter = "D",
-				halfRight = "F",
-				thirdLeft = "Q",
-				thirdHorizontalCenter = "W",
-				thirdRight = "E",
-				quarterTopLeft = "T",
-				sixthBottomRight = "Z",
-				twoThirdsLeft = "R",
-				twoThirdsHorizontalCenter = "Y",
-				twoThirdsRight = "U",
-				twoThirdsTop = "I",
-				twoThirdsVerticalCenter = "O",
-				twoThirdsBottom = "P",
-				twoThirdsCenter = "B",
-				threeQuartersLeft = "G",
-				threeQuartersHorizontalCenter = "H",
-				threeQuartersRight = "J",
-				threeQuartersTop = "K",
-				threeQuartersVerticalCenter = "L",
-				threeQuartersBottom = "M",
-				threeQuartersCenter = "N4",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					full = "A",
+					halfLeft = "S",
+					halfHorizontalCenter = "D",
+					halfRight = "F",
+					thirdLeft = "Q",
+					thirdHorizontalCenter = "W",
+					thirdRight = "E",
+					quarterTopLeft = "T",
+					sixthBottomRight = "Z",
+					twoThirdsLeft = "R",
+					twoThirdsHorizontalCenter = "Y",
+					twoThirdsRight = "U",
+					twoThirdsTop = "I",
+					twoThirdsVerticalCenter = "O",
+					twoThirdsBottom = "P",
+					twoThirdsCenter = "B",
+					threeQuartersLeft = "G",
+					threeQuartersHorizontalCenter = "H",
+					threeQuartersRight = "J",
+					threeQuartersTop = "K",
+					threeQuartersVerticalCenter = "L",
+					threeQuartersBottom = "M",
+					threeQuartersCenter = "N4",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
 
-		assert.are.same(
-			{
-				"A",
-				"S",
-				"D",
-				"F",
-				"Q",
-				"W",
-				"E",
-				"T",
-				"Z",
-				"R",
-				"Y",
-				"U",
-				"I",
-				"O",
-				"P",
-				"B",
-				"G",
-				"H",
-				"J",
-				"K",
-				"L",
-				"M",
-				"N4",
-			},
-			canvasKeys(state)
-		)
+		assert.are.same({
+			"A",
+			"S",
+			"D",
+			"F",
+			"Q",
+			"W",
+			"E",
+			"T",
+			"Z",
+			"R",
+			"Y",
+			"U",
+			"I",
+			"O",
+			"P",
+			"B",
+			"G",
+			"H",
+			"J",
+			"K",
+			"L",
+			"M",
+			"N4",
+		}, canvasKeys(state))
 		for _, canvas in ipairs(state.canvases) do
 			assert.are.equal(12, canvas._level)
 		end
@@ -1179,12 +1196,16 @@ describe("window_mover", function()
 	it("3文字の選択キーは3打鍵目でエリアへ移動する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "www",
-				halfRight = "iii",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "www",
+					halfRight = "iii",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -1203,38 +1224,49 @@ describe("window_mover", function()
 		assert.are.same({ x = 0, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
 	end)
 
-	it("freeArea は各ディスプレイの右上に1つずつ表示され、対象ディスプレイの空き領域へ移動する", function()
-		local screenA = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
-		local screenB = newScreen(2, { x = 1000, y = 0, w = 1000, h = 800 }, "uuid-b")
-		local win = newWindow(screenA, { x = 100, y = 100, w = 200, h = 100 })
-		local occupiedA = newWindow(screenA, { x = 0, y = 0, w = 300, h = 800 })
-		local occupiedB = newWindow(screenB, { x = 1700, y = 0, w = 300, h = 800 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = { freeArea = "V" },
-			["uuid-b"] = { freeArea = "B" },
-		}), win, { win, occupiedA, occupiedB })
-		state.screens = { screenA, screenB }
+	it(
+		"freeArea は各ディスプレイの右上に1つずつ表示され、対象ディスプレイの空き領域へ移動する",
+		function()
+			local screenA = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
+			local screenB = newScreen(2, { x = 1000, y = 0, w = 1000, h = 800 }, "uuid-b")
+			local win = newWindow(screenA, { x = 100, y = 100, w = 200, h = 100 })
+			local occupiedA = newWindow(screenA, { x = 0, y = 0, w = 300, h = 800 })
+			local occupiedB = newWindow(screenB, { x = 1700, y = 0, w = 300, h = 800 })
+			local state, instance = newWindowMoverWithMock(
+				selectedAreaOptions({
+					["uuid-a"] = { freeArea = "V" },
+					["uuid-b"] = { freeArea = "B" },
+				}),
+				win,
+				{ win, occupiedA, occupiedB }
+			)
+			state.screens = { screenA, screenB }
 
-		instance.openWindowActionChooser()
+			instance.openWindowActionChooser()
 
-		local framesByKey = canvasFramesByKey(state)
-		assert.are.same({ x = 900, y = 8, w = 92, h = 66 }, framesByKey.V)
-		assert.are.same({ x = 1900, y = 8, w = 92, h = 66 }, framesByKey.B)
-		assert.is_true(canvasHasText(state, "Free"))
-		assert.are.same({ 5, 5, 5, 5 }, filledSquareSizes(canvasForKey(state, "V")))
+			local framesByKey = canvasFramesByKey(state)
+			assert.are.same({ x = 900, y = 8, w = 92, h = 66 }, framesByKey.V)
+			assert.are.same({ x = 1900, y = 8, w = 92, h = 66 }, framesByKey.B)
+			assert.is_true(canvasHasText(state, "Free"))
+			assert.are.same({ 5, 5, 5, 5 }, filledSquareSizes(canvasForKey(state, "V")))
 
-		sendKey(state, "b")
+			sendKey(state, "b")
 
-		assert.are.same({ x = 1000, y = 0, w = 700, h = 800 }, win.setFrameCalls[1].frame)
-	end)
+			assert.are.same({ x = 1000, y = 0, w = 700, h = 800 }, win.setFrameCalls[1].frame)
+		end
+	)
 
 	it("freeArea は選択時点の可視ウィンドウ配置で再計算する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local occupied = newWindow(screen, { x = 0, y = 0, w = 300, h = 800 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = { freeArea = "V" },
-		}), win, { win, occupied })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = { freeArea = "V" },
+			}),
+			win,
+			{ win, occupied }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -1247,12 +1279,16 @@ describe("window_mover", function()
 	it("freeArea の固定ヒントと重なる通常候補だけを下へずらす", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 300, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 100, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				freeArea = "V",
-				halfRight = "F",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					freeArea = "V",
+					halfRight = "F",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -1266,9 +1302,13 @@ describe("window_mover", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local occupied = newWindow(screen, { x = 0, y = 0, w = 1000, h = 800 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = { freeArea = "V" },
-		}), win, { win, occupied })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = { freeArea = "V" },
+			}),
+			win,
+			{ win, occupied }
+		)
 		state.screens = { screen }
 		local applyCount = 0
 
@@ -1289,11 +1329,19 @@ describe("window_mover", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local occupied = newWindow(screen, { x = 0, y = 0, w = 300, h = 800 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = { freeArea = "V" },
-		}, nil, {
-			hints = { show = false },
-		}), win, { win, occupied })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = { freeArea = "V" },
+				},
+				nil,
+				{
+					hints = { show = false },
+				}
+			),
+			win,
+			{ win, occupied }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -1303,29 +1351,40 @@ describe("window_mover", function()
 		assert.are.same({ x = 300, y = 0, w = 700, h = 800 }, win.setFrameCalls[1].frame)
 	end)
 
-	it("freeArea の候補外クリックはディスプレイ全体ではなくヒント外で chooser を閉じる", function()
-		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
-		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = { freeArea = "V" },
-		}), win, { win })
-		state.screens = { screen }
+	it(
+		"freeArea の候補外クリックはディスプレイ全体ではなくヒント外で chooser を閉じる",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 }, "uuid-a")
+			local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+			local state, instance = newWindowMoverWithMock(
+				selectedAreaOptions({
+					["uuid-a"] = { freeArea = "V" },
+				}),
+				win,
+				{ win }
+			)
+			state.screens = { screen }
 
-		instance.openWindowActionChooser()
+			instance.openWindowActionChooser()
 
-		assert.is_true(sendMouseDown(state, { x = 100, y = 100 }))
-		assert.is_true(state.canvases[1]._hidden)
-		assert.is_nil(state.canvases[1]._deleted)
-	end)
+			assert.is_true(sendMouseDown(state, { x = 100, y = 100 }))
+			assert.is_true(state.canvases[1]._hidden)
+			assert.is_nil(state.canvases[1]._deleted)
+		end
+	)
 
 	it("openWindowActionChooser の onApply は移動完了後に呼ばれる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local appliedFrame
 		local appliedCandidate
@@ -1350,15 +1409,23 @@ describe("window_mover", function()
 	it("openWindowActionChooser で closeWindow action を実行できる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				closeWindow = "X",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						closeWindow = "X",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local appliedCandidate
 		local cancelCount = 0
@@ -1386,15 +1453,23 @@ describe("window_mover", function()
 	it("openWindowActionChooser で minimizeWindow action を実行できる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				minimizeWindow = "M",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						minimizeWindow = "M",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local appliedCandidate
 
@@ -1415,15 +1490,23 @@ describe("window_mover", function()
 	it("openWindowActionChooser で maximizeWindow action を実行できる", function()
 		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				maximizeWindow = "F",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						maximizeWindow = "F",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local appliedCandidate
 
@@ -1446,15 +1529,23 @@ describe("window_mover", function()
 	it("openWindowActionChooser で quitApplication action を実行できる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				quitApplication = "Q",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						quitApplication = "Q",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local appliedCandidate
 
@@ -1475,15 +1566,23 @@ describe("window_mover", function()
 	it("openWindowActionChooser で detachChromeTabToNewWindow action を実行できる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.google.Chrome" })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				detachChromeTabToNewWindow = "T",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						detachChromeTabToNewWindow = "T",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local appliedCandidate
 
@@ -1505,15 +1604,23 @@ describe("window_mover", function()
 	it("JinraiMode context の detachChromeTabToNewWindow action は Window Mover を再表示する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.google.Chrome" })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				detachChromeTabToNewWindow = "T",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						detachChromeTabToNewWindow = "T",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local applyCount = 0
 		local appliedCandidate
@@ -1547,15 +1654,23 @@ describe("window_mover", function()
 	it("detachChromeTabToNewWindow action は Chrome 以外では onApply を呼ばない", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.example.app" })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				detachChromeTabToNewWindow = "T",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						detachChromeTabToNewWindow = "T",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local applyCount = 0
 
@@ -1573,15 +1688,23 @@ describe("window_mover", function()
 	it("detachChromeTabToNewWindow action は selectMenuItem 不在時に onApply を呼ばない", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.google.Chrome" })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				detachChromeTabToNewWindow = "T",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						detachChromeTabToNewWindow = "T",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		win._app.selectMenuItem = nil
 		local applyCount = 0
@@ -1602,15 +1725,23 @@ describe("window_mover", function()
 			bundleID = "com.google.Chrome",
 			selectMenuItemResult = false,
 		})
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				detachChromeTabToNewWindow = "T",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						detachChromeTabToNewWindow = "T",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local applyCount = 0
 
@@ -1629,15 +1760,23 @@ describe("window_mover", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		win._app = nil
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				quitApplication = "Q",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						quitApplication = "Q",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local applyCount = 0
 
@@ -1696,83 +1835,93 @@ describe("window_mover", function()
 		assert.are.equal(0, cancelCount)
 	end)
 
-	it("JinraiMode 文脈の openWindowActionChooser では selectedArea.windowHints.key が JinraiMode 継続を通知する", function()
-		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
-		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local options = selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		})
-		options.selectedArea.windowHints = {
-			key = "space",
-		}
-		local openWindowHintsContext
-		options.internal = {
-			jinraiMode = {
-				onOpenWindowHints = function(ctx)
-					openWindowHintsContext = ctx
-				end,
-			},
-		}
-		local state, instance = newWindowMoverWithMock(options, win, { win })
-		state.screens = { screen }
-
-		instance.openWindowActionChooser({ jinraiMode = true })
-		sendKey(state, "space")
-
-		assert.is_true(openWindowHintsContext.jinraiMode)
-	end)
-
-	it("openWindowActionChooser 表示中に JinraiMode キーを押した後の selectedArea.windowHints.key は JinraiMode 継続を通知する", function()
-		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
-		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local options = selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		})
-		options.selectedArea.windowHints = {
-			key = "space",
-		}
-		local startCount = 0
-		local openWindowHintsContext
-		options.internal = {
-			jinraiMode = {
-				windowMover = {
-					key = "j",
+	it(
+		"JinraiMode 文脈の openWindowActionChooser では selectedArea.windowHints.key が JinraiMode 継続を通知する",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+			local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+			local options = selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
 				},
-				onStart = function()
-					startCount = startCount + 1
-				end,
-				onOpenWindowHints = function(ctx)
-					openWindowHintsContext = ctx
-				end,
-			},
-		}
-		local state, instance = newWindowMoverWithMock(options, win, { win })
-		state.screens = { screen }
+			})
+			options.selectedArea.windowHints = {
+				key = "space",
+			}
+			local openWindowHintsContext
+			options.internal = {
+				jinraiMode = {
+					onOpenWindowHints = function(ctx)
+						openWindowHintsContext = ctx
+					end,
+				},
+			}
+			local state, instance = newWindowMoverWithMock(options, win, { win })
+			state.screens = { screen }
 
-		instance.openWindowActionChooser()
-		sendKey(state, "j")
-		sendKey(state, "space")
+			instance.openWindowActionChooser({ jinraiMode = true })
+			sendKey(state, "space")
 
-		assert.are.equal(1, startCount)
-		assert.is_true(openWindowHintsContext.jinraiMode)
-	end)
+			assert.is_true(openWindowHintsContext.jinraiMode)
+		end
+	)
+
+	it(
+		"openWindowActionChooser 表示中に JinraiMode キーを押した後の selectedArea.windowHints.key は JinraiMode 継続を通知する",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+			local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+			local options = selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
+			})
+			options.selectedArea.windowHints = {
+				key = "space",
+			}
+			local startCount = 0
+			local openWindowHintsContext
+			options.internal = {
+				jinraiMode = {
+					windowMover = {
+						key = "j",
+					},
+					onStart = function()
+						startCount = startCount + 1
+					end,
+					onOpenWindowHints = function(ctx)
+						openWindowHintsContext = ctx
+					end,
+				},
+			}
+			local state, instance = newWindowMoverWithMock(options, win, { win })
+			state.screens = { screen }
+
+			instance.openWindowActionChooser()
+			sendKey(state, "j")
+			sendKey(state, "space")
+
+			assert.are.equal(1, startCount)
+			assert.is_true(openWindowHintsContext.jinraiMode)
+		end
+	)
 
 	it("selectedArea.hints.show=false でも selectedArea.windowHints.key を実行できる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local options = selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
+		local options = selectedAreaOptions(
+			{
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
 			},
-		}, nil, {
-			hints = {
-				show = false,
-			},
-		})
+			nil,
+			{
+				hints = {
+					show = false,
+				},
+			}
+		)
 		options.selectedArea.windowHints = {
 			key = "space",
 		}
@@ -1801,11 +1950,15 @@ describe("window_mover", function()
 	it("openWindowActionChooser の onCancel はキャンセル時だけ呼ばれる", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local applyCount = 0
 		local cancelCount = 0
@@ -1852,53 +2005,60 @@ describe("window_mover", function()
 		assert.are.equal(0, applyCount)
 	end)
 
-	it("openWindowActionChooser 表示中に JinraiMode キーを押すとエリア適用後に継続コールバックを呼ぶ", function()
-		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
-		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local options = selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		})
-		local startCount = 0
-		local applyCount = 0
-		options.internal = {
-			jinraiMode = {
-				windowMover = {
-					key = "space",
+	it(
+		"openWindowActionChooser 表示中に JinraiMode キーを押すとエリア適用後に継続コールバックを呼ぶ",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+			local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+			local options = selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
 				},
-				onStart = function()
-					startCount = startCount + 1
-				end,
-				onApply = function()
-					applyCount = applyCount + 1
-				end,
-			},
-		}
-		local state, instance = newWindowMoverWithMock(options, win, { win })
-		state.screens = { screen }
+			})
+			local startCount = 0
+			local applyCount = 0
+			options.internal = {
+				jinraiMode = {
+					windowMover = {
+						key = "space",
+					},
+					onStart = function()
+						startCount = startCount + 1
+					end,
+					onApply = function()
+						applyCount = applyCount + 1
+					end,
+				},
+			}
+			local state, instance = newWindowMoverWithMock(options, win, { win })
+			state.screens = { screen }
 
-		instance.openWindowActionChooser()
-		sendKey(state, "space")
-		sendKey(state, "a")
+			instance.openWindowActionChooser()
+			sendKey(state, "space")
+			sendKey(state, "a")
 
-		assert.are.equal(1, startCount)
-		assert.are.equal(1, applyCount)
-	end)
+			assert.are.equal(1, startCount)
+			assert.are.equal(1, applyCount)
+		end
+	)
 
 	it("JinraiMode 中の minimizeWindow action 適用後に継続コールバックを呼ぶ", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local nextWin = newWindow(screen, { x = 400, y = 100, w = 200, h = 100 })
-		local options = selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
+		local options = selectedAreaOptions(
+			{
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
 			},
-		}, nil, {
-			actions = {
-				minimizeWindow = "M",
-			},
-		})
+			nil,
+			{
+				actions = {
+					minimizeWindow = "M",
+				},
+			}
+		)
 		local applyCount = 0
 		options.internal = {
 			jinraiMode = {
@@ -1931,15 +2091,24 @@ describe("window_mover", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 		local nextWin = newWindow(screen, { x = 400, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				minimizeWindow = "M",
-			},
-		}), win, { win, nextWin }, { win, nextWin })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						minimizeWindow = "M",
+					},
+				}
+			),
+			win,
+			{ win, nextWin },
+			{ win, nextWin }
+		)
 		state.screens = { screen }
 		local applyCount = 0
 
@@ -1965,15 +2134,23 @@ describe("window_mover", function()
 	it("minimizeWindow action はフォールバック対象がなければ JinraiMode を終了する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				minimizeWindow = "M",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						minimizeWindow = "M",
+					},
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		local applyCount = 0
 		local cancelCount = 0
@@ -1998,15 +2175,19 @@ describe("window_mover", function()
 	it("JinraiMode 中の minimizeWindow action はフォールバック対象がなければ終了する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local options = selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
+		local options = selectedAreaOptions(
+			{
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
 			},
-		}, nil, {
-			actions = {
-				minimizeWindow = "M",
-			},
-		})
+			nil,
+			{
+				actions = {
+					minimizeWindow = "M",
+				},
+			}
+		)
 		local applyCount = 0
 		local cancelCount = 0
 		options.internal = {
@@ -2077,78 +2258,88 @@ describe("window_mover", function()
 		assert.are.equal(1, cancelCount)
 	end)
 
-	it("moveToSelectedAreaInJinraiMode hotkey は chooser を開けないとき JinraiMode を開始しない", function()
-		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
-		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local startCount = 0
-		local cancelCount = 0
-		local options = {
-			commands = {
-				moveToSelectedAreaInJinraiMode = {
-					hotkey = {
-						modifiers = { "cmd", "alt" },
-						key = "f18",
+	it(
+		"moveToSelectedAreaInJinraiMode hotkey は chooser を開けないとき JinraiMode を開始しない",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+			local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+			local startCount = 0
+			local cancelCount = 0
+			local options = {
+				commands = {
+					moveToSelectedAreaInJinraiMode = {
+						hotkey = {
+							modifiers = { "cmd", "alt" },
+							key = "f18",
+						},
 					},
 				},
-			},
-			internal = {
+				internal = {
+					jinraiMode = {
+						onStart = function()
+							startCount = startCount + 1
+						end,
+						onCancel = function()
+							cancelCount = cancelCount + 1
+						end,
+					},
+				},
+			}
+			local state = newWindowMoverWithMock(options, win, { win })
+
+			state.hotkeys[1].callback()
+
+			assert.are.equal(0, startCount)
+			assert.are.equal(0, cancelCount)
+		end
+	)
+
+	it(
+		"openWindowActionChooser 表示中に JinraiMode キーを押した後のキャンセルで終了コールバックを呼ぶ",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+			local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
+			local options = selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
+			})
+			local cancelCount = 0
+			options.internal = {
 				jinraiMode = {
-					onStart = function()
-						startCount = startCount + 1
-					end,
+					windowMover = {
+						key = "space",
+					},
 					onCancel = function()
 						cancelCount = cancelCount + 1
 					end,
 				},
-			},
-		}
-		local state = newWindowMoverWithMock(options, win, { win })
+			}
+			local state, instance = newWindowMoverWithMock(options, win, { win })
+			state.screens = { screen }
 
-		state.hotkeys[1].callback()
+			instance.openWindowActionChooser()
+			sendKey(state, "space")
+			sendKey(state, "escape")
 
-		assert.are.equal(0, startCount)
-		assert.are.equal(0, cancelCount)
-	end)
-
-	it("openWindowActionChooser 表示中に JinraiMode キーを押した後のキャンセルで終了コールバックを呼ぶ", function()
-		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
-		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local options = selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		})
-		local cancelCount = 0
-		options.internal = {
-			jinraiMode = {
-				windowMover = {
-					key = "space",
-				},
-				onCancel = function()
-					cancelCount = cancelCount + 1
-				end,
-			},
-		}
-		local state, instance = newWindowMoverWithMock(options, win, { win })
-		state.screens = { screen }
-
-		instance.openWindowActionChooser()
-		sendKey(state, "space")
-		sendKey(state, "escape")
-
-		assert.are.equal(1, cancelCount)
-	end)
+			assert.are.equal(1, cancelCount)
+		end
+	)
 
 	it("明示された上下方向の half エリアへ移動する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 600, h = 900 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfTop = "A",
-				halfVerticalCenter = "S",
-				halfBottom = "D",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfTop = "A",
+					halfVerticalCenter = "S",
+					halfBottom = "D",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2160,12 +2351,16 @@ describe("window_mover", function()
 	it("画面の縦横比に関係なく明示方向を使う", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 600, h = 900 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfRight = "F",
-				thirdBottom = "B",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfRight = "F",
+					thirdBottom = "B",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2177,12 +2372,16 @@ describe("window_mover", function()
 	it("twoThirdsVerticalCenter と固定サイズ Center へ移動する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				twoThirdsVerticalCenter = "V",
-				["800x600Center"] = "M",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					twoThirdsVerticalCenter = "V",
+					["800x600Center"] = "M",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2199,17 +2398,21 @@ describe("window_mover", function()
 	it("twoThirds の各エリアへ移動する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 900 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				twoThirdsLeft = "A",
-				twoThirdsHorizontalCenter = "S",
-				twoThirdsRight = "D",
-				twoThirdsTop = "Q",
-				twoThirdsVerticalCenter = "W",
-				twoThirdsBottom = "E",
-				twoThirdsCenter = "R",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					twoThirdsLeft = "A",
+					twoThirdsHorizontalCenter = "S",
+					twoThirdsRight = "D",
+					twoThirdsTop = "Q",
+					twoThirdsVerticalCenter = "W",
+					twoThirdsBottom = "E",
+					twoThirdsCenter = "R",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2240,17 +2443,21 @@ describe("window_mover", function()
 	it("threeQuarters の各エリアへ移動する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				threeQuartersLeft = "A",
-				threeQuartersHorizontalCenter = "S",
-				threeQuartersRight = "D",
-				threeQuartersTop = "Q",
-				threeQuartersVerticalCenter = "W",
-				threeQuartersBottom = "E",
-				threeQuartersCenter = "R",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					threeQuartersLeft = "A",
+					threeQuartersHorizontalCenter = "S",
+					threeQuartersRight = "D",
+					threeQuartersTop = "Q",
+					threeQuartersVerticalCenter = "W",
+					threeQuartersBottom = "E",
+					threeQuartersCenter = "R",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2281,11 +2488,15 @@ describe("window_mover", function()
 	it("固定サイズ Center はディスプレイサイズを上限にする", function()
 		local screen = newScreen(1, { x = 10, y = 20, w = 1200, h = 900 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				["1920x1080Center"] = "M",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					["1920x1080Center"] = "M",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2297,14 +2508,18 @@ describe("window_mover", function()
 	it("明示された横方向の quarter エリアへ移動する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				quarterLeft = "A",
-				quarterHorizontalLeftCenter = "S",
-				quarterHorizontalRightCenter = "D",
-				quarterRight = "F",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					quarterLeft = "A",
+					quarterHorizontalLeftCenter = "S",
+					quarterHorizontalRightCenter = "D",
+					quarterRight = "F",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2325,14 +2540,18 @@ describe("window_mover", function()
 	it("明示された縦方向の quarter エリアへ移動する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				quarterTop = "A",
-				quarterVerticalTopCenter = "S",
-				quarterVerticalBottomCenter = "D",
-				quarterBottom = "F",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					quarterTop = "A",
+					quarterVerticalTopCenter = "S",
+					quarterVerticalBottomCenter = "D",
+					quarterBottom = "F",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2353,17 +2572,21 @@ describe("window_mover", function()
 	it("selectedArea ヒントは横方向に重なる列だけ縦方向にずらす", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 2560, h = 1440 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				full = "KD",
-				halfLeft = "KH",
-				halfRight = "KL",
-				twoThirdsHorizontalCenter = "KS",
-				halfHorizontalCenter = "KA",
-				["1920x1080Center"] = "K1",
-				["1280x720Center"] = "K2",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					full = "KD",
+					halfLeft = "KH",
+					halfRight = "KL",
+					twoThirdsHorizontalCenter = "KS",
+					halfHorizontalCenter = "KA",
+					["1920x1080Center"] = "K1",
+					["1280x720Center"] = "K2",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2382,12 +2605,16 @@ describe("window_mover", function()
 	it("UUID未登録ディスプレイは default 参照先のキーマップを使う", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "unknown")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				full = "A",
-				halfRight = "F",
-			},
-		}, "uuid-a"), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					full = "A",
+					halfRight = "F",
+				},
+			}, "uuid-a"),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2473,33 +2700,44 @@ describe("window_mover", function()
 		assert.are.equal(480, state.webviews[1]._frame.h)
 	end)
 
-	it("default候補が既存候補と衝突する未登録ディスプレイにはUUID案内を表示する", function()
-		local configured = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
-		local unknown = newScreen(2, { x = 1200, y = 0, w = 1200, h = 800 }, "unknown")
-		local win = newWindow(configured, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				full = "A",
-				halfLeft = "S",
-			},
-		}, "uuid-a"), win, { win })
-		state.screens = { configured, unknown }
+	it(
+		"default候補が既存候補と衝突する未登録ディスプレイにはUUID案内を表示する",
+		function()
+			local configured = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+			local unknown = newScreen(2, { x = 1200, y = 0, w = 1200, h = 800 }, "unknown")
+			local win = newWindow(configured, { x = 100, y = 100, w = 200, h = 100 })
+			local state, instance = newWindowMoverWithMock(
+				selectedAreaOptions({
+					["uuid-a"] = {
+						full = "A",
+						halfLeft = "S",
+					},
+				}, "uuid-a"),
+				win,
+				{ win }
+			)
+			state.screens = { configured, unknown }
 
-		instance.openWindowActionChooser()
+			instance.openWindowActionChooser()
 
-		assert.are.same({ "A", "S" }, canvasKeys(state))
-		assert.are.equal(1, #state.webviews)
-		assert.is_truthy(state.webviews[1]._html:match("unknown"))
-	end)
+			assert.are.same({ "A", "S" }, canvasKeys(state))
+			assert.are.equal(1, #state.webviews)
+			assert.is_truthy(state.webviews[1]._html:match("unknown"))
+		end
+	)
 
 	it("selectedArea は visibleWindows を参照しない", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				full = "A",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					full = "A",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 		_G.hs.window.visibleWindows = function()
 			error("visibleWindows should not be called")
@@ -2513,16 +2751,24 @@ describe("window_mover", function()
 	it("selectedArea.hints.show=false なら候補canvasを描画せずキー入力で移動する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			actions = {
-				closeWindow = "X",
-			},
-			hints = { show = false },
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						closeWindow = "X",
+					},
+					hints = { show = false },
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2564,11 +2810,15 @@ describe("window_mover", function()
 	it("selectedArea の候補クリックは移動せずイベントだけ消費する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2581,11 +2831,15 @@ describe("window_mover", function()
 	it("selectedArea の canvas は chooser を閉じても再利用する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2608,11 +2862,15 @@ describe("window_mover", function()
 	it("selectedArea.screens が設定されていれば起動直後に遅延 prewarm を予約する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		assert.are.equal(1, #state.delayTimers)
@@ -2636,13 +2894,21 @@ describe("window_mover", function()
 	it("selectedArea.hints.show=false のときは prewarm を予約しない", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}, nil, {
-			hints = { show = false },
-		}), win, { win })
+		local state = newWindowMoverWithMock(
+			selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					hints = { show = false },
+				}
+			),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		assert.are.equal(0, #state.delayTimers)
@@ -2651,11 +2917,15 @@ describe("window_mover", function()
 	it("selectedArea の配置が変わった候補は canvas を再生成する", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "A",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "A",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2674,12 +2944,16 @@ describe("window_mover", function()
 	it("再利用した selectedArea の canvas は再オープン時に active 状態へ戻る", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				halfLeft = "AA",
-				halfRight = "SS",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					halfLeft = "AA",
+					halfRight = "SS",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { screen }
 
 		instance.openWindowActionChooser()
@@ -2700,11 +2974,15 @@ describe("window_mover", function()
 		local configured = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local unknown = newScreen(2, { x = 1200, y = 0, w = 1200, h = 800 }, "unknown")
 		local win = newWindow(configured, { x = 100, y = 100, w = 200, h = 100 })
-		local state, instance = newWindowMoverWithMock(selectedAreaOptions({
-			["uuid-a"] = {
-				full = "A",
-			},
-		}), win, { win })
+		local state, instance = newWindowMoverWithMock(
+			selectedAreaOptions({
+				["uuid-a"] = {
+					full = "A",
+				},
+			}),
+			win,
+			{ win }
+		)
 		state.screens = { configured, unknown }
 
 		instance.openWindowActionChooser()

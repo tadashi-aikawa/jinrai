@@ -251,7 +251,10 @@ function M.new(options)
 				return
 			end
 			if not success then
-				fail("Failed to update Jinrai", "SpoonInstall could not install " .. displayVersion(targetVersion) .. ".")
+				fail(
+					"Failed to update Jinrai",
+					"SpoonInstall could not install " .. displayVersion(targetVersion) .. "."
+				)
 				return
 			end
 

@@ -141,12 +141,22 @@ describe("application_hints", function()
 			},
 			timer = {
 				doEvery = function(_, callback)
-					local timer = { callback = callback, stop = function(self) self.stopped = true end }
+					local timer = {
+						callback = callback,
+						stop = function(self)
+							self.stopped = true
+						end,
+					}
 					table.insert(timers, timer)
 					return timer
 				end,
 				doAfter = function(_, callback)
-					local timer = { callback = callback, stop = function(self) self.stopped = true end }
+					local timer = {
+						callback = callback,
+						stop = function(self)
+							self.stopped = true
+						end,
+					}
 					table.insert(timers, timer)
 					return timer
 				end,
@@ -198,7 +208,11 @@ describe("application_hints", function()
 		})
 
 		assert.is_true(instance.show())
-		mocks.keyWatcher().callback({ getKeyCode = function() return 8 end })
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 8
+			end,
+		})
 
 		assert.are.equal(0, activateCount)
 		assert.are.equal(0, #mocks.keyStrokes)
@@ -226,7 +240,11 @@ describe("application_hints", function()
 		})
 
 		assert.is_true(instance.show())
-		mocks.keyWatcher().callback({ getKeyCode = function() return 8 end })
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 8
+			end,
+		})
 
 		assert.is_true(callbackInvoked)
 		assert.is_nil(receivedApp)
@@ -261,7 +279,11 @@ describe("application_hints", function()
 		})
 
 		assert.is_true(instance.show())
-		mocks.keyWatcher().callback({ getKeyCode = function() return 8 end })
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 8
+			end,
+		})
 
 		assert.are.equal(0, activateCount)
 		assert.are.equal("n", mocks.keyStrokes[1].key)
@@ -301,7 +323,11 @@ describe("application_hints", function()
 		})
 
 		assert.is_true(instance.show())
-		mocks.keyWatcher().callback({ getKeyCode = function() return 8 end })
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 8
+			end,
+		})
 
 		assert.are.same({ "ctrl" }, mocks.keyStrokes[1].modifiers)
 		assert.are.equal("n", mocks.keyStrokes[1].key)
@@ -387,7 +413,11 @@ describe("application_hints", function()
 		})
 
 		assert.is_true(instance.show())
-		mocks.keyWatcher().callback({ getKeyCode = function() return 8 end })
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 8
+			end,
+		})
 
 		assert.are.equal(1, focusCount.count)
 		assert.is_false(mocks.timers[1].stopped == true)
@@ -418,7 +448,11 @@ describe("application_hints", function()
 		})
 
 		assert.is_true(instance.show())
-		mocks.keyWatcher().callback({ getKeyCode = function() return 8 end })
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 8
+			end,
+		})
 		mocks.timers[2].callback()
 
 		assert.are.equal(1, #mocks.alerts)
@@ -469,8 +503,16 @@ describe("application_hints", function()
 		})
 
 		assert.is_true(instance.show())
-		mocks.keyWatcher().callback({ getKeyCode = function() return 49 end })
-		mocks.keyWatcher().callback({ getKeyCode = function() return 8 end })
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 49
+			end,
+		})
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 8
+			end,
+		})
 
 		assert.are.equal(1, started)
 		assert.are.equal(windows[2], selected)
@@ -507,8 +549,16 @@ describe("application_hints", function()
 		})
 
 		assert.is_true(instance.show())
-		mocks.keyWatcher().callback({ getKeyCode = function() return 49 end })
-		mocks.keyWatcher().callback({ getKeyCode = function() return 53 end })
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 49
+			end,
+		})
+		mocks.keyWatcher().callback({
+			getKeyCode = function()
+				return 53
+			end,
+		})
 
 		assert.are.equal(1, canceled)
 	end)

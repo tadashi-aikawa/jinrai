@@ -2598,18 +2598,11 @@ function M.new(options)
 			canvas[1].frame = layout.characterFrame
 		end
 		applyProgress(0)
-		animateJinraiModeCanvas(
-			canvas,
-			previousCanvas,
-			character.animation,
-			applyProgress,
-			function(timer)
-				jinraiModeCharacterAnimationTimer = timer
-			end,
-			function()
-				jinraiModePreviousCharacterCanvas = nil
-			end
-		)
+		animateJinraiModeCanvas(canvas, previousCanvas, character.animation, applyProgress, function(timer)
+			jinraiModeCharacterAnimationTimer = timer
+		end, function()
+			jinraiModePreviousCharacterCanvas = nil
+		end)
 	end
 
 	local function showJinraiModeText(displayContext, logoSize, text)
@@ -2641,18 +2634,11 @@ function M.new(options)
 			canvas[2].frame = layout.comboTextFrame
 		end
 		applyProgress(0)
-		animateJinraiModeCanvas(
-			canvas,
-			previousCanvas,
-			text.animation,
-			applyProgress,
-			function(timer)
-				jinraiModeTextAnimationTimer = timer
-			end,
-			function()
-				jinraiModePreviousTextCanvas = nil
-			end
-		)
+		animateJinraiModeCanvas(canvas, previousCanvas, text.animation, applyProgress, function(timer)
+			jinraiModeTextAnimationTimer = timer
+		end, function()
+			jinraiModePreviousTextCanvas = nil
+		end)
 	end
 
 	local function showJinraiModeCombo()
@@ -3881,15 +3867,7 @@ function M.new(options)
 				return
 			end
 			table.insert(placementTasks, function(showImmediately)
-				placeHint(
-					hint,
-					canvasFrame,
-					previewImage,
-					previewHeight,
-					keyBoxWidth,
-					scale,
-					showImmediately
-				)
+				placeHint(hint, canvasFrame, previewImage, previewHeight, keyBoxWidth, scale, showImmediately)
 			end)
 		end
 
@@ -4151,8 +4129,7 @@ function M.new(options)
 			repeat
 				placementTasks[nextTaskIndex](false)
 				nextTaskIndex = nextTaskIndex + 1
-			until nextTaskIndex > #placementTasks
-				or nowMilliseconds() - startedAt >= ASYNC_HINT_CANVAS_BUDGET_MS
+			until nextTaskIndex > #placementTasks or nowMilliseconds() - startedAt >= ASYNC_HINT_CANVAS_BUDGET_MS
 
 			if nextTaskIndex > #placementTasks then
 				preparationTimer = nil

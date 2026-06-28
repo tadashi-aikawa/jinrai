@@ -330,7 +330,9 @@ end
 
 local function checkRemovedKeys(options)
 	if options.hotkey ~= nil then
-		error("[jinrai.window_mover] removed key 'hotkey' is no longer supported; use 'commands.moveToNextDisplay.hotkey'")
+		error(
+			"[jinrai.window_mover] removed key 'hotkey' is no longer supported; use 'commands.moveToNextDisplay.hotkey'"
+		)
 	end
 	if type(options.commands) == "table" and options.commands.openWindowActionChooser ~= nil then
 		error(
@@ -507,7 +509,10 @@ local function validateSelectedAreaActionKeysDoNotConflict(selectedAreaActions, 
 		for uuid, areaMap in pairs(selectedAreaScreens) do
 			for _, areaKey in pairs(areaMap) do
 				local normalizedAreaKey = string.lower(areaKey)
-				if startsWith(normalizedAreaKey, normalizedActionKey) or startsWith(normalizedActionKey, normalizedAreaKey) then
+				if
+					startsWith(normalizedAreaKey, normalizedActionKey)
+					or startsWith(normalizedActionKey, normalizedAreaKey)
+				then
 					error(
 						string.format(
 							"[jinrai.window_mover] selectedArea.actions.%s key '%s' conflicts with selectedArea.screens['%s'] key '%s'",
@@ -577,8 +582,10 @@ function M.build(options)
 	local selectedAreaDefault = normalizeSelectedAreaDefault(merged.selectedArea.defaultScreen, selectedAreaScreens)
 	local selectedAreaWindowHintsKey = normalizeSelectedAreaWindowHintsKey(merged.selectedArea.windowHints)
 	local jinraiModeKey = normalizeJinraiModeKey(merged.internal.jinraiMode.windowMover.key)
-	local cycleHorizontalRatios = normalizeCycleRatios(merged.behavior.cycle.horizontalRatios, "behavior.cycle.horizontalRatios")
-	local cycleVerticalRatios = normalizeCycleRatios(merged.behavior.cycle.verticalRatios, "behavior.cycle.verticalRatios")
+	local cycleHorizontalRatios =
+		normalizeCycleRatios(merged.behavior.cycle.horizontalRatios, "behavior.cycle.horizontalRatios")
+	local cycleVerticalRatios =
+		normalizeCycleRatios(merged.behavior.cycle.verticalRatios, "behavior.cycle.verticalRatios")
 	validateSelectedAreaActionKeysDoNotConflict(selectedAreaActions, selectedAreaScreens)
 	validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens, selectedAreaActions)
 
