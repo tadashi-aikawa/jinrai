@@ -179,6 +179,9 @@ local DEFAULT_CONFIG = {
 			horizontalRatios = { 1 / 2, 1 / 3, 2 / 3 },
 			verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },
 		},
+		freeArea = {
+			hiddenWindowThreshold = 0.5,
+		},
 	},
 	selectedArea = {
 		defaultScreen = nil,
@@ -503,6 +506,13 @@ local function normalizeCycleRatios(ratios, path)
 	return normalized
 end
 
+local function normalizeHiddenWindowThreshold(value)
+	if type(value) ~= "number" or value < 0 or value > 1 then
+		error("[jinrai.window_mover] behavior.freeArea.hiddenWindowThreshold must be a number between 0 and 1")
+	end
+	return value
+end
+
 local function validateSelectedAreaActionKeysDoNotConflict(selectedAreaActions, selectedAreaScreens)
 	for actionName, actionKey in pairs(selectedAreaActions) do
 		local normalizedActionKey = string.lower(actionKey)
@@ -586,6 +596,7 @@ function M.build(options)
 		normalizeCycleRatios(merged.behavior.cycle.horizontalRatios, "behavior.cycle.horizontalRatios")
 	local cycleVerticalRatios =
 		normalizeCycleRatios(merged.behavior.cycle.verticalRatios, "behavior.cycle.verticalRatios")
+	local freeAreaHiddenWindowThreshold = normalizeHiddenWindowThreshold(merged.behavior.freeArea.hiddenWindowThreshold)
 	validateSelectedAreaActionKeysDoNotConflict(selectedAreaActions, selectedAreaScreens)
 	validateJinraiModeKeyDoesNotConflict(jinraiModeKey, selectedAreaScreens, selectedAreaActions)
 
@@ -617,6 +628,7 @@ function M.build(options)
 		centerCursor = merged.behavior.cursor.afterMove,
 		cycleHorizontalRatios = cycleHorizontalRatios,
 		cycleVerticalRatios = cycleVerticalRatios,
+		freeAreaHiddenWindowThreshold = freeAreaHiddenWindowThreshold,
 		selectedAreaDefault = selectedAreaDefault,
 		selectedAreaScreens = selectedAreaScreens,
 		selectedAreaActions = selectedAreaActions,

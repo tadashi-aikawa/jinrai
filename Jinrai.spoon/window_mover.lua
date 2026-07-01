@@ -329,6 +329,42 @@ local function bestFreeFrame(screenFrame, occupiedFrames, currentFrame)
 	return best
 end
 
+local function coveredAreaByFrames(frame, coverFrames)
+	local coveredFrames = {}
+	local coveredArea = 0
+	for _, coverFrame in ipairs(coverFrames) do
+		local coveredPart = intersectFrame(frame, coverFrame)
+		if coveredPart then
+			local uncoveredParts = { coveredPart }
+			for _, alreadyCovered in ipairs(coveredFrames) do
+				local nextUncoveredParts = {}
+				for _, uncoveredPart in ipairs(uncoveredParts) do
+					for _, splitPart in ipairs(subtractFrame(uncoveredPart, alreadyCovered)) do
+						table.insert(nextUncoveredParts, splitPart)
+					end
+				end
+				uncoveredParts = nextUncoveredParts
+				if #uncoveredParts == 0 then
+					break
+				end
+			end
+			for _, uncoveredPart in ipairs(uncoveredParts) do
+				table.insert(coveredFrames, uncoveredPart)
+				coveredArea = coveredArea + frameArea(uncoveredPart)
+			end
+		end
+	end
+	return coveredArea
+end
+
+local function isHiddenByFrontFrames(frame, frontFrames, threshold)
+	local coveredArea = coveredAreaByFrames(frame, frontFrames)
+	if threshold <= 0 then
+		return coveredArea > 0
+	end
+	return coveredArea / frameArea(frame) >= threshold
+end
+
 local function frameKey(frame)
 	return table.concat({ frame.x, frame.y, frame.w, frame.h }, ":")
 end
@@ -533,19 +569,15 @@ function M.new(options)
 		local occupiedFrames = {}
 		local frontFrames = {}
 		for _, otherWin in ipairs(hs.window.orderedWindows()) do
-			if otherWin and not sameWindow(win, otherWin) and isStandardWindow(otherWin) then
+			if otherWin and isStandardWindow(otherWin) then
 				local otherScreen = screenOf(otherWin)
 				if sameScreen(screen, otherScreen) then
 					local occupiedFrame = intersectFrame(screenFrame, frameOf(otherWin))
 					if occupiedFrame then
-						local overlapsFrontWindow = false
-						for _, frontFrame in ipairs(frontFrames) do
-							if intersectFrame(occupiedFrame, frontFrame) then
-								overlapsFrontWindow = true
-								break
-							end
-						end
-						if not overlapsFrontWindow then
+						local activeWindow = sameWindow(win, otherWin)
+						local hiddenByFrontWindow =
+							isHiddenByFrontFrames(occupiedFrame, frontFrames, config.freeAreaHiddenWindowThreshold)
+						if not activeWindow and not hiddenByFrontWindow then
 							table.insert(occupiedFrames, occupiedFrame)
 						end
 						table.insert(frontFrames, occupiedFrame)

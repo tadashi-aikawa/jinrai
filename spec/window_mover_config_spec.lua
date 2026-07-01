@@ -171,6 +171,9 @@ describe("window_mover_config", function()
 					horizontalRatios = { 1 / 3, 1 / 2 },
 					verticalRatios = { 2 / 3, 1 / 2 },
 				},
+				freeArea = {
+					hiddenWindowThreshold = 0.75,
+				},
 			},
 			selectedArea = {
 				defaultScreen = "uuid-a",
@@ -380,6 +383,7 @@ describe("window_mover_config", function()
 		)
 		assert.are.same({ 1 / 3, 1 / 2 }, built.cycleHorizontalRatios)
 		assert.are.same({ 2 / 3, 1 / 2 }, built.cycleVerticalRatios)
+		assert.are.equal(0.75, built.freeAreaHiddenWindowThreshold)
 	end)
 
 	it("未指定時はホットキーなし、カーソル移動あり、選択エリア候補なし", function()
@@ -436,6 +440,40 @@ describe("window_mover_config", function()
 		)
 		assert.are.same({ 1 / 2, 1 / 3, 2 / 3 }, built.cycleHorizontalRatios)
 		assert.are.same({ 1 / 2, 1 / 3, 2 / 3 }, built.cycleVerticalRatios)
+		assert.are.equal(0.5, built.freeAreaHiddenWindowThreshold)
+	end)
+
+	it("freeArea hiddenWindowThreshold は0から1まで設定できる", function()
+		for _, threshold in ipairs({ 0, 0.5, 1 }) do
+			local built = mod.build({
+				behavior = {
+					freeArea = {
+						hiddenWindowThreshold = threshold,
+					},
+				},
+			})
+
+			assert.are.equal(threshold, built.freeAreaHiddenWindowThreshold)
+		end
+	end)
+
+	it("freeArea hiddenWindowThreshold が不正ならエラー", function()
+		for _, threshold in ipairs({ "0.5", -0.1, 1.1 }) do
+			local ok, err = pcall(function()
+				mod.build({
+					behavior = {
+						freeArea = {
+							hiddenWindowThreshold = threshold,
+						},
+					},
+				})
+			end)
+
+			assert.is_false(ok)
+			assert.is_truthy(
+				tostring(err):match("behavior%.freeArea%.hiddenWindowThreshold must be a number between 0 and 1")
+			)
+		end
 	end)
 
 	it("cycle ratio が不正ならエラー", function()

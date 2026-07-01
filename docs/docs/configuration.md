@@ -588,6 +588,10 @@ spoon.Jinrai:setup({
         -- 高さを切り替える順番です。
         verticalRatios = { 1 / 2, 1 / 3, 2 / 3 },
       },
+      freeArea = {
+        -- 前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するしきい値です。
+        hiddenWindowThreshold = 0.5,
+      },
     },
     selectedArea = {
       -- 未設定ディスプレイへ流用するキーマップのUUIDです。

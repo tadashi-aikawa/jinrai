@@ -553,7 +553,7 @@ describe("window_mover", function()
 			local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
 			local front = newWindow(screen, { x = 0, y = 0, w = 800, h = 800 })
 			local backLeft = newWindow(screen, { x = 0, y = 0, w = 600, h = 800 })
-			local backRight = newWindow(screen, { x = 600, y = 0, w = 600, h = 800 })
+			local backRight = newWindow(screen, { x = 400, y = 0, w = 800, h = 800 })
 			local _, instance = newWindowMoverWithMock(
 				{ behavior = { cursor = { afterMove = false } } },
 				win,
@@ -567,17 +567,90 @@ describe("window_mover", function()
 		end
 	)
 
-	it("アクティブウィンドウは背面ウィンドウの除外判定でも無視する", function()
+	it(
+		"アクティブウィンドウは背面ウィンドウの除外判定では前面領域として扱う",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
+			local win = newWindow(screen, { x = 0, y = 0, w = 800, h = 800 })
+			local backHidden = newWindow(screen, { x = 0, y = 0, w = 600, h = 800 })
+			local occupiedRight = newWindow(screen, { x = 1000, y = 0, w = 200, h = 800 })
+			local _, instance = newWindowMoverWithMock(
+				{ behavior = { cursor = { afterMove = false } } },
+				win,
+				{ win, backHidden, occupiedRight },
+				{ win, backHidden, occupiedRight }
+			)
+
+			instance.moveToActiveDisplayFreeArea()
+
+			assert.are.same({ x = 0, y = 0, w = 1000, h = 800 }, win.setFrameCalls[1].frame)
+		end
+	)
+
+	it("背面ウィンドウの隠れた面積がしきい値未満なら障害物として扱う", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
-		local win = newWindow(screen, { x = 0, y = 0, w = 800, h = 800 })
-		local backLeft = newWindow(screen, { x = 0, y = 0, w = 600, h = 800 })
-		local backRight = newWindow(screen, { x = 600, y = 0, w = 600, h = 800 })
+		local win = newWindow(screen, { x = 0, y = 0, w = 400, h = 800 })
+		local back = newWindow(screen, { x = 300, y = 0, w = 300, h = 800 })
+		local occupiedRight = newWindow(screen, { x = 1000, y = 0, w = 200, h = 800 })
 		local _, instance = newWindowMoverWithMock(
 			{ behavior = { cursor = { afterMove = false } } },
 			win,
-			{ win, backLeft, backRight },
-			{ win, backLeft, backRight }
+			{ win, back, occupiedRight },
+			{ win, back, occupiedRight }
 		)
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 600, y = 0, w = 400, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("hiddenWindowThreshold=0なら少しでも重なる背面ウィンドウを除外する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
+		local win = newWindow(screen, { x = 0, y = 0, w = 400, h = 800 })
+		local back = newWindow(screen, { x = 300, y = 0, w = 300, h = 800 })
+		local occupiedRight = newWindow(screen, { x = 1000, y = 0, w = 200, h = 800 })
+		local _, instance = newWindowMoverWithMock({
+			behavior = {
+				cursor = { afterMove = false },
+				freeArea = { hiddenWindowThreshold = 0 },
+			},
+		}, win, { win, back, occupiedRight }, { win, back, occupiedRight })
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 0, y = 0, w = 1000, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("複数の前面ウィンドウでしきい値以上隠れる背面ウィンドウを除外する", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 })
+		local win = newWindow(screen, { x = 500, y = 0, w = 10, h = 10 })
+		local frontLeft = newWindow(screen, { x = 0, y = 0, w = 300, h = 800 })
+		local frontRight = newWindow(screen, { x = 700, y = 0, w = 300, h = 800 })
+		local back = newWindow(screen, { x = 0, y = 0, w = 1000, h = 800 })
+		local _, instance = newWindowMoverWithMock(
+			{ behavior = { cursor = { afterMove = false } } },
+			win,
+			{ win, frontLeft, frontRight, back },
+			{ win, frontLeft, frontRight, back }
+		)
+
+		instance.moveToActiveDisplayFreeArea()
+
+		assert.are.same({ x = 300, y = 0, w = 400, h = 800 }, win.setFrameCalls[1].frame)
+	end)
+
+	it("前面ウィンドウ同士の重複領域を二重カウントしない", function()
+		local screen = newScreen(1, { x = 0, y = 0, w = 1000, h = 800 })
+		local win = newWindow(screen, { x = 900, y = 0, w = 50, h = 50 })
+		local frontLeft = newWindow(screen, { x = 0, y = 0, w = 300, h = 800 })
+		local frontMiddle = newWindow(screen, { x = 200, y = 0, w = 300, h = 800 })
+		local back = newWindow(screen, { x = 0, y = 0, w = 1000, h = 800 })
+		local _, instance = newWindowMoverWithMock({
+			behavior = {
+				cursor = { afterMove = false },
+				freeArea = { hiddenWindowThreshold = 0.6 },
+			},
+		}, win, { win, frontLeft, frontMiddle, back }, { win, frontLeft, frontMiddle, back })
 
 		instance.moveToActiveDisplayFreeArea()
 
@@ -587,9 +660,9 @@ describe("window_mover", function()
 	it("障害物から除外されたウィンドウもさらに背面の重なり判定に使う", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 })
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 })
-		local front = newWindow(screen, { x = 0, y = 0, w = 400, h = 800 })
+		local front = newWindow(screen, { x = 0, y = 0, w = 600, h = 800 })
 		local middle = newWindow(screen, { x = 300, y = 0, w = 400, h = 800 })
-		local back = newWindow(screen, { x = 600, y = 0, w = 400, h = 800 })
+		local back = newWindow(screen, { x = 500, y = 0, w = 400, h = 800 })
 		local _, instance = newWindowMoverWithMock(
 			{ behavior = { cursor = { afterMove = false } } },
 			win,
@@ -599,7 +672,7 @@ describe("window_mover", function()
 
 		instance.moveToActiveDisplayFreeArea()
 
-		assert.are.same({ x = 400, y = 0, w = 800, h = 800 }, win.setFrameCalls[1].frame)
+		assert.are.same({ x = 600, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
 	end)
 
 	it("新しい直接実行コマンドのホットキーを登録して解放する", function()
