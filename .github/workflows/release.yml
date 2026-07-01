@@ -33,7 +33,7 @@ jobs:
         run: |
           pnpm dlx \
             --package semantic-release@25.0.2 \
-            --package conventional-changelog-conventionalcommits \
+            --package conventional-changelog-conventionalcommits@9.3.1 \
             --package @semantic-release/exec \
             semantic-release
         env:
