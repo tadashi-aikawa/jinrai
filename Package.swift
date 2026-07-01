@@ -4,6 +4,10 @@ import PackageDescription
 let package = Package(
     name: "jinrai-native",
     platforms: [.macOS(.v14)],
+    dependencies: [
+        // Command Line Tools のみの環境には swift-testing が同梱されないため依存で供給
+        .package(url: "https://github.com/swiftlang/swift-testing.git", from: "0.12.0")
+    ],
     targets: [
         // 非公開 CGS / AX API の extern 宣言のみを持つ C ターゲット
         .target(
@@ -29,7 +33,10 @@ let package = Package(
         ),
         .testTarget(
             name: "JinraiCoreTests",
-            dependencies: ["JinraiCore"],
+            dependencies: [
+                "JinraiCore",
+                .product(name: "Testing", package: "swift-testing"),
+            ],
             path: "Tests/JinraiCoreTests"
         ),
     ]
