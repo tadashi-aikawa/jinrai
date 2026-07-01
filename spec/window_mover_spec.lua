@@ -1651,6 +1651,63 @@ describe("window_mover", function()
 		assert.are.same({ x = 0, y = 0, w = 600, h = 800 }, win.setFrameCalls[1].frame)
 	end)
 
+	it(
+		"JinraiMode context の detachChromeTabToNewWindow action 再表示後のエリア適用で onJinraiModeApply を呼ぶ",
+		function()
+			local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
+			local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.google.Chrome" })
+			local options = selectedAreaOptions(
+				{
+					["uuid-a"] = {
+						halfLeft = "A",
+					},
+				},
+				nil,
+				{
+					actions = {
+						detachChromeTabToNewWindow = "T",
+					},
+				}
+			)
+			local jinraiModeApplyCount = 0
+			local jinraiModeStartCount = 0
+			options.internal = {
+				jinraiMode = {
+					onStart = function()
+						jinraiModeStartCount = jinraiModeStartCount + 1
+					end,
+					onApply = function()
+						jinraiModeApplyCount = jinraiModeApplyCount + 1
+					end,
+				},
+			}
+			local state, instance = newWindowMoverWithMock(options, win, { win })
+			state.screens = { screen }
+
+			instance.openWindowActionChooser({ jinraiMode = true })
+			sendKey(state, "t")
+
+			assert.are.equal(0, jinraiModeApplyCount)
+			assert.are.equal(0, jinraiModeStartCount)
+
+			local reopenTimer = nil
+			for _, timer in ipairs(state.delayTimers) do
+				if timer.interval == 0.15 then
+					reopenTimer = timer
+				end
+			end
+			assert.is_truthy(reopenTimer)
+
+			reopenTimer.callback()
+			assert.are.equal(0, jinraiModeStartCount)
+
+			sendKey(state, "a")
+
+			assert.are.equal(1, jinraiModeApplyCount)
+			assert.are.equal(0, jinraiModeStartCount)
+		end
+	)
+
 	it("detachChromeTabToNewWindow action は Chrome 以外では onApply を呼ばない", function()
 		local screen = newScreen(1, { x = 0, y = 0, w = 1200, h = 800 }, "uuid-a")
 		local win = newWindow(screen, { x = 100, y = 100, w = 200, h = 100 }, { bundleID = "com.example.app" })

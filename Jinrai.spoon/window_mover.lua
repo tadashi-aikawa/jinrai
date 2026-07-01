@@ -2358,8 +2358,10 @@ button:active {
 		if startJinraiMode then
 			areaJinraiModeActive = true
 			areaJinraiModeContext = true
+		elseif options.jinraiMode then
+			areaJinraiModeActive = true
 		end
-		if areaJinraiModeActive and config.onJinraiModeStart then
+		if startJinraiMode and config.onJinraiModeStart then
 			config.onJinraiModeStart()
 		end
 		if config.selectedAreaHintsShow then
