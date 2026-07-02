@@ -16,6 +16,8 @@ final class WindowHintsFeature {
     private var hints: [HintKeyAssignment.Hint] = []
     private var hintContainers: [String: CALayer] = [:]
     private var hintKeyLayers: [String: CATextLayer] = [:]
+    private var hintOverlayFills: [String: CALayer] = [:]
+    private var hintOverlayBorders: [String: CAShapeLayer] = [:]
     private var hintFrames: [String: CGRect] = [:]  // top-left 座標(外クリック判定用)
     private var currentInput = ""
     private var occludedWindowIDs: Set<UInt32> = []
@@ -113,6 +115,8 @@ final class WindowHintsFeature {
         overlays = []
         hintContainers = [:]
         hintKeyLayers = [:]
+        hintOverlayFills = [:]
+        hintOverlayBorders = [:]
         hintFrames = [:]
         hints = []
         currentInput = ""
@@ -401,6 +405,19 @@ final class WindowHintsFeature {
         container.backgroundColor = cgColor(style.bgColor)
         container.cornerRadius = CGFloat(config.cornerRadius)
 
+        // ヒント箱の overlay 塗り(アクティブ=橙 / 通常=青)。dock(occluded)には描かない
+        let isDock = isDockHint(hint)
+        if !isDock {
+            let colors = overlayColors(
+                isActiveWindow: hint.entry.window.isFocused, matched: true)
+            let fill = CALayer()
+            fill.frame = container.bounds
+            fill.cornerRadius = CGFloat(config.cornerRadius)
+            fill.backgroundColor = cgColor(colors.fill)
+            container.addSublayer(fill)
+            hintOverlayFills[hint.key] = fill
+        }
+
         // mode "background": プレビューをヒント全体の背景として敷く
         if let image = previewImage, config.previewMode == "background" {
             container.masksToBounds = true
@@ -483,7 +500,41 @@ final class WindowHintsFeature {
             container.addSublayer(badge)
         }
 
+        // ヒント箱の枠線(アクティブ=橙 / 通常=青 / 候補外=灰)
+        if !isDock {
+            let colors = overlayColors(
+                isActiveWindow: hint.entry.window.isFocused, matched: true)
+            let bw = CGFloat(config.overlayBorderWidth)
+            let border = CAShapeLayer()
+            border.path = CGPath(
+                roundedRect: container.bounds.insetBy(dx: bw / 2, dy: bw / 2),
+                cornerWidth: CGFloat(config.cornerRadius),
+                cornerHeight: CGFloat(config.cornerRadius), transform: nil)
+            border.fillColor = nil
+            border.lineWidth = bw
+            border.strokeColor = cgColor(colors.border)
+            container.addSublayer(border)
+            hintOverlayBorders[hint.key] = border
+        }
+
         return container
+    }
+
+    /// ヒント箱の overlay 塗り・枠線の色(元 resolveHintOverlayFill/BorderColor)。
+    /// matched=false は入力で候補外になった状態
+    private func overlayColors(isActiveWindow: Bool, matched: Bool)
+        -> (fill: ConfigColor, border: ConfigColor)
+    {
+        let fill =
+            (matched && isActiveWindow)
+            ? config.activeOverlayFillColor : config.overlayFillColor
+        let border: ConfigColor
+        if isActiveWindow {
+            border = matched ? config.activeOverlayBorderColor : config.dimmedOverlayBorderColor
+        } else {
+            border = matched ? config.overlayBorderColor : config.dimmedOverlayBorderColor
+        }
+        return (fill, border)
     }
 
     private func textLayer(
@@ -703,6 +754,16 @@ final class WindowHintsFeature {
             let style = config.states[state] ?? config.states[.normal]!
             container.backgroundColor = cgColor(style.bgColor)
             container.opacity = matches ? 1.0 : 0.35
+
+            // ヒント箱の overlay 塗り・枠線を状態に合わせて更新
+            if let fill = hintOverlayFills[hint.key],
+                let border = hintOverlayBorders[hint.key]
+            {
+                let colors = overlayColors(
+                    isActiveWindow: hint.entry.window.isFocused, matched: matches)
+                fill.backgroundColor = cgColor(colors.fill)
+                border.strokeColor = cgColor(colors.border)
+            }
 
             guard let keyLayer = hintKeyLayers[hint.key] else { continue }
             let prefixLength =

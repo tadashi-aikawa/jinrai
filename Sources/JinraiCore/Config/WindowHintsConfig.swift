@@ -35,6 +35,14 @@ public struct WindowHintsConfig: Sendable {
     public var focusedHighlightColor: ConfigColor
     public var focusedHighlightWidth: Double
 
+    /// ヒント箱の overlay(塗り+枠線)。状態・アクティブウィンドウで色が変わる
+    public var overlayBorderWidth: Double
+    public var overlayFillColor: ConfigColor  // 通常(青)
+    public var overlayBorderColor: ConfigColor
+    public var dimmedOverlayBorderColor: ConfigColor  // 入力で候補外(灰)
+    public var activeOverlayFillColor: ConfigColor  // アクティブウィンドウ(橙)
+    public var activeOverlayBorderColor: ConfigColor
+
     public var occlusionSampling: Occlusion.SamplingConfig
     /// 隠れウィンドウのプレビュー(要・画面収録権限)
     public var previewEnabled: Bool
@@ -224,6 +232,17 @@ public enum WindowHintsConfigBuilder {
             focusedHighlightColor: merged.color("focusedWindowHighlight.borderColor")
                 ?? ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95),
             focusedHighlightWidth: merged.double("focusedWindowHighlight.borderWidth") ?? 13,
+            overlayBorderWidth: merged.double("hint.highlight.borderWidth") ?? 6,
+            overlayFillColor: merged.color("hint.state.normal.highlight.fillColor")
+                ?? ConfigColor(red: 0.40, green: 0.68, blue: 0.98, alpha: 0.56),
+            overlayBorderColor: merged.color("hint.state.normal.highlight.borderColor")
+                ?? ConfigColor(red: 0.40, green: 0.68, blue: 0.98, alpha: 0.85),
+            dimmedOverlayBorderColor: merged.color("hint.state.dimmed.highlight.borderColor")
+                ?? ConfigColor(red: 0.45, green: 0.45, blue: 0.48, alpha: 0.30),
+            activeOverlayFillColor: merged.color("hint.state.active.highlight.fillColor")
+                ?? ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.56),
+            activeOverlayBorderColor: merged.color("hint.state.active.highlight.borderColor")
+                ?? ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95),
             occlusionSampling: sampling,
             previewEnabled: merged.bool("occlusion.preview.enabled") ?? true,
             previewMode: merged.string("occlusion.preview.mode") ?? "background",
