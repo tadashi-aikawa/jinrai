@@ -292,10 +292,13 @@ final class ApplicationHintsFeature {
         if let urlString = entry.newWindowURL, let url = URL(string: urlString) {
             NSWorkspace.shared.open(url)
         } else if let running {
-            // 起動済み → 新規ウィンドウのホットキー送出
+            // 起動済み → 新規ウィンドウのホットキーを対象アプリへ直接送出。
+            // 自身の EventTap を経由しない postKeyStroke(toPid:) を使わないと、
+            // モーダル中のキー捕捉に消費されて届かない
             running.activate()
             EventTap.postKeyStroke(
-                modifiers: entry.newWindowModifiers, key: entry.newWindowKey)
+                modifiers: entry.newWindowModifiers, key: entry.newWindowKey,
+                toPid: running.processIdentifier)
         } else {
             // 未起動 → 起動
             guard

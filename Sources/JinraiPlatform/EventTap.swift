@@ -102,18 +102,36 @@ public final class EventTap {
         }
     }
 
-    /// キーストロークを送出する(元 hs.eventtap.keyStroke)
+    /// キーストロークをシステム全体へ送出する(元 hs.eventtap.keyStroke)。
+    /// Mission Control のショートカット送出などに使う
     public static func postKeyStroke(modifiers: [String], key: String) {
-        guard let keyCode = KeyCodes.keyCode(for: key) else { return }
+        guard let (down, up) = makeKeyEvents(modifiers: modifiers, key: key) else { return }
+        down.post(tap: .cghidEventTap)
+        up.post(tap: .cghidEventTap)
+    }
+
+    /// キーストロークを特定アプリの pid へ直接送る(元 hs.eventtap.keyStroke(..., app))。
+    /// 自身の session tap を経由しないため、モーダル中でも消費されずに対象へ届く
+    public static func postKeyStroke(modifiers: [String], key: String, toPid pid: pid_t) {
+        guard let (down, up) = makeKeyEvents(modifiers: modifiers, key: key) else { return }
+        down.postToPid(pid)
+        up.postToPid(pid)
+    }
+
+    private static func makeKeyEvents(
+        modifiers: [String], key: String
+    ) -> (down: CGEvent, up: CGEvent)? {
+        guard let keyCode = KeyCodes.keyCode(for: key) else { return nil }
         let flags = KeyCodes.cgEventFlags(for: modifiers)
         let source = CGEventSource(stateID: .hidSystemState)
-        let down = CGEvent(
-            keyboardEventSource: source, virtualKey: CGKeyCode(keyCode), keyDown: true)
-        let up = CGEvent(
-            keyboardEventSource: source, virtualKey: CGKeyCode(keyCode), keyDown: false)
-        down?.flags = flags
-        up?.flags = flags
-        down?.post(tap: .cghidEventTap)
-        up?.post(tap: .cghidEventTap)
+        guard
+            let down = CGEvent(
+                keyboardEventSource: source, virtualKey: CGKeyCode(keyCode), keyDown: true),
+            let up = CGEvent(
+                keyboardEventSource: source, virtualKey: CGKeyCode(keyCode), keyDown: false)
+        else { return nil }
+        down.flags = flags
+        up.flags = flags
+        return (down, up)
     }
 }
