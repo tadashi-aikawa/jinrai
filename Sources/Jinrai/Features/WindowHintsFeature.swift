@@ -17,7 +17,11 @@ final class WindowHintsFeature {
     private var hintContainers: [String: CALayer] = [:]
     private var hintFrames: [String: CGRect] = [:]  // top-left 座標(外クリック判定用)
     private var currentInput = ""
+    private var occludedWindowIDs: Set<UInt32> = []
     private(set) var isVisible = false
+
+    /// Window Mover のエリア選択画面へ遷移するコールバック(相互結線)
+    var onOpenWindowMover: (() -> Void)?
 
     init(config: WindowHintsConfig, focusHistory: FocusHistoryFeature?) {
         self.config = config
@@ -94,11 +98,16 @@ final class WindowHintsFeature {
         currentInput = ""
     }
 
-    /// 候補収集(最小版: 現Space の可視標準ウィンドウ)
+    /// 候補収集(現Space の可視標準ウィンドウ。完全に隠れたものは occluded 扱い)
     private func collectEntries() -> [HintKeyAssignment.Entry] {
         let ordered = WindowEnumerator.orderedWindows()
             .filter { $0.pid != ProcessInfo.processInfo.processIdentifier }
         let standard = WindowEnumerator.standardWindows(from: ordered)
+        occludedWindowIDs = Set(
+            standard.filter {
+                DirectionScoring.isFullyOccludedWindow(
+                    $0, orderedWindows: ordered, config: config.directionScoring)
+            }.map(\.id))
         var entries = standard.map { win in
             HintKeyAssignment.Entry(
                 window: win,
@@ -126,6 +135,7 @@ final class WindowHintsFeature {
     private func reservedChars() -> Set<String> {
         var reserved = Set<String>()
         if let key = config.navigationFocusBackKey { reserved.insert(key.uppercased()) }
+        if let key = config.windowMoverKey { reserved.insert(key.uppercased()) }
         for key in config.directionHintKeys.keys { reserved.insert(key.uppercased()) }
         if let key = config.prevSpaceKey { reserved.insert(key.uppercased()) }
         if let key = config.nextSpaceKey { reserved.insert(key.uppercased()) }
@@ -201,9 +211,15 @@ final class WindowHintsFeature {
         return shape
     }
 
+    private func hintState(of hint: HintKeyAssignment.Hint) -> HintState {
+        if hint.entry.window.isFocused { return .active }
+        if occludedWindowIDs.contains(hint.entry.window.id) { return .occluded }
+        return .normal
+    }
+
     /// ヒント1個分のレイヤー(角丸背景+アイコン+キー+タイトル)
     private func hintContainer(for hint: HintKeyAssignment.Hint) -> CALayer {
-        let state: HintState = hint.entry.window.isFocused ? .active : .normal
+        let state = hintState(of: hint)
         let style = config.states[state] ?? config.states[.normal]!
 
         let padding = CGFloat(config.padding)
@@ -323,6 +339,22 @@ final class WindowHintsFeature {
             focusHistory.focusBack(centerCursor: config.cursorOnSelect)
             return true
         }
+        // Window Mover のエリア選択へ遷移
+        if let character = event.character?.lowercased(),
+            character == config.windowMoverKey,
+            let onOpenWindowMover
+        {
+            close()
+            onOpenWindowMover()
+            return true
+        }
+        // 方向キー(8方向ナビゲーション)
+        if let character = event.character?.lowercased(),
+            let direction = config.directionHintKeys[character]
+        {
+            runDirectionalMove(direction)
+            return true
+        }
 
         // ヒント文字の逐次マッチ
         guard let character = event.character, !character.isEmpty,
@@ -334,7 +366,11 @@ final class WindowHintsFeature {
         {
         case .selected(let key):
             if let hint = hints.first(where: { $0.key == key }) {
-                selectWindow(hint)
+                let swap =
+                    config.swapModifiers.map {
+                        event.flags.contains(KeyCodes.cgEventFlags(for: $0))
+                    } ?? false
+                selectWindow(hint, swap: swap)
             }
         case .partial(let input):
             currentInput = input
@@ -357,13 +393,55 @@ final class WindowHintsFeature {
         return false  // 外クリックはアプリに透過
     }
 
-    private func selectWindow(_ hint: HintKeyAssignment.Hint) {
+    private func selectWindow(_ hint: HintKeyAssignment.Hint, swap: Bool = false) {
         let window = hint.entry.window
         close()
         guard let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) else { return }
+        if swap, let focused = WindowEnumerator.focusedWindow(),
+            focused.windowID != ax.windowID,
+            let fromFrame = focused.frame, let toFrame = ax.frame
+        {
+            // 移動元と移動先の frame を交換(元 swapWindowFrames)
+            focused.setFrame(toFrame)
+            ax.setFrame(fromFrame)
+        }
         ax.focus()
         if config.cursorOnSelect {
             Mouse.moveToCenter(of: ax.frame ?? window.frame)
+        }
+    }
+
+    /// 方向ナビゲーション: 現Space の非オクルージョン候補から最良を選んでフォーカス
+    private func runDirectionalMove(_ direction: Direction) {
+        let ordered = WindowEnumerator.orderedWindows()
+            .filter { $0.pid != ProcessInfo.processInfo.processIdentifier }
+        guard let current = ordered.first(where: { $0.isFocused }) else {
+            close()
+            return
+        }
+        let candidates = WindowEnumerator.standardWindows(from: ordered)
+            .filter {
+                !DirectionScoring.isFullyOccludedWindow(
+                    $0, orderedWindows: ordered, config: config.directionScoring)
+            }
+        let previous = focusHistory?.previousWindow().flatMap { prev in
+            ordered.first { $0.id == prev.windowID }
+        }
+        let target = DirectionScoring.findDirectionalWindowTarget(
+            current: current,
+            candidates: candidates,
+            direction: direction,
+            previous: previous,
+            orderedWindows: ordered,
+            config: config.directionScoring
+        )
+        close()
+        guard let target,
+            let ax = AXWindow.resolve(windowID: target.id, pid: target.pid)
+        else { return }
+        ax.focus()
+        if config.cursorOnSelect {
+            Mouse.moveToCenter(of: ax.frame ?? target.frame)
         }
     }
 
@@ -374,10 +452,7 @@ final class WindowHintsFeature {
         for hint in hints {
             guard let container = hintContainers[hint.key] else { continue }
             let matches = currentInput.isEmpty || hint.key.hasPrefix(currentInput)
-            let state: HintState =
-                matches
-                ? (hint.entry.window.isFocused ? .active : .normal)
-                : .dimmed
+            let state: HintState = matches ? hintState(of: hint) : .dimmed
             let style = config.states[state] ?? config.states[.normal]!
             container.backgroundColor = cgColor(style.bgColor)
             container.opacity = matches ? 1.0 : 0.35

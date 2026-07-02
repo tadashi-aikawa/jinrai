@@ -54,4 +54,22 @@ public enum ScreenUtil {
     public static func visibleFrame(of screen: NSScreen) -> CGRect {
         fromAppKit(screen.visibleFrame)
     }
+
+    /// ディスプレイの UUID(元 hs.screen:getUUID()。selectedArea.screens のキー)
+    public static func uuid(of screen: NSScreen) -> String? {
+        guard
+            let displayID = screen.deviceDescription[
+                NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID,
+            let cfUUID = CGDisplayCreateUUIDFromDisplayID(displayID)?.takeRetainedValue(),
+            let uuidString = CFUUIDCreateString(nil, cfUUID)
+        else { return nil }
+        return uuidString as String
+    }
+
+    /// 次のディスプレイ(元 hs.screen:next())
+    public static func nextScreen(after screen: NSScreen) -> NSScreen? {
+        let screens = NSScreen.screens
+        guard let index = screens.firstIndex(of: screen) else { return screens.first }
+        return screens[(index + 1) % screens.count]
+    }
 }

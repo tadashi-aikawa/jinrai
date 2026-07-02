@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var focusBack: FocusBackFeature?
     private var focusBorder: FocusBorderFeature?
     private var windowHints: WindowHintsFeature?
+    private var windowMover: WindowMoverFeature?
     private var accessibilityGranted = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -53,13 +54,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             focusBack = FocusBackFeature(config: focusBackConfig, focusHistory: history)
         }
 
+        if let windowMoverConfig = config.windowMover {
+            windowMover = WindowMoverFeature(config: windowMoverConfig)
+        }
+
         if let windowHintsConfig = config.windowHints {
             windowHints = WindowHintsFeature(
                 config: windowHintsConfig, focusHistory: focusHistory)
         }
+
+        // 相互遷移の結線(元 init.lua のコールバック配線)
+        windowMover?.onOpenWindowHints = { [weak self] in
+            self?.windowHints?.show()
+        }
+        windowHints?.onOpenWindowMover = { [weak self] in
+            self?.windowMover?.openAreaChooser()
+        }
     }
 
     private func teardownFeatures() {
+        windowMover?.teardown()
+        windowMover = nil
         windowHints?.teardown()
         windowHints = nil
         focusBack?.teardown()

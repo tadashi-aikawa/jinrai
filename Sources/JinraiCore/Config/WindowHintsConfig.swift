@@ -38,6 +38,8 @@ public struct WindowHintsConfig: Sendable {
     public var dockItemGap: Double
 
     public var navigationFocusBackKey: String?
+    /// Window Mover のエリア選択画面へ遷移するキー
+    public var windowMoverKey: String?
     public var directionHintKeys: [String: Direction]
     public var directionScoring: DirectionScoring.Config
     public var spacesNumbers: Bool
@@ -210,6 +212,8 @@ public enum WindowHintsConfigBuilder {
             dockBottomMargin: merged.double("dock.bottomMargin") ?? 96,
             dockItemGap: merged.double("dock.itemGap") ?? 12,
             navigationFocusBackKey: merged.string("navigation.focusBack.key")?.lowercased(),
+            windowMoverKey: merged.string("navigation.windowMover.moveToSelectedArea.key")?
+                .lowercased(),
             directionHintKeys: directionKeys,
             directionScoring: scoring,
             spacesNumbers: merged.bool("navigation.spaces.numbers") ?? true,
