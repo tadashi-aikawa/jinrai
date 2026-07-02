@@ -52,6 +52,8 @@ public struct WindowHintsConfig: Sendable {
     public var navigationFocusBackKey: String?
     /// Window Mover のエリア選択画面へ遷移するキー
     public var windowMoverKey: String?
+    /// Application Hints へ遷移するキー
+    public var applicationHintsKey: String?
     public var directionHintKeys: [String: Direction]
     public var directionScoring: DirectionScoring.Config
     public var spacesNumbers: Bool
@@ -235,6 +237,7 @@ public enum WindowHintsConfigBuilder {
             navigationFocusBackKey: merged.string("navigation.focusBack.key")?.lowercased(),
             windowMoverKey: merged.string("navigation.windowMover.moveToSelectedArea.key")?
                 .lowercased(),
+            applicationHintsKey: merged.string("navigation.applicationHints.key")?.lowercased(),
             directionHintKeys: directionKeys,
             directionScoring: scoring,
             spacesNumbers: merged.bool("navigation.spaces.numbers") ?? true,

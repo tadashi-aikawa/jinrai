@@ -42,6 +42,20 @@ enum ConfigLoader {
             //         "defaultScreen": { "halfLeft": "H", "halfRight": "L", "full": "F" }
             //     }
             // },
+
+            // アプリランチャー。Window Hints から navigation.applicationHints.key で開く。
+            // 起動済みアプリは新規ウィンドウ(既定 Cmd+N)、未起動なら起動する。
+            // 例:
+            // "application_hints": {
+            //     "appearance": { "columns": 4 },
+            //     "apps": [
+            //         { "bundleID": "com.mitchellh.ghostty", "key": "G",
+            //           "newWindow": { "hotkey": { "modifiers": ["ctrl"], "key": "n" } } },
+            //         { "bundleID": "com.google.Chrome", "key": "E" },
+            //         { "bundleID": "md.obsidian", "key": "O", "name": "Obsidian",
+            //           "newWindow": { "url": "obsidian://open?path=/path/to/vault" } }
+            //     ]
+            // },
         }
         """
 

@@ -26,6 +26,8 @@ final class WindowHintsFeature {
 
     /// Window Mover のエリア選択画面へ遷移するコールバック(相互結線)
     var onOpenWindowMover: (() -> Void)?
+    /// Application Hints へ遷移するコールバック(相互結線)
+    var onOpenApplicationHints: (() -> Void)?
 
     init(
         config: WindowHintsConfig,
@@ -188,6 +190,7 @@ final class WindowHintsFeature {
         var reserved = Set<String>()
         if let key = config.navigationFocusBackKey { reserved.insert(key.uppercased()) }
         if let key = config.windowMoverKey { reserved.insert(key.uppercased()) }
+        if let key = config.applicationHintsKey { reserved.insert(key.uppercased()) }
         for key in config.directionHintKeys.keys { reserved.insert(key.uppercased()) }
         if let key = config.prevSpaceKey { reserved.insert(key.uppercased()) }
         if let key = config.nextSpaceKey { reserved.insert(key.uppercased()) }
@@ -617,6 +620,15 @@ final class WindowHintsFeature {
         {
             close()
             onOpenWindowMover()
+            return true
+        }
+        // Application Hints へ遷移
+        if let name = keyName(of: event),
+            name == config.applicationHintsKey,
+            let onOpenApplicationHints
+        {
+            close()
+            onOpenApplicationHints()
             return true
         }
         // 方向キー(8方向ナビゲーション)

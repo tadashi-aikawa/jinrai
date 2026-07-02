@@ -18,19 +18,22 @@ public struct RootConfig {
     public var focusBorder: FocusBorderConfig?
     public var windowHints: WindowHintsConfig?
     public var windowMover: WindowMoverConfig?
+    public var applicationHints: ApplicationHintsConfig?
 
     public init(
         macosNativeTabs: MacosNativeTabsConfig = .default,
         focusBack: FocusBackConfig? = nil,
         focusBorder: FocusBorderConfig? = nil,
         windowHints: WindowHintsConfig? = nil,
-        windowMover: WindowMoverConfig? = nil
+        windowMover: WindowMoverConfig? = nil,
+        applicationHints: ApplicationHintsConfig? = nil
     ) {
         self.macosNativeTabs = macosNativeTabs
         self.focusBack = focusBack
         self.focusBorder = focusBorder
         self.windowHints = windowHints
         self.windowMover = windowMover
+        self.applicationHints = applicationHints
     }
 }
 
@@ -69,6 +72,15 @@ public enum RootConfigBuilder {
         }
         if let section = root["window_mover"] as? [String: Any] {
             config.windowMover = try WindowMoverConfigBuilder.build(section)
+        }
+        if let section = root["application_hints"] as? [String: Any] {
+            // Window Hints からの遷移キー(navigation.applicationHints.key)を渡す
+            let windowHintsSection = root["window_hints"] as? [String: Any]
+            let appHintsKey =
+                ((windowHintsSection?["navigation"] as? [String: Any])?["applicationHints"]
+                    as? [String: Any])?["key"] as? String
+            config.applicationHints = try ApplicationHintsConfigBuilder.build(
+                section, windowHintsKey: appHintsKey)
         }
         return config
     }

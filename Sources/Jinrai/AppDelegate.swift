@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var focusBorder: FocusBorderFeature?
     private var windowHints: WindowHintsFeature?
     private var windowMover: WindowMoverFeature?
+    private var applicationHints: ApplicationHintsFeature?
     private var accessibilityGranted = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -65,6 +66,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 macosNativeTabs: config.macosNativeTabs)
         }
 
+        if let applicationHintsConfig = config.applicationHints {
+            applicationHints = ApplicationHintsFeature(config: applicationHintsConfig)
+        }
+
         // 相互遷移の結線(元 init.lua のコールバック配線)
         windowMover?.onOpenWindowHints = { [weak self] in
             self?.windowHints?.show()
@@ -72,9 +77,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowHints?.onOpenWindowMover = { [weak self] in
             self?.windowMover?.openAreaChooser()
         }
+        windowHints?.onOpenApplicationHints = { [weak self] in
+            self?.applicationHints?.show()
+        }
+        applicationHints?.onOpenWindowHints = { [weak self] in
+            self?.windowHints?.show()
+        }
     }
 
     private func teardownFeatures() {
+        applicationHints?.teardown()
+        applicationHints = nil
         windowMover?.teardown()
         windowMover = nil
         windowHints?.teardown()
