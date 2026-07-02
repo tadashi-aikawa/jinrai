@@ -258,84 +258,40 @@ final class WindowHintsFeature {
     /// 別Space・完全に隠れた候補を、そのウィンドウが属するスクリーンに並べる。
     /// dock.windowBlend でウィンドウの実位置(X は 0.65、Y は上半分なら画面上端)へ寄せる
     private func buildDock(root: CALayer, screenFrame: CGRect, screen: NSScreen) {
-        var dockHints = hints.filter {
+        let dockHints = hints.filter {
             isDockHint($0) && ScreenUtil.screenContaining($0.entry.window.frame) == screen
         }
         guard !dockHints.isEmpty else { return }
 
-        let xBlend = CGFloat(config.dockWindowXBlend)
-        let yBlend = CGFloat(config.dockWindowYBlend)
-        // ウィンドウ位置へ寄せる場合は X 順に並べる(元実装のソート)
-        if xBlend > 0 {
-            dockHints.sort { a, b in
-                let ax = a.entry.window.frame.midX
-                let bx = b.entry.window.frame.midX
-                return ax != bx ? ax < bx : a.key < b.key
-            }
+        // ラベルを natural サイズで構築し、DockLayout(PAV + 画面内シフト + 行分割)で配置
+        let containers = Dictionary(
+            uniqueKeysWithValues: dockHints.map { ($0.key, hintContainer(for: $0)) })
+        let items = dockHints.map { hint -> DockLayout.Item in
+            let size = containers[hint.key]!.bounds.size
+            let winFrame = hint.entry.window.frame
+            return DockLayout.Item(
+                key: hint.key, width: size.width, height: size.height,
+                windowCenterX: winFrame.midX, windowCenterY: winFrame.midY)
         }
 
-        let gap = CGFloat(config.dockItemGap)
-        let margin = CGFloat(config.dockBottomMargin)
-        let containers = dockHints.map { ($0, hintContainer(for: $0)) }
-        let maxRowWidth = screenFrame.width - 48
+        let placements = DockLayout.layout(
+            items: items,
+            screenFrame: screenFrame,
+            gap: CGFloat(config.dockItemGap),
+            dockMargin: CGFloat(config.dockBottomMargin),
+            xBlend: CGFloat(config.dockWindowXBlend),
+            yBlend: CGFloat(config.dockWindowYBlend))
 
-        // 幅に収まるよう行分割
-        var rows: [[(HintKeyAssignment.Hint, CALayer)]] = [[]]
-        var rowWidth: CGFloat = 0
-        for item in containers {
-            let width = item.1.bounds.width
-            if rowWidth > 0, rowWidth + gap + width > maxRowWidth {
-                rows.append([])
-                rowWidth = 0
-            }
-            rows[rows.count - 1].append(item)
-            rowWidth += (rowWidth > 0 ? gap : 0) + width
-        }
-
-        // 以下は top-left グローバル座標で計算し、レイヤー配置時にローカル AppKit 座標へ変換
-        var rowBottomY = screenFrame.maxY - margin
-        for row in rows {
-            let totalWidth =
-                row.reduce(0) { $0 + $1.1.bounds.width } + gap * CGFloat(row.count - 1)
-            let rowHeight = row.map(\.1.bounds.height).max() ?? 0
-            let dockY = rowBottomY - rowHeight
-            var centeredX = screenFrame.minX + (screenFrame.width - totalWidth) / 2
-            var minX = xBlend > 0 ? screenFrame.minX : centeredX
-
-            for (hint, container) in row {
-                let size = container.bounds.size
-                let winFrame = hint.entry.window.frame
-
-                // X: 中央整列位置からウィンドウ中心へ blend し、前のアイテムと重ならない位置へ
-                var desiredX = centeredX
-                if xBlend > 0 {
-                    let targetX = winFrame.midX - size.width / 2
-                    desiredX = centeredX + (targetX - centeredX) * xBlend
-                }
-                let x = min(
-                    max(max(minX, desiredX), screenFrame.minX),
-                    screenFrame.maxX - size.width)
-
-                // Y: 行の下端揃えを基準に、上半分のウィンドウは画面上端へ blend
-                var desiredY = dockY + (rowHeight - size.height)
-                if yBlend > 0, winFrame.midY < screenFrame.midY {
-                    let targetY = screenFrame.minY + margin
-                    desiredY = desiredY + (targetY - desiredY) * yBlend
-                }
-                let y = min(max(desiredY, screenFrame.minY), screenFrame.maxY - size.height)
-
-                let localX = x - screenFrame.minX
-                let localY = screenFrame.height - (y - screenFrame.minY) - size.height
-                container.frame = CGRect(
-                    origin: CGPoint(x: localX, y: localY), size: size)
-                root.addSublayer(container)
-                hintContainers[hint.key] = container
-                hintFrames[hint.key] = CGRect(origin: CGPoint(x: x, y: y), size: size)
-
-                minX = x + size.width + gap
-                centeredX += size.width + gap
-            }
-            rowBottomY = dockY - gap
+        for placement in placements {
+            guard let container = containers[placement.key] else { continue }
+            let global = placement.frame
+            let localX = global.minX - screenFrame.minX
+            let localY = screenFrame.height - (global.minY - screenFrame.minY) - global.height
+            container.frame = CGRect(
+                x: localX, y: localY, width: global.width, height: global.height)
+            root.addSublayer(container)
+            hintContainers[placement.key] = container
+            hintFrames[placement.key] = global
         }
     }
 
