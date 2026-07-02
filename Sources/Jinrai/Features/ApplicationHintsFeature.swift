@@ -294,8 +294,9 @@ final class ApplicationHintsFeature {
         } else if let running {
             // 起動済み → 新規ウィンドウのホットキーを対象アプリへ直接送出。
             // 自身の EventTap を経由しない postKeyStroke(toPid:) を使わないと、
-            // モーダル中のキー捕捉に消費されて届かない
-            running.activate()
+            // モーダル中のキー捕捉に消費されて届かない。
+            // activate() は既存ウィンドウを前面に出してしまうため呼ばない。
+            // 新規ウィンドウは出現検出後に ax.focus() で前面化される
             EventTap.postKeyStroke(
                 modifiers: entry.newWindowModifiers, key: entry.newWindowKey,
                 toPid: running.processIdentifier)
