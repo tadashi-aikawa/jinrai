@@ -128,8 +128,13 @@ final class WindowHintsFeature {
                 DirectionScoring.isFullyOccludedWindow(
                     $0, orderedWindows: ordered, config: config.directionScoring)
             }.map(\.id))
-        var entries = standard.map { win in
-            HintKeyAssignment.Entry(
+        // フォーカス中ウィンドウ = 最前面の標準ウィンドウ(CGWindowList の Z順は
+        // window server 由来で速く更新され、frontmostApplication の非同期遅延に強い)
+        let focusedID = standard.first?.id
+        var entries = standard.map { win -> HintKeyAssignment.Entry in
+            var win = win
+            win.isFocused = (win.id == focusedID)
+            return HintKeyAssignment.Entry(
                 window: win,
                 appKey: win.bundleID ?? win.appName,
                 appTitle: win.appName,
@@ -654,11 +659,13 @@ final class WindowHintsFeature {
     private func runDirectionalMove(_ direction: Direction) {
         let ordered = WindowEnumerator.orderedWindows()
             .filter { $0.pid != ProcessInfo.processInfo.processIdentifier }
-        guard let current = ordered.first(where: { $0.isFocused }) else {
+        let standard = WindowEnumerator.standardWindows(from: ordered)
+        // フォーカス中 = 最前面の標準ウィンドウ(collectEntries と同じ判定)
+        guard let current = standard.first else {
             close()
             return
         }
-        let candidates = WindowEnumerator.standardWindows(from: ordered)
+        let candidates = standard
             .filter {
                 !DirectionScoring.isFullyOccludedWindow(
                     $0, orderedWindows: ordered, config: config.directionScoring)
