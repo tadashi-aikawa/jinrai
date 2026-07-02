@@ -1,4 +1,5 @@
 import AppKit
+import JinraiPlatform
 
 /// メニューバー常駐アイコン(元 Jinrai の updater.lua のメニューバー相当)
 @MainActor
@@ -36,6 +37,14 @@ final class StatusItem {
         permissionMenuItem.target = self
         menu.addItem(permissionMenuItem)
         menu.addItem(.separator())
+        let dumpItem = NSMenuItem(
+            title: "ウィンドウ一覧をダンプ",
+            action: #selector(dumpWindows),
+            keyEquivalent: ""
+        )
+        dumpItem.target = self
+        menu.addItem(dumpItem)
+        menu.addItem(.separator())
         let quitItem = NSMenuItem(
             title: "Quit Jinrai",
             action: #selector(NSApplication.terminate(_:)),
@@ -47,6 +56,21 @@ final class StatusItem {
 
     func setAccessibilityGranted(_ granted: Bool) {
         permissionMenuItem.title = granted ? "アクセシビリティ権限: 許可済み" : "アクセシビリティ権限: 未許可"
+    }
+
+    @objc private func dumpWindows() {
+        let windows = WindowEnumerator.orderedWindows()
+        NSLog("=== Jinrai window dump: %d windows (Z順) ===", windows.count)
+        for (index, win) in windows.enumerated() {
+            let ax = AXWindow.resolve(windowID: win.id, pid: win.pid)
+            NSLog(
+                "%2d. id=%u pid=%d app=%@ title=%@ frame=(%.0f,%.0f %.0fx%.0f) ax=%@ standard=%@",
+                index, win.id, win.pid, win.appName, win.title,
+                win.frame.minX, win.frame.minY, win.frame.width, win.frame.height,
+                ax == nil ? "NG" : "OK",
+                ax?.isStandard == true ? "yes" : "no"
+            )
+        }
     }
 
     @objc private func openAccessibilitySettings() {
