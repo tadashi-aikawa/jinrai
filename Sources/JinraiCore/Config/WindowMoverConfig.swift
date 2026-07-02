@@ -18,6 +18,12 @@ public struct WindowMoverConfig: Sendable {
         /// エリア種類別の色
         public var styleColors: [String: ConfigColor]
         public var styleDimmedColors: [String: ConfigColor]
+        /// ラベルボックスの状態別色(元 appearance.state)
+        public var normalBgColor: ConfigColor
+        public var normalTextColor: ConfigColor
+        public var typedTextColor: ConfigColor
+        public var dimmedBgColor: ConfigColor
+        public var dimmedTextColor: ConfigColor
     }
 
     /// コマンド名 → ホットキー(未設定のコマンドは含まれない)
@@ -163,7 +169,18 @@ public enum WindowMoverConfigBuilder {
                 windowHintsKey: windowHintsKey,
                 showHints: merged.bool("selectedArea.hints.show") ?? true,
                 styleColors: defaultStyles,
-                styleDimmedColors: dimmedStyles
+                styleDimmedColors: dimmedStyles,
+                normalBgColor: merged.color("selectedArea.appearance.state.normal.bgColor")
+                    ?? ConfigColor(red: 0.03, green: 0.03, blue: 0.04, alpha: 0.88),
+                normalTextColor: merged.color("selectedArea.appearance.state.normal.textColor")
+                    ?? ConfigColor(red: 0.96, green: 1.0, blue: 0.98, alpha: 1.0),
+                typedTextColor: merged.color(
+                    "selectedArea.appearance.state.normal.typedTextColor")
+                    ?? ConfigColor(red: 0.96, green: 1.0, blue: 0.98, alpha: 0.38),
+                dimmedBgColor: merged.color("selectedArea.appearance.state.dimmed.bgColor")
+                    ?? ConfigColor(red: 0.03, green: 0.03, blue: 0.04, alpha: 0.30),
+                dimmedTextColor: merged.color("selectedArea.appearance.state.dimmed.textColor")
+                    ?? ConfigColor(red: 0.96, green: 1.0, blue: 0.98, alpha: 0.32)
             )
         )
     }

@@ -15,9 +15,22 @@ final class WindowMoverFeature {
     // エリア選択画面の状態
     private var chooserOverlays: [OverlayWindow] = []
     private var chooserInput = ""
-    private var chooserLabelLayers: [String: [CATextLayer]] = [:]  // キー → ラベル
     private var chooserCandidates: [(key: String, areaName: String, frame: CGRect)] = []
     private(set) var isChooserVisible = false
+
+    /// ラベルボックス1個分のレイヤー参照(入力に応じた再スタイル用)
+    private struct AreaLabelRefs {
+        let key: String
+        let styleKind: String
+        let detailText: String?
+        let container: CALayer
+        let border: CAShapeLayer
+        let keyLayer: CATextLayer
+        let iconFills: [CALayer]
+        let iconOutline: CAShapeLayer
+        let detailLayer: CATextLayer?
+    }
+    private var areaLabels: [AreaLabelRefs] = []
 
     /// エリア選択画面から Window Hints へ遷移するコールバック(相互結線)
     var onOpenWindowHints: (() -> Void)?
@@ -170,7 +183,7 @@ final class WindowMoverFeature {
     func openAreaChooser() {
         guard !isChooserVisible else { return }
         chooserCandidates = []
-        chooserLabelLayers = [:]
+        areaLabels = []
         chooserInput = ""
 
         var hasAnyMapping = false
@@ -214,19 +227,22 @@ final class WindowMoverFeature {
         }
         chooserOverlays = []
         chooserCandidates = []
-        chooserLabelLayers = [:]
+        areaLabels = []
         chooserInput = ""
     }
 
+    /// エリア選択画面の描画。元実装同様、エリア矩形は描かず
+    /// ラベルボックス(bg + 枠線 + キー + ミニアイコン + detail)だけを配置する
     private func drawAreas(
         mapping: [String: String], screen: NSScreen, screenFrame: CGRect, root: CALayer
     ) {
-        if config.selectedArea.showHints {
-            root.backgroundColor = CGColor(gray: 0, alpha: 0.25)
-        }
+        var labelCandidates: [AreaLabelLayout.Candidate] = []
+        var candidateAreaFrames: [CGRect] = []
+
         for (areaName, key) in mapping.sorted(by: { $0.value < $1.value }) {
+            let isFreeArea = AreaSpec.kind(of: areaName) == .freeArea
             let areaFrame: CGRect?
-            if AreaSpec.kind(of: areaName) == .freeArea {
+            if isFreeArea {
                 areaFrame = computeFreeArea(
                     screen: screen, screenFrame: screenFrame,
                     excluding: WindowEnumerator.focusedWindow()?.windowID)
@@ -237,43 +253,196 @@ final class WindowMoverFeature {
             chooserCandidates.append((key: key, areaName: areaName, frame: areaFrame))
 
             guard config.selectedArea.showHints else { continue }
-            let kindName = AreaSpec.kind(of: areaName).map(styleKey) ?? "free"
-            let color = config.selectedArea.styleColors[kindName]
-                ?? ConfigColor(red: 0.58, green: 0.64, blue: 0.70, alpha: 0.95)
+            let detail = AreaLabelLayout.detailLabel(for: areaName)
+            let keyWidth = AreaLabelLayout.keyBoxWidth(
+                measuredTextWidth: measureText(
+                    key, fontSize: AreaLabelLayout.keyFontSize).width)
+            labelCandidates.append(
+                AreaLabelLayout.Candidate(
+                    key: key,
+                    areaName: areaName,
+                    // ラベル配置は freeArea なら画面全体基準(右上固定)
+                    areaFrame: isFreeArea ? screenFrame : areaFrame,
+                    labelSize: AreaLabelLayout.labelSize(
+                        keyBoxWidth: keyWidth, detailLabel: detail),
+                    fixedTopRight: isFreeArea
+                ))
+            candidateAreaFrames.append(areaFrame)
+        }
 
-            // overlay ローカル座標(bottom-left)へ
+        guard config.selectedArea.showHints, !labelCandidates.isEmpty else { return }
+
+        let labelFrames = AreaLabelLayout.resolveLabelFrames(
+            candidates: labelCandidates, screenFrame: screenFrame)
+
+        for (index, candidate) in labelCandidates.enumerated() {
+            let globalFrame = labelFrames[index]
             let local = CGRect(
-                x: areaFrame.minX - screenFrame.minX,
-                y: screenFrame.height - (areaFrame.minY - screenFrame.minY)
-                    - areaFrame.height,
-                width: areaFrame.width, height: areaFrame.height)
+                x: globalFrame.minX - screenFrame.minX,
+                y: screenFrame.height - (globalFrame.minY - screenFrame.minY)
+                    - globalFrame.height,
+                width: globalFrame.width, height: globalFrame.height)
+            let refs = buildAreaLabel(
+                candidate: candidate, scale: screen.backingScaleFactor)
+            refs.container.frame = local
+            root.addSublayer(refs.container)
+            areaLabels.append(refs)
+        }
+        applyChooserStyles()
+    }
 
-            let border = CAShapeLayer()
-            border.path = CGPath(rect: local.insetBy(dx: 2, dy: 2), transform: nil)
-            border.fillColor = nil
-            border.lineWidth = 2
-            border.strokeColor = CGColor(
-                red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
-            root.addSublayer(border)
+    private func measureText(_ text: String, fontSize: CGFloat) -> CGSize {
+        NSAttributedString(
+            string: text,
+            attributes: [.font: NSFont.systemFont(ofSize: fontSize)]
+        ).size()
+    }
 
-            let label = CATextLayer()
-            label.string = key
-            label.font = NSFont.boldSystemFont(ofSize: 28)
-            label.fontSize = 28
-            label.foregroundColor = CGColor(
-                red: color.red, green: color.green, blue: color.blue, alpha: 1)
-            label.backgroundColor = CGColor(
-                red: 0.03, green: 0.03, blue: 0.04, alpha: 0.88)
-            label.cornerRadius = 6
-            label.alignmentMode = .center
-            label.contentsScale = screen.backingScaleFactor
-            let size = label.preferredFrameSize()
-            label.frame = CGRect(
-                x: local.midX - (size.width + 20) / 2,
-                y: local.midY - (size.height + 10) / 2,
-                width: size.width + 20, height: size.height + 10)
-            root.addSublayer(label)
-            chooserLabelLayers[key, default: []].append(label)
+    /// ラベルボックス1個を組み立てる(色は applyChooserStyles で設定)
+    private func buildAreaLabel(
+        candidate: AreaLabelLayout.Candidate, scale: CGFloat
+    ) -> AreaLabelRefs {
+        let size = candidate.labelSize
+        let height = size.height
+        let detail = AreaLabelLayout.detailLabel(for: candidate.areaName)
+        let keyWidth = size.width - 9 - 5 - AreaLabelLayout.iconWidth - 10
+        let styleKind = AreaSpec.kind(of: candidate.areaName).map(styleKey) ?? "free"
+
+        // 元実装は top-left 座標で要素を置くため、AppKit レイヤー座標へ反転するヘルパー
+        func flip(_ rect: CGRect) -> CGRect {
+            CGRect(
+                x: rect.minX, y: height - rect.maxY,
+                width: rect.width, height: rect.height)
+        }
+
+        let container = CALayer()
+        container.bounds = CGRect(origin: .zero, size: size)
+        container.cornerRadius = 6
+
+        let border = CAShapeLayer()
+        border.path = CGPath(
+            roundedRect: CGRect(origin: .zero, size: size).insetBy(dx: 1, dy: 1),
+            cornerWidth: 6, cornerHeight: 6, transform: nil)
+        border.fillColor = nil
+        border.lineWidth = 2
+        container.addSublayer(border)
+
+        // キー文字(size 26、x=9。top-left 基準で y=9, h=43)
+        let keyLayer = CATextLayer()
+        keyLayer.string = candidate.key
+        keyLayer.font = NSFont.systemFont(ofSize: AreaLabelLayout.keyFontSize)
+        keyLayer.fontSize = AreaLabelLayout.keyFontSize
+        keyLayer.alignmentMode = .center
+        keyLayer.contentsScale = scale
+        keyLayer.frame = flip(CGRect(x: 9, y: 9, width: keyWidth, height: 43))
+        container.addSublayer(keyLayer)
+
+        // ミニアイコン(38x30、外枠 + 該当スロットの塗り)
+        let iconX = 9 + keyWidth + 5
+        let outlineRect = CGRect(
+            x: iconX, y: 11,
+            width: AreaLabelLayout.iconWidth, height: AreaLabelLayout.iconHeight)
+        let iconOutline = CAShapeLayer()
+        iconOutline.path = CGPath(
+            roundedRect: flip(outlineRect).insetBy(dx: 1, dy: 1),
+            cornerWidth: 3, cornerHeight: 3, transform: nil)
+        iconOutline.fillColor = nil
+        iconOutline.lineWidth = 2
+        container.addSublayer(iconOutline)
+
+        var iconFills: [CALayer] = []
+        for fillRect in iconFillRects(
+            spec: AreaLabelLayout.iconSpec(for: candidate.areaName),
+            outline: outlineRect)
+        {
+            let fill = CALayer()
+            fill.frame = flip(fillRect)
+            fill.cornerRadius = 1
+            container.addSublayer(fill)
+            iconFills.append(fill)
+        }
+
+        // detail テキスト(size 13、下部中央)
+        var detailLayer: CATextLayer?
+        if let detail {
+            let layer = CATextLayer()
+            layer.string = detail
+            layer.font = NSFont.systemFont(ofSize: AreaLabelLayout.detailFontSize)
+            layer.fontSize = AreaLabelLayout.detailFontSize
+            layer.alignmentMode = .center
+            layer.contentsScale = scale
+            let width = AreaLabelLayout.detailTextWidth(detail)
+            layer.frame = flip(
+                CGRect(x: (size.width - width) / 2, y: 47, width: width, height: 16))
+            container.addSublayer(layer)
+            detailLayer = layer
+        }
+
+        return AreaLabelRefs(
+            key: candidate.key,
+            styleKind: styleKind,
+            detailText: detail,
+            container: container,
+            border: border,
+            keyLayer: keyLayer,
+            iconFills: iconFills,
+            iconOutline: iconOutline,
+            detailLayer: detailLayer
+        )
+    }
+
+    /// ミニアイコンの塗り矩形(top-left 座標、外枠から 5px インセット、スロット間 gap 2)
+    private func iconFillRects(
+        spec: AreaLabelLayout.IconSpec?, outline: CGRect
+    ) -> [CGRect] {
+        let inner = outline.insetBy(dx: 5, dy: 5)
+        let gap: CGFloat = 2
+        let dot: CGFloat = 5
+        switch spec {
+        case .slot(let slots, let index, let span, let vertical):
+            if vertical {
+                let slotHeight = (inner.height - gap * CGFloat(slots - 1)) / CGFloat(slots)
+                let y = inner.minY + CGFloat(index - 1) * (slotHeight + gap)
+                let bandHeight = slotHeight * CGFloat(span) + gap * CGFloat(span - 1)
+                return [CGRect(x: inner.minX, y: y, width: inner.width, height: bandHeight)]
+            }
+            let slotWidth = (inner.width - gap * CGFloat(slots - 1)) / CGFloat(slots)
+            let x = inner.minX + CGFloat(index - 1) * (slotWidth + gap)
+            let bandWidth = slotWidth * CGFloat(span) + gap * CGFloat(span - 1)
+            return [CGRect(x: x, y: inner.minY, width: bandWidth, height: inner.height)]
+        case .grid(let cols, let rows, let col, let row):
+            let cellWidth = (inner.width - gap * CGFloat(cols - 1)) / CGFloat(cols)
+            let cellHeight = (inner.height - gap * CGFloat(rows - 1)) / CGFloat(rows)
+            return [
+                CGRect(
+                    x: inner.minX + CGFloat(col - 1) * (cellWidth + gap),
+                    y: inner.minY + CGFloat(row - 1) * (cellHeight + gap),
+                    width: cellWidth, height: cellHeight)
+            ]
+        case .centeredRatio(let ratio):
+            let width = inner.width * ratio
+            let height = inner.height * ratio
+            return [
+                CGRect(
+                    x: inner.midX - width / 2, y: inner.midY - height / 2,
+                    width: width, height: height)
+            ]
+        case .free, .fixedSizeCenter:
+            var rects = [
+                CGRect(x: inner.minX, y: inner.minY, width: dot, height: dot),
+                CGRect(x: inner.maxX - dot, y: inner.minY, width: dot, height: dot),
+                CGRect(x: inner.minX, y: inner.maxY - dot, width: dot, height: dot),
+                CGRect(x: inner.maxX - dot, y: inner.maxY - dot, width: dot, height: dot),
+            ]
+            if case .fixedSizeCenter = spec {
+                rects.append(
+                    CGRect(
+                        x: inner.midX - dot / 2, y: inner.midY - dot / 2,
+                        width: dot, height: dot))
+            }
+            return rects
+        case nil:
+            return []
         }
     }
 
@@ -374,13 +543,64 @@ final class WindowMoverFeature {
     private func updateChooserHighlight() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        for (key, labels) in chooserLabelLayers {
-            let matches = chooserInput.isEmpty || key.hasPrefix(chooserInput)
-            for label in labels {
-                label.opacity = matches ? 1.0 : 0.25
-            }
-        }
+        applyChooserStyles()
         CATransaction.commit()
+    }
+
+    /// 入力状態に応じて各ラベルボックスの色を適用する(元 updateAreaCandidateCanvas)
+    private func applyChooserStyles() {
+        let selected = config.selectedArea
+        for refs in areaLabels {
+            let active = chooserInput.isEmpty || refs.key.hasPrefix(chooserInput)
+            let styleColor =
+                (active
+                    ? selected.styleColors[refs.styleKind]
+                    : selected.styleDimmedColors[refs.styleKind])
+                ?? ConfigColor(red: 0.58, green: 0.64, blue: 0.70, alpha: 0.95)
+            let bgColor = active ? selected.normalBgColor : selected.dimmedBgColor
+            let textColor = active ? selected.normalTextColor : selected.dimmedTextColor
+
+            refs.container.backgroundColor = cgColor(bgColor)
+            refs.border.strokeColor = cgColor(styleColor)
+            refs.iconOutline.strokeColor = cgColor(styleColor)
+            for fill in refs.iconFills {
+                fill.backgroundColor = cgColor(styleColor)
+            }
+
+            // 入力済みプレフィックスを薄く、残りを通常色で描き分け
+            if active, !chooserInput.isEmpty, refs.key.hasPrefix(chooserInput) {
+                let prefixLength = min(chooserInput.count, refs.key.count)
+                let attributed = NSMutableAttributedString()
+                attributed.append(
+                    NSAttributedString(
+                        string: String(refs.key.prefix(prefixLength)),
+                        attributes: [
+                            .font: NSFont.systemFont(ofSize: AreaLabelLayout.keyFontSize),
+                            .foregroundColor: nsColor(selected.typedTextColor),
+                        ]))
+                attributed.append(
+                    NSAttributedString(
+                        string: String(refs.key.dropFirst(prefixLength)),
+                        attributes: [
+                            .font: NSFont.systemFont(ofSize: AreaLabelLayout.keyFontSize),
+                            .foregroundColor: nsColor(textColor),
+                        ]))
+                refs.keyLayer.string = attributed
+            } else {
+                refs.keyLayer.string = refs.key
+                refs.keyLayer.foregroundColor = cgColor(textColor)
+            }
+            refs.detailLayer?.foregroundColor = cgColor(textColor)
+        }
+    }
+
+    private func cgColor(_ color: ConfigColor) -> CGColor {
+        CGColor(red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
+    }
+
+    private func nsColor(_ color: ConfigColor) -> NSColor {
+        NSColor(
+            red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
     }
 
     private func runAction(_ name: String) {
