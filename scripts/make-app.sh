@@ -21,8 +21,10 @@ sed "s/0\.0\.0-development/$VERSION/" "$ROOT/Resources/Info.plist" > "$APP/Conte
 # TCC の許可が再ビルドでも維持される)。なければ ad-hoc 署名。
 # ad-hoc で TCC の許可が剥がれた場合は:
 #   tccutil reset Accessibility com.tadashi-aikawa.jinrai
-if security find-identity -v -p codesigning 2>/dev/null | grep -q "jinrai-dev"; then
-    codesign --force --sign "jinrai-dev" "$APP"
+# 自己署名のコード署名証明書は「信頼」設定が無くても署名に使えるため、
+# find-identity は -v(valid のみ)を付けずに検索する。
+if security find-identity -p codesigning 2>/dev/null | grep -q "jinrai-dev" \
+    && codesign --force --sign "jinrai-dev" "$APP" 2>/dev/null; then
     echo "Signed with: jinrai-dev"
 else
     codesign --force --sign - "$APP"
