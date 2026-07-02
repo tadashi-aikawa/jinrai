@@ -6,6 +6,7 @@ import JinraiPlatform
 final class StatusItem {
     private let item: NSStatusItem
     private let permissionMenuItem: NSMenuItem
+    var onReloadConfig: (() -> Void)?
 
     init() {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -44,6 +45,13 @@ final class StatusItem {
         )
         dumpItem.target = self
         menu.addItem(dumpItem)
+        let reloadItem = NSMenuItem(
+            title: "設定を再読込",
+            action: #selector(reloadConfig),
+            keyEquivalent: "r"
+        )
+        reloadItem.target = self
+        menu.addItem(reloadItem)
         menu.addItem(.separator())
         let quitItem = NSMenuItem(
             title: "Quit Jinrai",
@@ -56,6 +64,10 @@ final class StatusItem {
 
     func setAccessibilityGranted(_ granted: Bool) {
         permissionMenuItem.title = granted ? "アクセシビリティ権限: 許可済み" : "アクセシビリティ権限: 未許可"
+    }
+
+    @objc private func reloadConfig() {
+        onReloadConfig?()
     }
 
     @objc private func dumpWindows() {
