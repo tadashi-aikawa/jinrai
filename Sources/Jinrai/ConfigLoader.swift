@@ -29,6 +29,19 @@ enum ConfigLoader {
             // ウィンドウヒント(デフォルトのホットキーは alt+f20)
             // "hotkey": { "modifiers": ["alt"], "key": "f20" } で変更可
             "window_hints": {},
+
+            // ウィンドウ移動。コマンドにホットキーを割り当てて有効化する
+            // 例:
+            // "window_mover": {
+            //     "commands": {
+            //         "cycleLeft": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "h" } },
+            //         "cycleRight": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "l" } },
+            //         "moveToSelectedArea": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "s" } }
+            //     },
+            //     "selectedArea": {
+            //         "defaultScreen": { "halfLeft": "H", "halfRight": "L", "full": "F" }
+            //     }
+            // },
         }
         """
 
