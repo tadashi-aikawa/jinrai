@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: StatusItem?
     private var focusHistory: FocusHistoryFeature?
     private var focusBack: FocusBackFeature?
+    private var focusBorder: FocusBorderFeature?
     private var accessibilityGranted = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -40,6 +41,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        if let focusBorderConfig = config.focusBorder {
+            focusBorder = FocusBorderFeature(config: focusBorderConfig)
+        }
+
         // focus_back が有効なときだけ履歴を生成し、後で window_hints と共有する
         if let focusBackConfig = config.focusBack {
             let history = FocusHistoryFeature(macosNativeTabs: config.macosNativeTabs)
@@ -53,6 +58,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         focusBack = nil
         focusHistory?.teardown()
         focusHistory = nil
+        focusBorder?.teardown()
+        focusBorder = nil
     }
 
     func reloadConfig() {
