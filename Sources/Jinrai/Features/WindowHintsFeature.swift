@@ -438,6 +438,16 @@ final class WindowHintsFeature {
 
     // MARK: - 入力処理
 
+    /// ナビゲーションキー比較用のキー名("space" "return" 等の特殊キー名に正規化)
+    private func keyName(of event: EventTap.KeyEvent) -> String? {
+        switch Int(event.keyCode) {
+        case kVK_Space: return "space"
+        case kVK_Return: return "return"
+        case kVK_Tab: return "tab"
+        default: return event.character?.lowercased()
+        }
+    }
+
     private func handleKeyDown(_ event: EventTap.KeyEvent) -> Bool {
         guard isVisible else { return false }
 
@@ -462,8 +472,8 @@ final class WindowHintsFeature {
             return true
         }
         // focusBack キー
-        if let character = event.character?.lowercased(),
-            character == config.navigationFocusBackKey,
+        if let name = keyName(of: event),
+            name == config.navigationFocusBackKey,
             let focusHistory
         {
             close()
@@ -480,21 +490,21 @@ final class WindowHintsFeature {
             return true
         }
         // 前後の Space へ移動
-        if let character = event.character?.lowercased() {
-            if character == config.prevSpaceKey {
+        if let name = keyName(of: event) {
+            if name == config.prevSpaceKey {
                 close()
                 Spaces.gotoPrevSpace()
                 return true
             }
-            if character == config.nextSpaceKey {
+            if name == config.nextSpaceKey {
                 close()
                 Spaces.gotoNextSpace()
                 return true
             }
         }
         // Window Mover のエリア選択へ遷移
-        if let character = event.character?.lowercased(),
-            character == config.windowMoverKey,
+        if let name = keyName(of: event),
+            name == config.windowMoverKey,
             let onOpenWindowMover
         {
             close()
@@ -502,8 +512,8 @@ final class WindowHintsFeature {
             return true
         }
         // 方向キー(8方向ナビゲーション)
-        if let character = event.character?.lowercased(),
-            let direction = config.directionHintKeys[character]
+        if let name = keyName(of: event),
+            let direction = config.directionHintKeys[name]
         {
             runDirectionalMove(direction)
             return true

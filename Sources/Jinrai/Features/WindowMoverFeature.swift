@@ -320,8 +320,18 @@ final class WindowMoverFeature {
             return true
         }
 
+        // "space" 等の特殊キーは Window Hints への遷移キーとしてのみ扱う
+        if event.keyCode == UInt32(kVK_Space),
+            config.selectedArea.windowHintsKey == "SPACE"
+        {
+            closeChooser()
+            onOpenWindowHints?()
+            return true
+        }
+
         guard let character = event.character?.uppercased(), !character.isEmpty,
             character.rangeOfCharacter(from: .alphanumerics) != nil
+                || character.rangeOfCharacter(from: .punctuationCharacters) != nil
         else { return true }
 
         let input = chooserInput + character
