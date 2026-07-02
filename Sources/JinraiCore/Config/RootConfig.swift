@@ -16,21 +16,21 @@ public struct RootConfig {
     public var macosNativeTabs: MacosNativeTabsConfig
     public var focusBack: FocusBackConfig?
     public var focusBorder: FocusBorderConfig?
-    /// window_hints / window_mover は機能実装時に型付き config へ差し替える
-    public var windowHintsRaw: [String: Any]?
+    public var windowHints: WindowHintsConfig?
+    /// window_mover は機能実装時に型付き config へ差し替える
     public var windowMoverRaw: [String: Any]?
 
     public init(
         macosNativeTabs: MacosNativeTabsConfig = .default,
         focusBack: FocusBackConfig? = nil,
         focusBorder: FocusBorderConfig? = nil,
-        windowHintsRaw: [String: Any]? = nil,
+        windowHints: WindowHintsConfig? = nil,
         windowMoverRaw: [String: Any]? = nil
     ) {
         self.macosNativeTabs = macosNativeTabs
         self.focusBack = focusBack
         self.focusBorder = focusBorder
-        self.windowHintsRaw = windowHintsRaw
+        self.windowHints = windowHints
         self.windowMoverRaw = windowMoverRaw
     }
 }
@@ -65,7 +65,9 @@ public enum RootConfigBuilder {
         if let section = root["focus_border"] as? [String: Any] {
             config.focusBorder = try FocusBorderConfigBuilder.build(section)
         }
-        config.windowHintsRaw = root["window_hints"] as? [String: Any]
+        if let section = root["window_hints"] as? [String: Any] {
+            config.windowHints = try WindowHintsConfigBuilder.build(section)
+        }
         config.windowMoverRaw = root["window_mover"] as? [String: Any]
         return config
     }

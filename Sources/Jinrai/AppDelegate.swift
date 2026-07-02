@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var focusHistory: FocusHistoryFeature?
     private var focusBack: FocusBackFeature?
     private var focusBorder: FocusBorderFeature?
+    private var windowHints: WindowHintsFeature?
     private var accessibilityGranted = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -51,9 +52,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             focusHistory = history
             focusBack = FocusBackFeature(config: focusBackConfig, focusHistory: history)
         }
+
+        if let windowHintsConfig = config.windowHints {
+            windowHints = WindowHintsFeature(
+                config: windowHintsConfig, focusHistory: focusHistory)
+        }
     }
 
     private func teardownFeatures() {
+        windowHints?.teardown()
+        windowHints = nil
         focusBack?.teardown()
         focusBack = nil
         focusHistory?.teardown()

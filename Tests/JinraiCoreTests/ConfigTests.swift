@@ -140,7 +140,7 @@ struct RootConfigTests {
         let config = try RootConfigBuilder.build(text: #"{ "focus_back": {} }"#)
         #expect(config.focusBack != nil)
         #expect(config.focusBorder == nil)
-        #expect(config.windowHintsRaw == nil)
+        #expect(config.windowHints == nil)
     }
 
     @Test("macos_native_tabs はデフォルトにユーザー指定を追記する")

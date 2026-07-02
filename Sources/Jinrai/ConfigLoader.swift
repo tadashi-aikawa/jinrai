@@ -25,6 +25,10 @@ enum ConfigLoader {
 
             // option+w で直前のウィンドウへ戻る
             "focus_back": {},
+
+            // ウィンドウヒント(デフォルトのホットキーは alt+f20)
+            // "hotkey": { "modifiers": ["alt"], "key": "f20" } で変更可
+            "window_hints": {},
         }
         """
 
