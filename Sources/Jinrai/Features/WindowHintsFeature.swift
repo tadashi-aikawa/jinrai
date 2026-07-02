@@ -201,16 +201,13 @@ final class WindowHintsFeature {
     }
 
     private func buildOverlays() {
-        let mainScreen = NSScreen.main ?? NSScreen.screens.first
         for screen in NSScreen.screens {
             let screenFrame = ScreenUtil.frame(of: screen)
             let overlay = OverlayWindow(frame: screenFrame)
             guard let root = overlay.rootLayer else { continue }
 
-            // ドック(画面下部に別Space・隠れウィンドウの候補を並べる)はメイン画面のみ
-            if screen == mainScreen {
-                buildDock(root: root, screenFrame: screenFrame)
-            }
+            // ドック(別Space・隠れウィンドウの候補)は各ウィンドウが属するスクリーンに出す
+            buildDock(root: root, screenFrame: screenFrame, screen: screen)
 
             for hint in hints where !isDockHint(hint) {
                 let winFrame = hint.entry.window.frame
@@ -253,12 +250,27 @@ final class WindowHintsFeature {
         }
     }
 
-    /// 別Space・完全に隠れた候補を画面下部に並べる(元 occluded dock の簡易版)
-    private func buildDock(root: CALayer, screenFrame: CGRect) {
-        let dockHints = hints.filter(isDockHint)
+    /// 別Space・完全に隠れた候補を、そのウィンドウが属するスクリーンに並べる。
+    /// dock.windowBlend でウィンドウの実位置(X は 0.65、Y は上半分なら画面上端)へ寄せる
+    private func buildDock(root: CALayer, screenFrame: CGRect, screen: NSScreen) {
+        var dockHints = hints.filter {
+            isDockHint($0) && ScreenUtil.screenContaining($0.entry.window.frame) == screen
+        }
         guard !dockHints.isEmpty else { return }
 
+        let xBlend = CGFloat(config.dockWindowXBlend)
+        let yBlend = CGFloat(config.dockWindowYBlend)
+        // ウィンドウ位置へ寄せる場合は X 順に並べる(元実装のソート)
+        if xBlend > 0 {
+            dockHints.sort { a, b in
+                let ax = a.entry.window.frame.midX
+                let bx = b.entry.window.frame.midX
+                return ax != bx ? ax < bx : a.key < b.key
+            }
+        }
+
         let gap = CGFloat(config.dockItemGap)
+        let margin = CGFloat(config.dockBottomMargin)
         let containers = dockHints.map { ($0, hintContainer(for: $0)) }
         let maxRowWidth = screenFrame.width - 48
 
@@ -275,27 +287,50 @@ final class WindowHintsFeature {
             rowWidth += (rowWidth > 0 ? gap : 0) + width
         }
 
-        var rowBottom = CGFloat(config.dockBottomMargin)  // AppKit座標: 下からの距離
-        for row in rows.reversed() {
+        // 以下は top-left グローバル座標で計算し、レイヤー配置時にローカル AppKit 座標へ変換
+        var rowBottomY = screenFrame.maxY - margin
+        for row in rows {
             let totalWidth =
                 row.reduce(0) { $0 + $1.1.bounds.width } + gap * CGFloat(row.count - 1)
             let rowHeight = row.map(\.1.bounds.height).max() ?? 0
-            var x = (screenFrame.width - totalWidth) / 2
+            let dockY = rowBottomY - rowHeight
+            var centeredX = screenFrame.minX + (screenFrame.width - totalWidth) / 2
+            var minX = xBlend > 0 ? screenFrame.minX : centeredX
+
             for (hint, container) in row {
+                let size = container.bounds.size
+                let winFrame = hint.entry.window.frame
+
+                // X: 中央整列位置からウィンドウ中心へ blend し、前のアイテムと重ならない位置へ
+                var desiredX = centeredX
+                if xBlend > 0 {
+                    let targetX = winFrame.midX - size.width / 2
+                    desiredX = centeredX + (targetX - centeredX) * xBlend
+                }
+                let x = min(
+                    max(max(minX, desiredX), screenFrame.minX),
+                    screenFrame.maxX - size.width)
+
+                // Y: 行の下端揃えを基準に、上半分のウィンドウは画面上端へ blend
+                var desiredY = dockY + (rowHeight - size.height)
+                if yBlend > 0, winFrame.midY < screenFrame.midY {
+                    let targetY = screenFrame.minY + margin
+                    desiredY = desiredY + (targetY - desiredY) * yBlend
+                }
+                let y = min(max(desiredY, screenFrame.minY), screenFrame.maxY - size.height)
+
+                let localX = x - screenFrame.minX
+                let localY = screenFrame.height - (y - screenFrame.minY) - size.height
                 container.frame = CGRect(
-                    origin: CGPoint(x: x, y: rowBottom), size: container.bounds.size)
+                    origin: CGPoint(x: localX, y: localY), size: size)
                 root.addSublayer(container)
                 hintContainers[hint.key] = container
-                // 外クリック判定用に top-left グローバル座標も記録
-                let globalTopY =
-                    screenFrame.minY + screenFrame.height - rowBottom
-                    - container.bounds.height
-                hintFrames[hint.key] = CGRect(
-                    x: screenFrame.minX + x, y: globalTopY,
-                    width: container.bounds.width, height: container.bounds.height)
-                x += container.bounds.width + gap
+                hintFrames[hint.key] = CGRect(origin: CGPoint(x: x, y: y), size: size)
+
+                minX = x + size.width + gap
+                centeredX += size.width + gap
             }
-            rowBottom += rowHeight + gap
+            rowBottomY = dockY - gap
         }
     }
 
@@ -377,11 +412,26 @@ final class WindowHintsFeature {
             + (belowPreviewSize.height > 0
                 ? belowPreviewSize.height + CGFloat(config.previewPadding) : 0)
 
+        var containerWidth = contentWidth + padding * 2
+        var containerHeight = contentHeight + padding * 2
+        // mode "background": ウィンドウの実サイズに比例した box にする
+        // (元実装: scaleFactor = 2 * previewWidth / 画面高さ)
+        if previewImage != nil, config.previewMode == "background" {
+            let winFrame = hint.entry.window.frame
+            if Geometry.isValidFrame(winFrame),
+                let screen = ScreenUtil.screenContaining(winFrame)
+            {
+                let screenHeight = ScreenUtil.frame(of: screen).height
+                if screenHeight > 0 {
+                    let scaleFactor = 2 * CGFloat(config.previewWidth) / screenHeight
+                    containerWidth = max(containerWidth, (winFrame.width * scaleFactor).rounded(.down))
+                    containerHeight = max(containerHeight, (winFrame.height * scaleFactor).rounded(.down))
+                }
+            }
+        }
+
         let container = CALayer()
-        container.bounds = CGRect(
-            x: 0, y: 0,
-            width: contentWidth + padding * 2,
-            height: contentHeight + padding * 2)
+        container.bounds = CGRect(x: 0, y: 0, width: containerWidth, height: containerHeight)
         container.backgroundColor = cgColor(style.bgColor)
         container.cornerRadius = CGFloat(config.cornerRadius)
 
@@ -396,8 +446,8 @@ final class WindowHintsFeature {
             container.addSublayer(previewLayer)
         }
 
-        // mode "below": タイトルの下に小さくプレビューを表示
-        var bottomY = padding
+        // コンテンツ(アイコン+キー+タイトル)は container 内で上下中央に置く
+        var bottomY = padding + max(0, (containerHeight - contentHeight - padding * 2) / 2)
         if let image = previewImage, belowPreviewSize.height > 0 {
             let previewLayer = CALayer()
             previewLayer.contents = image
@@ -413,21 +463,23 @@ final class WindowHintsFeature {
             bottomY += belowPreviewSize.height + CGFloat(config.previewPadding)
         }
 
-        // アイコン(左)+キー(右)を上段に、タイトルを下段に
+        // アイコン+キーの行をセットで左右中央に、タイトルを下段に
         let topRowY = bottomY + (title != nil ? title!.preferredFrameSize().height + 8 : 0)
+        let keySize = keyText.preferredFrameSize()
+        let topRowWidth = iconSize + 8 + keySize.width
+        let topRowX = (container.bounds.width - topRowWidth) / 2
         if let app = NSRunningApplication(processIdentifier: hint.entry.window.pid) {
             let iconLayer = CALayer()
             let icon = app.icon ?? NSWorkspace.shared.icon(for: .applicationBundle)
             var rect = CGRect(origin: .zero, size: icon.size)
             iconLayer.contents = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil)
-            iconLayer.frame = CGRect(x: padding, y: topRowY, width: iconSize, height: iconSize)
+            iconLayer.frame = CGRect(x: topRowX, y: topRowY, width: iconSize, height: iconSize)
             iconLayer.opacity = Float(style.iconAlpha)
             container.addSublayer(iconLayer)
         }
 
-        let keySize = keyText.preferredFrameSize()
         keyText.frame = CGRect(
-            x: padding + iconSize + 8,
+            x: topRowX + iconSize + 8,
             y: topRowY + (iconSize - keySize.height) / 2,
             width: keySize.width, height: keySize.height)
         container.addSublayer(keyText)

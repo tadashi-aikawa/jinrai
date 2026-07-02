@@ -43,6 +43,9 @@ public struct WindowHintsConfig: Sendable {
     public var previewAlpha: Double
     public var dockBottomMargin: Double
     public var dockItemGap: Double
+    /// ドックアイテムをウィンドウの実位置へ寄せる度合い(0=中央整列, 1=ウィンドウ位置)
+    public var dockWindowXBlend: Double
+    public var dockWindowYBlend: Double
 
     public var navigationFocusBackKey: String?
     /// Window Mover のエリア選択画面へ遷移するキー
@@ -223,6 +226,8 @@ public enum WindowHintsConfigBuilder {
             previewAlpha: merged.double("occlusion.preview.alpha") ?? 0.64,
             dockBottomMargin: merged.double("dock.bottomMargin") ?? 96,
             dockItemGap: merged.double("dock.itemGap") ?? 12,
+            dockWindowXBlend: merged.double("dock.windowBlend.x") ?? 0.65,
+            dockWindowYBlend: merged.double("dock.windowBlend.y") ?? 1,
             navigationFocusBackKey: merged.string("navigation.focusBack.key")?.lowercased(),
             windowMoverKey: merged.string("navigation.windowMover.moveToSelectedArea.key")?
                 .lowercased(),
