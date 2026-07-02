@@ -60,7 +60,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let windowHintsConfig = config.windowHints {
             windowHints = WindowHintsFeature(
-                config: windowHintsConfig, focusHistory: focusHistory)
+                config: windowHintsConfig,
+                focusHistory: focusHistory,
+                macosNativeTabs: config.macosNativeTabs)
         }
 
         // 相互遷移の結線(元 init.lua のコールバック配線)

@@ -18,14 +18,21 @@ final class WindowHintsFeature {
     private var hintFrames: [String: CGRect] = [:]  // top-left 座標(外クリック判定用)
     private var currentInput = ""
     private var occludedWindowIDs: Set<UInt32> = []
+    private var offSpaceWindowIDs: Set<UInt32> = []
+    private let macosNativeTabsApps: Set<String>
     private(set) var isVisible = false
 
     /// Window Mover のエリア選択画面へ遷移するコールバック(相互結線)
     var onOpenWindowMover: (() -> Void)?
 
-    init(config: WindowHintsConfig, focusHistory: FocusHistoryFeature?) {
+    init(
+        config: WindowHintsConfig,
+        focusHistory: FocusHistoryFeature?,
+        macosNativeTabs: MacosNativeTabsConfig = .default
+    ) {
         self.config = config
         self.focusHistory = focusHistory
+        self.macosNativeTabsApps = Set(macosNativeTabs.apps)
 
         if let key = config.hotkeyKey {
             hotkey = Hotkey(modifiers: config.hotkeyModifiers, key: key) { [weak self] in
@@ -119,6 +126,40 @@ final class WindowHintsFeature {
         if !config.includeActiveWindow {
             entries.removeAll { $0.window.isFocused }
         }
+
+        // 別 Space の候補(元 collectCandidateWindows の includeOtherSpaces)
+        offSpaceWindowIDs = []
+        if config.includeOtherSpaces {
+            let onScreenIDs = Set(ordered.map(\.id))
+            let activeSpaces = Spaces.activeSpaceIDs()
+            let spaceNumbers = Spaces.spaceNumbersByID()
+            let others = WindowEnumerator.allSpacesWindows()
+                .filter {
+                    $0.pid != ProcessInfo.processInfo.processIdentifier
+                        && !onScreenIDs.contains($0.id)
+                }
+            for var win in WindowEnumerator.standardWindows(from: others) {
+                guard let spaceID = Spaces.spaceID(of: win.id) else {
+                    continue
+                }
+                // 現Space にあるのに画面にない(最小化等)ものは対象外
+                guard !activeSpaces.contains(spaceID) else { continue }
+                win.spaceNumber = spaceNumbers[spaceID]
+                // ネイティブタブアプリで Space 不明な候補は幽霊タブの可能性があるため除外
+                let appKey = win.bundleID ?? win.appName
+                if macosNativeTabsApps.contains(appKey), win.spaceNumber == nil {
+                    continue
+                }
+                offSpaceWindowIDs.insert(win.id)
+                entries.append(
+                    HintKeyAssignment.Entry(
+                        window: win,
+                        appKey: appKey,
+                        appTitle: win.appName,
+                        title: win.title
+                    ))
+            }
+        }
         // 表示順: アプリ名 → タイトル → x → y(元 collectEntries のソート)
         entries.sort { a, b in
             if a.appTitle != b.appTitle { return a.appTitle < b.appTitle }
@@ -144,13 +185,25 @@ final class WindowHintsFeature {
 
     // MARK: - 描画
 
+    /// ドック行き(別Space または完全に隠れた)ヒントか
+    private func isDockHint(_ hint: HintKeyAssignment.Hint) -> Bool {
+        offSpaceWindowIDs.contains(hint.entry.window.id)
+            || occludedWindowIDs.contains(hint.entry.window.id)
+    }
+
     private func buildOverlays() {
+        let mainScreen = NSScreen.main ?? NSScreen.screens.first
         for screen in NSScreen.screens {
             let screenFrame = ScreenUtil.frame(of: screen)
             let overlay = OverlayWindow(frame: screenFrame)
             guard let root = overlay.rootLayer else { continue }
 
-            for hint in hints {
+            // ドック(画面下部に別Space・隠れウィンドウの候補を並べる)はメイン画面のみ
+            if screen == mainScreen {
+                buildDock(root: root, screenFrame: screenFrame)
+            }
+
+            for hint in hints where !isDockHint(hint) {
                 let winFrame = hint.entry.window.frame
                 guard screenFrame.intersects(winFrame) else { continue }
 
@@ -191,6 +244,52 @@ final class WindowHintsFeature {
         }
     }
 
+    /// 別Space・完全に隠れた候補を画面下部に並べる(元 occluded dock の簡易版)
+    private func buildDock(root: CALayer, screenFrame: CGRect) {
+        let dockHints = hints.filter(isDockHint)
+        guard !dockHints.isEmpty else { return }
+
+        let gap = CGFloat(config.dockItemGap)
+        let containers = dockHints.map { ($0, hintContainer(for: $0)) }
+        let maxRowWidth = screenFrame.width - 48
+
+        // 幅に収まるよう行分割
+        var rows: [[(HintKeyAssignment.Hint, CALayer)]] = [[]]
+        var rowWidth: CGFloat = 0
+        for item in containers {
+            let width = item.1.bounds.width
+            if rowWidth > 0, rowWidth + gap + width > maxRowWidth {
+                rows.append([])
+                rowWidth = 0
+            }
+            rows[rows.count - 1].append(item)
+            rowWidth += (rowWidth > 0 ? gap : 0) + width
+        }
+
+        var rowBottom = CGFloat(config.dockBottomMargin)  // AppKit座標: 下からの距離
+        for row in rows.reversed() {
+            let totalWidth =
+                row.reduce(0) { $0 + $1.1.bounds.width } + gap * CGFloat(row.count - 1)
+            let rowHeight = row.map(\.1.bounds.height).max() ?? 0
+            var x = (screenFrame.width - totalWidth) / 2
+            for (hint, container) in row {
+                container.frame = CGRect(
+                    origin: CGPoint(x: x, y: rowBottom), size: container.bounds.size)
+                root.addSublayer(container)
+                hintContainers[hint.key] = container
+                // 外クリック判定用に top-left グローバル座標も記録
+                let globalTopY =
+                    screenFrame.minY + screenFrame.height - rowBottom
+                    - container.bounds.height
+                hintFrames[hint.key] = CGRect(
+                    x: screenFrame.minX + x, y: globalTopY,
+                    width: container.bounds.width, height: container.bounds.height)
+                x += container.bounds.width + gap
+            }
+            rowBottom += rowHeight + gap
+        }
+    }
+
     private func highlightLayer(
         windowFrame: CGRect, screenFrame: CGRect, overlayHeight: CGFloat
     ) -> CAShapeLayer {
@@ -213,9 +312,18 @@ final class WindowHintsFeature {
 
     private func hintState(of hint: HintKeyAssignment.Hint) -> HintState {
         if hint.entry.window.isFocused { return .active }
-        if occludedWindowIDs.contains(hint.entry.window.id) { return .occluded }
+        if isDockHint(hint) { return .occluded }
         return .normal
     }
+
+    /// Space 番号バッジの色パレット(元 spaceBadge.spaceColors: 青/緑/橙/紫/桃)
+    private static let spaceBadgeColors: [ConfigColor] = [
+        ConfigColor(red: 0.34, green: 0.64, blue: 0.96, alpha: 0.56),
+        ConfigColor(red: 0.30, green: 0.78, blue: 0.47, alpha: 0.56),
+        ConfigColor(red: 0.95, green: 0.60, blue: 0.25, alpha: 0.56),
+        ConfigColor(red: 0.68, green: 0.42, blue: 0.90, alpha: 0.56),
+        ConfigColor(red: 0.92, green: 0.38, blue: 0.58, alpha: 0.56),
+    ]
 
     /// ヒント1個分のレイヤー(角丸背景+アイコン+キー+タイトル)
     private func hintContainer(for hint: HintKeyAssignment.Hint) -> CALayer {
@@ -280,6 +388,29 @@ final class WindowHintsFeature {
             container.addSublayer(title)
         }
 
+        // Space 番号バッジ(別Space候補のみ、右上に表示)
+        if let spaceNumber = hint.entry.window.spaceNumber {
+            let badgeSize: CGFloat = 32
+            let color = Self.spaceBadgeColors[(spaceNumber - 1) % Self.spaceBadgeColors.count]
+            let badge = CATextLayer()
+            badge.string = String(spaceNumber)
+            badge.font = NSFont.boldSystemFont(ofSize: 18)
+            badge.fontSize = 18
+            badge.alignmentMode = .center
+            badge.foregroundColor = CGColor(gray: 1, alpha: 0.92)
+            badge.backgroundColor = CGColor(
+                red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
+            badge.borderColor = CGColor(red: 0.98, green: 0.99, blue: 1.00, alpha: 0.72)
+            badge.borderWidth = 1
+            badge.cornerRadius = badgeSize / 2
+            badge.contentsScale = NSScreen.main?.backingScaleFactor ?? 2
+            badge.frame = CGRect(
+                x: container.bounds.width - badgeSize - 4,
+                y: container.bounds.height - badgeSize - 4,
+                width: badgeSize, height: badgeSize)
+            container.addSublayer(badge)
+        }
+
         return container
     }
 
@@ -338,6 +469,28 @@ final class WindowHintsFeature {
             close()
             focusHistory.focusBack(centerCursor: config.cursorOnSelect)
             return true
+        }
+        // 数字キー 1〜9 で該当 Space へ移動
+        if config.spacesNumbers,
+            let character = event.character,
+            let number = Int(character), (1...9).contains(number)
+        {
+            close()
+            Spaces.gotoSpace(number: number)
+            return true
+        }
+        // 前後の Space へ移動
+        if let character = event.character?.lowercased() {
+            if character == config.prevSpaceKey {
+                close()
+                Spaces.gotoPrevSpace()
+                return true
+            }
+            if character == config.nextSpaceKey {
+                close()
+                Spaces.gotoNextSpace()
+                return true
+            }
         }
         // Window Mover のエリア選択へ遷移
         if let character = event.character?.lowercased(),

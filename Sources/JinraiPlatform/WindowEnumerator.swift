@@ -7,9 +7,17 @@ import JinraiCore
 public enum WindowEnumerator {
     /// 現在画面に見えているウィンドウを前面→背面順で返す
     public static func orderedWindows() -> [WindowInfo] {
+        windows(options: [.optionOnScreenOnly, .excludeDesktopElements])
+    }
+
+    /// 別 Space 含む全ウィンドウ(前面→背面順)
+    public static func allSpacesWindows() -> [WindowInfo] {
+        windows(options: [.optionAll, .excludeDesktopElements])
+    }
+
+    private static func windows(options: CGWindowListOption) -> [WindowInfo] {
         guard
-            let list = CGWindowListCopyWindowInfo(
-                [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
+            let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
                 as? [[String: Any]]
         else { return [] }
 
