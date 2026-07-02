@@ -20,6 +20,7 @@ final class WindowHintsFeature {
     private var occludedWindowIDs: Set<UInt32> = []
     private var offSpaceWindowIDs: Set<UInt32> = []
     private let macosNativeTabsApps: Set<String>
+    private var didRequestScreenCapture = false
     private(set) var isVisible = false
 
     /// Window Mover のエリア選択画面へ遷移するコールバック(相互結線)
@@ -78,6 +79,14 @@ final class WindowHintsFeature {
         guard eventTap.start() else {
             NSLog("[jinrai.window_hints] キー捕捉を開始できません(権限またはセキュア入力)")
             return
+        }
+
+        // プレビューが有効なら画面収録権限を一度だけ要求(未許可時はプレビューなしで続行)
+        if config.previewEnabled, hints.contains(where: isDockHint),
+            !WindowCapture.hasPermission, !didRequestScreenCapture
+        {
+            didRequestScreenCapture = true
+            WindowCapture.requestPermission()
         }
 
         currentInput = ""
@@ -344,13 +353,29 @@ final class WindowHintsFeature {
                 fontSize: config.titleFontSize, color: style.titleColor, bold: false)
             : nil
 
+        // 隠れウィンドウのプレビュー(要・画面収録権限。未許可時はスキップ)
+        var previewImage: CGImage?
+        if isDockHint(hint), config.previewEnabled, WindowCapture.hasPermission {
+            previewImage = WindowCapture.captureImage(windowID: hint.entry.window.id)
+        }
+        var belowPreviewSize = CGSize.zero
+        if let image = previewImage, config.previewMode == "below", image.width > 0 {
+            let width = CGFloat(config.previewWidth)
+            belowPreviewSize = CGSize(
+                width: width,
+                height: width * CGFloat(image.height) / CGFloat(image.width))
+        }
+
         let contentWidth = max(
             iconSize + 8 + keyText.preferredFrameSize().width,
             title?.preferredFrameSize().width ?? 0,
+            belowPreviewSize.width,
             CGFloat(config.keyMinWidth))
         let contentHeight =
             max(iconSize, keyText.preferredFrameSize().height)
             + (title != nil ? title!.preferredFrameSize().height + 8 : 0)
+            + (belowPreviewSize.height > 0
+                ? belowPreviewSize.height + CGFloat(config.previewPadding) : 0)
 
         let container = CALayer()
         container.bounds = CGRect(
@@ -360,8 +385,36 @@ final class WindowHintsFeature {
         container.backgroundColor = cgColor(style.bgColor)
         container.cornerRadius = CGFloat(config.cornerRadius)
 
+        // mode "background": プレビューをヒント全体の背景として敷く
+        if let image = previewImage, config.previewMode == "background" {
+            container.masksToBounds = true
+            let previewLayer = CALayer()
+            previewLayer.contents = image
+            previewLayer.contentsGravity = .resizeAspectFill
+            previewLayer.frame = container.bounds
+            previewLayer.opacity = Float(config.previewAlpha)
+            container.addSublayer(previewLayer)
+        }
+
+        // mode "below": タイトルの下に小さくプレビューを表示
+        var bottomY = padding
+        if let image = previewImage, belowPreviewSize.height > 0 {
+            let previewLayer = CALayer()
+            previewLayer.contents = image
+            previewLayer.contentsGravity = .resizeAspectFill
+            previewLayer.masksToBounds = true
+            previewLayer.cornerRadius = 4
+            previewLayer.opacity = Float(config.previewAlpha)
+            previewLayer.frame = CGRect(
+                x: (container.bounds.width - belowPreviewSize.width) / 2,
+                y: bottomY,
+                width: belowPreviewSize.width, height: belowPreviewSize.height)
+            container.addSublayer(previewLayer)
+            bottomY += belowPreviewSize.height + CGFloat(config.previewPadding)
+        }
+
         // アイコン(左)+キー(右)を上段に、タイトルを下段に
-        let topRowY = padding + (title != nil ? title!.preferredFrameSize().height + 8 : 0)
+        let topRowY = bottomY + (title != nil ? title!.preferredFrameSize().height + 8 : 0)
         if let app = NSRunningApplication(processIdentifier: hint.entry.window.pid) {
             let iconLayer = CALayer()
             let icon = app.icon ?? NSWorkspace.shared.icon(for: .applicationBundle)
@@ -383,7 +436,7 @@ final class WindowHintsFeature {
             let titleSize = title.preferredFrameSize()
             title.frame = CGRect(
                 x: (container.bounds.width - titleSize.width) / 2,
-                y: padding,
+                y: bottomY,
                 width: titleSize.width, height: titleSize.height)
             container.addSublayer(title)
         }

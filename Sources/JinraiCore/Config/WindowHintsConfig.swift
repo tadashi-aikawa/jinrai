@@ -34,6 +34,13 @@ public struct WindowHintsConfig: Sendable {
     public var focusedHighlightWidth: Double
 
     public var occlusionSampling: Occlusion.SamplingConfig
+    /// 隠れウィンドウのプレビュー(要・画面収録権限)
+    public var previewEnabled: Bool
+    /// "background": ヒント全体の背景として表示 / "below": タイトル下に小さく表示
+    public var previewMode: String
+    public var previewWidth: Double
+    public var previewPadding: Double
+    public var previewAlpha: Double
     public var dockBottomMargin: Double
     public var dockItemGap: Double
 
@@ -209,6 +216,11 @@ public enum WindowHintsConfigBuilder {
                 ?? ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95),
             focusedHighlightWidth: merged.double("focusedWindowHighlight.borderWidth") ?? 13,
             occlusionSampling: sampling,
+            previewEnabled: merged.bool("occlusion.preview.enabled") ?? true,
+            previewMode: merged.string("occlusion.preview.mode") ?? "background",
+            previewWidth: merged.double("occlusion.preview.width") ?? 140,
+            previewPadding: merged.double("occlusion.preview.padding") ?? 6,
+            previewAlpha: merged.double("occlusion.preview.alpha") ?? 0.64,
             dockBottomMargin: merged.double("dock.bottomMargin") ?? 96,
             dockItemGap: merged.double("dock.itemGap") ?? 12,
             navigationFocusBackKey: merged.string("navigation.focusBack.key")?.lowercased(),
