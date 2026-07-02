@@ -15,6 +15,7 @@ final class WindowHintsFeature {
     private var overlays: [OverlayWindow] = []
     private var hints: [HintKeyAssignment.Hint] = []
     private var hintContainers: [String: CALayer] = [:]
+    private var hintKeyLayers: [String: CATextLayer] = [:]
     private var hintFrames: [String: CGRect] = [:]  // top-left 座標(外クリック判定用)
     private var currentInput = ""
     private var occludedWindowIDs: Set<UInt32> = []
@@ -109,6 +110,7 @@ final class WindowHintsFeature {
         }
         overlays = []
         hintContainers = [:]
+        hintKeyLayers = [:]
         hintFrames = [:]
         hints = []
         currentInput = ""
@@ -483,6 +485,7 @@ final class WindowHintsFeature {
             y: topRowY + (iconSize - keySize.height) / 2,
             width: keySize.width, height: keySize.height)
         container.addSublayer(keyText)
+        hintKeyLayers[hint.key] = keyText
 
         if let title {
             let titleSize = title.preferredFrameSize()
@@ -713,7 +716,8 @@ final class WindowHintsFeature {
         }
     }
 
-    /// 入力中の接頭辞に一致しないヒントを dimmed 表示にする
+    /// 入力中の接頭辞に一致しないヒントを dimmed に、
+    /// 一致するヒントは押下済みプレフィックス文字を keyHighlightColor でグレーアウトする
     private func updateHighlight() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -724,8 +728,38 @@ final class WindowHintsFeature {
             let style = config.states[state] ?? config.states[.normal]!
             container.backgroundColor = cgColor(style.bgColor)
             container.opacity = matches ? 1.0 : 0.35
+
+            guard let keyLayer = hintKeyLayers[hint.key] else { continue }
+            let prefixLength =
+                matches && !currentInput.isEmpty
+                ? min(currentInput.count, hint.key.count) : 0
+            if prefixLength > 0 {
+                let attributed = NSMutableAttributedString()
+                attributed.append(
+                    NSAttributedString(
+                        string: String(hint.key.prefix(prefixLength)),
+                        attributes: [
+                            .font: NSFont.boldSystemFont(ofSize: config.keyFontSize),
+                            .foregroundColor: nsColor(config.keyHighlightColor),
+                        ]))
+                attributed.append(
+                    NSAttributedString(
+                        string: String(hint.key.dropFirst(prefixLength)),
+                        attributes: [
+                            .font: NSFont.boldSystemFont(ofSize: config.keyFontSize),
+                            .foregroundColor: nsColor(style.keyColor),
+                        ]))
+                keyLayer.string = attributed
+            } else {
+                keyLayer.string = hint.key
+                keyLayer.foregroundColor = cgColor(style.keyColor)
+            }
         }
         CATransaction.commit()
+    }
+
+    private func nsColor(_ color: ConfigColor) -> NSColor {
+        NSColor(red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
     }
 
     func teardown() {

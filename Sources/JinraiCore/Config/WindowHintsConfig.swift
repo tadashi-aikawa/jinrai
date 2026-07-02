@@ -25,6 +25,8 @@ public struct WindowHintsConfig: Sendable {
     public var iconSize: Double
     public var keyFontSize: Double
     public var keyMinWidth: Double
+    /// 入力済みプレフィックス文字の色(元 hint.key.keyHighlightColor)
+    public var keyHighlightColor: ConfigColor
     public var titleShow: Bool
     public var titleFontSize: Double
     public var titleMaxSize: Int
@@ -210,6 +212,8 @@ public enum WindowHintsConfigBuilder {
             iconSize: merged.double("hint.icon.size") ?? 72,
             keyFontSize: merged.double("hint.key.fontSize") ?? 48,
             keyMinWidth: merged.double("hint.key.minWidth") ?? 72,
+            keyHighlightColor: merged.color("hint.key.keyHighlightColor")
+                ?? ConfigColor(red: 0.84, green: 0.84, blue: 0.86, alpha: 0.35),
             titleShow: merged.bool("hint.title.show") ?? true,
             titleFontSize: merged.double("hint.title.fontSize") ?? 16,
             titleMaxSize: merged.int("hint.title.maxSize") ?? 72,
