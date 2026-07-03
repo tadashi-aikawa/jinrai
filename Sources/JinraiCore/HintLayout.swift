@@ -13,12 +13,19 @@ public enum HintLayout {
         public var center: CGPoint
         public var width: CGFloat
         public var height: CGFloat
+        /// 小さいほど優先(先に配置され、希望位置に留まりやすい)。
+        /// ウィンドウの z-order(前面=小)を渡すと前面のヒントが中央に残る
+        public var priority: Int
 
-        public init(key: String, center: CGPoint, width: CGFloat, height: CGFloat) {
+        public init(
+            key: String, center: CGPoint, width: CGFloat, height: CGFloat,
+            priority: Int = 0
+        ) {
             self.key = key
             self.center = center
             self.width = width
             self.height = height
+            self.priority = priority
         }
     }
 
@@ -39,9 +46,10 @@ public enum HintLayout {
     ) -> [Placement] {
         guard !items.isEmpty else { return [] }
 
-        // 処理順を固定して決定性を担保(入力順に依存しない)
+        // 優先度順(同点は位置→key)に処理順を固定して決定性を担保(入力順に依存しない)
         var sorted = items
         sorted.sort { a, b in
+            if a.priority != b.priority { return a.priority < b.priority }
             if a.center.y != b.center.y { return a.center.y < b.center.y }
             if a.center.x != b.center.x { return a.center.x < b.center.x }
             return a.key < b.key

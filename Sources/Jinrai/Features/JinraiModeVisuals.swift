@@ -24,6 +24,21 @@ final class JinraiModeVisuals {
     private var logoImage: NSImage?
     private var comboImages: [Int: NSImage] = [:]
 
+    /// 表示先の基準ウィンドウ。frontmostApplication は更新が非同期で遅れるため、
+    /// ヒント選択直後などは選択したウィンドウを明示して追従させる
+    private var anchor: (windowID: UInt32, pid: pid_t)?
+
+    /// 前回 COMBO を表示したスクリーン(ディスプレイ跨ぎ判定用)
+    private var lastComboScreenFrame: CGRect?
+
+    func setAnchor(windowID: UInt32, pid: pid_t) {
+        anchor = (windowID, pid)
+    }
+
+    func clearAnchor() {
+        anchor = nil
+    }
+
     private static let comboTextColor = ConfigColor(red: 1, green: 0.46, blue: 0.08)
 
     init(config: JinraiModeConfig) {
@@ -64,7 +79,11 @@ final class JinraiModeVisuals {
     }
 
     private func displayContext() -> DisplayContext? {
-        let focusedFrame = WindowEnumerator.focusedWindow()?.frame
+        // アンカーがあれば AX で最新 frame を解決(移動・別ディスプレイへの追従)
+        let anchorFrame = anchor.flatMap {
+            AXWindow.resolve(windowID: $0.windowID, pid: $0.pid)?.frame
+        }
+        let focusedFrame = anchorFrame ?? WindowEnumerator.focusedWindow()?.frame
         let screen =
             focusedFrame.flatMap { ScreenUtil.screenContaining($0) } ?? NSScreen.main
         guard let screen else { return nil }
@@ -135,6 +154,18 @@ final class JinraiModeVisuals {
         let window = ensureWindow(
             &comboWindow, screenFrame: context.screenFrame, level: .combo)
         guard let root = window.rootLayer else { return }
+
+        // ディスプレイを跨いだら旧内容のダブルバッファを破棄
+        // (クロスフェードの「前の画像」が新ディスプレイ上に一瞬映るのを防ぐ)
+        if lastComboScreenFrame != context.screenFrame {
+            for layer in characterLayers { layer.removeFromSuperlayer() }
+            characterLayers = []
+            for entry in textLayers { entry.container.removeFromSuperlayer() }
+            textLayers = []
+            currentCharacterIndex = 0
+            currentTextIndex = 0
+        }
+        lastComboScreenFrame = context.screenFrame
 
         if characterEnabled {
             showCharacter(count: count, context: context, root: root)
@@ -304,6 +335,7 @@ final class JinraiModeVisuals {
         comboWindow = nil
         characterLayers = []
         textLayers = []
+        lastComboScreenFrame = nil
     }
 
     func clear() {

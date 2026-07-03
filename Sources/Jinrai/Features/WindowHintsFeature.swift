@@ -22,6 +22,7 @@ final class WindowHintsFeature {
     private var currentInput = ""
     private var occludedWindowIDs: Set<UInt32> = []
     private var offSpaceWindowIDs: Set<UInt32> = []
+    private var windowZOrder: [UInt32: Int] = [:]  // 前面=小(ヒント配置の優先度)
     private let macosNativeTabsApps: Set<String>
     private var didRequestScreenCapture = false
     private(set) var isVisible = false
@@ -42,6 +43,7 @@ final class WindowHintsFeature {
     func startJinraiMode() {
         comboCount = 0
         isJinraiMode = true
+        jinraiVisuals.clearAnchor()
         jinraiVisuals.showLogo()
         jinraiVisuals.showCombo(count: 0)
     }
@@ -49,6 +51,7 @@ final class WindowHintsFeature {
     func stopJinraiMode() {
         isJinraiMode = false
         comboCount = 0
+        jinraiVisuals.clearAnchor()
         jinraiVisuals.clear()
     }
 
@@ -175,6 +178,8 @@ final class WindowHintsFeature {
         // フォーカス中ウィンドウ = 最前面の標準ウィンドウ(CGWindowList の Z順は
         // window server 由来で速く更新され、frontmostApplication の非同期遅延に強い)
         let focusedID = standard.first?.id
+        windowZOrder = Dictionary(
+            standard.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { a, _ in a })
         var entries = standard.map { win -> HintKeyAssignment.Entry in
             var win = win
             win.isFocused = (win.id == focusedID)
@@ -261,9 +266,6 @@ final class WindowHintsFeature {
             let overlay = OverlayWindow(frame: screenFrame, level: .hints)
             guard let root = overlay.rootLayer else { continue }
 
-            // ドック(別Space・隠れウィンドウの候補)は各ウィンドウが属するスクリーンに出す
-            let dockFrames = buildDock(root: root, screenFrame: screenFrame, screen: screen)
-
             // 収集: 各ヒントの希望center(ウィンドウ中心、画面内クランプ)とサイズ
             var containers: [String: CALayer] = [:]
             var layoutItems: [HintLayout.Item] = []
@@ -294,13 +296,13 @@ final class WindowHintsFeature {
                 layoutItems.append(
                     HintLayout.Item(
                         key: hint.key, center: center,
-                        width: size.width, height: size.height))
+                        width: size.width, height: size.height,
+                        priority: windowZOrder[hint.entry.window.id] ?? Int.max))
             }
 
-            // 解決 → 配置: ラベル同士(dockヒント含む)が重ならない最終位置に置く
-            for placement in HintLayout.layout(
-                items: layoutItems, screenFrame: screenFrame, obstacles: dockFrames)
-            {
+            // 解決 → 配置: 前面ウィンドウのヒントを優先して希望位置に置き、重なりは後順が避ける
+            var normalFrames: [CGRect] = []
+            for placement in HintLayout.layout(items: layoutItems, screenFrame: screenFrame) {
                 guard let container = containers[placement.key] else { continue }
                 let global = placement.frame
                 // overlay 内ローカル座標(AppKit: bottom-left 原点)へ変換
@@ -313,7 +315,13 @@ final class WindowHintsFeature {
 
                 hintContainers[placement.key] = container
                 hintFrames[placement.key] = global
+                normalFrames.append(global)
             }
+
+            // ドック(別Space・隠れウィンドウの候補)は通常ヒントを避けて配置する
+            buildDock(
+                root: root, screenFrame: screenFrame, screen: screen,
+                obstacles: normalFrames)
 
             overlay.orderFrontRegardless()
             overlays.append(overlay)
@@ -321,16 +329,15 @@ final class WindowHintsFeature {
     }
 
     /// 別Space・完全に隠れた候補を、そのウィンドウが属するスクリーンに並べる。
-    /// dock.windowBlend でウィンドウの実位置(X は 0.65、Y は上半分なら画面上端)へ寄せる。
-    /// 返り値は配置した各ヒントのグローバル top-left frame(通常ヒントの衝突回避用)
-    @discardableResult
+    /// dock.windowBlend でウィンドウの実位置(X は 0.65、Y は上半分なら画面上端)へ寄せ、
+    /// obstacles(通常ヒント)と重なる場合は dock 側が避ける
     private func buildDock(
-        root: CALayer, screenFrame: CGRect, screen: NSScreen
-    ) -> [CGRect] {
+        root: CALayer, screenFrame: CGRect, screen: NSScreen, obstacles: [CGRect]
+    ) {
         let dockHints = hints.filter {
             isDockHint($0) && ScreenUtil.screenContaining($0.entry.window.frame) == screen
         }
-        guard !dockHints.isEmpty else { return [] }
+        guard !dockHints.isEmpty else { return }
 
         // ラベルを natural サイズで構築し、DockLayout(PAV + 画面内シフト + 行分割)で配置
         let containers = Dictionary(
@@ -351,8 +358,20 @@ final class WindowHintsFeature {
             xBlend: CGFloat(config.dockWindowXBlend),
             yBlend: CGFloat(config.dockWindowYBlend))
 
-        var frames: [CGRect] = []
-        for placement in placements {
+        // DockLayout の結果を希望位置として、通常ヒント(obstacles)を避ける位置へ再解決。
+        // priority は DockLayout の並び順を維持
+        let resolveItems = placements.enumerated().map { index, placement in
+            HintLayout.Item(
+                key: placement.key,
+                center: CGPoint(x: placement.frame.midX, y: placement.frame.midY),
+                width: placement.frame.width, height: placement.frame.height,
+                priority: index)
+        }
+        let resolved = HintLayout.layout(
+            items: resolveItems, screenFrame: screenFrame, obstacles: obstacles,
+            gap: CGFloat(config.dockItemGap))
+
+        for placement in resolved {
             guard let container = containers[placement.key] else { continue }
             let global = placement.frame
             let localX = global.minX - screenFrame.minX
@@ -362,9 +381,7 @@ final class WindowHintsFeature {
             root.addSublayer(container)
             hintContainers[placement.key] = container
             hintFrames[placement.key] = global
-            frames.append(global)
         }
-        return frames
     }
 
     private func highlightLayer(
@@ -716,6 +733,10 @@ final class WindowHintsFeature {
             if jinrai && !isJinraiMode {
                 startJinraiMode()
             }
+            // 以後のフォーカス先はアプリ起動側で決まるため、選択アンカーを解除
+            if jinrai {
+                jinraiVisuals.clearAnchor()
+            }
             close(keepJinraiMode: jinrai)
             onOpenApplicationHints(jinrai)
             return true
@@ -768,8 +789,11 @@ final class WindowHintsFeature {
     private func selectWindow(_ hint: HintKeyAssignment.Hint, swap: Bool = false) {
         let window = hint.entry.window
 
-        // JinraiMode 中の選択: ロゴ表示 → mode 維持で閉じる → focus → エリア選択へ
+        // JinraiMode 中の選択: ロゴ表示 → mode 維持で閉じる → focus → エリア選択へ。
+        // 選択ウィンドウをアンカーにして、別ディスプレイでも演出が追従するようにする
+        // (frontmostApplication の更新は非同期で、focus 直後は旧ウィンドウを指すため)
         if isJinraiMode {
+            jinraiVisuals.setAnchor(windowID: window.id, pid: window.pid)
             jinraiVisuals.showLogo()
             close(keepJinraiMode: true)
             if let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) {

@@ -102,6 +102,26 @@ struct HintLayoutTests {
         }
     }
 
+    @Test("前面ウィンドウ(priority小)のヒントが希望位置に残り背面側がずれる")
+    func frontWindowHintStaysAtCenter() {
+        // 入力順は背面(A)が先でも、前面(B)が優先して中央に残る
+        let items = [
+            HintLayout.Item(
+                key: "A", center: CGPoint(x: 960, y: 540), width: 80, height: 32,
+                priority: 1),
+            HintLayout.Item(
+                key: "B", center: CGPoint(x: 960, y: 540), width: 80, height: 32,
+                priority: 0),
+        ]
+        let placements = HintLayout.layout(items: items, screenFrame: screen)
+        assertNoOverlap(placements)
+        let front = placements.first { $0.key == "B" }!
+        let back = placements.first { $0.key == "A" }!
+        #expect(front.frame.midX == 960)
+        #expect(front.frame.midY == 540)
+        #expect(back.frame.midY != 540)
+    }
+
     @Test("obstacles(dockヒント等)とも重ならない")
     func avoidsObstacles() {
         // 画面中央に大きな障害物(プレビュー背景つき dock ヒント相当)
