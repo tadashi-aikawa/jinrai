@@ -1,12 +1,21 @@
 import AppKit
 
+/// オーバーレイの重なり順(値が大きいほど前面)。
+/// border < logo < combo < hints を保証する。
+public enum OverlayLevel: Int, Sendable {
+    case border = 0  // フォーカスborder(最背面)
+    case logo = 1  // JINRAIロゴ
+    case combo = 2  // JINRAI COMBO(キャラ+テキスト。ロゴより前面)
+    case hints = 3  // Window/Area/Application Hints(最前面)
+}
+
 /// オーバーレイ描画用の透明ボーダレスウィンドウ(元 hs.canvas 相当の基盤)。
 /// 全 Space に表示され、マウスイベントを透過する。
 @MainActor
 public final class OverlayWindow: NSWindow {
     /// frame は CG/AX 準拠の top-left 座標で渡す。
-    /// levelOffset で overlay レベルからの重なり順を調整(元 hs.canvas の overlay+1 等)
-    public init(frame: CGRect, levelOffset: Int = 0) {
+    /// level は OverlayLevel で明示し、orderFront のタイミングに依らず前後を固定する
+    public init(frame: CGRect, level overlayLevel: OverlayLevel) {
         super.init(
             contentRect: ScreenUtil.toAppKit(frame),
             styleMask: .borderless,
@@ -18,7 +27,7 @@ public final class OverlayWindow: NSWindow {
         hasShadow = false
         ignoresMouseEvents = true
         level = NSWindow.Level(
-            rawValue: Int(CGWindowLevelForKey(.overlayWindow)) + levelOffset)
+            rawValue: Int(CGWindowLevelForKey(.overlayWindow)) + overlayLevel.rawValue)
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         isReleasedWhenClosed = false
 

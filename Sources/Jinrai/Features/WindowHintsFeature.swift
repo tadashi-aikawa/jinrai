@@ -258,12 +258,15 @@ final class WindowHintsFeature {
     private func buildOverlays() {
         for screen in NSScreen.screens {
             let screenFrame = ScreenUtil.frame(of: screen)
-            let overlay = OverlayWindow(frame: screenFrame)
+            let overlay = OverlayWindow(frame: screenFrame, level: .hints)
             guard let root = overlay.rootLayer else { continue }
 
             // ドック(別Space・隠れウィンドウの候補)は各ウィンドウが属するスクリーンに出す
-            buildDock(root: root, screenFrame: screenFrame, screen: screen)
+            let dockFrames = buildDock(root: root, screenFrame: screenFrame, screen: screen)
 
+            // 収集: 各ヒントの希望center(ウィンドウ中心、画面内クランプ)とサイズ
+            var containers: [String: CALayer] = [:]
+            var layoutItems: [HintLayout.Item] = []
             for hint in hints where !isDockHint(hint) {
                 let winFrame = hint.entry.window.frame
                 guard screenFrame.intersects(winFrame) else { continue }
@@ -287,17 +290,29 @@ final class WindowHintsFeature {
                     max(center.y, screenFrame.minY + size.height / 2),
                     screenFrame.maxY - size.height / 2)
 
+                containers[hint.key] = container
+                layoutItems.append(
+                    HintLayout.Item(
+                        key: hint.key, center: center,
+                        width: size.width, height: size.height))
+            }
+
+            // 解決 → 配置: ラベル同士(dockヒント含む)が重ならない最終位置に置く
+            for placement in HintLayout.layout(
+                items: layoutItems, screenFrame: screenFrame, obstacles: dockFrames)
+            {
+                guard let container = containers[placement.key] else { continue }
+                let global = placement.frame
                 // overlay 内ローカル座標(AppKit: bottom-left 原点)へ変換
-                let localX = center.x - screenFrame.minX - size.width / 2
-                let localTopY = center.y - screenFrame.minY - size.height / 2
-                let localY = screenFrame.height - localTopY - size.height
-                container.frame = CGRect(origin: CGPoint(x: localX, y: localY), size: size)
+                let localX = global.minX - screenFrame.minX
+                let localY =
+                    screenFrame.height - (global.minY - screenFrame.minY) - global.height
+                container.frame = CGRect(
+                    x: localX, y: localY, width: global.width, height: global.height)
                 root.addSublayer(container)
 
-                hintContainers[hint.key] = container
-                hintFrames[hint.key] = CGRect(
-                    x: center.x - size.width / 2, y: center.y - size.height / 2,
-                    width: size.width, height: size.height)
+                hintContainers[placement.key] = container
+                hintFrames[placement.key] = global
             }
 
             overlay.orderFrontRegardless()
@@ -306,12 +321,16 @@ final class WindowHintsFeature {
     }
 
     /// 別Space・完全に隠れた候補を、そのウィンドウが属するスクリーンに並べる。
-    /// dock.windowBlend でウィンドウの実位置(X は 0.65、Y は上半分なら画面上端)へ寄せる
-    private func buildDock(root: CALayer, screenFrame: CGRect, screen: NSScreen) {
+    /// dock.windowBlend でウィンドウの実位置(X は 0.65、Y は上半分なら画面上端)へ寄せる。
+    /// 返り値は配置した各ヒントのグローバル top-left frame(通常ヒントの衝突回避用)
+    @discardableResult
+    private func buildDock(
+        root: CALayer, screenFrame: CGRect, screen: NSScreen
+    ) -> [CGRect] {
         let dockHints = hints.filter {
             isDockHint($0) && ScreenUtil.screenContaining($0.entry.window.frame) == screen
         }
-        guard !dockHints.isEmpty else { return }
+        guard !dockHints.isEmpty else { return [] }
 
         // ラベルを natural サイズで構築し、DockLayout(PAV + 画面内シフト + 行分割)で配置
         let containers = Dictionary(
@@ -332,6 +351,7 @@ final class WindowHintsFeature {
             xBlend: CGFloat(config.dockWindowXBlend),
             yBlend: CGFloat(config.dockWindowYBlend))
 
+        var frames: [CGRect] = []
         for placement in placements {
             guard let container = containers[placement.key] else { continue }
             let global = placement.frame
@@ -342,7 +362,9 @@ final class WindowHintsFeature {
             root.addSublayer(container)
             hintContainers[placement.key] = container
             hintFrames[placement.key] = global
+            frames.append(global)
         }
+        return frames
     }
 
     private func highlightLayer(

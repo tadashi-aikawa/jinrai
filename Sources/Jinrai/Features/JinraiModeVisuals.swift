@@ -88,7 +88,7 @@ final class JinraiModeVisuals {
         guard config.logo.enabled else { return }
         guard let image = loadLogoImage(), let context = displayContext() else { return }
 
-        let window = ensureWindow(&logoWindow, screenFrame: context.screenFrame, levelOffset: 0)
+        let window = ensureWindow(&logoWindow, screenFrame: context.screenFrame, level: .logo)
         guard let root = window.rootLayer else { return }
 
         if logoLayer == nil {
@@ -133,7 +133,7 @@ final class JinraiModeVisuals {
         guard let context = displayContext() else { return }
 
         let window = ensureWindow(
-            &comboWindow, screenFrame: context.screenFrame, levelOffset: 1)
+            &comboWindow, screenFrame: context.screenFrame, level: .combo)
         guard let root = window.rootLayer else { return }
 
         if characterEnabled {
@@ -286,13 +286,13 @@ final class JinraiModeVisuals {
     // MARK: - 共通
 
     private func ensureWindow(
-        _ window: inout OverlayWindow?, screenFrame: CGRect, levelOffset: Int
+        _ window: inout OverlayWindow?, screenFrame: CGRect, level: OverlayLevel
     ) -> OverlayWindow {
         if let window {
             window.setTopLeftFrame(screenFrame)
             return window
         }
-        let created = OverlayWindow(frame: screenFrame, levelOffset: levelOffset)
+        let created = OverlayWindow(frame: screenFrame, level: level)
         window = created
         return created
     }

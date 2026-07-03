@@ -132,7 +132,7 @@ final class ApplicationHintsFeature {
         let startX = clampStart(center.x, totalWidth, screenFrame.minX, screenFrame.width)
         let startY = clampStart(center.y, totalHeight, screenFrame.minY, screenFrame.height)
 
-        let overlay = OverlayWindow(frame: screenFrame)
+        let overlay = OverlayWindow(frame: screenFrame, level: .hints)
         guard let root = overlay.rootLayer else { return }
 
         for (index, entry) in config.apps.enumerated() {

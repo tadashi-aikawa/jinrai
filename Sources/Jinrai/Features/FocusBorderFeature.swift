@@ -33,7 +33,7 @@ final class FocusBorderFeature {
 
     /// frame(top-left 座標)の内側に外枠+メイン枠を描画してフェードアウト
     func show(around frame: CGRect) {
-        let overlay = self.overlay ?? OverlayWindow(frame: frame)
+        let overlay = self.overlay ?? OverlayWindow(frame: frame, level: .border)
         self.overlay = overlay
         overlay.setTopLeftFrame(frame)
 

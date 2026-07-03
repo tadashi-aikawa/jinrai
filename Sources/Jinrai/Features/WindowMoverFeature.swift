@@ -206,7 +206,7 @@ final class WindowMoverFeature {
                 uuid.flatMap { config.selectedArea.screens[$0] }
                 ?? config.selectedArea.defaultScreen
             let screenFrame = ScreenUtil.visibleFrame(of: screen)
-            let overlay = OverlayWindow(frame: screenFrame)
+            let overlay = OverlayWindow(frame: screenFrame, level: .hints)
             guard let root = overlay.rootLayer else { continue }
 
             if let mapping, !mapping.isEmpty {
