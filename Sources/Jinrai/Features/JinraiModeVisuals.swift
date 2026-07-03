@@ -272,13 +272,17 @@ final class JinraiModeVisuals {
                 logoSize: logoSize, textHeight: textHeight)
 
             let left = center.x - totalWidth / 2
-            // ベースライン揃え(下端合わせ)で数字と COMBO! を横並び
+            // ベースライン揃えで数字と COMBO! を横並び。box 下端揃えだと
+            // フォントサイズ差の分 descender の高さが違い、大きい数字側が浮いて見える
+            let numberDescent = -Self.comboFont(size: numberFont).descender
+            let labelDescent = -Self.comboFont(size: labelFont).descender
+            let baselineY = top + textHeight - numberDescent
             let numberGlobal = CGRect(
-                x: left, y: top + textHeight - numberSize.height,
+                x: left, y: baselineY + numberDescent - numberSize.height,
                 width: numberSize.width, height: numberSize.height)
             let labelGlobal = CGRect(
                 x: left + numberSize.width + gap,
-                y: top + textHeight - labelSize.height,
+                y: baselineY + labelDescent - labelSize.height,
                 width: labelSize.width, height: labelSize.height)
 
             current.number.fontSize = numberFont
@@ -295,13 +299,16 @@ final class JinraiModeVisuals {
         }
     }
 
+    private static func comboFont(size: CGFloat) -> NSFont {
+        NSFont(name: "AvenirNext-Heavy", size: size)
+            ?? NSFont.boldSystemFont(ofSize: size)
+    }
+
     private func comboAttributedText(
         _ text: String, fontSize: CGFloat, alpha: Double, strokeWidth: Double
     ) -> NSAttributedString {
         let color = Self.comboTextColor
-        let font =
-            NSFont(name: "AvenirNext-Heavy", size: fontSize)
-            ?? NSFont.boldSystemFont(ofSize: fontSize)
+        let font = Self.comboFont(size: fontSize)
         return NSAttributedString(
             string: text,
             attributes: [
