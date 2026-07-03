@@ -34,6 +34,12 @@ final class WindowMoverFeature {
 
     /// エリア選択画面から Window Hints へ遷移するコールバック(相互結線)
     var onOpenWindowHints: (() -> Void)?
+    /// JinraiMode: 開始(mode 演出の起動)/ 適用後(combo+1 して Hints へ)/ キャンセル
+    var onJinraiModeStart: (() -> Void)?
+    var onJinraiModeApply: (() -> Void)?
+    var onJinraiModeCancel: (() -> Void)?
+    /// エリア選択画面が JinraiMode 文脈で開かれているか
+    private var chooserJinraiMode = false
 
     init(config: WindowMoverConfig) {
         self.config = config
@@ -54,7 +60,12 @@ final class WindowMoverFeature {
             self?.handleChooserKey(event) ?? false
         }
         eventTap.onLeftMouseDown = { [weak self] _ in
-            self?.closeChooser()
+            guard let self else { return false }
+            let wasJinrai = self.chooserJinraiMode
+            self.closeChooser()
+            if wasJinrai {
+                self.onJinraiModeCancel?()
+            }
             return false
         }
     }
@@ -70,7 +81,8 @@ final class WindowMoverFeature {
         case "moveToSelectedArea":
             openAreaChooser()
         case "moveToSelectedAreaInJinraiMode":
-            openAreaChooser()  // JinraiMode はフェーズ2
+            onJinraiModeStart?()
+            openAreaChooser(jinraiMode: true)
         case "minimizeWindow":
             WindowEnumerator.focusedWindow()?.minimize()
         case "maximizeWindow":
@@ -180,8 +192,9 @@ final class WindowMoverFeature {
 
     // MARK: - エリア選択画面
 
-    func openAreaChooser() {
+    func openAreaChooser(jinraiMode: Bool = false) {
         guard !isChooserVisible else { return }
+        chooserJinraiMode = jinraiMode
         chooserCandidates = []
         areaLabels = []
         chooserInput = ""
@@ -221,6 +234,7 @@ final class WindowMoverFeature {
     func closeChooser() {
         guard isChooserVisible || !chooserOverlays.isEmpty else { return }
         isChooserVisible = false
+        chooserJinraiMode = false
         eventTap.stop()
         for overlay in chooserOverlays {
             overlay.orderOut(nil)
@@ -476,11 +490,25 @@ final class WindowMoverFeature {
 
     // MARK: - エリア選択のキー入力
 
+    /// キー名の正規化("return" "space" 等の特殊キー対応、JinraiMode トリガ比較用)
+    private func chooserKeyName(of event: EventTap.KeyEvent) -> String? {
+        switch Int(event.keyCode) {
+        case kVK_Space: return "space"
+        case kVK_Return: return "return"
+        case kVK_Tab: return "tab"
+        default: return event.character?.lowercased()
+        }
+    }
+
     private func handleChooserKey(_ event: EventTap.KeyEvent) -> Bool {
         guard isChooserVisible else { return false }
 
         if event.keyCode == UInt32(kVK_Escape) {
+            let wasJinrai = chooserJinraiMode
             closeChooser()
+            if wasJinrai {
+                onJinraiModeCancel?()
+            }
             return true
         }
         if event.keyCode == UInt32(kVK_Delete) {
@@ -489,12 +517,22 @@ final class WindowMoverFeature {
             return true
         }
 
+        // JinraiMode 開始(triggers.windowMover.key。選択画面は開いたまま)
+        if let name = chooserKeyName(of: event),
+            name == config.jinraiModeKey
+        {
+            if !chooserJinraiMode {
+                chooserJinraiMode = true
+                onJinraiModeStart?()
+            }
+            return true
+        }
+
         // "space" 等の特殊キーは Window Hints への遷移キーとしてのみ扱う
         if event.keyCode == UInt32(kVK_Space),
             config.selectedArea.windowHintsKey == "SPACE"
         {
-            closeChooser()
-            onOpenWindowHints?()
+            transitionToWindowHints()
             return true
         }
 
@@ -507,22 +545,26 @@ final class WindowMoverFeature {
 
         // Window Hints への遷移
         if let hintsKey = config.selectedArea.windowHintsKey, input == hintsKey {
-            closeChooser()
-            onOpenWindowHints?()
+            transitionToWindowHints()
             return true
         }
         // アクション
         if let action = config.selectedArea.actions.first(where: { $0.value == input }) {
+            let wasJinrai = chooserJinraiMode
             closeChooser()
-            runAction(action.key)
+            runAction(action.key, jinraiMode: wasJinrai)
             return true
         }
         // エリア
         if let candidate = chooserCandidates.first(where: { $0.key == input }) {
             let frame = candidate.frame
+            let wasJinrai = chooserJinraiMode
             closeChooser()
             if let win = WindowEnumerator.focusedWindow() {
                 apply(frame: frame, to: win)
+            }
+            if wasJinrai {
+                onJinraiModeApply?()
             }
             return true
         }
@@ -538,6 +580,17 @@ final class WindowMoverFeature {
             updateChooserHighlight()
         }
         return true
+    }
+
+    /// Window Hints への遷移(JinraiMode 中は combo+1 して Hints を mode 維持で再表示)
+    private func transitionToWindowHints() {
+        let wasJinrai = chooserJinraiMode
+        closeChooser()
+        if wasJinrai {
+            onJinraiModeApply?()
+        } else {
+            onOpenWindowHints?()
+        }
     }
 
     private func updateChooserHighlight() {
@@ -603,8 +656,11 @@ final class WindowMoverFeature {
             red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
     }
 
-    private func runAction(_ name: String) {
-        guard let win = WindowEnumerator.focusedWindow() else { return }
+    private func runAction(_ name: String, jinraiMode: Bool = false) {
+        guard let win = WindowEnumerator.focusedWindow() else {
+            if jinraiMode { onJinraiModeCancel?() }
+            return
+        }
         switch name {
         case "closeWindow":
             win.close()
@@ -618,8 +674,20 @@ final class WindowMoverFeature {
             NSRunningApplication(processIdentifier: win.pid)?.terminate()
         case "detachChromeTabToNewWindow":
             detachChromeTab(win)
+            // JinraiMode 中は Hints に戻らず、分離されたウィンドウを続けて配置できるよう
+            // 選択画面を再表示する(元 reopenWindowActionChooserAfterDetach)
+            if jinraiMode {
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(for: .seconds(0.3))
+                    self?.openAreaChooser(jinraiMode: true)
+                }
+            }
+            return
         default:
             break
+        }
+        if jinraiMode {
+            onJinraiModeApply?()
         }
     }
 

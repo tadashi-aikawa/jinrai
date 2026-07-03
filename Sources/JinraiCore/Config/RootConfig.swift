@@ -19,6 +19,8 @@ public struct RootConfig {
     public var windowHints: WindowHintsConfig?
     public var windowMover: WindowMoverConfig?
     public var applicationHints: ApplicationHintsConfig?
+    /// セクションなしでもデフォルト値を持つ(元 init.lua の normalizeJinraiMode)
+    public var jinraiMode: JinraiModeConfig = .default
 
     public init(
         macosNativeTabs: MacosNativeTabsConfig = .default,
@@ -82,6 +84,14 @@ public enum RootConfigBuilder {
             config.applicationHints = try ApplicationHintsConfigBuilder.build(
                 section, windowHintsKey: appHintsKey)
         }
+
+        if let section = root["jinrai_mode"] as? [String: Any] {
+            config.jinraiMode = try JinraiModeConfigBuilder.build(section)
+        }
+        // トリガキーを各機能の config へ配布(元 init.lua の internal.jinraiMode 注入)
+        config.windowHints?.jinraiModeKey = config.jinraiMode.windowHintsTriggerKey
+        config.windowMover?.jinraiModeKey = config.jinraiMode.windowMoverTriggerKey
+        config.applicationHints?.jinraiModeKey = config.jinraiMode.applicationHintsTriggerKey
         return config
     }
 }

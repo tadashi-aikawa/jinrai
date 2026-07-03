@@ -4,8 +4,9 @@ import AppKit
 /// 全 Space に表示され、マウスイベントを透過する。
 @MainActor
 public final class OverlayWindow: NSWindow {
-    /// frame は CG/AX 準拠の top-left 座標で渡す
-    public init(frame: CGRect) {
+    /// frame は CG/AX 準拠の top-left 座標で渡す。
+    /// levelOffset で overlay レベルからの重なり順を調整(元 hs.canvas の overlay+1 等)
+    public init(frame: CGRect, levelOffset: Int = 0) {
         super.init(
             contentRect: ScreenUtil.toAppKit(frame),
             styleMask: .borderless,
@@ -16,7 +17,8 @@ public final class OverlayWindow: NSWindow {
         backgroundColor = .clear
         hasShadow = false
         ignoresMouseEvents = true
-        level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.overlayWindow)))
+        level = NSWindow.Level(
+            rawValue: Int(CGWindowLevelForKey(.overlayWindow)) + levelOffset)
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         isReleasedWhenClosed = false
 

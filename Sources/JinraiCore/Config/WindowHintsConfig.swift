@@ -62,6 +62,10 @@ public struct WindowHintsConfig: Sendable {
     public var windowMoverKey: String?
     /// Application Hints へ遷移するキー
     public var applicationHintsKey: String?
+    /// Application Hints へ遷移するとき JinraiMode を開始するか
+    public var applicationHintsJinraiMode: Bool
+    /// Hints 表示中に JinraiMode を開始するキー(jinrai_mode.triggers.windowHints.key)
+    public var jinraiModeKey: String?
     public var directionHintKeys: [String: Direction]
     public var directionScoring: DirectionScoring.Config
     public var spacesNumbers: Bool
@@ -257,6 +261,9 @@ public enum WindowHintsConfigBuilder {
             windowMoverKey: merged.string("navigation.windowMover.moveToSelectedArea.key")?
                 .lowercased(),
             applicationHintsKey: merged.string("navigation.applicationHints.key")?.lowercased(),
+            applicationHintsJinraiMode: merged.bool("navigation.applicationHints.jinraiMode")
+                ?? false,
+            jinraiModeKey: nil,  // RootConfigBuilder が jinrai_mode.triggers から注入
             directionHintKeys: directionKeys,
             directionScoring: scoring,
             spacesNumbers: merged.bool("navigation.spaces.numbers") ?? true,

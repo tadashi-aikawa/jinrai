@@ -34,6 +34,8 @@ public struct ApplicationHintsConfig: Sendable {
 
     /// Window Hints へ戻る遷移キー(init 相当の結線で注入)
     public var windowHintsKey: String?
+    /// 表示中に JinraiMode を開始するキー(jinrai_mode.triggers.applicationHints.key)
+    public var jinraiModeKey: String?
 }
 
 public enum ApplicationHintsConfigBuilder {
@@ -160,7 +162,8 @@ public enum ApplicationHintsConfigBuilder {
                 ?? ConfigColor(red: 0.82, green: 0.84, blue: 0.88, alpha: 0.30),
             stateColor: merged.color("appearance.stateColor")
                 ?? ConfigColor(red: 0.40, green: 0.68, blue: 0.98, alpha: 1.00),
-            windowHintsKey: windowHintsKey?.uppercased()
+            windowHintsKey: windowHintsKey?.uppercased(),
+            jinraiModeKey: nil  // RootConfigBuilder が jinrai_mode.triggers から注入
         )
     }
 }

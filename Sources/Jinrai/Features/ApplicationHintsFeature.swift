@@ -21,8 +21,14 @@ final class ApplicationHintsFeature {
     private var waitTimer: Timer?
     private var waitTimeoutTimer: Timer?
 
-    /// Window Hints へ戻る遷移コールバック(相互結線)
-    var onOpenWindowHints: (() -> Void)?
+    /// Window Hints へ戻る遷移コールバック(jinraiMode フラグ付き)
+    var onOpenWindowHints: ((Bool) -> Void)?
+    /// JinraiMode: 開始 / ウィンドウ作成完了後(→ エリア選択へ)/ キャンセル
+    var onStartJinraiMode: (() -> Void)?
+    var onSelectInJinraiMode: (() -> Void)?
+    var onCancelJinraiMode: (() -> Void)?
+    /// 現在の表示が JinraiMode 文脈か
+    private var showJinraiMode = false
 
     private struct AppCell {
         let entry: ApplicationHintsConfig.AppEntry
@@ -46,19 +52,29 @@ final class ApplicationHintsFeature {
             self?.handleKeyDown(event) ?? false
         }
         eventTap.onLeftMouseDown = { [weak self] _ in
-            self?.close()
+            self?.closeAndCancelJinraiMode()
             return false
         }
     }
 
     func toggle() {
-        if isVisible { close() } else { show() }
+        if isVisible { closeAndCancelJinraiMode() } else { show() }
+    }
+
+    /// 閉じる + JinraiMode 中ならキャンセル通知(Escape・外クリック用)
+    private func closeAndCancelJinraiMode() {
+        let wasJinrai = showJinraiMode
+        close()
+        if wasJinrai {
+            onCancelJinraiMode?()
+        }
     }
 
     // MARK: - 表示
 
-    func show() {
+    func show(jinraiMode: Bool = false) {
         guard !isVisible, !config.apps.isEmpty else { return }
+        showJinraiMode = jinraiMode
 
         // 配置基準: フォーカス中ウィンドウの中央(なければスクリーン中央)
         let focused = WindowEnumerator.focusedWindow()
@@ -86,6 +102,7 @@ final class ApplicationHintsFeature {
     func close() {
         guard isVisible || !overlays.isEmpty else { return }
         isVisible = false
+        showJinraiMode = false
         stopWait()
         eventTap.stop()
         for overlay in overlays {
@@ -218,11 +235,11 @@ final class ApplicationHintsFeature {
         guard isVisible else { return false }
         // 待機中は Escape のみ
         if waiting {
-            if event.keyCode == UInt32(kVK_Escape) { close() }
+            if event.keyCode == UInt32(kVK_Escape) { closeAndCancelJinraiMode() }
             return true
         }
         if event.keyCode == UInt32(kVK_Escape) {
-            close()
+            closeAndCancelJinraiMode()
             return true
         }
         if event.keyCode == UInt32(kVK_Delete) {
@@ -230,12 +247,25 @@ final class ApplicationHintsFeature {
             applyHighlights()
             return true
         }
+        // JinraiMode 開始(triggers.applicationHints.key。表示は開いたまま)
+        if let name = jinraiKeyName(of: event),
+            name == config.jinraiModeKey
+        {
+            if !showJinraiMode {
+                showJinraiMode = true
+                currentInput = ""
+                onStartJinraiMode?()
+                applyHighlights()
+            }
+            return true
+        }
         // Window Hints へ戻る
         if let name = event.character?.uppercased(),
             name == config.windowHintsKey, let onOpenWindowHints
         {
+            let wasJinrai = showJinraiMode
             close()
-            onOpenWindowHints()
+            onOpenWindowHints(wasJinrai)
             return true
         }
 
@@ -255,6 +285,16 @@ final class ApplicationHintsFeature {
         }
         applyHighlights()
         return true
+    }
+
+    /// JinraiMode トリガキー比較用("return" 等の特殊キー名に正規化)
+    private func jinraiKeyName(of event: EventTap.KeyEvent) -> String? {
+        switch Int(event.keyCode) {
+        case kVK_Space: return "space"
+        case kVK_Return: return "return"
+        case kVK_Tab: return "tab"
+        default: return event.character?.lowercased()
+        }
     }
 
     private func applyHighlights() {
@@ -335,14 +375,19 @@ final class ApplicationHintsFeature {
                 {
                     ax.focus()
                     self.stopWait()
+                    let wasJinrai = self.showJinraiMode
                     self.close()
+                    // JinraiMode 中: 作成したウィンドウを続けて配置(→ エリア選択へ)
+                    if wasJinrai {
+                        self.onSelectInJinraiMode?()
+                    }
                     return
                 }
                 if Date() > deadline {
                     self.stopWait()
                     self.reportError(
                         "新しいウィンドウの出現がタイムアウトしました: \(entry.bundleID)")
-                    self.close()
+                    self.closeAndCancelJinraiMode()
                 }
             }
         }

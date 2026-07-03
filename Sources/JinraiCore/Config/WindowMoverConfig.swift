@@ -33,6 +33,8 @@ public struct WindowMoverConfig: Sendable {
     public var verticalRatios: [Double]
     public var hiddenWindowThreshold: Double
     public var selectedArea: SelectedArea
+    /// エリア選択中に JinraiMode を開始するキー(jinrai_mode.triggers.windowMover.key)
+    public var jinraiModeKey: String?
 }
 
 public enum WindowMoverConfigBuilder {
@@ -181,7 +183,8 @@ public enum WindowMoverConfigBuilder {
                     ?? ConfigColor(red: 0.03, green: 0.03, blue: 0.04, alpha: 0.30),
                 dimmedTextColor: merged.color("selectedArea.appearance.state.dimmed.textColor")
                     ?? ConfigColor(red: 0.96, green: 1.0, blue: 0.98, alpha: 0.32)
-            )
+            ),
+            jinraiModeKey: nil  // RootConfigBuilder が jinrai_mode.triggers から注入
         )
     }
 

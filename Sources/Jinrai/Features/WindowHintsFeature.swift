@@ -26,19 +26,56 @@ final class WindowHintsFeature {
     private var didRequestScreenCapture = false
     private(set) var isVisible = false
 
-    /// Window Mover のエリア選択画面へ遷移するコールバック(相互結線)
-    var onOpenWindowMover: (() -> Void)?
-    /// Application Hints へ遷移するコールバック(相互結線)
-    var onOpenApplicationHints: (() -> Void)?
+    /// Window Mover のエリア選択画面へ遷移するコールバック(jinraiMode フラグ付き)
+    var onOpenWindowMover: ((Bool) -> Void)?
+    /// Application Hints へ遷移するコールバック(jinraiMode フラグ付き)
+    var onOpenApplicationHints: ((Bool) -> Void)?
+    /// JinraiMode 中のウィンドウ選択後(→ エリア選択画面を開く)
+    var onJinraiModeSelect: (() -> Void)?
+
+    // MARK: - JinraiMode 状態(元 window_hints.lua の isJinraiMode / comboCount)
+
+    private let jinraiVisuals: JinraiModeVisuals
+    private(set) var isJinraiMode = false
+    private var comboCount = 0
+
+    func startJinraiMode() {
+        comboCount = 0
+        isJinraiMode = true
+        jinraiVisuals.showLogo()
+        jinraiVisuals.showCombo(count: 0)
+    }
+
+    func stopJinraiMode() {
+        isJinraiMode = false
+        comboCount = 0
+        jinraiVisuals.clear()
+    }
+
+    /// mode を維持したまま Hints を再表示(元 showJinraiMode)
+    func showJinraiMode() {
+        show()
+    }
+
+    @discardableResult
+    func advanceJinraiModeCombo() -> Bool {
+        guard isJinraiMode else { return false }
+        comboCount += 1
+        jinraiVisuals.showLogo()
+        jinraiVisuals.showCombo(count: comboCount)
+        return true
+    }
 
     init(
         config: WindowHintsConfig,
         focusHistory: FocusHistoryFeature?,
-        macosNativeTabs: MacosNativeTabsConfig = .default
+        macosNativeTabs: MacosNativeTabsConfig = .default,
+        jinraiMode: JinraiModeConfig = .default
     ) {
         self.config = config
         self.focusHistory = focusHistory
         self.macosNativeTabsApps = Set(macosNativeTabs.apps)
+        self.jinraiVisuals = JinraiModeVisuals(config: jinraiMode)
 
         if let key = config.hotkeyKey {
             hotkey = Hotkey(modifiers: config.hotkeyModifiers, key: key) { [weak self] in
@@ -105,7 +142,10 @@ final class WindowHintsFeature {
         }
     }
 
-    func close() {
+    func close(keepJinraiMode: Bool = false) {
+        if !keepJinraiMode {
+            stopJinraiMode()
+        }
         guard isVisible else { return }
         isVisible = false
         eventTap.stop()
@@ -200,6 +240,7 @@ final class WindowHintsFeature {
         if let key = config.navigationFocusBackKey { reserved.insert(key.uppercased()) }
         if let key = config.windowMoverKey { reserved.insert(key.uppercased()) }
         if let key = config.applicationHintsKey { reserved.insert(key.uppercased()) }
+        if let key = config.jinraiModeKey { reserved.insert(key.uppercased()) }
         for key in config.directionHintKeys.keys { reserved.insert(key.uppercased()) }
         if let key = config.prevSpaceKey { reserved.insert(key.uppercased()) }
         if let key = config.nextSpaceKey { reserved.insert(key.uppercased()) }
@@ -625,22 +666,36 @@ final class WindowHintsFeature {
                 return true
             }
         }
+        // JinraiMode 開始(triggers.windowHints.key。Hints は開いたまま)
+        if let name = keyName(of: event),
+            name == config.jinraiModeKey
+        {
+            if !isJinraiMode {
+                startJinraiMode()
+            }
+            return true
+        }
         // Window Mover のエリア選択へ遷移
         if let name = keyName(of: event),
             name == config.windowMoverKey,
             let onOpenWindowMover
         {
-            close()
-            onOpenWindowMover()
+            let jinrai = isJinraiMode
+            close(keepJinraiMode: jinrai)
+            onOpenWindowMover(jinrai)
             return true
         }
-        // Application Hints へ遷移
+        // Application Hints へ遷移(navigation.applicationHints.jinraiMode で mode 開始)
         if let name = keyName(of: event),
             name == config.applicationHintsKey,
             let onOpenApplicationHints
         {
-            close()
-            onOpenApplicationHints()
+            let jinrai = isJinraiMode || config.applicationHintsJinraiMode
+            if jinrai && !isJinraiMode {
+                startJinraiMode()
+            }
+            close(keepJinraiMode: jinrai)
+            onOpenApplicationHints(jinrai)
             return true
         }
         // 方向キー(8方向ナビゲーション)
@@ -690,6 +745,21 @@ final class WindowHintsFeature {
 
     private func selectWindow(_ hint: HintKeyAssignment.Hint, swap: Bool = false) {
         let window = hint.entry.window
+
+        // JinraiMode 中の選択: ロゴ表示 → mode 維持で閉じる → focus → エリア選択へ
+        if isJinraiMode {
+            jinraiVisuals.showLogo()
+            close(keepJinraiMode: true)
+            if let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) {
+                ax.focus()
+                if config.cursorOnSelect {
+                    Mouse.moveToCenter(of: ax.frame ?? window.frame)
+                }
+            }
+            onJinraiModeSelect?()
+            return
+        }
+
         close()
         guard let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) else { return }
         if swap, let focused = WindowEnumerator.focusedWindow(),
@@ -800,6 +870,7 @@ final class WindowHintsFeature {
 
     func teardown() {
         close()
+        stopJinraiMode()
         hotkey?.unregister()
         hotkey = nil
     }

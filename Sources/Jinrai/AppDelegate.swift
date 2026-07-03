@@ -63,7 +63,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             windowHints = WindowHintsFeature(
                 config: windowHintsConfig,
                 focusHistory: focusHistory,
-                macosNativeTabs: config.macosNativeTabs)
+                macosNativeTabs: config.macosNativeTabs,
+                jinraiMode: config.jinraiMode)
         }
 
         if let applicationHintsConfig = config.applicationHints {
@@ -74,15 +75,60 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowMover?.onOpenWindowHints = { [weak self] in
             self?.windowHints?.show()
         }
-        windowHints?.onOpenWindowMover = { [weak self] in
-            self?.windowMover?.openAreaChooser()
+        windowHints?.onOpenWindowMover = { [weak self] jinraiMode in
+            if jinraiMode {
+                self?.openJinraiModeAreaChooser()
+            } else {
+                self?.windowMover?.openAreaChooser()
+            }
         }
-        windowHints?.onOpenApplicationHints = { [weak self] in
-            self?.applicationHints?.show()
+        windowHints?.onOpenApplicationHints = { [weak self] jinraiMode in
+            guard let self else { return }
+            self.applicationHints?.show(jinraiMode: jinraiMode)
+            if jinraiMode {
+                self.windowHints?.advanceJinraiModeCombo()
+            }
         }
-        applicationHints?.onOpenWindowHints = { [weak self] in
-            self?.windowHints?.show()
+        applicationHints?.onOpenWindowHints = { [weak self] jinraiMode in
+            guard let self else { return }
+            if jinraiMode {
+                self.windowHints?.advanceJinraiModeCombo()
+                self.windowHints?.showJinraiMode()
+            } else {
+                self.windowHints?.show()
+            }
         }
+
+        // JinraiMode のループ結線(元 init.lua の openJinraiModeWindowActionChooser)
+        windowHints?.onJinraiModeSelect = { [weak self] in
+            self?.openJinraiModeAreaChooser()
+        }
+        windowMover?.onJinraiModeStart = { [weak self] in
+            self?.windowHints?.startJinraiMode()
+        }
+        windowMover?.onJinraiModeApply = { [weak self] in
+            guard let self else { return }
+            self.windowHints?.advanceJinraiModeCombo()
+            self.windowHints?.showJinraiMode()
+        }
+        windowMover?.onJinraiModeCancel = { [weak self] in
+            self?.windowHints?.stopJinraiMode()
+        }
+        applicationHints?.onStartJinraiMode = { [weak self] in
+            self?.windowHints?.startJinraiMode()
+        }
+        applicationHints?.onSelectInJinraiMode = { [weak self] in
+            self?.openJinraiModeAreaChooser()
+        }
+        applicationHints?.onCancelJinraiMode = { [weak self] in
+            self?.windowHints?.stopJinraiMode()
+        }
+    }
+
+    /// JinraiMode 中のエリア選択画面を開く(combo+1 してから)
+    private func openJinraiModeAreaChooser() {
+        windowHints?.advanceJinraiModeCombo()
+        windowMover?.openAreaChooser(jinraiMode: true)
     }
 
     private func teardownFeatures() {
