@@ -674,13 +674,23 @@ final class WindowHintsFeature {
             updateHighlight()
             return true
         }
-        // focusBack キー
+        // focusBack キー(JinraiMode 中は選択と同じ扱いでエリア選択へ)
         if let name = keyName(of: event),
             name == config.navigationFocusBackKey,
             let focusHistory
         {
-            close()
-            focusHistory.focusBack(centerCursor: config.cursorOnSelect)
+            if isJinraiMode {
+                close(keepJinraiMode: true)
+                if let target = focusHistory.focusBack(centerCursor: config.cursorOnSelect) {
+                    jinraiModeAdvance(windowID: target.windowID, pid: target.pid)
+                } else {
+                    // 戻り先がない場合は Hints を再表示してループ継続
+                    show()
+                }
+            } else {
+                close()
+                focusHistory.focusBack(centerCursor: config.cursorOnSelect)
+            }
             return true
         }
         // 数字キー 1〜9 で該当 Space へ移動
@@ -786,15 +796,20 @@ final class WindowHintsFeature {
         return false  // 外クリックはアプリに透過
     }
 
+    /// JinraiMode 中にフォーカス済みウィンドウを「選択」として扱い、エリア選択へ遷移する。
+    /// アンカー設定で別ディスプレイでも演出が追従する
+    /// (frontmostApplication の更新は非同期で、focus 直後は旧ウィンドウを指すため)
+    private func jinraiModeAdvance(windowID: UInt32, pid: pid_t) {
+        jinraiVisuals.setAnchor(windowID: windowID, pid: pid)
+        jinraiVisuals.showLogo()
+        onJinraiModeSelect?()
+    }
+
     private func selectWindow(_ hint: HintKeyAssignment.Hint, swap: Bool = false) {
         let window = hint.entry.window
 
-        // JinraiMode 中の選択: ロゴ表示 → mode 維持で閉じる → focus → エリア選択へ。
-        // 選択ウィンドウをアンカーにして、別ディスプレイでも演出が追従するようにする
-        // (frontmostApplication の更新は非同期で、focus 直後は旧ウィンドウを指すため)
+        // JinraiMode 中の選択: mode 維持で閉じる → focus → エリア選択へ
         if isJinraiMode {
-            jinraiVisuals.setAnchor(windowID: window.id, pid: window.pid)
-            jinraiVisuals.showLogo()
             close(keepJinraiMode: true)
             if let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) {
                 ax.focus()
@@ -802,7 +817,7 @@ final class WindowHintsFeature {
                     Mouse.moveToCenter(of: ax.frame ?? window.frame)
                 }
             }
-            onJinraiModeSelect?()
+            jinraiModeAdvance(windowID: window.id, pid: window.pid)
             return
         }
 
@@ -822,14 +837,15 @@ final class WindowHintsFeature {
         }
     }
 
-    /// 方向ナビゲーション: 現Space の非オクルージョン候補から最良を選んでフォーカス
+    /// 方向ナビゲーション: 現Space の非オクルージョン候補から最良を選んでフォーカス。
+    /// JinraiMode 中は選択と同じ扱いでエリア選択へ遷移する
     private func runDirectionalMove(_ direction: Direction) {
         let ordered = WindowEnumerator.orderedWindows()
             .filter { $0.pid != ProcessInfo.processInfo.processIdentifier }
         let standard = WindowEnumerator.standardWindows(from: ordered)
         // フォーカス中 = 最前面の標準ウィンドウ(collectEntries と同じ判定)
         guard let current = standard.first else {
-            close()
+            close(keepJinraiMode: isJinraiMode)
             return
         }
         let candidates = standard
@@ -848,13 +864,22 @@ final class WindowHintsFeature {
             orderedWindows: ordered,
             config: config.directionScoring
         )
-        close()
+        close(keepJinraiMode: isJinraiMode)
         guard let target,
             let ax = AXWindow.resolve(windowID: target.id, pid: target.pid)
-        else { return }
+        else {
+            // JinraiMode 中に移動先がない(画面端など)場合は再表示してループ継続
+            if isJinraiMode {
+                show()
+            }
+            return
+        }
         ax.focus()
         if config.cursorOnSelect {
             Mouse.moveToCenter(of: ax.frame ?? target.frame)
+        }
+        if isJinraiMode {
+            jinraiModeAdvance(windowID: target.id, pid: target.pid)
         }
     }
 
