@@ -82,12 +82,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.windowMover?.openAreaChooser()
             }
         }
+        // 開いただけでは combo は進めない(進むのは選択時 = onSelectInJinraiMode)
         windowHints?.onOpenApplicationHints = { [weak self] jinraiMode in
-            guard let self else { return }
-            self.applicationHints?.show(jinraiMode: jinraiMode)
-            if jinraiMode {
-                self.windowHints?.advanceJinraiModeCombo()
-            }
+            self?.applicationHints?.show(jinraiMode: jinraiMode)
         }
         applicationHints?.onOpenWindowHints = { [weak self] jinraiMode in
             guard let self else { return }
