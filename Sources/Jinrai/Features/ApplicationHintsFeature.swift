@@ -306,10 +306,36 @@ final class ApplicationHintsFeature {
                 active ? config.bgColor : config.dimmedBgColor)
             cell.iconLayer.opacity = active ? 1.0 : 0.3
             let textColor = active ? config.textColor : config.dimmedTextColor
-            cell.keyLayer.foregroundColor = cgColor(textColor)
             cell.nameLayer.foregroundColor = cgColor(textColor)
             cell.stateLayer.foregroundColor = cgColor(
                 active ? config.stateColor : config.dimmedTextColor)
+
+            // 入力済みプレフィックスをグレーアウト(Window Hints と同じ表現)
+            let key = cell.entry.key
+            let prefixLength =
+                active && !currentInput.isEmpty ? min(currentInput.count, key.count) : 0
+            if prefixLength > 0 {
+                let font = NSFont.boldSystemFont(ofSize: 30)
+                let attributed = NSMutableAttributedString()
+                attributed.append(
+                    NSAttributedString(
+                        string: String(key.prefix(prefixLength)),
+                        attributes: [
+                            .font: font,
+                            .foregroundColor: nsColor(config.keyHighlightColor),
+                        ]))
+                attributed.append(
+                    NSAttributedString(
+                        string: String(key.dropFirst(prefixLength)),
+                        attributes: [
+                            .font: font,
+                            .foregroundColor: nsColor(textColor),
+                        ]))
+                cell.keyLayer.string = attributed
+            } else {
+                cell.keyLayer.string = key
+                cell.keyLayer.foregroundColor = cgColor(textColor)
+            }
         }
         CATransaction.commit()
     }
@@ -411,6 +437,10 @@ final class ApplicationHintsFeature {
 
     private func cgColor(_ color: ConfigColor) -> CGColor {
         CGColor(red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
+    }
+
+    private func nsColor(_ color: ConfigColor) -> NSColor {
+        NSColor(red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
     }
 
     func teardown() {

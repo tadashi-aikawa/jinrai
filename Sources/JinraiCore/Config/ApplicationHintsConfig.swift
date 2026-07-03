@@ -31,6 +31,8 @@ public struct ApplicationHintsConfig: Sendable {
     public var textColor: ConfigColor
     public var dimmedTextColor: ConfigColor
     public var stateColor: ConfigColor
+    /// 入力済みプレフィックス文字の色(Window Hints の hint.key.keyHighlightColor 相当)
+    public var keyHighlightColor: ConfigColor
 
     /// Window Hints へ戻る遷移キー(init 相当の結線で注入)
     public var windowHintsKey: String?
@@ -54,6 +56,7 @@ public enum ApplicationHintsConfigBuilder {
                 "textColor": ["red": 0.96, "green": 0.97, "blue": 1.00, "alpha": 1.00],
                 "dimmedTextColor": ["red": 0.82, "green": 0.84, "blue": 0.88, "alpha": 0.30],
                 "stateColor": ["red": 0.40, "green": 0.68, "blue": 0.98, "alpha": 1.00],
+                "keyHighlightColor": ["red": 0.84, "green": 0.84, "blue": 0.86, "alpha": 0.35],
             ],
         ]
     }
@@ -162,6 +165,8 @@ public enum ApplicationHintsConfigBuilder {
                 ?? ConfigColor(red: 0.82, green: 0.84, blue: 0.88, alpha: 0.30),
             stateColor: merged.color("appearance.stateColor")
                 ?? ConfigColor(red: 0.40, green: 0.68, blue: 0.98, alpha: 1.00),
+            keyHighlightColor: merged.color("appearance.keyHighlightColor")
+                ?? ConfigColor(red: 0.84, green: 0.84, blue: 0.86, alpha: 0.35),
             windowHintsKey: windowHintsKey?.uppercased(),
             jinraiModeKey: nil  // RootConfigBuilder が jinrai_mode.triggers から注入
         )
