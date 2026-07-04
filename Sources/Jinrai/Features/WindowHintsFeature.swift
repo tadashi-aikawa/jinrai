@@ -443,20 +443,27 @@ final class WindowHintsFeature {
             overlays.append(overlay)
         }
 
-        // UI 全体(ヒント・spotlight・ボーダー)を ease-in で立ち上げる。
-        // 高速な操作は低い不透明度のうちに完結するため画面が明滅せず、
-        // 迷った(時間をかけた)ぶんだけ UI が濃くなる
-        if fadeIn, config.showFadeIn > 0 {
-            let all = spotlightOverlays.map(\.overlay) + overlays
-            for overlay in all {
-                overlay.alphaValue = 0
-            }
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = config.showFadeIn
-                context.timingFunction = CAMediaTimingFunction(name: .easeIn)
-                for overlay in all {
-                    overlay.animator().alphaValue = 1
-                }
+        // ヒントと spotlight を別々の時間で ease-in で立ち上げる(開始は同時)。
+        // ヒントは小面積なので短く出して即応感を優先し、画面全体の輝度が変わる
+        // spotlight は長めに取ることで、高速な操作では暗転がほぼ知覚されず、
+        // 迷った(時間をかけた)ぶんだけ暗幕が満ちてくる
+        if fadeIn {
+            fadeInOverlays(overlays, duration: config.showFadeInHints)
+            fadeInOverlays(
+                spotlightOverlays.map(\.overlay), duration: config.showFadeInSpotlight)
+        }
+    }
+
+    private func fadeInOverlays(_ targets: [OverlayWindow], duration: Double) {
+        guard duration > 0, !targets.isEmpty else { return }
+        for overlay in targets {
+            overlay.alphaValue = 0
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            for overlay in targets {
+                overlay.animator().alphaValue = 1
             }
         }
     }

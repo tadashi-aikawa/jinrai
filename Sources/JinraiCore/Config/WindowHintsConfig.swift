@@ -78,10 +78,14 @@ public struct WindowHintsConfig: Sendable {
     public var includeOtherSpaces: Bool
     public var includeActiveWindow: Bool
     public var swapModifiers: [String]?
-    /// UI 全体(ヒント・spotlight・ボーダー)を ease-in で立ち上げるフェード時間(秒)。
-    /// 高速な操作は低い不透明度のうちに完結するため画面が明滅せず、
-    /// 迷った(時間をかけた)ぶんだけ UI が濃く表示される(0 で即時表示)
-    public var showFadeIn: Double
+    /// ヒントを ease-in で立ち上げるフェード時間(秒。0 で即時表示)。
+    /// 小面積なので短くして即応感を優先する
+    public var showFadeInHints: Double
+    /// spotlight(暗幕) + アクティブボーダーを ease-in で立ち上げるフェード時間(秒)。
+    /// 画面全体の輝度が変わり明滅の刺激が強いため、ヒントより長めに取る。
+    /// 高速な操作は低い不透明度のうちに完結するため暗転が目立たず、
+    /// 迷った(時間をかけた)ぶんだけ暗幕が満ちてくる(0 で即時表示)
+    public var showFadeInSpotlight: Double
 }
 
 public enum WindowHintsConfigBuilder {
@@ -280,7 +284,8 @@ public enum WindowHintsConfigBuilder {
             includeOtherSpaces: merged.bool("behavior.candidates.includeOtherSpaces") ?? true,
             includeActiveWindow: merged.bool("behavior.candidates.includeActiveWindow") ?? true,
             swapModifiers: swapModifiers,
-            showFadeIn: merged.double("behavior.showFadeIn") ?? 0.15
+            showFadeInHints: merged.double("behavior.showFadeIn.hints") ?? 0.05,
+            showFadeInSpotlight: merged.double("behavior.showFadeIn.spotlight") ?? 0.4
         )
     }
 }
