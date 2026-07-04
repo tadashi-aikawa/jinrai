@@ -43,6 +43,12 @@ enum ActiveWindowOverlayLayers {
         shape.path = path
         shape.fillRule = .evenOdd
         shape.fillColor = CGColor(gray: 0, alpha: alpha)
+        // 瞬時に暗転すると目に刺さるため、フェードインで暗くする
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = 0
+        fade.toValue = 1
+        fade.duration = 0.15
+        shape.add(fade, forKey: "fadeIn")
         return shape
     }
 
