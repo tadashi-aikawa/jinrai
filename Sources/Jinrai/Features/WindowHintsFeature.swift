@@ -67,8 +67,8 @@ final class WindowHintsFeature {
     }
 
     /// mode を維持したまま Hints を再表示(元 showJinraiMode)
-    func showJinraiMode(fadeSpotlight: Bool = true) {
-        show(fadeSpotlight: fadeSpotlight)
+    func showJinraiMode(fadeIn: Bool = true) {
+        show(fadeIn: fadeIn)
     }
 
     @discardableResult
@@ -118,9 +118,9 @@ final class WindowHintsFeature {
 
     // MARK: - 表示
 
-    /// fadeSpotlight: 直前まで spotlight が出ていた遷移(Area Hints からの受け渡し等)
+    /// fadeIn: 直前まで spotlight が出ていた遷移(Area Hints からの受け渡し等)
     /// では false にして瞬間表示し、暗幕の連続性を保つ
-    func show(fadeSpotlight: Bool = true) {
+    func show(fadeIn: Bool = true) {
         guard !isVisible else { return }
 
         let entries = collectEntries()
@@ -148,8 +148,8 @@ final class WindowHintsFeature {
         }
 
         currentInput = ""
-        buildOverlays(fadeSpotlight: fadeSpotlight)
         isVisible = true
+        buildOverlays(fadeIn: fadeIn)
 
         if config.cursorOnStart,
             let active = hints.first(where: { $0.entry.window.isFocused })
@@ -342,7 +342,7 @@ final class WindowHintsFeature {
         }
     }
 
-    private func buildOverlays(fadeSpotlight: Bool = true) {
+    private func buildOverlays(fadeIn: Bool = true) {
         let focusedWindowFrame = hints.first {
             !isDockHint($0) && $0.entry.window.isFocused
         }?.entry.window.frame
@@ -355,11 +355,12 @@ final class WindowHintsFeature {
                 let screenFrame = ScreenUtil.frame(of: screen)
                 let overlay = OverlayWindow(frame: screenFrame, level: .hints)
                 guard let root = overlay.rootLayer else { continue }
+                // フェードはオーバーレイウィンドウ全体(下記)で行うため層単位では不要
                 let spotlight = ActiveWindowOverlayLayers.spotlightLayer(
                     windowFrame: focusedWindowFrame, screenFrame: screenFrame,
                     overlayHeight: screenFrame.height,
                     alpha: CGFloat(config.focusedSpotlightAlpha),
-                    fadeIn: fadeSpotlight)
+                    fadeIn: false)
                 root.addSublayer(spotlight)
                 var highlight: CAShapeLayer?
                 if screenFrame.intersects(focusedWindowFrame) {
@@ -440,6 +441,23 @@ final class WindowHintsFeature {
 
             overlay.orderFrontRegardless()
             overlays.append(overlay)
+        }
+
+        // UI 全体(ヒント・spotlight・ボーダー)を ease-in で立ち上げる。
+        // 高速な操作は低い不透明度のうちに完結するため画面が明滅せず、
+        // 迷った(時間をかけた)ぶんだけ UI が濃くなる
+        if fadeIn, config.showFadeIn > 0 {
+            let all = spotlightOverlays.map(\.overlay) + overlays
+            for overlay in all {
+                overlay.alphaValue = 0
+            }
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = config.showFadeIn
+                context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+                for overlay in all {
+                    overlay.animator().alphaValue = 1
+                }
+            }
         }
     }
 
@@ -807,7 +825,7 @@ final class WindowHintsFeature {
                     jinraiModeAdvance(windowID: target.windowID, pid: target.pid)
                 } else {
                     // 戻り先がない場合は Hints を再表示してループ継続
-                    show(fadeSpotlight: false)
+                    show(fadeIn: false)
                 }
             } else {
                 // 戻り先(=直前のウィンドウ)へ spotlight の穴を移して消す
@@ -1049,7 +1067,7 @@ final class WindowHintsFeature {
         else {
             // JinraiMode 中に移動先がない(画面端など)場合は再表示してループ継続
             if isJinraiMode {
-                show(fadeSpotlight: false)
+                show(fadeIn: false)
             }
             return
         }

@@ -78,6 +78,10 @@ public struct WindowHintsConfig: Sendable {
     public var includeOtherSpaces: Bool
     public var includeActiveWindow: Bool
     public var swapModifiers: [String]?
+    /// UI 全体(ヒント・spotlight・ボーダー)を ease-in で立ち上げるフェード時間(秒)。
+    /// 高速な操作は低い不透明度のうちに完結するため画面が明滅せず、
+    /// 迷った(時間をかけた)ぶんだけ UI が濃く表示される(0 で即時表示)
+    public var showFadeIn: Double
 }
 
 public enum WindowHintsConfigBuilder {
@@ -275,7 +279,8 @@ public enum WindowHintsConfigBuilder {
             cursorOnStart: merged.bool("behavior.cursor.onStart") ?? true,
             includeOtherSpaces: merged.bool("behavior.candidates.includeOtherSpaces") ?? true,
             includeActiveWindow: merged.bool("behavior.candidates.includeActiveWindow") ?? true,
-            swapModifiers: swapModifiers
+            swapModifiers: swapModifiers,
+            showFadeIn: merged.double("behavior.showFadeIn") ?? 0.4
         )
     }
 }

@@ -85,7 +85,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Hints ↔ Area Hints の受け渡しでは spotlight をフェードさせず瞬間切替にして
         // 暗幕の連続性を保つ(クロスフェードだと画面全体がフラッシュして見える)
         windowMover?.onOpenWindowHints = { [weak self] in
-            self?.windowHints?.show(fadeSpotlight: false)
+            self?.windowHints?.show(fadeIn: false)
         }
         windowHints?.onOpenWindowMover = { [weak self] jinraiMode in
             if jinraiMode {
@@ -118,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowMover?.onJinraiModeApply = { [weak self] in
             guard let self else { return }
             self.windowHints?.advanceJinraiModeCombo()
-            self.windowHints?.showJinraiMode(fadeSpotlight: false)
+            self.windowHints?.showJinraiMode(fadeIn: false)
         }
         windowMover?.onJinraiModeCancel = { [weak self] in
             self?.windowHints?.stopJinraiMode()
