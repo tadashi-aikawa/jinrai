@@ -34,6 +34,7 @@ public struct WindowHintsConfig: Sendable {
 
     public var focusedHighlightColor: ConfigColor
     public var focusedHighlightWidth: Double
+    public var focusedSpotlightAlpha: Double
 
     /// ヒント箱の overlay(塗り+枠線)。状態・アクティブウィンドウで色が変わる
     public var overlayBorderWidth: Double
@@ -236,6 +237,7 @@ public enum WindowHintsConfigBuilder {
             focusedHighlightColor: merged.color("focusedWindowHighlight.borderColor")
                 ?? ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95),
             focusedHighlightWidth: merged.double("focusedWindowHighlight.borderWidth") ?? 13,
+            focusedSpotlightAlpha: merged.double("focusedWindowSpotlight.alpha") ?? 0.28,
             overlayBorderWidth: merged.double("hint.highlight.borderWidth") ?? 6,
             overlayFillColor: merged.color("hint.state.normal.highlight.fillColor")
                 ?? ConfigColor(red: 0.40, green: 0.68, blue: 0.98, alpha: 0.56),

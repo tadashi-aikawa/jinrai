@@ -222,17 +222,18 @@ final class WindowMoverFeature {
                         windowFrame: focusedWindowFrame,
                         screenFrame: screenFrame,
                         overlayHeight: screenFrame.height,
-                        alpha: 0.28))
+                        alpha: CGFloat(config.selectedArea.activeWindowSpotlightAlpha)))
                 if screenFrame.intersects(focusedWindowFrame) {
                     root.addSublayer(
                         ActiveWindowOverlayLayers.highlightLayer(
                             windowFrame: focusedWindowFrame,
                             screenFrame: screenFrame,
                             overlayHeight: screenFrame.height,
-                            borderColor: ConfigColor(
-                                red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95),
-                            borderWidth: 13,
-                            cornerRadius: 12))
+                            borderColor: config.selectedArea.activeWindowHighlightColor,
+                            borderWidth: CGFloat(
+                                config.selectedArea.activeWindowHighlightWidth),
+                            cornerRadius: CGFloat(
+                                config.selectedArea.activeWindowHighlightCornerRadius)))
                 }
             }
 

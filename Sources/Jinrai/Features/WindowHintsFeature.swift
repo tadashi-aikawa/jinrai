@@ -301,7 +301,7 @@ final class WindowHintsFeature {
                     ActiveWindowOverlayLayers.spotlightLayer(
                         windowFrame: focusedWindowFrame, screenFrame: screenFrame,
                         overlayHeight: screenFrame.height,
-                        alpha: 0.28))
+                        alpha: CGFloat(config.focusedSpotlightAlpha)))
             }
 
             // 収集: 各ヒントの希望center(ウィンドウ中心、画面内クランプ)とサイズ

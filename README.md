@@ -40,6 +40,7 @@ open .build/Jinrai.app
     "focus_back": {},
     "window_hints": {
         "hotkey": { "modifiers": ["alt"], "key": "f20" },
+        "focusedWindowSpotlight": { "alpha": 0.28 },
         "navigation": {
             "focusBack": { "key": ";" },
             "direction": { "hints": { "keys": { "left": "h", "down": "j", "up": "k", "right": "l" } } },
@@ -52,6 +53,12 @@ open .build/Jinrai.app
             "cycleLeft": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "h" } }
         },
         "selectedArea": {
+            "activeWindowSpotlight": { "alpha": 0.28 },
+            "activeWindowHighlight": {
+                "borderColor": { "red": 0.95, "green": 0.68, "blue": 0.40, "alpha": 0.95 },
+                "borderWidth": 13,
+                "cornerRadius": 12
+            },
             "defaultScreen": {
                 "halfLeft": "H", "halfRight": "L", "full": "F", "freeArea": "S"
             }

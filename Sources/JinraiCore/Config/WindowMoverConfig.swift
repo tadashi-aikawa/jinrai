@@ -15,6 +15,10 @@ public struct WindowMoverConfig: Sendable {
         public var actions: [String: String]
         public var windowHintsKey: String?
         public var showHints: Bool
+        public var activeWindowSpotlightAlpha: Double
+        public var activeWindowHighlightColor: ConfigColor
+        public var activeWindowHighlightWidth: Double
+        public var activeWindowHighlightCornerRadius: Double
         /// エリア種類別の色
         public var styleColors: [String: ConfigColor]
         public var styleDimmedColors: [String: ConfigColor]
@@ -170,6 +174,15 @@ public enum WindowMoverConfigBuilder {
                 actions: actions,
                 windowHintsKey: windowHintsKey,
                 showHints: merged.bool("selectedArea.hints.show") ?? true,
+                activeWindowSpotlightAlpha: merged.double(
+                    "selectedArea.activeWindowSpotlight.alpha") ?? 0.28,
+                activeWindowHighlightColor: merged.color(
+                    "selectedArea.activeWindowHighlight.borderColor")
+                    ?? ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95),
+                activeWindowHighlightWidth: merged.double(
+                    "selectedArea.activeWindowHighlight.borderWidth") ?? 13,
+                activeWindowHighlightCornerRadius: merged.double(
+                    "selectedArea.activeWindowHighlight.cornerRadius") ?? 12,
                 styleColors: defaultStyles,
                 styleDimmedColors: dimmedStyles,
                 normalBgColor: merged.color("selectedArea.appearance.state.normal.bgColor")

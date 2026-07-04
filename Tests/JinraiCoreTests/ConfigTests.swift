@@ -133,6 +133,68 @@ struct FocusBorderConfigTests {
     }
 }
 
+@Suite("WindowHintsConfigBuilder")
+struct WindowHintsConfigTests {
+    @Test("spotlight alpha はデフォルト値を持つ")
+    func spotlightAlphaDefault() throws {
+        let config = try WindowHintsConfigBuilder.build()
+        #expect(config.focusedSpotlightAlpha == 0.28)
+    }
+
+    @Test("spotlight alpha を上書きできる")
+    func spotlightAlphaOverride() throws {
+        let config = try WindowHintsConfigBuilder.build([
+            "focusedWindowSpotlight": ["alpha": 0.42]
+        ])
+        #expect(config.focusedSpotlightAlpha == 0.42)
+    }
+}
+
+@Suite("WindowMoverConfigBuilder")
+struct WindowMoverConfigTests {
+    @Test("Area Hints の spotlight alpha はデフォルト値を持つ")
+    func spotlightAlphaDefault() throws {
+        let config = try WindowMoverConfigBuilder.build()
+        #expect(config.selectedArea.activeWindowSpotlightAlpha == 0.28)
+    }
+
+    @Test("Area Hints の spotlight alpha を上書きできる")
+    func spotlightAlphaOverride() throws {
+        let config = try WindowMoverConfigBuilder.build([
+            "selectedArea": ["activeWindowSpotlight": ["alpha": 0.36]]
+        ])
+        #expect(config.selectedArea.activeWindowSpotlightAlpha == 0.36)
+    }
+
+    @Test("Area Hints のアクティブ枠はデフォルト値を持つ")
+    func activeWindowHighlightDefault() throws {
+        let config = try WindowMoverConfigBuilder.build()
+        #expect(
+            config.selectedArea.activeWindowHighlightColor
+                == ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95))
+        #expect(config.selectedArea.activeWindowHighlightWidth == 13)
+        #expect(config.selectedArea.activeWindowHighlightCornerRadius == 12)
+    }
+
+    @Test("Area Hints のアクティブ枠を上書きできる")
+    func activeWindowHighlightOverride() throws {
+        let config = try WindowMoverConfigBuilder.build([
+            "selectedArea": [
+                "activeWindowHighlight": [
+                    "borderColor": ["red": 0.1, "green": 0.2, "blue": 0.3, "alpha": 0.4],
+                    "borderWidth": 8,
+                    "cornerRadius": 6,
+                ]
+            ]
+        ])
+        #expect(
+            config.selectedArea.activeWindowHighlightColor
+                == ConfigColor(red: 0.1, green: 0.2, blue: 0.3, alpha: 0.4))
+        #expect(config.selectedArea.activeWindowHighlightWidth == 8)
+        #expect(config.selectedArea.activeWindowHighlightCornerRadius == 6)
+    }
+}
+
 @Suite("RootConfigBuilder")
 struct RootConfigTests {
     @Test("セクションが存在する機能だけ有効になる")
