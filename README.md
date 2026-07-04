@@ -23,6 +23,13 @@
 open .build/Jinrai.app
 ```
 
+開発中は以下のワンライナーで確実に再起動できる。
+
+```bash
+pkill -x Jinrai && ./scripts/make-app.sh && open .build/Jinrai.app
+```
+
+
 初回起動時に**アクセシビリティ権限**を求められる。システム設定 → プライバシーとセキュリティ → アクセシビリティで Jinrai を許可すると機能が有効になる。
 
 > [!WARNING]
