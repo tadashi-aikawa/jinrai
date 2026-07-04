@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "jinrai-native",
+    name: "jinrai",
     platforms: [.macOS(.v14)],
     dependencies: [
         // Command Line Tools のみの環境には swift-testing が同梱されないため依存で供給
