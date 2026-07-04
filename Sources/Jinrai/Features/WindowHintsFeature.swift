@@ -496,9 +496,13 @@ final class WindowHintsFeature {
             if Geometry.isValidFrame(winFrame),
                 let screen = ScreenUtil.screenContaining(winFrame)
             {
-                let screenHeight = ScreenUtil.frame(of: screen).height
-                if screenHeight > 0 {
-                    let scaleFactor = 2 * CGFloat(config.previewWidth) / screenHeight
+                // スクリーンの短辺を基準にする(元実装はスクリーン高さ基準だったが、
+                // 縦長ディスプレイでは高さ=長辺のためスケールが過小になり
+                // ボックスの高さが潰れる。横長では高さ=短辺なので挙動は変わらない)
+                let screenFrame = ScreenUtil.frame(of: screen)
+                let shorterSide = min(screenFrame.width, screenFrame.height)
+                if shorterSide > 0 {
+                    let scaleFactor = 2 * CGFloat(config.previewWidth) / shorterSide
                     containerWidth = max(containerWidth, (winFrame.width * scaleFactor).rounded(.down))
                     containerHeight = max(containerHeight, (winFrame.height * scaleFactor).rounded(.down))
                 }
