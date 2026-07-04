@@ -523,15 +523,33 @@ final class WindowHintsFeature {
             hintOverlayFills[hint.key] = fill
         }
 
-        // mode "background": プレビューをヒント全体の背景として敷く
+        // mode "background": プレビューをヒント全体の背景として敷く。
+        // 角丸クリップは preview 層側で行う(container を masksToBounds にすると
+        // 下で付けるシャドウごと切られて描画されないため)
         if let image = previewImage, config.previewMode == "background" {
-            container.masksToBounds = true
             let previewLayer = CALayer()
             previewLayer.contents = image
             previewLayer.contentsGravity = .resizeAspectFill
+            previewLayer.masksToBounds = true
+            previewLayer.cornerRadius = container.cornerRadius
             previewLayer.frame = container.bounds
             previewLayer.opacity = Float(config.previewAlpha)
             container.addSublayer(previewLayer)
+        }
+
+        // プレビュー付きヒントは背後のウィンドウと色が近いと境界が消えるため、
+        // シャドウ(明るい背景で効く)と淡い縁取り(暗い背景で効く)を併用する
+        if previewImage != nil {
+            container.borderWidth = 1
+            container.borderColor = NSColor(white: 1, alpha: 0.3).cgColor
+            container.shadowColor = NSColor.black.cgColor
+            container.shadowOpacity = 0.5
+            container.shadowRadius = 6
+            container.shadowOffset = CGSize(width: 0, height: -2)
+            container.shadowPath = CGPath(
+                roundedRect: container.bounds,
+                cornerWidth: container.cornerRadius, cornerHeight: container.cornerRadius,
+                transform: nil)
         }
 
         // コンテンツ(アイコン+キー+タイトル)は container 内で上下中央に置く
@@ -542,6 +560,9 @@ final class WindowHintsFeature {
             previewLayer.contentsGravity = .resizeAspectFill
             previewLayer.masksToBounds = true
             previewLayer.cornerRadius = 4
+            // ヒント箱の背景色とプレビュー内容が近くても境界が分かるよう縁取り
+            previewLayer.borderWidth = 1
+            previewLayer.borderColor = NSColor(white: 1, alpha: 0.3).cgColor
             previewLayer.opacity = Float(config.previewAlpha)
             previewLayer.frame = CGRect(
                 x: (container.bounds.width - belowPreviewSize.width) / 2,
