@@ -283,10 +283,21 @@ final class WindowHintsFeature {
     }
 
     private func buildOverlays() {
+        let focusedWindowFrame = hints.first {
+            !isDockHint($0) && $0.entry.window.isFocused
+        }?.entry.window.frame
+
         for screen in NSScreen.screens {
             let screenFrame = ScreenUtil.frame(of: screen)
             let overlay = OverlayWindow(frame: screenFrame, level: .hints)
             guard let root = overlay.rootLayer else { continue }
+
+            if let focusedWindowFrame {
+                root.addSublayer(
+                    spotlightLayer(
+                        windowFrame: focusedWindowFrame, screenFrame: screenFrame,
+                        overlayHeight: screenFrame.height))
+            }
 
             // 収集: 各ヒントの希望center(ウィンドウ中心、画面内クランプ)とサイズ
             var containers: [String: CALayer] = [:]
@@ -413,13 +424,8 @@ final class WindowHintsFeature {
     private func highlightLayer(
         windowFrame: CGRect, screenFrame: CGRect, overlayHeight: CGFloat
     ) -> CAShapeLayer {
-        let localTopY = windowFrame.minY - screenFrame.minY
-        let local = CGRect(
-            x: windowFrame.minX - screenFrame.minX,
-            y: overlayHeight - localTopY - windowFrame.height,
-            width: windowFrame.width,
-            height: windowFrame.height
-        )
+        let local = localWindowFrame(
+            windowFrame: windowFrame, screenFrame: screenFrame, overlayHeight: overlayHeight)
         let width = CGFloat(config.focusedHighlightWidth)
         let shape = CAShapeLayer()
         shape.path = CGPath(
@@ -428,6 +434,36 @@ final class WindowHintsFeature {
         shape.lineWidth = width
         shape.strokeColor = cgColor(config.focusedHighlightColor)
         return shape
+    }
+
+    private func spotlightLayer(
+        windowFrame: CGRect, screenFrame: CGRect, overlayHeight: CGFloat
+    ) -> CAShapeLayer {
+        let local = localWindowFrame(
+            windowFrame: windowFrame, screenFrame: screenFrame, overlayHeight: overlayHeight)
+        let path = CGMutablePath()
+        path.addRect(CGRect(origin: .zero, size: screenFrame.size))
+        path.addRect(local)
+
+        let shape = CAShapeLayer()
+        shape.frame = CGRect(origin: .zero, size: screenFrame.size)
+        shape.bounds = CGRect(origin: .zero, size: screenFrame.size)
+        shape.path = path
+        shape.fillRule = .evenOdd
+        shape.fillColor = CGColor(gray: 0, alpha: 0.28)
+        return shape
+    }
+
+    private func localWindowFrame(
+        windowFrame: CGRect, screenFrame: CGRect, overlayHeight: CGFloat
+    ) -> CGRect {
+        let localTopY = windowFrame.minY - screenFrame.minY
+        return CGRect(
+            x: windowFrame.minX - screenFrame.minX,
+            y: overlayHeight - localTopY - windowFrame.height,
+            width: windowFrame.width,
+            height: windowFrame.height
+        )
     }
 
     private func hintState(of hint: HintKeyAssignment.Hint) -> HintState {
