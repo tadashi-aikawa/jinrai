@@ -138,7 +138,7 @@ struct WindowHintsConfigTests {
     @Test("spotlight alpha はデフォルト値を持つ")
     func spotlightAlphaDefault() throws {
         let config = try WindowHintsConfigBuilder.build()
-        #expect(config.focusedSpotlightAlpha == 0.28)
+        #expect(config.focusedSpotlightAlpha == 0.5)
     }
 
     @Test("spotlight alpha を上書きできる")
@@ -155,7 +155,7 @@ struct WindowMoverConfigTests {
     @Test("Area Hints の spotlight alpha はデフォルト値を持つ")
     func spotlightAlphaDefault() throws {
         let config = try WindowMoverConfigBuilder.build()
-        #expect(config.selectedArea.activeWindowSpotlightAlpha == 0.28)
+        #expect(config.selectedArea.activeWindowSpotlightAlpha == 0.5)
     }
 
     @Test("Area Hints の spotlight alpha を上書きできる")

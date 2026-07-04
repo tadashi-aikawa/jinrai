@@ -237,7 +237,7 @@ public enum WindowHintsConfigBuilder {
             focusedHighlightColor: merged.color("focusedWindowHighlight.borderColor")
                 ?? ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95),
             focusedHighlightWidth: merged.double("focusedWindowHighlight.borderWidth") ?? 13,
-            focusedSpotlightAlpha: merged.double("focusedWindowSpotlight.alpha") ?? 0.28,
+            focusedSpotlightAlpha: merged.double("focusedWindowSpotlight.alpha") ?? 0.5,
             overlayBorderWidth: merged.double("hint.highlight.borderWidth") ?? 6,
             overlayFillColor: merged.color("hint.state.normal.highlight.fillColor")
                 ?? ConfigColor(red: 0.40, green: 0.68, blue: 0.98, alpha: 0.56),

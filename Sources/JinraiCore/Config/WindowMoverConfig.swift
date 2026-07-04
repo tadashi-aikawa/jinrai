@@ -175,7 +175,7 @@ public enum WindowMoverConfigBuilder {
                 windowHintsKey: windowHintsKey,
                 showHints: merged.bool("selectedArea.hints.show") ?? true,
                 activeWindowSpotlightAlpha: merged.double(
-                    "selectedArea.activeWindowSpotlight.alpha") ?? 0.28,
+                    "selectedArea.activeWindowSpotlight.alpha") ?? 0.5,
                 activeWindowHighlightColor: merged.color(
                     "selectedArea.activeWindowHighlight.borderColor")
                     ?? ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95),
