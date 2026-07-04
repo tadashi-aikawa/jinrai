@@ -199,6 +199,7 @@ final class WindowMoverFeature {
         areaLabels = []
         chooserInput = ""
 
+        let focusedWindowFrame = WindowEnumerator.focusedWindow()?.frame
         var hasAnyMapping = false
         for screen in NSScreen.screens {
             let uuid = ScreenUtil.uuid(of: screen)
@@ -208,6 +209,26 @@ final class WindowMoverFeature {
             let screenFrame = ScreenUtil.visibleFrame(of: screen)
             let overlay = OverlayWindow(frame: screenFrame, level: .hints)
             guard let root = overlay.rootLayer else { continue }
+
+            if let focusedWindowFrame {
+                root.addSublayer(
+                    ActiveWindowOverlayLayers.spotlightLayer(
+                        windowFrame: focusedWindowFrame,
+                        screenFrame: screenFrame,
+                        overlayHeight: screenFrame.height,
+                        alpha: 0.28))
+                if screenFrame.intersects(focusedWindowFrame) {
+                    root.addSublayer(
+                        ActiveWindowOverlayLayers.highlightLayer(
+                            windowFrame: focusedWindowFrame,
+                            screenFrame: screenFrame,
+                            overlayHeight: screenFrame.height,
+                            borderColor: ConfigColor(
+                                red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95),
+                            borderWidth: 13,
+                            cornerRadius: 12))
+                }
+            }
 
             if let mapping, !mapping.isEmpty {
                 hasAnyMapping = true

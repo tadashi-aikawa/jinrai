@@ -294,9 +294,10 @@ final class WindowHintsFeature {
 
             if let focusedWindowFrame {
                 root.addSublayer(
-                    spotlightLayer(
+                    ActiveWindowOverlayLayers.spotlightLayer(
                         windowFrame: focusedWindowFrame, screenFrame: screenFrame,
-                        overlayHeight: screenFrame.height))
+                        overlayHeight: screenFrame.height,
+                        alpha: 0.28))
             }
 
             // 収集: 各ヒントの希望center(ウィンドウ中心、画面内クランプ)とサイズ
@@ -309,9 +310,12 @@ final class WindowHintsFeature {
                 // フォーカス中ウィンドウのハイライト枠
                 if hint.entry.window.isFocused {
                     root.addSublayer(
-                        highlightLayer(
+                        ActiveWindowOverlayLayers.highlightLayer(
                             windowFrame: winFrame, screenFrame: screenFrame,
-                            overlayHeight: screenFrame.height))
+                            overlayHeight: screenFrame.height,
+                            borderColor: config.focusedHighlightColor,
+                            borderWidth: CGFloat(config.focusedHighlightWidth),
+                            cornerRadius: CGFloat(config.cornerRadius)))
                 }
 
                 let container = hintContainer(for: hint)
@@ -419,54 +423,6 @@ final class WindowHintsFeature {
             hintContainers[placement.key] = container
             hintFrames[placement.key] = global
         }
-    }
-
-    private func highlightLayer(
-        windowFrame: CGRect, screenFrame: CGRect, overlayHeight: CGFloat
-    ) -> CAShapeLayer {
-        let local = localWindowFrame(
-            windowFrame: windowFrame, screenFrame: screenFrame, overlayHeight: overlayHeight)
-        let width = CGFloat(config.focusedHighlightWidth)
-        let shape = CAShapeLayer()
-        shape.path = CGPath(
-            roundedRect: local.insetBy(dx: width / 2, dy: width / 2),
-            cornerWidth: CGFloat(config.cornerRadius),
-            cornerHeight: CGFloat(config.cornerRadius),
-            transform: nil)
-        shape.fillColor = nil
-        shape.lineWidth = width
-        shape.strokeColor = cgColor(config.focusedHighlightColor)
-        return shape
-    }
-
-    private func spotlightLayer(
-        windowFrame: CGRect, screenFrame: CGRect, overlayHeight: CGFloat
-    ) -> CAShapeLayer {
-        let local = localWindowFrame(
-            windowFrame: windowFrame, screenFrame: screenFrame, overlayHeight: overlayHeight)
-        let path = CGMutablePath()
-        path.addRect(CGRect(origin: .zero, size: screenFrame.size))
-        path.addRect(local)
-
-        let shape = CAShapeLayer()
-        shape.frame = CGRect(origin: .zero, size: screenFrame.size)
-        shape.bounds = CGRect(origin: .zero, size: screenFrame.size)
-        shape.path = path
-        shape.fillRule = .evenOdd
-        shape.fillColor = CGColor(gray: 0, alpha: 0.28)
-        return shape
-    }
-
-    private func localWindowFrame(
-        windowFrame: CGRect, screenFrame: CGRect, overlayHeight: CGFloat
-    ) -> CGRect {
-        let localTopY = windowFrame.minY - screenFrame.minY
-        return CGRect(
-            x: windowFrame.minX - screenFrame.minX,
-            y: overlayHeight - localTopY - windowFrame.height,
-            width: windowFrame.width,
-            height: windowFrame.height
-        )
     }
 
     private func hintState(of hint: HintKeyAssignment.Hint) -> HintState {
