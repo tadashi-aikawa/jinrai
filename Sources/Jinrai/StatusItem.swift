@@ -11,12 +11,9 @@ final class StatusItem {
     init() {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = item.button {
-            let image = NSImage(
-                systemSymbolName: "bolt.fill",
-                accessibilityDescription: "Jinrai"
-            )
-            image?.isTemplate = true
-            button.image = image
+            button.image = Self.menuBarIcon()
+            button.imagePosition = .imageOnly
+            button.imageScaling = .scaleProportionallyDown
         }
 
         permissionMenuItem = NSMenuItem(
@@ -90,5 +87,22 @@ final class StatusItem {
             string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
         )!
         NSWorkspace.shared.open(url)
+    }
+
+    private static func menuBarIcon() -> NSImage? {
+        if let url = Bundle.main.url(forResource: "jinrai", withExtension: "svg"),
+           let image = NSImage(contentsOf: url)
+        {
+            image.size = NSSize(width: 18, height: 18)
+            image.isTemplate = false
+            return image
+        }
+
+        let image = NSImage(
+            systemSymbolName: "bolt.fill",
+            accessibilityDescription: "Jinrai"
+        )
+        image?.isTemplate = true
+        return image
     }
 }

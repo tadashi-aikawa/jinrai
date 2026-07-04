@@ -10,6 +10,8 @@
     <string>Jinrai</string>
     <key>CFBundleExecutable</key>
     <string>Jinrai</string>
+    <key>CFBundleIconFile</key>
+    <string>jinrai.icns</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
