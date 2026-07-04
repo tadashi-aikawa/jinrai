@@ -13,6 +13,16 @@ final class WindowHintsFeature {
     private let eventTap = EventTap()
 
     private var overlays: [OverlayWindow] = []
+    /// spotlight(暗幕) + アクティブボーダー用のスクリーンごとのオーバーレイ。
+    /// ウィンドウ切替時に余韻(穴の移動 + フェードアウト)を残すため、
+    /// ヒント本体とは別に管理する
+    private struct SpotlightOverlay {
+        let overlay: OverlayWindow
+        let spotlight: CAShapeLayer
+        let highlight: CAShapeLayer?
+        let screenFrame: CGRect
+    }
+    private var spotlightOverlays: [SpotlightOverlay] = []
     private var hints: [HintKeyAssignment.Hint] = []
     private var hintContainers: [String: CALayer] = [:]
     private var hintKeyLayers: [String: CATextLayer] = [:]
@@ -153,6 +163,9 @@ final class WindowHintsFeature {
         guard isVisible else { return }
         isVisible = false
         eventTap.stop()
+        // ウィンドウ切替を伴う操作では呼び元が dismissSpotlight(movingTo:) 済み
+        // (その場合ここは no-op)。escape 等の単純クローズはその場でフェードアウト
+        dismissSpotlight(movingTo: nil)
         for overlay in overlays {
             overlay.orderOut(nil)
         }
@@ -286,23 +299,82 @@ final class WindowHintsFeature {
             || occludedWindowIDs.contains(hint.entry.window.id)
     }
 
+    /// spotlight とアクティブボーダーを破棄する。targetFrame があれば穴を新しい
+    /// アクティブウィンドウへ瞬間的に移してからフェードアウトし、消えゆく残像が
+    /// 「移動先が明るい」状態になるようにする(アニメーションで動かすと視線が
+    /// 引っ張られて疲れるため移動表現はしない。到着の合図は FocusBorder に任せる)。
+    /// nil(escape・別Space 選択等)は穴を動かさずその場でフェードアウト
+    private func dismissSpotlight(movingTo targetFrame: CGRect?) {
+        let items = spotlightOverlays
+        spotlightOverlays = []
+        for item in items {
+            // ボーダーは即座に消す
+            item.highlight?.removeFromSuperlayer()
+            if let targetFrame {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                item.spotlight.path = ActiveWindowOverlayLayers.spotlightPath(
+                    windowFrame: targetFrame, screenFrame: item.screenFrame,
+                    overlayHeight: item.screenFrame.height)
+                CATransaction.commit()
+            }
+            // ウィンドウ切替時は表示(0.15s)より長めに取る。穴の瞬間移動後の
+            // 「移動先が明るい」残像が情報を運ぶため、読み取れる長さにする。
+            // escape 等(targetFrame なし)の残像は情報を運ばないので短くさっと消す
+            let overlay = item.overlay
+            let duration = targetFrame != nil ? 0.3 : 0.15
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = duration
+                overlay.animator().alphaValue = 0
+            }
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(duration))
+                overlay.orderOut(nil)
+            }
+        }
+    }
+
     private func buildOverlays() {
         let focusedWindowFrame = hints.first {
             !isDockHint($0) && $0.entry.window.isFocused
         }?.entry.window.frame
 
+        // spotlight + アクティブボーダーはヒントと別のオーバーレイに置く
+        // (ウィンドウ切替時にヒントだけ即閉じ、こちらは穴を移してフェードアウトする
+        //  余韻を残すため)。ヒント用オーバーレイより先に orderFront して背面にする
+        if let focusedWindowFrame {
+            for screen in NSScreen.screens {
+                let screenFrame = ScreenUtil.frame(of: screen)
+                let overlay = OverlayWindow(frame: screenFrame, level: .hints)
+                guard let root = overlay.rootLayer else { continue }
+                let spotlight = ActiveWindowOverlayLayers.spotlightLayer(
+                    windowFrame: focusedWindowFrame, screenFrame: screenFrame,
+                    overlayHeight: screenFrame.height,
+                    alpha: CGFloat(config.focusedSpotlightAlpha))
+                root.addSublayer(spotlight)
+                var highlight: CAShapeLayer?
+                if screenFrame.intersects(focusedWindowFrame) {
+                    let layer = ActiveWindowOverlayLayers.highlightLayer(
+                        windowFrame: focusedWindowFrame, screenFrame: screenFrame,
+                        overlayHeight: screenFrame.height,
+                        borderColor: config.focusedHighlightColor,
+                        borderWidth: CGFloat(config.focusedHighlightWidth),
+                        cornerRadius: CGFloat(config.cornerRadius))
+                    root.addSublayer(layer)
+                    highlight = layer
+                }
+                overlay.orderFrontRegardless()
+                spotlightOverlays.append(
+                    SpotlightOverlay(
+                        overlay: overlay, spotlight: spotlight, highlight: highlight,
+                        screenFrame: screenFrame))
+            }
+        }
+
         for screen in NSScreen.screens {
             let screenFrame = ScreenUtil.frame(of: screen)
             let overlay = OverlayWindow(frame: screenFrame, level: .hints)
             guard let root = overlay.rootLayer else { continue }
-
-            if let focusedWindowFrame {
-                root.addSublayer(
-                    ActiveWindowOverlayLayers.spotlightLayer(
-                        windowFrame: focusedWindowFrame, screenFrame: screenFrame,
-                        overlayHeight: screenFrame.height,
-                        alpha: CGFloat(config.focusedSpotlightAlpha)))
-            }
 
             // 収集: 各ヒントの希望center(ウィンドウ中心、画面内クランプ)とサイズ
             var containers: [String: CALayer] = [:]
@@ -310,17 +382,6 @@ final class WindowHintsFeature {
             for hint in hints where !isDockHint(hint) {
                 let winFrame = hint.entry.window.frame
                 guard screenFrame.intersects(winFrame) else { continue }
-
-                // フォーカス中ウィンドウのハイライト枠
-                if hint.entry.window.isFocused {
-                    root.addSublayer(
-                        ActiveWindowOverlayLayers.highlightLayer(
-                            windowFrame: winFrame, screenFrame: screenFrame,
-                            overlayHeight: screenFrame.height,
-                            borderColor: config.focusedHighlightColor,
-                            borderWidth: CGFloat(config.focusedHighlightWidth),
-                            cornerRadius: CGFloat(config.cornerRadius)))
-                }
 
                 let container = hintContainer(for: hint)
                 let size = container.bounds.size
@@ -729,6 +790,8 @@ final class WindowHintsFeature {
             name == config.navigationFocusBackKey,
             let focusHistory
         {
+            // 戻り先(=直前のウィンドウ)へ spotlight の穴を移して消す
+            dismissSpotlight(movingTo: focusHistory.previousWindow()?.frame)
             if isJinraiMode {
                 close(keepJinraiMode: true)
                 if let target = focusHistory.focusBack(centerCursor: config.cursorOnSelect) {
@@ -858,6 +921,8 @@ final class WindowHintsFeature {
     private func selectWindow(_ hint: HintKeyAssignment.Hint, swap: Bool = false) {
         let window = hint.entry.window
         let isOffSpace = offSpaceWindowIDs.contains(window.id)
+        // 選択先へ spotlight の穴を移して消す(別Space は Space 切替を伴うため対象外)
+        dismissSpotlight(movingTo: isOffSpace ? nil : window.frame)
 
         // JinraiMode 中の選択: mode 維持で閉じる → focus → エリア選択へ
         if isJinraiMode {
@@ -957,6 +1022,7 @@ final class WindowHintsFeature {
             orderedWindows: ordered,
             config: config.directionScoring
         )
+        dismissSpotlight(movingTo: target?.frame)
         close(keepJinraiMode: isJinraiMode)
         guard let target,
             let ax = AXWindow.resolve(windowID: target.id, pid: target.pid)

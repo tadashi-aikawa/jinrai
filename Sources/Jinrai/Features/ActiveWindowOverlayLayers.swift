@@ -31,16 +31,11 @@ enum ActiveWindowOverlayLayers {
         overlayHeight: CGFloat,
         alpha: CGFloat
     ) -> CAShapeLayer {
-        let local = localWindowFrame(
-            windowFrame: windowFrame, screenFrame: screenFrame, overlayHeight: overlayHeight)
-        let path = CGMutablePath()
-        path.addRect(CGRect(origin: .zero, size: screenFrame.size))
-        path.addRect(local)
-
         let shape = CAShapeLayer()
         shape.frame = CGRect(origin: .zero, size: screenFrame.size)
         shape.bounds = CGRect(origin: .zero, size: screenFrame.size)
-        shape.path = path
+        shape.path = spotlightPath(
+            windowFrame: windowFrame, screenFrame: screenFrame, overlayHeight: overlayHeight)
         shape.fillRule = .evenOdd
         shape.fillColor = CGColor(gray: 0, alpha: alpha)
         // 瞬時に暗転すると目に刺さるため、フェードインで暗くする
@@ -50,6 +45,21 @@ enum ActiveWindowOverlayLayers {
         fade.duration = 0.15
         shape.add(fade, forKey: "fadeIn")
         return shape
+    }
+
+    /// 暗幕に「穴」を開ける even-odd パス
+    /// (ウィンドウ切替時に穴を新しいアクティブウィンドウへ移す更新にも使う)
+    static func spotlightPath(
+        windowFrame: CGRect,
+        screenFrame: CGRect,
+        overlayHeight: CGFloat
+    ) -> CGPath {
+        let local = localWindowFrame(
+            windowFrame: windowFrame, screenFrame: screenFrame, overlayHeight: overlayHeight)
+        let path = CGMutablePath()
+        path.addRect(CGRect(origin: .zero, size: screenFrame.size))
+        path.addRect(local)
+        return path
     }
 
     private static func localWindowFrame(
