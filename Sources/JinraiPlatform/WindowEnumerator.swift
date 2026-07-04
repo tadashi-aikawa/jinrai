@@ -75,17 +75,21 @@ public enum WindowEnumerator {
     }
 
     /// 別 Space 候補を標準ウィンドウに絞る。AX は他 Space のウィンドウを列挙できない
-    /// (macOS の制限)ため、AX で解決できたものだけ subrole を確認し、
-    /// 解決できないものは標準ウィンドウとして受理する
+    /// (macOS の制限)ため、列挙で解決できないものは観測済みの AX 要素キャッシュで
+    /// subrole を判定する(キャッシュ済み要素への属性読み取りは Space をまたいでも有効)。
+    /// 未観測のウィンドウは候補にしない。常駐アプリの不可視ウィンドウ
+    /// (Shottr 等。CGWindowList には載るが AX には現れない)を幽霊候補として
+    /// 拾わないためで、キャッシュ済みのみ対象なのは元 hs.window.filter と同じ性質
     public static func offSpaceStandardWindows(from windows: [WindowInfo]) -> [WindowInfo] {
         var axCache: [pid_t: [AXWindow]] = [:]
         return windows.filter { win in
             let axWindows = axCache[win.pid] ?? AXWindow.windows(pid: win.pid)
             axCache[win.pid] = axWindows
-            guard let ax = axWindows.first(where: { $0.windowID == win.id }) else {
-                return true
+            if let ax = axWindows.first(where: { $0.windowID == win.id }) {
+                return ax.isStandard
             }
-            return ax.isStandard
+            guard let cached = WindowRegistry.shared.window(for: win.id) else { return false }
+            return cached.isStandard
         }
     }
 
