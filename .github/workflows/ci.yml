@@ -7,9 +7,9 @@ on:
 
 jobs:
   test:
-    # Package.swift が swift-tools-version 6.0 を要求するため、
-    # Swift 6 (Xcode 16) を積む macos-15 以上が必要
-    runs-on: macos-15
+    # ローカルの開発環境(最新 macOS)と SDK 世代を揃える。
+    # 古い SDK は ScreenCaptureKit 等の Sendable 注釈が欠けておりビルドが落ちる
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
       - name: Build
