@@ -18,7 +18,6 @@
 ## 必要環境
 
 - macOS 14 以降
-- Swift 6 toolchain(Xcode または Command Line Tools)
 
 
 ## ドキュメント
@@ -29,11 +28,24 @@
 
 ## 開発者向け
 
+### 必要環境
+
+- Swift 6 toolchain(Xcode または Command Line Tools)
+
+### コマンド
+
 ```bash
 swift build          # ビルド
 swift test           # ユニットテスト(JinraiCore の純粋ロジック)
 ./scripts/make-app.sh && open .build/Jinrai.app   # 実機確認
+pkill -x Jinrai && ./scripts/make-app.sh && open .build/Jinrai.app  # 再起動
 ```
+
+初回起動時に**アクセシビリティ権限**を求められる。システム設定 → プライバシーとセキュリティ → アクセシビリティで Jinrai を許可すると機能が有効になる。
+
+> [!WARNING]
+> ad-hoc 署名は再ビルドで署名が変わり、アクセシビリティ許可が剥がれることがある。
+> その場合は `tccutil reset Accessibility com.tadashi-aikawa.jinrai` を実行してから再許可する。
 
 ### アーキテクチャ
 
@@ -45,28 +57,6 @@ swift test           # ユニットテスト(JinraiCore の純粋ロジック)
 | `Jinrai` | 実行ターゲット。機能モジュール(Features/)と結線(AppDelegate = 元 init.lua 相当) |
 
 座標系は内部を CG/AX 準拠の top-left 原点に統一し、NSWindow/NSScreen との境界(`ScreenUtil`)でのみ変換する。
-
-### ビルドと起動
-
-```bash
-./scripts/make-app.sh          # swift build + .app 組み立て + ad-hoc 署名
-open .build/Jinrai.app
-```
-
-開発中は以下のワンライナーで確実に再起動できる。
-
-```bash
-pkill -x Jinrai && ./scripts/make-app.sh && open .build/Jinrai.app
-```
-
-
-初回起動時に**アクセシビリティ権限**を求められる。システム設定 → プライバシーとセキュリティ → アクセシビリティで Jinrai を許可すると機能が有効になる。
-
-> [!WARNING]
-> ad-hoc 署名は再ビルドで署名が変わり、アクセシビリティ許可が剥がれることがある。
-> その場合は `tccutil reset Accessibility com.tadashi-aikawa.jinrai` を実行してから再許可する。
-
-メニューバーの ⚡ アイコン →「設定を再読込」で反映できる。
 
 
 ## ライセンス
