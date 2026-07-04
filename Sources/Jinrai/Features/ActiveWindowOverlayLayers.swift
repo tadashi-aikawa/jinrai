@@ -25,11 +25,16 @@ enum ActiveWindowOverlayLayers {
         return shape
     }
 
+    /// fadeIn: 瞬時に暗転すると目に刺さるためフェードインで暗くする。
+    /// ただし Hints ↔ Area Hints の受け渡しで直前まで spotlight が出ていた場合は
+    /// false にして瞬間表示し、暗幕が連続して見えるようにする(クロスフェードだと
+    /// 画面全体の暗さが揺れてフラッシュに見える)
     static func spotlightLayer(
         windowFrame: CGRect,
         screenFrame: CGRect,
         overlayHeight: CGFloat,
-        alpha: CGFloat
+        alpha: CGFloat,
+        fadeIn: Bool = true
     ) -> CAShapeLayer {
         let shape = CAShapeLayer()
         shape.frame = CGRect(origin: .zero, size: screenFrame.size)
@@ -38,12 +43,13 @@ enum ActiveWindowOverlayLayers {
             windowFrame: windowFrame, screenFrame: screenFrame, overlayHeight: overlayHeight)
         shape.fillRule = .evenOdd
         shape.fillColor = CGColor(gray: 0, alpha: alpha)
-        // 瞬時に暗転すると目に刺さるため、フェードインで暗くする
-        let fade = CABasicAnimation(keyPath: "opacity")
-        fade.fromValue = 0
-        fade.toValue = 1
-        fade.duration = 0.15
-        shape.add(fade, forKey: "fadeIn")
+        if fadeIn {
+            let fade = CABasicAnimation(keyPath: "opacity")
+            fade.fromValue = 0
+            fade.toValue = 1
+            fade.duration = 0.15
+            shape.add(fade, forKey: "fadeIn")
+        }
         return shape
     }
 

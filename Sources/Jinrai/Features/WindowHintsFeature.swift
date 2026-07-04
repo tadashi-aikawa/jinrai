@@ -67,8 +67,8 @@ final class WindowHintsFeature {
     }
 
     /// mode を維持したまま Hints を再表示(元 showJinraiMode)
-    func showJinraiMode() {
-        show()
+    func showJinraiMode(fadeSpotlight: Bool = true) {
+        show(fadeSpotlight: fadeSpotlight)
     }
 
     @discardableResult
@@ -118,7 +118,9 @@ final class WindowHintsFeature {
 
     // MARK: - 表示
 
-    func show() {
+    /// fadeSpotlight: 直前まで spotlight が出ていた遷移(Area Hints からの受け渡し等)
+    /// では false にして瞬間表示し、暗幕の連続性を保つ
+    func show(fadeSpotlight: Bool = true) {
         guard !isVisible else { return }
 
         let entries = collectEntries()
@@ -146,7 +148,7 @@ final class WindowHintsFeature {
         }
 
         currentInput = ""
-        buildOverlays()
+        buildOverlays(fadeSpotlight: fadeSpotlight)
         isVisible = true
 
         if config.cursorOnStart,
@@ -303,14 +305,22 @@ final class WindowHintsFeature {
     /// アクティブウィンドウへ瞬間的に移してからフェードアウトし、消えゆく残像が
     /// 「移動先が明るい」状態になるようにする(アニメーションで動かすと視線が
     /// 引っ張られて疲れるため移動表現はしない。到着の合図は FocusBorder に任せる)。
-    /// nil(escape・別Space 選択等)は穴を動かさずその場でフェードアウト
-    private func dismissSpotlight(movingTo targetFrame: CGRect?) {
+    /// nil(escape・別Space 選択等)は穴を動かさずその場でフェードアウト。
+    /// animated=false は即時破棄。直後に Area Hints 等が同位置に spotlight を
+    /// 瞬間表示する受け渡しで使い、クロスフェードによる画面全体のフラッシュを防ぐ
+    private func dismissSpotlight(movingTo targetFrame: CGRect?, animated: Bool = true) {
         let items = spotlightOverlays
         spotlightOverlays = []
         for item in items {
+            if !animated {
+                item.overlay.orderOut(nil)
+                continue
+            }
             // ボーダーは即座に消す
             item.highlight?.removeFromSuperlayer()
             if let targetFrame {
+                // 穴を移動先へ瞬間切替してから消す。消えゆく残像が
+                // 「移動先が明るい」状態になり、到着の合図は FocusBorder に任せる
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 item.spotlight.path = ActiveWindowOverlayLayers.spotlightPath(
@@ -318,11 +328,9 @@ final class WindowHintsFeature {
                     overlayHeight: item.screenFrame.height)
                 CATransaction.commit()
             }
-            // ウィンドウ切替時は表示(0.15s)より長めに取る。穴の瞬間移動後の
-            // 「移動先が明るい」残像が情報を運ぶため、読み取れる長さにする。
-            // escape 等(targetFrame なし)の残像は情報を運ばないので短くさっと消す
+            // 高速な連続操作のテンポを削らないよう、表示時と同じ短さでさっと消す
             let overlay = item.overlay
-            let duration = targetFrame != nil ? 0.3 : 0.15
+            let duration = 0.15
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = duration
                 overlay.animator().alphaValue = 0
@@ -334,7 +342,7 @@ final class WindowHintsFeature {
         }
     }
 
-    private func buildOverlays() {
+    private func buildOverlays(fadeSpotlight: Bool = true) {
         let focusedWindowFrame = hints.first {
             !isDockHint($0) && $0.entry.window.isFocused
         }?.entry.window.frame
@@ -350,7 +358,8 @@ final class WindowHintsFeature {
                 let spotlight = ActiveWindowOverlayLayers.spotlightLayer(
                     windowFrame: focusedWindowFrame, screenFrame: screenFrame,
                     overlayHeight: screenFrame.height,
-                    alpha: CGFloat(config.focusedSpotlightAlpha))
+                    alpha: CGFloat(config.focusedSpotlightAlpha),
+                    fadeIn: fadeSpotlight)
                 root.addSublayer(spotlight)
                 var highlight: CAShapeLayer?
                 if screenFrame.intersects(focusedWindowFrame) {
@@ -790,17 +799,19 @@ final class WindowHintsFeature {
             name == config.navigationFocusBackKey,
             let focusHistory
         {
-            // 戻り先(=直前のウィンドウ)へ spotlight の穴を移して消す
-            dismissSpotlight(movingTo: focusHistory.previousWindow()?.frame)
             if isJinraiMode {
+                // 直後にエリア選択(または Hints 再表示)の spotlight が出るため即時破棄
+                dismissSpotlight(movingTo: nil, animated: false)
                 close(keepJinraiMode: true)
                 if let target = focusHistory.focusBack(centerCursor: config.cursorOnSelect) {
                     jinraiModeAdvance(windowID: target.windowID, pid: target.pid)
                 } else {
                     // 戻り先がない場合は Hints を再表示してループ継続
-                    show()
+                    show(fadeSpotlight: false)
                 }
             } else {
+                // 戻り先(=直前のウィンドウ)へ spotlight の穴を移して消す
+                dismissSpotlight(movingTo: focusHistory.previousWindow()?.frame)
                 close()
                 focusHistory.focusBack(centerCursor: config.cursorOnSelect)
             }
@@ -843,6 +854,8 @@ final class WindowHintsFeature {
             let onOpenWindowMover
         {
             let jinrai = isJinraiMode
+            // 直後にエリア選択の spotlight が同位置に出るため即時破棄(受け渡し)
+            dismissSpotlight(movingTo: nil, animated: false)
             close(keepJinraiMode: jinrai)
             onOpenWindowMover(jinrai)
             return true
@@ -921,11 +934,11 @@ final class WindowHintsFeature {
     private func selectWindow(_ hint: HintKeyAssignment.Hint, swap: Bool = false) {
         let window = hint.entry.window
         let isOffSpace = offSpaceWindowIDs.contains(window.id)
-        // 選択先へ spotlight の穴を移して消す(別Space は Space 切替を伴うため対象外)
-        dismissSpotlight(movingTo: isOffSpace ? nil : window.frame)
 
         // JinraiMode 中の選択: mode 維持で閉じる → focus → エリア選択へ
         if isJinraiMode {
+            // 直後にエリア選択の spotlight が選択先に出るため即時破棄(受け渡し)
+            dismissSpotlight(movingTo: nil, animated: false)
             close(keepJinraiMode: true)
             if let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) {
                 ax.focus()
@@ -943,6 +956,8 @@ final class WindowHintsFeature {
             return
         }
 
+        // 選択先へ spotlight の穴を移して消す(別Space は Space 切替を伴うため対象外)
+        dismissSpotlight(movingTo: isOffSpace ? nil : window.frame)
         close()
         guard let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) else {
             if isOffSpace {
@@ -1022,14 +1037,19 @@ final class WindowHintsFeature {
             orderedWindows: ordered,
             config: config.directionScoring
         )
-        dismissSpotlight(movingTo: target?.frame)
+        if isJinraiMode {
+            // 直後にエリア選択(または Hints 再表示)の spotlight が出るため即時破棄
+            dismissSpotlight(movingTo: nil, animated: false)
+        } else {
+            dismissSpotlight(movingTo: target?.frame)
+        }
         close(keepJinraiMode: isJinraiMode)
         guard let target,
             let ax = AXWindow.resolve(windowID: target.id, pid: target.pid)
         else {
             // JinraiMode 中に移動先がない(画面端など)場合は再表示してループ継続
             if isJinraiMode {
-                show()
+                show(fadeSpotlight: false)
             }
             return
         }

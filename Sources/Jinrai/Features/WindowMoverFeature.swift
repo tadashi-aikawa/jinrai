@@ -195,8 +195,11 @@ final class WindowMoverFeature {
 
     // MARK: - エリア選択画面
 
+    /// fadeSpotlight: Window Hints からの受け渡しでは false にして瞬間表示し、
+    /// 暗幕の連続性を保つ(クロスフェードによる画面全体のフラッシュを防ぐ)
     func openAreaChooser(
-        jinraiMode: Bool = false, target: (windowID: UInt32, pid: pid_t)? = nil
+        jinraiMode: Bool = false, target: (windowID: UInt32, pid: pid_t)? = nil,
+        fadeSpotlight: Bool = true
     ) {
         guard !isChooserVisible else { return }
         chooserJinraiMode = jinraiMode
@@ -222,7 +225,8 @@ final class WindowMoverFeature {
                         windowFrame: focusedWindowFrame,
                         screenFrame: screenFrame,
                         overlayHeight: screenFrame.height,
-                        alpha: CGFloat(config.selectedArea.activeWindowSpotlightAlpha)))
+                        alpha: CGFloat(config.selectedArea.activeWindowSpotlightAlpha),
+                        fadeIn: fadeSpotlight))
                 if screenFrame.intersects(focusedWindowFrame) {
                     root.addSublayer(
                         ActiveWindowOverlayLayers.highlightLayer(

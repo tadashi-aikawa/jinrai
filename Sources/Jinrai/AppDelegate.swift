@@ -81,15 +81,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             applicationHints = ApplicationHintsFeature(config: applicationHintsConfig)
         }
 
-        // 相互遷移の結線(元 init.lua のコールバック配線)
+        // 相互遷移の結線(元 init.lua のコールバック配線)。
+        // Hints ↔ Area Hints の受け渡しでは spotlight をフェードさせず瞬間切替にして
+        // 暗幕の連続性を保つ(クロスフェードだと画面全体がフラッシュして見える)
         windowMover?.onOpenWindowHints = { [weak self] in
-            self?.windowHints?.show()
+            self?.windowHints?.show(fadeSpotlight: false)
         }
         windowHints?.onOpenWindowMover = { [weak self] jinraiMode in
             if jinraiMode {
-                self?.openJinraiModeAreaChooser()
+                self?.openJinraiModeAreaChooser(fadeSpotlight: false)
             } else {
-                self?.windowMover?.openAreaChooser()
+                self?.windowMover?.openAreaChooser(fadeSpotlight: false)
             }
         }
         // 開いただけでは combo は進めない(進むのは選択時 = onSelectInJinraiMode)
@@ -108,7 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // JinraiMode のループ結線(元 init.lua の openJinraiModeWindowActionChooser)
         windowHints?.onJinraiModeSelect = { [weak self] windowID, pid in
-            self?.openJinraiModeAreaChooser(target: (windowID, pid))
+            self?.openJinraiModeAreaChooser(target: (windowID, pid), fadeSpotlight: false)
         }
         windowMover?.onJinraiModeStart = { [weak self] in
             self?.windowHints?.startJinraiMode()
@@ -116,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowMover?.onJinraiModeApply = { [weak self] in
             guard let self else { return }
             self.windowHints?.advanceJinraiModeCombo()
-            self.windowHints?.showJinraiMode()
+            self.windowHints?.showJinraiMode(fadeSpotlight: false)
         }
         windowMover?.onJinraiModeCancel = { [weak self] in
             self?.windowHints?.stopJinraiMode()
@@ -135,10 +137,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// JinraiMode 中のエリア選択画面を開く(combo+1 してから)。
     /// target は直前に選択したウィンドウ(focusedWindow の非同期遅延を回避)
     private func openJinraiModeAreaChooser(
-        target: (windowID: UInt32, pid: pid_t)? = nil
+        target: (windowID: UInt32, pid: pid_t)? = nil,
+        fadeSpotlight: Bool = true
     ) {
         windowHints?.advanceJinraiModeCombo()
-        windowMover?.openAreaChooser(jinraiMode: true, target: target)
+        windowMover?.openAreaChooser(
+            jinraiMode: true, target: target, fadeSpotlight: fadeSpotlight)
     }
 
     private func teardownFeatures() {
