@@ -356,7 +356,12 @@ final class ApplicationHintsFeature {
         cells[entry.key]?.stateLayer.string = "WAIT"
 
         if let urlString = entry.newWindowURL, let url = URL(string: urlString) {
-            NSWorkspace.shared.open(url)
+            // アプリをアクティブ化せず URL イベントだけ送る(元 hs.urlevent.openURL 相当。
+            // 既存ウィンドウが一瞬前面に出るのを防ぐ)。
+            // 新規ウィンドウは出現検出後に ax.focus() で前面化される
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = false
+            NSWorkspace.shared.open(url, configuration: configuration)
         } else if let running {
             // 起動済み → 新規ウィンドウのホットキーを対象アプリへ直接送出。
             // 自身の EventTap を経由しない postKeyStroke(toPid:) を使わないと、
