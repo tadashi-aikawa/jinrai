@@ -435,7 +435,7 @@ final class ApplicationHintsFeature {
     private func reportError(_ message: String) {
         NSLog("[jinrai.application_hints] %@", message)
         let notification = NSUserNotification()
-        notification.title = "Jinrai"
+        notification.title = "JINRAI"
         notification.informativeText = message
         NSUserNotificationCenter.default.deliver(notification)
     }

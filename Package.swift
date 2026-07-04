@@ -34,7 +34,7 @@ let package = Package(
         ),
         // 実行ターゲット(メニューバー常駐アプリ)
         .executableTarget(
-            name: "Jinrai",
+            name: "JINRAI",
             dependencies: ["JinraiPlatform"],
             path: "Sources/Jinrai"
         ),

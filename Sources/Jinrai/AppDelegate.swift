@@ -182,7 +182,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showConfigError(_ error: Error) {
         let alert = NSAlert()
-        alert.messageText = "Jinrai の設定読み込みに失敗しました"
+        alert.messageText = "JINRAI の設定読み込みに失敗しました"
         alert.informativeText = "\(error)\n\n\(ConfigLoader.configFileURL.path)"
         alert.alertStyle = .warning
         alert.runModal()

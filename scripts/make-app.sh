@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# swift build → Jinrai.app 組み立て → ad-hoc 署名
+# swift build → JINRAI.app 組み立て → ad-hoc 署名
 # 使い方: ./scripts/make-app.sh [debug|release] [version]
 set -euo pipefail
 
 CONFIG="${1:-debug}"
 VERSION="${2:-0.0.0-development}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP="$ROOT/.build/Jinrai.app"
+APP="$ROOT/.build/JINRAI.app"
 
 swift build --package-path "$ROOT" -c "$CONFIG"
 
-BIN="$ROOT/.build/$CONFIG/Jinrai"
+BIN="$ROOT/.build/$CONFIG/JINRAI"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN" "$APP/Contents/MacOS/Jinrai"
-sed "s/0\.0\.0-development/$VERSION/" "$ROOT/Resources/Info.plist" > "$APP/Contents/Info.plist"
+cp "$BIN" "$APP/Contents/MacOS/JINRAI"
+sed "s/0\.0\.0-development/$VERSION/" "$ROOT/Resources/Info.plist" >"$APP/Contents/Info.plist"
 cp "$ROOT"/Resources/images/* "$APP/Contents/Resources/"
 
 # 署名: "jinrai-dev" という自己署名証明書が Keychain にあればそれを使う(署名が固定され
@@ -24,12 +24,12 @@ cp "$ROOT"/Resources/images/* "$APP/Contents/Resources/"
 #   tccutil reset Accessibility com.tadashi-aikawa.jinrai
 # 自己署名のコード署名証明書は「信頼」設定が無くても署名に使えるため、
 # find-identity は -v(valid のみ)を付けずに検索する。
-if security find-identity -p codesigning 2>/dev/null | grep -q "jinrai-dev" \
-    && codesign --force --sign "jinrai-dev" "$APP" 2>/dev/null; then
-    echo "Signed with: jinrai-dev"
+if security find-identity -p codesigning 2>/dev/null | grep -q "jinrai-dev" &&
+  codesign --force --sign "jinrai-dev" "$APP" 2>/dev/null; then
+  echo "Signed with: jinrai-dev"
 else
-    codesign --force --sign - "$APP"
-    echo "Signed with: ad-hoc"
+  codesign --force --sign - "$APP"
+  echo "Signed with: ad-hoc"
 fi
 
 echo "Built: $APP"

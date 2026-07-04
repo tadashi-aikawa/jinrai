@@ -5,11 +5,11 @@
     <key>CFBundleIdentifier</key>
     <string>com.tadashi-aikawa.jinrai</string>
     <key>CFBundleName</key>
-    <string>Jinrai</string>
+    <string>JINRAI</string>
     <key>CFBundleDisplayName</key>
-    <string>Jinrai</string>
+    <string>JINRAI</string>
     <key>CFBundleExecutable</key>
-    <string>Jinrai</string>
+    <string>JINRAI</string>
     <key>CFBundleIconFile</key>
     <string>jinrai.icns</string>
     <key>CFBundlePackageType</key>

@@ -25,7 +25,7 @@ final class StatusItem {
         let menu = NSMenu()
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         let versionItem = NSMenuItem(
-            title: "Jinrai \(version ?? "0.0.0-development")",
+            title: "JINRAI \(version ?? "0.0.0-development")",
             action: nil,
             keyEquivalent: ""
         )
@@ -51,7 +51,7 @@ final class StatusItem {
         menu.addItem(reloadItem)
         menu.addItem(.separator())
         let quitItem = NSMenuItem(
-            title: "Quit Jinrai",
+            title: "Quit JINRAI",
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         )
@@ -69,7 +69,7 @@ final class StatusItem {
 
     @objc private func dumpWindows() {
         let windows = WindowEnumerator.orderedWindows()
-        NSLog("=== Jinrai window dump: %d windows (Z順) ===", windows.count)
+        NSLog("=== JINRAI window dump: %d windows (Z順) ===", windows.count)
         for (index, win) in windows.enumerated() {
             let ax = AXWindow.resolve(windowID: win.id, pid: win.pid)
             NSLog(
@@ -100,7 +100,7 @@ final class StatusItem {
 
         let image = NSImage(
             systemSymbolName: "bolt.fill",
-            accessibilityDescription: "Jinrai"
+            accessibilityDescription: "JINRAI"
         )
         image?.isTemplate = true
         return image
