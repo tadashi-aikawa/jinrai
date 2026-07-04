@@ -25,7 +25,7 @@ final class ApplicationHintsFeature {
     var onOpenWindowHints: ((Bool) -> Void)?
     /// JinraiMode: 開始 / ウィンドウ作成完了後(→ エリア選択へ)/ キャンセル
     var onStartJinraiMode: (() -> Void)?
-    var onSelectInJinraiMode: (() -> Void)?
+    var onSelectInJinraiMode: ((_ windowID: UInt32, _ pid: pid_t) -> Void)?
     var onCancelJinraiMode: (() -> Void)?
     /// 現在の表示が JinraiMode 文脈か
     private var showJinraiMode = false
@@ -410,7 +410,7 @@ final class ApplicationHintsFeature {
                     self.close()
                     // JinraiMode 中: 作成したウィンドウを続けて配置(→ エリア選択へ)
                     if wasJinrai {
-                        self.onSelectInJinraiMode?()
+                        self.onSelectInJinraiMode?(newWindow.id, newWindow.pid)
                     }
                     return
                 }

@@ -40,6 +40,9 @@ final class WindowMoverFeature {
     var onJinraiModeCancel: (() -> Void)?
     /// エリア選択画面が JinraiMode 文脈で開かれているか
     private var chooserJinraiMode = false
+    /// エリア選択の対象ウィンドウ(直前に選択されたウィンドウ。
+    /// focusedWindow は frontmostApplication ベースで focus 直後は古いため明示する)
+    private var chooserTarget: (windowID: UInt32, pid: pid_t)?
 
     init(config: WindowMoverConfig) {
         self.config = config
@@ -192,14 +195,17 @@ final class WindowMoverFeature {
 
     // MARK: - エリア選択画面
 
-    func openAreaChooser(jinraiMode: Bool = false) {
+    func openAreaChooser(
+        jinraiMode: Bool = false, target: (windowID: UInt32, pid: pid_t)? = nil
+    ) {
         guard !isChooserVisible else { return }
         chooserJinraiMode = jinraiMode
+        chooserTarget = target
         chooserCandidates = []
         areaLabels = []
         chooserInput = ""
 
-        let focusedWindowFrame = WindowEnumerator.focusedWindow()?.frame
+        let focusedWindowFrame = chooserTargetWindow()?.frame
         var hasAnyMapping = false
         for screen in NSScreen.screens {
             let uuid = ScreenUtil.uuid(of: screen)
@@ -252,10 +258,22 @@ final class WindowMoverFeature {
         }
     }
 
+    /// エリア選択の対象ウィンドウ(target 指定時は AX で最新解決、なければ focusedWindow)
+    private func chooserTargetWindow() -> AXWindow? {
+        if let chooserTarget,
+            let ax = AXWindow.resolve(
+                windowID: chooserTarget.windowID, pid: chooserTarget.pid)
+        {
+            return ax
+        }
+        return WindowEnumerator.focusedWindow()
+    }
+
     func closeChooser() {
         guard isChooserVisible || !chooserOverlays.isEmpty else { return }
         isChooserVisible = false
         chooserJinraiMode = false
+        chooserTarget = nil
         eventTap.stop()
         for overlay in chooserOverlays {
             overlay.orderOut(nil)
@@ -280,7 +298,7 @@ final class WindowMoverFeature {
             if isFreeArea {
                 areaFrame = computeFreeArea(
                     screen: screen, screenFrame: screenFrame,
-                    excluding: WindowEnumerator.focusedWindow()?.windowID)
+                    excluding: chooserTargetWindow()?.windowID)
             } else {
                 areaFrame = AreaSpec.frame(for: areaName, screenFrame: screenFrame)
             }
@@ -569,19 +587,21 @@ final class WindowMoverFeature {
             transitionToWindowHints()
             return true
         }
-        // アクション
+        // アクション(対象は closeChooser でクリアされる前に解決しておく)
         if let action = config.selectedArea.actions.first(where: { $0.value == input }) {
             let wasJinrai = chooserJinraiMode
+            let win = chooserTargetWindow()
             closeChooser()
-            runAction(action.key, jinraiMode: wasJinrai)
+            runAction(action.key, window: win, jinraiMode: wasJinrai)
             return true
         }
         // エリア
         if let candidate = chooserCandidates.first(where: { $0.key == input }) {
             let frame = candidate.frame
             let wasJinrai = chooserJinraiMode
+            let win = chooserTargetWindow()
             closeChooser()
-            if let win = WindowEnumerator.focusedWindow() {
+            if let win {
                 apply(frame: frame, to: win)
             }
             if wasJinrai {
@@ -677,8 +697,10 @@ final class WindowMoverFeature {
             red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
     }
 
-    private func runAction(_ name: String, jinraiMode: Bool = false) {
-        guard let win = WindowEnumerator.focusedWindow() else {
+    private func runAction(
+        _ name: String, window: AXWindow? = nil, jinraiMode: Bool = false
+    ) {
+        guard let win = window ?? WindowEnumerator.focusedWindow() else {
             if jinraiMode { onJinraiModeCancel?() }
             return
         }

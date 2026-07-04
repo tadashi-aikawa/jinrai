@@ -32,8 +32,8 @@ final class WindowHintsFeature {
     var onOpenWindowMover: ((Bool) -> Void)?
     /// Application Hints へ遷移するコールバック(jinraiMode フラグ付き)
     var onOpenApplicationHints: ((Bool) -> Void)?
-    /// JinraiMode 中のウィンドウ選択後(→ エリア選択画面を開く)
-    var onJinraiModeSelect: (() -> Void)?
+    /// JinraiMode 中のウィンドウ選択後(→ 選択ウィンドウを対象にエリア選択画面を開く)
+    var onJinraiModeSelect: ((_ windowID: UInt32, _ pid: pid_t) -> Void)?
 
     // MARK: - JinraiMode 状態(元 window_hints.lua の isJinraiMode / comboCount)
 
@@ -823,7 +823,7 @@ final class WindowHintsFeature {
     private func jinraiModeAdvance(windowID: UInt32, pid: pid_t) {
         jinraiVisuals.setAnchor(windowID: windowID, pid: pid)
         jinraiVisuals.showLogo()
-        onJinraiModeSelect?()
+        onJinraiModeSelect?(windowID, pid)
     }
 
     private func selectWindow(_ hint: HintKeyAssignment.Hint, swap: Bool = false) {
