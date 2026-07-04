@@ -2,8 +2,8 @@
 import PackageDescription
 
 let package = Package(
-    name: "jinrai",
-    platforms: [.macOS(.v14)],
+    name: "JINRAI",
+    platforms: [.macOS(.v15)],
     dependencies: [
         // Command Line Tools のみの環境には swift-testing が同梱されないため依存で供給
         .package(url: "https://github.com/swiftlang/swift-testing.git", from: "0.12.0")

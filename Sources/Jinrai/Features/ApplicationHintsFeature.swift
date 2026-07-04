@@ -2,6 +2,7 @@ import AppKit
 import Carbon.HIToolbox
 import JinraiCore
 import JinraiPlatform
+import UserNotifications
 
 /// アプリランチャー(元 application_hints.lua)。
 /// 登録アプリをグリッド表示し、キーで起動 or 新規ウィンドウ作成する。
@@ -434,10 +435,20 @@ final class ApplicationHintsFeature {
 
     private func reportError(_ message: String) {
         NSLog("[jinrai.application_hints] %@", message)
-        let notification = NSUserNotification()
-        notification.title = "JINRAI"
-        notification.informativeText = message
-        NSUserNotificationCenter.default.deliver(notification)
+        // UNUserNotificationCenter は .app バンドル外(swift run 等)から触ると
+        // クラッシュするため、バンドルで動いているときだけ通知を出す
+        guard Bundle.main.bundleIdentifier != nil else { return }
+        Task { @MainActor in
+            let center = UNUserNotificationCenter.current()
+            guard (try? await center.requestAuthorization(options: [.alert])) == true
+            else { return }
+            let content = UNMutableNotificationContent()
+            content.title = "JINRAI"
+            content.body = message
+            try? await center.add(
+                UNNotificationRequest(
+                    identifier: UUID().uuidString, content: content, trigger: nil))
+        }
     }
 
     private func cgColor(_ color: ConfigColor) -> CGColor {

@@ -7,7 +7,9 @@ on:
 
 jobs:
   test:
-    runs-on: macos-14
+    # Package.swift が swift-tools-version 6.0 を要求するため、
+    # Swift 6 (Xcode 16) を積む macos-15 以上が必要
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Build

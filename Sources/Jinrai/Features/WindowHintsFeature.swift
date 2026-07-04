@@ -29,6 +29,8 @@ final class WindowHintsFeature {
     private var hintOverlayFills: [String: CALayer] = [:]
     private var hintOverlayBorders: [String: CAShapeLayer] = [:]
     private var hintFrames: [String: CGRect] = [:]  // top-left 座標(外クリック判定用)
+    /// プレビュー画像の差し込み先(windowID → 層)。撮影は非同期のため後から埋める
+    private var previewLayersByWindowID: [UInt32: CALayer] = [:]
     private var currentInput = ""
     private var occludedWindowIDs: Set<UInt32> = []
     private var offSpaceWindowIDs: Set<UInt32> = []
@@ -177,6 +179,7 @@ final class WindowHintsFeature {
         hintOverlayFills = [:]
         hintOverlayBorders = [:]
         hintFrames = [:]
+        previewLayersByWindowID = [:]
         hints = []
         currentInput = ""
     }
@@ -452,6 +455,22 @@ final class WindowHintsFeature {
             fadeInOverlays(
                 spotlightOverlays.map(\.overlay), duration: config.showFadeInSpotlight)
         }
+
+        // プレビュー画像を非同期で撮影し、確保済みの層へ差し込む
+        // (close 済みなら previewLayersByWindowID が空になっており何もしない)
+        if !previewLayersByWindowID.isEmpty {
+            let windowIDs = Array(previewLayersByWindowID.keys)
+            Task { @MainActor [weak self] in
+                let images = await WindowCapture.captureImages(windowIDs: windowIDs)
+                guard let self, self.isVisible else { return }
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                for (windowID, image) in images {
+                    self.previewLayersByWindowID[windowID]?.contents = image
+                }
+                CATransaction.commit()
+            }
+        }
     }
 
     private func fadeInOverlays(_ targets: [OverlayWindow], duration: Double) {
@@ -558,17 +577,20 @@ final class WindowHintsFeature {
                 fontSize: config.titleFontSize, color: style.titleColor, bold: false)
             : nil
 
-        // 隠れウィンドウのプレビュー(要・画面収録権限。未許可時はスキップ)
-        var previewImage: CGImage?
-        if isDockHint(hint), config.previewEnabled, WindowCapture.hasPermission {
-            previewImage = WindowCapture.captureImage(windowID: hint.entry.window.id)
-        }
+        // 隠れウィンドウのプレビュー(要・画面収録権限。未許可時はスキップ)。
+        // ScreenCaptureKit は非同期 API のため、ここではウィンドウの frame から
+        // サイズだけ確保し、画像は撮影完了後に差し込む(buildOverlays 末尾の Task)
+        let winFrame = hint.entry.window.frame
+        let expectsPreview =
+            isDockHint(hint) && config.previewEnabled && WindowCapture.hasPermission
+            && Geometry.isValidFrame(winFrame)
         var belowPreviewSize = CGSize.zero
-        if let image = previewImage, config.previewMode == "below", image.width > 0 {
+        if expectsPreview, config.previewMode == "below" {
+            // アスペクト比はキャプチャ画像と同じなので frame から算出できる
             let width = CGFloat(config.previewWidth)
             belowPreviewSize = CGSize(
                 width: width,
-                height: width * CGFloat(image.height) / CGFloat(image.width))
+                height: width * winFrame.height / winFrame.width)
         }
 
         let contentWidth = max(
@@ -586,11 +608,8 @@ final class WindowHintsFeature {
         var containerHeight = contentHeight + padding * 2
         // mode "background": ウィンドウの実サイズに比例した box にする
         // (元実装: scaleFactor = 2 * previewWidth / 画面高さ)
-        if previewImage != nil, config.previewMode == "background" {
-            let winFrame = hint.entry.window.frame
-            if Geometry.isValidFrame(winFrame),
-                let screen = ScreenUtil.screenContaining(winFrame)
-            {
+        if expectsPreview, config.previewMode == "background" {
+            if let screen = ScreenUtil.screenContaining(winFrame) {
                 // スクリーンの短辺を基準にする(元実装はスクリーン高さ基準だったが、
                 // 縦長ディスプレイでは高さ=長辺のためスケールが過小になり
                 // ボックスの高さが潰れる。横長では高さ=短辺なので挙動は変わらない)
@@ -625,20 +644,20 @@ final class WindowHintsFeature {
         // mode "background": プレビューをヒント全体の背景として敷く。
         // 角丸クリップは preview 層側で行う(container を masksToBounds にすると
         // 下で付けるシャドウごと切られて描画されないため)
-        if let image = previewImage, config.previewMode == "background" {
+        if expectsPreview, config.previewMode == "background" {
             let previewLayer = CALayer()
-            previewLayer.contents = image
             previewLayer.contentsGravity = .resizeAspectFill
             previewLayer.masksToBounds = true
             previewLayer.cornerRadius = container.cornerRadius
             previewLayer.frame = container.bounds
             previewLayer.opacity = Float(config.previewAlpha)
             container.addSublayer(previewLayer)
+            previewLayersByWindowID[hint.entry.window.id] = previewLayer
         }
 
         // プレビュー付きヒントは背後のウィンドウと色が近いと境界が消えるため、
         // シャドウ(明るい背景で効く)と淡い縁取り(暗い背景で効く)を併用する
-        if previewImage != nil {
+        if expectsPreview {
             container.borderWidth = 1
             container.borderColor = NSColor(white: 1, alpha: 0.3).cgColor
             container.shadowColor = NSColor.black.cgColor
@@ -653,9 +672,8 @@ final class WindowHintsFeature {
 
         // コンテンツ(アイコン+キー+タイトル)は container 内で上下中央に置く
         var bottomY = padding + max(0, (containerHeight - contentHeight - padding * 2) / 2)
-        if let image = previewImage, belowPreviewSize.height > 0 {
+        if expectsPreview, belowPreviewSize.height > 0 {
             let previewLayer = CALayer()
-            previewLayer.contents = image
             previewLayer.contentsGravity = .resizeAspectFill
             previewLayer.masksToBounds = true
             previewLayer.cornerRadius = 4
@@ -668,6 +686,7 @@ final class WindowHintsFeature {
                 y: bottomY,
                 width: belowPreviewSize.width, height: belowPreviewSize.height)
             container.addSublayer(previewLayer)
+            previewLayersByWindowID[hint.entry.window.id] = previewLayer
             bottomY += belowPreviewSize.height + CGFloat(config.previewPadding)
         }
 
