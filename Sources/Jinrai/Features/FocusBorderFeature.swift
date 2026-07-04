@@ -28,6 +28,30 @@ final class FocusBorderFeature {
         guard frame.width >= config.minWindowSize || frame.height >= config.minWindowSize else {
             return
         }
+        // 別 Space のウィンドウへのフォーカス(Space 切替を伴う)は、切替完了を
+        // 待ってから点灯する。オーバーレイは全 Space 表示のため、即時に出すと
+        // 移動前の Space の画面上で光って見えてしまう
+        if let spaceID = Spaces.spaceID(of: window.windowID),
+            !Spaces.activeSpaceIDs().contains(spaceID)
+        {
+            let windowID = window.windowID
+            Task { @MainActor [weak self] in
+                // Space 切替の完了を待つ(最大 1 秒。完了後に少し置いて点灯)
+                for _ in 0..<20 {
+                    try? await Task.sleep(for: .seconds(0.05))
+                    guard let self, self.lastWindowID == windowID else { return }
+                    guard
+                        let sid = Spaces.spaceID(of: windowID),
+                        Spaces.activeSpaceIDs().contains(sid)
+                    else { continue }
+                    try? await Task.sleep(for: .seconds(0.1))
+                    guard self.lastWindowID == windowID else { return }
+                    self.show(around: window.frame ?? frame)
+                    return
+                }
+            }
+            return
+        }
         show(around: frame)
     }
 

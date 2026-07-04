@@ -74,31 +74,63 @@ public enum Spaces {
     /// 切替する(こちらのみショートカットが有効な場合に限り動作)
     public static func gotoSpace(number: Int) {
         guard (1...9).contains(number) else { return }
-        if let target = spaceNumbersByID().first(where: { $0.value == number })?.key {
-            // 前面→背面順なので、最初に見つかったものが対象 Space の最前面ウィンドウ
-            var fallback: WindowInfo?
-            for win in WindowEnumerator.allSpacesWindows() {
-                guard spaceID(of: win.id) == target else { continue }
-                if let cached = WindowRegistry.shared.window(for: win.id) {
-                    cached.focus()
-                    return
-                }
-                if fallback == nil { fallback = win }
-            }
-            if let fallback {
-                WindowServerFocus.focus(windowID: fallback.id, pid: fallback.pid)
-                return
-            }
+        if let target = spaceNumbersByID().first(where: { $0.value == number })?.key,
+            focusWindow(inSpace: target)
+        {
+            return
         }
         EventTap.postKeyStroke(modifiers: ["ctrl"], key: String(number))
     }
 
-    /// 前後の Space へ切替(ctrl+←/→)
+    /// 前後の Space へ切替。数字キー移動と同じくウィンドウフォーカス駆動で
+    /// 切り替える(アニメーションが短く、フォーカス確定も速い)。
+    /// 隣接 Space が空・解決失敗・端の場合は fn+ctrl+←/→ にフォールバック
+    /// (macOS デフォルト有効のショートカット。端では OS 標準のラバーバンド演出になる)
     public static func gotoPrevSpace() {
+        if let target = adjacentSpaceID(offset: -1), focusWindow(inSpace: target) { return }
         EventTap.postKeyStroke(modifiers: ["fn", "ctrl"], key: "left")
     }
 
     public static func gotoNextSpace() {
+        if let target = adjacentSpaceID(offset: 1), focusWindow(inSpace: target) { return }
         EventTap.postKeyStroke(modifiers: ["fn", "ctrl"], key: "right")
+    }
+
+    /// 対象 Space のウィンドウをフォーカスして macOS に切り替えさせる。
+    /// 観測済みの AX 要素があればそれを focus し(最も確実)、なければ window server
+    /// 経由で試みる。ウィンドウが 1 つもなければ false(呼び元でフォールバック)
+    private static func focusWindow(inSpace target: UInt64) -> Bool {
+        // 前面→背面順なので、最初に見つかったものが対象 Space の最前面ウィンドウ
+        var fallback: WindowInfo?
+        for win in WindowEnumerator.allSpacesWindows() {
+            guard spaceID(of: win.id) == target else { continue }
+            if let cached = WindowRegistry.shared.window(for: win.id) {
+                cached.focus()
+                return true
+            }
+            if fallback == nil { fallback = win }
+        }
+        if let fallback {
+            WindowServerFocus.focus(windowID: fallback.id, pid: fallback.pid)
+            return true
+        }
+        return false
+    }
+
+    /// 現在フォーカスのあるスクリーンの Space 一覧上で、現在 Space から offset 隣の
+    /// SpaceID。端で隣がない場合は nil(macOS 標準と同じくラップしない)
+    private static func adjacentSpaceID(offset: Int) -> UInt64? {
+        let displays = managedDisplaySpaces()
+        guard !displays.isEmpty else { return nil }
+        // キーウィンドウのあるスクリーンのディスプレイを探す(見つからなければ先頭)
+        let mainUUID = NSScreen.main.flatMap { ScreenUtil.uuid(of: $0) }
+        let display = displays.first { $0.displayUUID == mainUUID } ?? displays[0]
+        guard
+            let current = display.currentSpaceID,
+            let index = display.spaceIDs.firstIndex(of: current)
+        else { return nil }
+        let targetIndex = index + offset
+        guard display.spaceIDs.indices.contains(targetIndex) else { return nil }
+        return display.spaceIDs[targetIndex]
     }
 }
