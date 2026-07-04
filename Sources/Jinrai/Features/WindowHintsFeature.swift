@@ -23,6 +23,7 @@ final class WindowHintsFeature {
     private var occludedWindowIDs: Set<UInt32> = []
     private var offSpaceWindowIDs: Set<UInt32> = []
     private var windowZOrder: [UInt32: Int] = [:]  // 前面=小(ヒント配置の優先度)
+    private var coveringFramesByID: [UInt32: [CGRect]] = [:]  // 自分より前面のフレーム群
     private let macosNativeTabsApps: Set<String>
     private var didRequestScreenCapture = false
     private(set) var isVisible = false
@@ -167,9 +168,20 @@ final class WindowHintsFeature {
 
     /// 候補収集(現Space の可視標準ウィンドウ。完全に隠れたものは occluded 扱い)
     private func collectEntries() -> [HintKeyAssignment.Entry] {
-        let ordered = WindowEnumerator.orderedWindows()
+        var ordered = WindowEnumerator.orderedWindows()
             .filter { $0.pid != ProcessInfo.processInfo.processIdentifier }
-        let standard = WindowEnumerator.standardWindows(from: ordered)
+        var standard = WindowEnumerator.standardWindows(from: ordered)
+        // 最前面ウィンドウの frame を AX で最新化(Window Mover 適用直後は
+        // CGWindowList の frame 反映が遅れ、アクティブ枠等が旧位置に描かれるため)
+        if let front = standard.first,
+            let freshFrame = AXWindow.resolve(windowID: front.id, pid: front.pid)?.frame,
+            freshFrame != front.frame
+        {
+            for i in ordered.indices where ordered[i].id == front.id {
+                ordered[i].frame = freshFrame
+            }
+            standard[0].frame = freshFrame
+        }
         occludedWindowIDs = Set(
             standard.filter {
                 DirectionScoring.isFullyOccludedWindow(
@@ -180,6 +192,16 @@ final class WindowHintsFeature {
         let focusedID = standard.first?.id
         windowZOrder = Dictionary(
             standard.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { a, _ in a })
+        // 各ウィンドウを覆う「自分より前面」のフレーム群(見えている領域の中央計算用)
+        coveringFramesByID = [:]
+        for win in standard {
+            var frames: [CGRect] = []
+            for other in ordered {
+                if other.id == win.id { break }
+                frames.append(other.frame)
+            }
+            coveringFramesByID[win.id] = frames
+        }
         var entries = standard.map { win -> HintKeyAssignment.Entry in
             var win = win
             win.isFocused = (win.id == focusedID)
@@ -283,7 +305,11 @@ final class WindowHintsFeature {
 
                 let container = hintContainer(for: hint)
                 let size = container.bounds.size
-                var center = CGPoint(x: winFrame.midX, y: winFrame.midY)
+                // 見えている(前面ウィンドウに覆われていない)領域の中央に置く。
+                // 前面ウィンドウは coveringFrames が空なので幾何中心のまま
+                var center = Occlusion.findUncoveredCenter(
+                    windowFrame: winFrame,
+                    coveringFrames: coveringFramesByID[hint.entry.window.id] ?? [])
                 // 画面内に収める
                 center.x = min(
                     max(center.x, screenFrame.minX + size.width / 2),
