@@ -43,17 +43,20 @@ final class FocusBorderFeature {
         let bounds = CGRect(origin: .zero, size: frame.size)
         let outlineWidth = CGFloat(config.outlineWidth)
         let borderWidth = CGFloat(config.borderWidth)
+        let cornerRadius: CGFloat = 12
 
         // 外枠(細い黒)を最外周、メイン枠(太い青)をその内側に
         let outlineLayer = strokeLayer(
             rect: bounds.insetBy(dx: outlineWidth / 2, dy: outlineWidth / 2),
             width: outlineWidth,
+            cornerRadius: cornerRadius,
             color: config.outlineColor
         )
         let borderLayer = strokeLayer(
             rect: bounds.insetBy(
                 dx: outlineWidth + borderWidth / 2, dy: outlineWidth + borderWidth / 2),
             width: borderWidth,
+            cornerRadius: cornerRadius,
             color: config.borderColor
         )
         layer.addSublayer(outlineLayer)
@@ -75,9 +78,15 @@ final class FocusBorderFeature {
         }
     }
 
-    private func strokeLayer(rect: CGRect, width: CGFloat, color: ConfigColor) -> CAShapeLayer {
+    private func strokeLayer(
+        rect: CGRect, width: CGFloat, cornerRadius: CGFloat, color: ConfigColor
+    ) -> CAShapeLayer {
         let shape = CAShapeLayer()
-        shape.path = CGPath(rect: rect, transform: nil)
+        shape.path = CGPath(
+            roundedRect: rect,
+            cornerWidth: cornerRadius,
+            cornerHeight: cornerRadius,
+            transform: nil)
         shape.fillColor = nil
         shape.lineWidth = width
         shape.strokeColor = CGColor(

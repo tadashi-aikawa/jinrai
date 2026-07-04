@@ -429,7 +429,10 @@ final class WindowHintsFeature {
         let width = CGFloat(config.focusedHighlightWidth)
         let shape = CAShapeLayer()
         shape.path = CGPath(
-            rect: local.insetBy(dx: width / 2, dy: width / 2), transform: nil)
+            roundedRect: local.insetBy(dx: width / 2, dy: width / 2),
+            cornerWidth: CGFloat(config.cornerRadius),
+            cornerHeight: CGFloat(config.cornerRadius),
+            transform: nil)
         shape.fillColor = nil
         shape.lineWidth = width
         shape.strokeColor = cgColor(config.focusedHighlightColor)
