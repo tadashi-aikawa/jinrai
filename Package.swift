@@ -23,7 +23,14 @@ let package = Package(
         .target(
             name: "JinraiPlatform",
             dependencies: ["JinraiCore", "CGSPrivate"],
-            path: "Sources/JinraiPlatform"
+            path: "Sources/JinraiPlatform",
+            linkerSettings: [
+                // SLPS* (window server 経由のフォーカス) は SkyLight.framework にのみ実体がある
+                .unsafeFlags([
+                    "-F", "/System/Library/PrivateFrameworks",
+                    "-framework", "SkyLight",
+                ])
+            ]
         ),
         // 実行ターゲット(メニューバー常駐アプリ)
         .executableTarget(

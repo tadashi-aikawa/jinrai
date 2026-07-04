@@ -31,6 +31,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.accessibilityGranted = true
             self.statusItem?.setAccessibilityGranted(true)
             self.startFeatures()
+            // 別 Space フォーカス用の AX 要素キャッシュを起動時と Space 切替のたびに温める
+            // (AX は現在 Space のウィンドウしか列挙できないため、訪問時に蓄積しておく)
+            WindowRegistry.shared.warmUpCurrentSpace()
+            NSWorkspace.shared.notificationCenter.addObserver(
+                forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main
+            ) { _ in
+                Task { @MainActor in
+                    WindowRegistry.shared.warmUpCurrentSpace()
+                }
+            }
         }
     }
 

@@ -31,10 +31,13 @@ public struct AXWindow {
                 == .success,
             let elements = value as? [AXUIElement]
         else { return [] }
-        return elements.compactMap { element in
+        let windows = elements.compactMap { element -> AXWindow? in
             guard let id = windowID(of: element) else { return nil }
             return AXWindow(element: element, pid: pid, windowID: id)
         }
+        // 別 Space ウィンドウのフォーカス用に、観測した AX 要素を蓄積しておく
+        WindowRegistry.shared.register(windows)
+        return windows
     }
 
     /// CGWindowID との対応付け(非公開 _AXUIElementGetWindow)

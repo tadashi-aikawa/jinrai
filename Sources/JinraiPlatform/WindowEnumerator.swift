@@ -74,6 +74,21 @@ public enum WindowEnumerator {
         }
     }
 
+    /// 別 Space 候補を標準ウィンドウに絞る。AX は他 Space のウィンドウを列挙できない
+    /// (macOS の制限)ため、AX で解決できたものだけ subrole を確認し、
+    /// 解決できないものは標準ウィンドウとして受理する
+    public static func offSpaceStandardWindows(from windows: [WindowInfo]) -> [WindowInfo] {
+        var axCache: [pid_t: [AXWindow]] = [:]
+        return windows.filter { win in
+            let axWindows = axCache[win.pid] ?? AXWindow.windows(pid: win.pid)
+            axCache[win.pid] = axWindows
+            guard let ax = axWindows.first(where: { $0.windowID == win.id }) else {
+                return true
+            }
+            return ax.isStandard
+        }
+    }
+
     /// フォーカス中のウィンドウ(AX 経由)
     public static func focusedWindow() -> AXWindow? {
         guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
@@ -87,6 +102,9 @@ public enum WindowEnumerator {
         else { return nil }
         let axElement = element as! AXUIElement
         guard let windowID = AXWindow.windowID(of: axElement) else { return nil }
-        return AXWindow(element: axElement, pid: app.processIdentifier, windowID: windowID)
+        let window = AXWindow(element: axElement, pid: app.processIdentifier, windowID: windowID)
+        // フォーカスされたウィンドウは別 Space フォーカス用キャッシュにも蓄積する
+        WindowRegistry.shared.register([window])
+        return window
     }
 }

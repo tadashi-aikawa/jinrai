@@ -227,13 +227,17 @@ final class WindowHintsFeature {
                     $0.pid != ProcessInfo.processInfo.processIdentifier
                         && !onScreenIDs.contains($0.id)
                 }
-            for var win in WindowEnumerator.standardWindows(from: others) {
-                guard let spaceID = Spaces.spaceID(of: win.id) else {
-                    continue
-                }
+            // Space 判定を先に行い、Space 解決不能なゴースト窓を除外する
+            // (AX 呼び出し前に絞ることで大量の無関係ウィンドウへの IPC も避ける)
+            var offSpace: [WindowInfo] = []
+            for var win in others {
+                guard let spaceID = Spaces.spaceID(of: win.id) else { continue }
                 // 現Space にあるのに画面にない(最小化等)ものは対象外
                 guard !activeSpaces.contains(spaceID) else { continue }
                 win.spaceNumber = spaceNumbers[spaceID]
+                offSpace.append(win)
+            }
+            for win in WindowEnumerator.offSpaceStandardWindows(from: offSpace) {
                 // ネイティブタブアプリで Space 不明な候補は幽霊タブの可能性があるため除外
                 let appKey = win.bundleID ?? win.appName
                 if macosNativeTabsApps.contains(appKey), win.spaceNumber == nil {
@@ -828,6 +832,7 @@ final class WindowHintsFeature {
 
     private func selectWindow(_ hint: HintKeyAssignment.Hint, swap: Bool = false) {
         let window = hint.entry.window
+        let isOffSpace = offSpaceWindowIDs.contains(window.id)
 
         // JinraiMode 中の選択: mode 維持で閉じる → focus → エリア選択へ
         if isJinraiMode {
@@ -837,13 +842,24 @@ final class WindowHintsFeature {
                 if config.cursorOnSelect {
                     Mouse.moveToCenter(of: ax.frame ?? window.frame)
                 }
+            } else if isOffSpace {
+                // 別Space の候補は Space 切替とフォーカス完了を待ってからエリア選択へ
+                focusOffSpaceWindow(window) { [weak self] in
+                    self?.jinraiModeAdvance(windowID: window.id, pid: window.pid)
+                }
+                return
             }
             jinraiModeAdvance(windowID: window.id, pid: window.pid)
             return
         }
 
         close()
-        guard let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) else { return }
+        guard let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) else {
+            if isOffSpace {
+                focusOffSpaceWindow(window)
+            }
+            return
+        }
         if swap, let focused = WindowEnumerator.focusedWindow(),
             focused.windowID != ax.windowID,
             let fromFrame = focused.frame, let toFrame = ax.frame
@@ -855,6 +871,37 @@ final class WindowHintsFeature {
         ax.focus()
         if config.cursorOnSelect {
             Mouse.moveToCenter(of: ax.frame ?? window.frame)
+        }
+    }
+
+    /// 別Space のウィンドウは AX で列挙できず resolve が失敗する(macOS の制限)ため、
+    /// 観測済みの AX 要素キャッシュから focus する(FocusBack と同じ経路。
+    /// macOS が対象の Space へ自動的に切り替える。元 hs.window:focus() 相当)
+    private func focusOffSpaceWindow(_ window: WindowInfo, completion: (() -> Void)? = nil) {
+        if let cached = WindowRegistry.shared.window(for: window.id) {
+            cached.focus()
+            if config.cursorOnSelect {
+                Mouse.moveToCenter(of: cached.frame ?? window.frame)
+            }
+            completion?()
+            return
+        }
+        // 未観測(起動後その Space を訪れていない)場合は window server 経由で試みる
+        WindowServerFocus.focus(windowID: window.id, pid: window.pid)
+        Task { @MainActor [weak self] in
+            // Space 切替完了後は AX で解決できるようになるため、
+            // 再試行して raise とカーソル移動を仕上げる(最大 1 秒)
+            for _ in 0..<10 {
+                try? await Task.sleep(for: .seconds(0.1))
+                if let ax = AXWindow.resolve(windowID: window.id, pid: window.pid) {
+                    ax.focus()
+                    if self?.config.cursorOnSelect == true {
+                        Mouse.moveToCenter(of: ax.frame ?? window.frame)
+                    }
+                    break
+                }
+            }
+            completion?()
         }
     }
 

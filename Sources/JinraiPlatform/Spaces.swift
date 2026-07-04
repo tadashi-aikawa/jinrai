@@ -1,5 +1,6 @@
 import AppKit
 import CGSPrivate
+import JinraiCore
 
 /// Space(仮想デスクトップ)情報(元 hs.spaces 相当)。
 /// 列挙は非公開 CGS API、切替はキーストローク送出(Mission Control ショートカット)を使う。
@@ -66,10 +67,29 @@ public enum Spaces {
         return spaces.first?.uint64Value
     }
 
-    /// 指定番号の Space へ切替(ctrl+<番号> のキーストローク。
-    /// システム設定で Mission Control のショートカットが有効な必要がある)
+    /// 指定番号の Space へ切替。その Space のウィンドウをフォーカスして macOS に
+    /// 切り替えさせる(Mission Control のショートカット設定に依存しない)。
+    /// 観測済みの AX 要素があればそれを focus し(最も確実)、なければ window server
+    /// 経由で試みる。ウィンドウが 1 つもない Space へは ctrl+<番号> のキーストロークで
+    /// 切替する(こちらのみショートカットが有効な場合に限り動作)
     public static func gotoSpace(number: Int) {
         guard (1...9).contains(number) else { return }
+        if let target = spaceNumbersByID().first(where: { $0.value == number })?.key {
+            // 前面→背面順なので、最初に見つかったものが対象 Space の最前面ウィンドウ
+            var fallback: WindowInfo?
+            for win in WindowEnumerator.allSpacesWindows() {
+                guard spaceID(of: win.id) == target else { continue }
+                if let cached = WindowRegistry.shared.window(for: win.id) {
+                    cached.focus()
+                    return
+                }
+                if fallback == nil { fallback = win }
+            }
+            if let fallback {
+                WindowServerFocus.focus(windowID: fallback.id, pid: fallback.pid)
+                return
+            }
+        }
         EventTap.postKeyStroke(modifiers: ["ctrl"], key: String(number))
     }
 
