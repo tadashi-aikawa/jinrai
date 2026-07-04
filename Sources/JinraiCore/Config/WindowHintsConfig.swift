@@ -280,7 +280,7 @@ public enum WindowHintsConfigBuilder {
             includeOtherSpaces: merged.bool("behavior.candidates.includeOtherSpaces") ?? true,
             includeActiveWindow: merged.bool("behavior.candidates.includeActiveWindow") ?? true,
             swapModifiers: swapModifiers,
-            showFadeIn: merged.double("behavior.showFadeIn") ?? 0.4
+            showFadeIn: merged.double("behavior.showFadeIn") ?? 0.15
         )
     }
 }
