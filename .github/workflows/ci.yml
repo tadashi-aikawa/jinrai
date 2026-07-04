@@ -11,7 +11,7 @@ jobs:
     # 古い SDK は ScreenCaptureKit 等の Sendable 注釈が欠けておりビルドが落ちる
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build
         run: swift build
       - name: Test
