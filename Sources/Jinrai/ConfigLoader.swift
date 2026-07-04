@@ -1,7 +1,7 @@
 import AppKit
 import JinraiCore
 
-/// ~/.config/jinrai/config.json の読込($XDG_CONFIG_HOME 尊重)
+/// ~/.config/jinrai/config.jsonc の読込($XDG_CONFIG_HOME 尊重)
 enum ConfigLoader {
     static var configFileURL: URL {
         let base: URL
@@ -11,7 +11,7 @@ enum ConfigLoader {
             base = FileManager.default.homeDirectoryForCurrentUser
                 .appendingPathComponent(".config")
         }
-        return base.appendingPathComponent("jinrai/config.json")
+        return base.appendingPathComponent("jinrai/config.jsonc")
     }
 
     /// 初回起動時に生成するテンプレート

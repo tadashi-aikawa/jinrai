@@ -11,7 +11,7 @@ public struct MacosNativeTabsConfig: Equatable, Sendable {
     )
 }
 
-/// config.json 全体。各機能はセクションが存在するときだけ有効(元 setup(config) と同じ)。
+/// config.jsonc 全体。各機能はセクションが存在するときだけ有効(元 setup(config) と同じ)。
 public struct RootConfig {
     public var macosNativeTabs: MacosNativeTabsConfig
     public var focusBack: FocusBackConfig?
