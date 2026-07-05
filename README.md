@@ -94,25 +94,18 @@ pkill -x Jinrai && ./scripts/make-app.sh && open .build/Jinrai.app  # 再起動
 
 ### リリース
 
-GitHub Actions の [Release ワークフロー](.github/workflows/release.yml) を main ブランチで手動実行(workflow_dispatch)すると、
-semantic-release が conventional commits から次バージョンを算出し、
-ビルド → 自己署名 → zip 化 → タグ・GitHub Release 作成 → [homebrew-tap](https://github.com/tadashi-aikawa/homebrew-tap) の cask 更新まで自動で行われる。
+[Release ワークフロー](https://github.com/tadashi-aikawa/jinrai/actions/workflows/release.yml) を実行する。
 
-```bash
-gh workflow run Release
-```
+#### 前提条件
 
-バージョンの決定ルールやリリースノートのセクション構成は [release.config.cjs](release.config.cjs) を参照。前回リリース以降にリリース対象のコミット(feat/fix など)が無い場合は何もせず終了する。
+以下のGitHub Secretsが設定されていること。
 
-署名には自己署名証明書 `jinrai-dev` を使う(ad-hoc だとリリース毎に署名が変わり、更新のたびに TCC 許可が剥がれるため)。必要な GitHub Secrets:
 
 | Secret | 内容 |
 | --- | --- |
 | `MACOS_CERT_P12_BASE64` | `jinrai-dev` 証明書(.p12)の base64。`base64 -i jinrai-dev.p12 \| pbcopy` |
 | `MACOS_CERT_PASSWORD` | .p12 のエクスポートパスワード |
 | `TAP_GITHUB_TOKEN` | homebrew-tap 更新用 fine-grained PAT(homebrew-tap リポジトリのみ・Contents: Read and write) |
-
-`jinrai-dev` 証明書は Keychain Access → 証明書アシスタント → 「証明書を作成…」で作る(自己署名ルート / コード署名 / 有効期限は 3650 日等に延長推奨)。秘密鍵ごと .p12 で書き出して Secrets に登録する。証明書を作り直すと TCC 許可が剥がれるので注意。
 
 
 ## ライセンス
