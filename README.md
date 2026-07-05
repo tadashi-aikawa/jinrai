@@ -34,7 +34,7 @@ brew install tadashi-aikawa/tap/jinrai
 1. [Releases](https://github.com/tadashi-aikawa/jinrai/releases/latest) から `JINRAI-x.y.z.zip` をダウンロード
 2. 展開して `JINRAI.app` を `/Applications` へ移動
 
-### 初回起動(Gatekeeper)
+#### 手動インストールの初回起動時 (Gatekeeper対策)
 
 JINRAI は自己署名(未公証)アプリのため、手動インストール時は初回起動がブロックされる。
 macOS 15 以降は「右クリック → 開く」のバイパスが廃止されているため、以下の手順で許可する。
