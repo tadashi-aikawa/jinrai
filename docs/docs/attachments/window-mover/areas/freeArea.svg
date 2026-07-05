@@ -1,0 +1,7 @@
+<svg width="48" height="38" viewBox="0 0 48 38" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="freeArea">
+  <rect x="5" y="4" width="38" height="30" rx="3" fill="none" stroke="#94A3B0" stroke-width="2"/>
+  <rect x="11" y="10" width="5" height="5" rx="2.5" fill="#94A3B0"/>
+  <rect x="32" y="10" width="5" height="5" rx="2.5" fill="#94A3B0"/>
+  <rect x="11" y="23" width="5" height="5" rx="2.5" fill="#94A3B0"/>
+  <rect x="32" y="23" width="5" height="5" rx="2.5" fill="#94A3B0"/>
+</svg>
