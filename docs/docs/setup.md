@@ -1,3 +1,7 @@
+---
+icon: lucide/download
+---
+
 # セットアップ
 
 ## 対応環境

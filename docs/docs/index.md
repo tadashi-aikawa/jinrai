@@ -1,3 +1,7 @@
+---
+icon: lucide/zap
+---
+
 <div align="center">
     <h1>JINRAI</h1>
     <img src="./attachments/jinrai.svg" width="256" />

@@ -1,3 +1,7 @@
+---
+icon: lucide/move
+---
+
 # Window Mover
 
 Window Moverは、アクティブウィンドウの位置や大きさをホットキーまたはエリア選択から変更する機能です。

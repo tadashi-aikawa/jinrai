@@ -1,3 +1,7 @@
+---
+icon: lucide/app-window
+---
+
 # Application Hints
 
 Application Hintsは、登録したアプリを固定キーから起動し、新しいウィンドウを作成する機能です。

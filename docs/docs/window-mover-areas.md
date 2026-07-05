@@ -1,3 +1,7 @@
+---
+icon: lucide/layout-grid
+---
+
 # 利用可能なエリア
 
 [Window Mover](window-mover.md)の固定配置コマンドや`selectedArea.screens`では、次のエリア名を使用できます。

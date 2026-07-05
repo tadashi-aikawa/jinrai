@@ -1,3 +1,7 @@
+---
+icon: lucide/panels-top-left
+---
+
 # macOS Native Tabs
 
 macOSネイティブタブを使うアプリで、[Window Hints](window-hints.md)と[Focus Back](focus-back.md)を安定して利用するための補正設定です。

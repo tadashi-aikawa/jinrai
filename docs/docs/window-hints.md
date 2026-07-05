@@ -1,3 +1,7 @@
+---
+icon: lucide/panel-top
+---
+
 # Window Hints
 
 Window Hintsは、各ウィンドウの上にアプリアイコンとキーを表示し、キー入力やクリックで対象ウィンドウへ切り替える機能です。

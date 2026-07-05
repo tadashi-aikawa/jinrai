@@ -1,3 +1,7 @@
+---
+icon: lucide/repeat
+---
+
 # JinraiMode
 
 JinraiModeは、[Window Hints](window-hints.md)によるウィンドウ選択と、[Window Mover](window-mover.md)による移動先選択を交互に繰り返すモードです。
