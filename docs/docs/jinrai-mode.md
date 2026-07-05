@@ -6,7 +6,7 @@ icon: lucide/repeat
 
 JinraiModeは、[Window Hints](window-hints.md)によるウィンドウ選択と、[Window Mover](window-mover.md)による移動先選択を交互に繰り返すモードです。
 
-<iframe width="700" height="393" src="https://www.youtube.com/embed/nvcH4tw52tY?si=CovTRxCAiW9JzXxB" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+==TODO: 動画==
 
 
 ## 使い方

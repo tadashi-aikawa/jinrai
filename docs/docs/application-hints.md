@@ -8,7 +8,7 @@ Application Hintsは、登録したアプリを固定キーから起動し、新
 
 Window Hintsとは異なり、現在存在するウィンドウではなく、起動可能なアプリを表示します。
 
-<iframe width="700" height="393" src="https://www.youtube.com/embed/UnIfdg4emzU?si=e71kGttbS3O_CBfy" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+==TODO: 動画==
 
 ## 基本設定
 
