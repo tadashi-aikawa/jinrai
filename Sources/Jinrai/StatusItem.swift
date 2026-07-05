@@ -7,6 +7,7 @@ final class StatusItem {
     private let item: NSStatusItem
     private let permissionMenuItem: NSMenuItem
     var onReloadConfig: (() -> Void)?
+    var onCheckForUpdates: (() -> Void)?
 
     init() {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -31,6 +32,13 @@ final class StatusItem {
         )
         versionItem.isEnabled = false
         menu.addItem(versionItem)
+        let updateItem = NSMenuItem(
+            title: "アップデートを確認…",
+            action: #selector(checkForUpdates),
+            keyEquivalent: ""
+        )
+        updateItem.target = self
+        menu.addItem(updateItem)
         menu.addItem(.separator())
         permissionMenuItem.target = self
         menu.addItem(permissionMenuItem)
@@ -65,6 +73,10 @@ final class StatusItem {
 
     @objc private func reloadConfig() {
         onReloadConfig?()
+    }
+
+    @objc private func checkForUpdates() {
+        onCheckForUpdates?()
     }
 
     @objc private func dumpWindows() {

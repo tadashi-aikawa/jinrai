@@ -11,12 +11,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowHints: WindowHintsFeature?
     private var windowMover: WindowMoverFeature?
     private var applicationHints: ApplicationHintsFeature?
+    private let updater = UpdaterFeature()
     private var accessibilityGranted = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = StatusItem()
         statusItem?.onReloadConfig = { [weak self] in
             self?.reloadConfig()
+        }
+        statusItem?.onCheckForUpdates = { [weak self] in
+            self?.updater.checkForUpdates()
         }
 
         NSAppleEventManager.shared().setEventHandler(
