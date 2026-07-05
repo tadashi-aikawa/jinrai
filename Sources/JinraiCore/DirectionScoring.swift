@@ -25,6 +25,7 @@ public enum DirectionScoring {
         public var minOrthogonalOverlapRatio: CGFloat
         /// この可視率を満たす候補を優先(0 で無効)
         public var preferredVisibleRatio: Double
+        /// 可視率の算出に使うサンプリング設定(occlusion.sampling を共用)
         public var sampling: Occlusion.SamplingConfig
 
         public init(

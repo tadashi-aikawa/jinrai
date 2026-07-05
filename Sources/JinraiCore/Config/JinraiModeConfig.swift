@@ -7,37 +7,54 @@ public struct JinraiModeConfig: Sendable {
     }
 
     public struct Animation: Equatable, Sendable {
+        /// 表示切り替え時にフェードするか
         public var fade: Bool
         /// 開始スケール(1.0 でスケールアニメなし)
         public var scale: Double
+        /// アニメーション時間(秒。0 で即時表示)
         public var duration: Double
+        /// アニメーションの補間方式(linear / easeOut / easeInOut)
         public var easing: Easing
 
         public static let `default` = Animation(
             fade: true, scale: 1.0, duration: 0.16, easing: .linear)
     }
 
+    /// JinraiMode 中の JINRAI ロゴ表示(logo)
     public struct Logo: Equatable, Sendable {
+        /// ロゴを表示するか(logo.enabled)
         public var enabled: Bool
+        /// ロゴの大きさ(logo.size)
         public var size: Double
+        /// ロゴの透明度(logo.alpha)
         public var alpha: Double
+        /// 表示切り替えアニメーション(logo.animation)
         public var animation: Animation
     }
 
+    /// コンボ表示要素(combo.character / combo.text)
     public struct ComboElement: Equatable, Sendable {
+        /// この表示を有効にするか
         public var enabled: Bool
+        /// 表示の透明度
         public var alpha: Double
+        /// 表示切り替えアニメーション
         public var animation: Animation
     }
 
     /// ロゴ・コンボの表示位置基準("activeWindow" = フォーカスウィンドウ中央)
     public var position: String
-    /// 各機能の表示中に JinraiMode を開始するキー
+    /// Window Hints 表示中に JinraiMode を開始するキー(triggers.windowHints.key)
     public var windowHintsTriggerKey: String?
+    /// Application Hints 表示中に JinraiMode を開始するキー(triggers.applicationHints.key)
     public var applicationHintsTriggerKey: String?
+    /// Area Hints 表示中に JinraiMode を開始するキー(triggers.areaHints.key)
     public var areaHintsTriggerKey: String?
+    /// JinraiMode 中のロゴ表示(logo)
     public var logo: Logo
+    /// 操作回数に応じたキャラクター画像の表示(combo.character)
     public var comboCharacter: ComboElement
+    /// 継続回数を示す COMBO テキストの表示(combo.text)
     public var comboText: ComboElement
 
     public static let `default` = JinraiModeConfig(

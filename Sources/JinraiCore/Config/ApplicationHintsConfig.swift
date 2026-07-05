@@ -3,6 +3,7 @@ import Foundation
 /// Application Hints(アプリランチャー)の設定(元 application_hints_config.lua)
 public struct ApplicationHintsConfig: Sendable {
     public struct AppEntry: Sendable {
+        /// 起動するアプリの bundle ID(apps[].bundleID)
         public var bundleID: String
         /// 選択キー(1-2文字、大文字化済み)
         public var key: String
@@ -10,33 +11,49 @@ public struct ApplicationHintsConfig: Sendable {
         public var name: String?
         /// 新規ウィンドウ作成のホットキー(起動済みアプリに送出。デフォルト cmd+n)
         public var newWindowModifiers: [String]
+        /// 新規ウィンドウ作成のキー(apps[].newWindow.hotkey.key)
         public var newWindowKey: String
         /// 宣言的な新規ウィンドウ URL(元 callback の代替。指定時は最優先で open)
         public var newWindowURL: String?
     }
 
+    /// Application Hints を直接開くホットキーの修飾キー(hotkey.modifiers)
     public var hotkeyModifiers: [String]
+    /// Application Hints を直接開くキー(hotkey.key。nil で無効)
     public var hotkeyKey: String?
+    /// 新規ウィンドウが現れるまで待つ最大時間(秒。windowWaitTimeout)
     public var windowWaitTimeout: Double
+    /// 対象アプリの一覧(apps。1件以上必須)
     public var apps: [AppEntry]
 
+    /// 1行に表示するアプリ数(appearance.columns)
     public var columns: Int
+    /// アプリ項目の幅(appearance.itemWidth)
     public var itemWidth: Double
+    /// アプリ項目の高さ(appearance.itemHeight)
     public var itemHeight: Double
+    /// アプリ項目同士の間隔(appearance.gap)
     public var gap: Double
+    /// アプリアイコンの大きさ(appearance.iconSize)
     public var iconSize: Double
+    /// アプリ項目背景の角丸(appearance.cornerRadius)
     public var cornerRadius: Double
+    /// 通常時の背景色(appearance.bgColor)
     public var bgColor: ConfigColor
+    /// 候補から外れた項目の背景色(appearance.dimmedBgColor)
     public var dimmedBgColor: ConfigColor
+    /// 通常時の文字色(appearance.textColor)
     public var textColor: ConfigColor
+    /// 候補から外れた項目の文字色(appearance.dimmedTextColor)
     public var dimmedTextColor: ConfigColor
+    /// OPEN または NEW の状態表示色(appearance.stateColor)
     public var stateColor: ConfigColor
     /// 入力済みプレフィックス文字の色(Window Hints の hint.key.keyHighlightColor 相当)
     public var keyHighlightColor: ConfigColor
 
     /// Window Hints へ戻る遷移キー(init 相当の結線で注入)
     public var windowHintsKey: String?
-    /// 表示中に JinraiMode を開始するキー(jinrai_mode.triggers.applicationHints.key)
+    /// 表示中に JinraiMode を開始するキー(jinraiMode.triggers.applicationHints.key)
     public var jinraiModeKey: String?
 }
 

@@ -6,9 +6,13 @@ public enum HintState: String, CaseIterable, Sendable {
 }
 
 public struct HintStateStyle: Equatable, Sendable {
+    /// ヒントの背景色(hint.state.<state>.bgColor)
     public var bgColor: ConfigColor
+    /// アプリアイコンの透明度(hint.icon.state.<state>.alpha)
     public var iconAlpha: Double
+    /// キーの文字色(hint.key.state.<state>.color)
     public var keyColor: ConfigColor
+    /// タイトルの文字色(hint.title.state.<state>.color)
     public var titleColor: ConfigColor
 }
 
@@ -16,31 +20,49 @@ public struct HintStateStyle: Equatable, Sendable {
 public struct WindowHintsConfig: Sendable {
     /// Hints を開かずに直接方向フォーカス移動するホットキー(navigation.direction.direct)
     public struct DirectDirectionHotkeys: Equatable, Sendable {
+        /// 直接方向移動の修飾キー(fn 不可)
         public var modifiers: [String]
         /// 方向 → キー名(方向ごとに1ホットキーを登録するため hints.keys とは向きが逆)
         public var keys: [Direction: String]
     }
 
+    /// Window Hints を開くホットキーの修飾キー(hotkey.modifiers)
     public var hotkeyModifiers: [String]
+    /// Window Hints を開くキー(hotkey.key。nil で無効)
     public var hotkeyKey: String?
+    /// ヒントキーに使用する文字(hint.chars)
     public var hintChars: [String]
+    /// アプリやタイトルごとのヒント先頭文字ルール(hint.prefixOverrides)
     public var prefixOverrides: [HintKeyAssignment.PrefixOverride]
 
+    /// ヒント内側の余白(hint.padding)
     public var padding: Double
+    /// ヒント背景の角丸(hint.cornerRadius)
     public var cornerRadius: Double
+    /// 隠れたウィンドウのヒント倍率(hint.occludedScale)
     public var occludedScale: Double
+    /// アプリアイコンの大きさ(hint.icon.size)
     public var iconSize: Double
+    /// キー表示の文字サイズ(hint.key.fontSize)
     public var keyFontSize: Double
+    /// キー表示部分の最小幅(hint.key.minWidth)
     public var keyMinWidth: Double
     /// 入力済みプレフィックス文字の色(元 hint.key.keyHighlightColor)
     public var keyHighlightColor: ConfigColor
+    /// ウィンドウタイトルを表示するか(hint.title.show)
     public var titleShow: Bool
+    /// タイトルの文字サイズ(hint.title.fontSize)
     public var titleFontSize: Double
+    /// 表示するタイトルの最大文字数(hint.title.maxSize)
     public var titleMaxSize: Int
+    /// 状態(normal/dimmed/occluded/active)ごとのスタイル
     public var states: [HintState: HintStateStyle]
 
+    /// 現在のウィンドウを示す枠線色(focusedWindowHighlight.borderColor)
     public var focusedHighlightColor: ConfigColor
+    /// 現在のウィンドウを示す枠線の太さ(focusedWindowHighlight.borderWidth)
     public var focusedHighlightWidth: Double
+    /// 現在のウィンドウ以外を覆う暗幕の透明度(focusedWindowSpotlight.alpha)
     public var focusedSpotlightAlpha: Double
 
     /// ヒント箱の overlay(塗り+枠線)。状態・アクティブウィンドウで色が変わる
@@ -51,20 +73,27 @@ public struct WindowHintsConfig: Sendable {
     public var activeOverlayFillColor: ConfigColor  // アクティブウィンドウ(橙)
     public var activeOverlayBorderColor: ConfigColor
 
+    /// ウィンドウの隠れ具合を判定するサンプリング設定(occlusion.sampling)
     public var occlusionSampling: Occlusion.SamplingConfig
     /// 隠れウィンドウのプレビュー(要・画面収録権限)
     public var previewEnabled: Bool
     /// "background": ヒント全体の背景として表示 / "below": タイトル下に小さく表示
     public var previewMode: String
+    /// プレビューの幅(occlusion.preview.width)
     public var previewWidth: Double
+    /// ヒントとプレビューの間隔(occlusion.preview.padding)
     public var previewPadding: Double
+    /// プレビューの透明度(occlusion.preview.alpha)
     public var previewAlpha: Double
+    /// 画面下部に並べる候補の下余白(dock.bottomMargin)
     public var dockBottomMargin: Double
+    /// 画面下部に並べる候補の間隔(dock.itemGap)
     public var dockItemGap: Double
     /// ドックアイテムをウィンドウの実位置へ寄せる度合い(0=中央整列, 1=ウィンドウ位置)
     public var dockWindowXBlend: Double
     public var dockWindowYBlend: Double
 
+    /// 表示中に Focus Back を実行するキー(navigation.focusBack.key)
     public var navigationFocusBackKey: String?
     /// Area Hints(エリア選択画面)へ遷移するキー
     public var areaHintsKey: String?
@@ -74,18 +103,29 @@ public struct WindowHintsConfig: Sendable {
     public var applicationHintsJinraiMode: Bool
     /// Hints 表示中に JinraiMode を開始するキー(jinraiMode.triggers.windowHints.key)
     public var jinraiModeKey: String?
+    /// 表示中に方向で候補を選ぶキー → 方向(navigation.direction.hints.keys)
     public var directionHintKeys: [String: Direction]
     /// Hints 非表示時のグローバル方向移動ホットキー(nil で無効)
     public var directDirectionHotkeys: DirectDirectionHotkeys?
+    /// 方向移動の候補評価の調整(navigation.direction.scoring)
     public var directionScoring: DirectionScoring.Config
+    /// 数字キーで対応する Space へ移動するか(navigation.spaces.numbers)
     public var spacesNumbers: Bool
+    /// 前の Space へ移動するキー(navigation.spaces.prev.key)
     public var prevSpaceKey: String?
+    /// 次の Space へ移動するキー(navigation.spaces.next.key)
     public var nextSpaceKey: String?
 
+    /// 選択後にカーソルを対象ウィンドウ中央へ移動するか(behavior.cursor.onSelect)
     public var cursorOnSelect: Bool
+    /// 起動時にカーソルを現在のウィンドウ中央へ移動するか(behavior.cursor.onStart)
     public var cursorOnStart: Bool
+    /// 別の Space にあるウィンドウを候補に含めるか(behavior.candidates.includeOtherSpaces)
     public var includeOtherSpaces: Bool
+    /// 現在のウィンドウを候補に含めるか(behavior.candidates.includeActiveWindow)
     public var includeActiveWindow: Bool
+    /// 押しながら選択すると移動元と移動先の位置・サイズを交換する修飾キー
+    /// (behavior.selection.swapWindowFrame.modifiers)
     public var swapModifiers: [String]?
     /// ヒントを ease-in で立ち上げるフェード時間(秒。0 で即時表示)。
     /// 小面積なので短くして即応感を優先する

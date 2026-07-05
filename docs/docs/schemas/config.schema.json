@@ -12,28 +12,36 @@
       "default": "https://tadashi-aikawa.github.io/jinrai/schemas/config.schema.json"
     },
     "macosNativeTabs": {
-      "$ref": "#/definitions/macosNativeTabs"
+      "$ref": "#/definitions/macosNativeTabs",
+      "description": "macOSネイティブタブを使うアプリのウィンドウ追跡を補正します。"
     },
     "jinraiMode": {
-      "$ref": "#/definitions/jinraiMode"
+      "$ref": "#/definitions/jinraiMode",
+      "description": "Window HintsとArea Hintsを連続して操作するモードです。"
     },
     "focusBack": {
-      "$ref": "#/definitions/focusBack"
+      "$ref": "#/definitions/focusBack",
+      "description": "直前にアクティブだったウィンドウへ戻ります。セクションを記述すると有効になります。"
     },
     "focusBorder": {
-      "$ref": "#/definitions/focusBorder"
+      "$ref": "#/definitions/focusBorder",
+      "description": "フォーカスしたウィンドウを枠線で強調します。セクションを記述すると有効になります。"
     },
     "windowHints": {
-      "$ref": "#/definitions/windowHints"
+      "$ref": "#/definitions/windowHints",
+      "description": "キーヒントからウィンドウを選択します。セクションを記述すると有効になります。"
     },
     "windowMover": {
-      "$ref": "#/definitions/windowMover"
+      "$ref": "#/definitions/windowMover",
+      "description": "アクティブウィンドウをホットキーで移動・リサイズします。セクションを記述すると有効になります。"
     },
     "areaHints": {
-      "$ref": "#/definitions/areaHints"
+      "$ref": "#/definitions/areaHints",
+      "description": "エリアとキーを表示してウィンドウの移動先を選択します。セクションを記述すると有効になります。"
     },
     "applicationHints": {
-      "$ref": "#/definitions/applicationHints"
+      "$ref": "#/definitions/applicationHints",
+      "description": "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。有効化にはappsへ1件以上の指定が必要です。"
     }
   },
   "definitions": {
@@ -44,24 +52,28 @@
       "properties": {
         "red": {
           "type": "number",
+          "description": "赤成分(0〜1)です。",
           "minimum": 0,
           "maximum": 1,
           "default": 0
         },
         "green": {
           "type": "number",
+          "description": "緑成分(0〜1)です。",
           "minimum": 0,
           "maximum": 1,
           "default": 0
         },
         "blue": {
           "type": "number",
+          "description": "青成分(0〜1)です。",
           "minimum": 0,
           "maximum": 1,
           "default": 0
         },
         "alpha": {
           "type": "number",
+          "description": "不透明度(0〜1)です。",
           "minimum": 0,
           "maximum": 1,
           "default": 1
@@ -70,7 +82,7 @@
     },
     "carbonModifierName": {
       "type": "string",
-      "description": "Carbon グローバルホットキーで使える修飾キー名です。",
+      "description": "グローバルホットキーで使える修飾キー名です。",
       "enum": ["cmd", "command", "alt", "option", "ctrl", "control", "shift"]
     },
     "eventModifierName": {
@@ -80,6 +92,7 @@
     },
     "carbonModifiers": {
       "type": ["array", "null"],
+      "description": "修飾キーの配列です。cmd/alt/ctrl/shift(とその別名)を指定できます。",
       "items": {
         "$ref": "#/definitions/carbonModifierName"
       },
@@ -88,6 +101,7 @@
     },
     "eventModifiers": {
       "type": ["array", "null"],
+      "description": "修飾キーの配列です。cmd/alt/ctrl/shift/fn(とその別名)を指定できます。",
       "items": {
         "$ref": "#/definitions/eventModifierName"
       },
@@ -106,81 +120,102 @@
     },
     "hotkey": {
       "type": "object",
+      "description": "グローバルホットキーです。modifiers と key で指定します。",
       "additionalProperties": false,
       "properties": {
         "modifiers": {
-          "$ref": "#/definitions/carbonModifiers"
+          "$ref": "#/definitions/carbonModifiers",
+          "description": "ホットキーの修飾キーです。"
         },
         "key": {
-          "$ref": "#/definitions/nullableKeyName"
+          "$ref": "#/definitions/nullableKeyName",
+          "description": "ホットキーのキーです。null で無効にできます。"
         }
       }
     },
     "eventHotkey": {
       "type": "object",
+      "description": "アプリへ送出するキーストロークです。modifiers と key で指定します。",
       "additionalProperties": false,
       "properties": {
         "modifiers": {
-          "$ref": "#/definitions/eventModifiers"
+          "$ref": "#/definitions/eventModifiers",
+          "description": "送出する修飾キーです。"
         },
         "key": {
-          "$ref": "#/definitions/nullableKeyName"
+          "$ref": "#/definitions/nullableKeyName",
+          "description": "送出するキーです。"
         }
       }
     },
     "direction": {
       "type": "string",
+      "description": "方向名です。",
       "enum": ["left", "right", "up", "down", "upLeft", "upRight", "downLeft", "downRight"]
     },
     "directionKeyMap": {
       "type": ["object", "null"],
+      "description": "方向名ごとの移動キーです。指定した方向だけ有効になります。",
       "additionalProperties": false,
       "properties": {
         "left": {
-          "$ref": "#/definitions/keyName"
+          "$ref": "#/definitions/keyName",
+          "description": "左方向へ移動するキーです。"
         },
         "right": {
-          "$ref": "#/definitions/keyName"
+          "$ref": "#/definitions/keyName",
+          "description": "右方向へ移動するキーです。"
         },
         "up": {
-          "$ref": "#/definitions/keyName"
+          "$ref": "#/definitions/keyName",
+          "description": "上方向へ移動するキーです。"
         },
         "down": {
-          "$ref": "#/definitions/keyName"
+          "$ref": "#/definitions/keyName",
+          "description": "下方向へ移動するキーです。"
         },
         "upLeft": {
-          "$ref": "#/definitions/keyName"
+          "$ref": "#/definitions/keyName",
+          "description": "左上方向へ移動するキーです。"
         },
         "upRight": {
-          "$ref": "#/definitions/keyName"
+          "$ref": "#/definitions/keyName",
+          "description": "右上方向へ移動するキーです。"
         },
         "downLeft": {
-          "$ref": "#/definitions/keyName"
+          "$ref": "#/definitions/keyName",
+          "description": "左下方向へ移動するキーです。"
         },
         "downRight": {
-          "$ref": "#/definitions/keyName"
+          "$ref": "#/definitions/keyName",
+          "description": "右下方向へ移動するキーです。"
         }
       }
     },
     "animation": {
       "type": "object",
+      "description": "表示切り替えアニメーションの設定です。",
       "additionalProperties": false,
       "properties": {
         "fade": {
           "type": "boolean",
+          "description": "表示切り替え時にフェードします。",
           "default": true
         },
         "scale": {
           "type": "number",
+          "description": "アニメーション開始時の倍率です。1.0へ変化します。0より大きい値を指定します。",
           "default": 1
         },
         "duration": {
           "type": "number",
+          "description": "アニメーション時間（秒）です。0で即時に最終状態を表示します。",
           "minimum": 0,
           "default": 0.16
         },
         "easing": {
           "type": "string",
+          "description": "アニメーションの補間方式です。",
           "enum": ["linear", "easeOut", "easeInOut"],
           "default": "linear"
         }
@@ -188,11 +223,12 @@
     },
     "macosNativeTabs": {
       "type": "object",
+      "description": "macOSネイティブタブを使うアプリのウィンドウ追跡を補正します。",
       "additionalProperties": false,
       "properties": {
         "apps": {
           "type": "array",
-          "description": "組み込み対象へ追加する bundle ID またはアプリ名です。",
+          "description": "組み込み対象(GhosttyとFinder)へ追加する bundle ID またはアプリ名です。",
           "items": {
             "type": "string"
           },
@@ -200,6 +236,7 @@
         },
         "stateSyncInterval": {
           "type": "number",
+          "description": "タブ状態を同期する間隔（秒）です。",
           "minimum": 0,
           "default": 0.5
         }
@@ -207,6 +244,7 @@
     },
     "jinraiModeTrigger": {
       "type": "object",
+      "description": "キー1つを指定する設定です。",
       "additionalProperties": false,
       "properties": {
         "key": {
@@ -216,81 +254,100 @@
     },
     "jinraiModeElement": {
       "type": "object",
+      "description": "JinraiModeのコンボ表示要素の設定です。",
       "additionalProperties": false,
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "この表示を有効にします。"
         },
         "alpha": {
           "type": "number",
+          "description": "表示の透明度です。",
           "minimum": 0,
           "maximum": 1
         },
         "animation": {
-          "$ref": "#/definitions/animation"
+          "$ref": "#/definitions/animation",
+          "description": "表示切り替えアニメーションです。"
         }
       }
     },
     "jinraiModeLogo": {
       "type": "object",
+      "description": "JinraiMode中のロゴ表示の設定です。",
       "additionalProperties": false,
       "properties": {
         "enabled": {
           "type": "boolean",
+          "description": "JinraiMode中にJINRAIロゴを表示します。",
           "default": true
         },
         "size": {
           "type": "number",
+          "description": "ロゴの大きさです。",
           "minimum": 0,
           "default": 480
         },
         "alpha": {
           "type": "number",
+          "description": "ロゴの透明度です。",
           "minimum": 0,
           "maximum": 1,
           "default": 0.25
         },
         "animation": {
-          "$ref": "#/definitions/animation"
+          "$ref": "#/definitions/animation",
+          "description": "ロゴの表示切り替えアニメーションです。"
         }
       }
     },
     "jinraiMode": {
       "type": "object",
+      "description": "Window HintsとArea Hintsを連続して操作するモードです。",
       "additionalProperties": false,
       "properties": {
         "position": {
           "type": "string",
+          "description": "ロゴなどの中心位置です。activeWindow はアクティブウィンドウ中央、activeDisplay はアクティブディスプレイ中央に表示します。",
           "enum": ["activeWindow", "activeDisplay"],
           "default": "activeWindow"
         },
         "triggers": {
           "type": "object",
+          "description": "各機能の表示中にJinraiModeを開始するキーです。",
           "additionalProperties": false,
           "properties": {
             "windowHints": {
-              "$ref": "#/definitions/jinraiModeTrigger"
+              "$ref": "#/definitions/jinraiModeTrigger",
+              "description": "Window Hints表示中にJinraiModeを開始するキーです。"
             },
             "applicationHints": {
-              "$ref": "#/definitions/jinraiModeTrigger"
+              "$ref": "#/definitions/jinraiModeTrigger",
+              "description": "Application Hints表示中にJinraiModeを開始するキーです。"
             },
             "areaHints": {
-              "$ref": "#/definitions/jinraiModeTrigger"
+              "$ref": "#/definitions/jinraiModeTrigger",
+              "description": "Area Hints表示中にJinraiModeを開始するキーです。"
             }
           }
         },
         "logo": {
-          "$ref": "#/definitions/jinraiModeLogo"
+          "$ref": "#/definitions/jinraiModeLogo",
+          "description": "JinraiMode中のロゴ表示です。"
         },
         "combo": {
           "type": "object",
+          "description": "操作の継続回数に応じたコンボ表示です。",
           "additionalProperties": false,
           "properties": {
             "character": {
-              "$ref": "#/definitions/jinraiModeElement"
+              "$ref": "#/definitions/jinraiModeElement",
+              "description": "操作回数に応じたキャラクター画像の表示です。"
             },
             "text": {
-              "$ref": "#/definitions/jinraiModeElement"
+              "$ref": "#/definitions/jinraiModeElement",
+              "description": "継続回数を示すCOMBOテキストの表示です。"
             }
           }
         }
@@ -298,31 +355,37 @@
     },
     "focusBack": {
       "type": "object",
+      "description": "直前にアクティブだったウィンドウへ戻ります。連続して押すと2つのウィンドウを交互に切り替えます。",
       "additionalProperties": false,
       "properties": {
         "hotkey": {
-          "$ref": "#/definitions/hotkey"
+          "$ref": "#/definitions/hotkey",
+          "description": "Focus Backを実行するホットキーです。デフォルトは option+w です。"
         },
         "urlEvent": {
           "type": "object",
+          "description": "jinrai://<名前> のURLからFocus Backを実行するための設定です。",
           "additionalProperties": false,
           "properties": {
             "name": {
               "type": ["string", "null"],
-              "description": "URL イベント名です。"
+              "description": "jinrai://<名前> のURLから実行する場合の名前です。"
             }
           }
         },
         "behavior": {
           "type": "object",
+          "description": "Focus Backの動作の設定です。",
           "additionalProperties": false,
           "properties": {
             "cursor": {
               "type": "object",
+              "description": "カーソル移動の設定です。",
               "additionalProperties": false,
               "properties": {
                 "onSelect": {
                   "type": "boolean",
+                  "description": "切り替え後にカーソルをウィンドウ中央へ移動します。",
                   "default": true
                 }
               }
@@ -333,32 +396,40 @@
     },
     "focusBorder": {
       "type": "object",
+      "description": "フォーカスしたウィンドウを枠線で一時的に強調します。",
       "additionalProperties": false,
       "properties": {
         "visual": {
           "type": "object",
+          "description": "枠線とロゴの見た目の設定です。",
           "additionalProperties": false,
           "properties": {
             "border": {
-              "$ref": "#/definitions/borderVisual"
+              "$ref": "#/definitions/borderVisual",
+              "description": "メイン枠線の太さと色です。"
             },
             "outline": {
-              "$ref": "#/definitions/borderVisual"
+              "$ref": "#/definitions/borderVisual",
+              "description": "外側の枠線の太さと色です。"
             },
             "logo": {
               "type": "object",
+              "description": "フォーカス時にウィンドウ中央へ表示するロゴです。未指定で非表示になります。",
               "additionalProperties": false,
               "properties": {
                 "source": {
-                  "type": ["string", "null"]
+                  "type": ["string", "null"],
+                  "description": "ロゴ画像のパスまたはURLです。省略するとJINRAI同梱ロゴを使います。"
                 },
                 "size": {
                   "type": "number",
+                  "description": "ロゴの大きさです。",
                   "minimum": 0,
                   "default": 480
                 },
                 "alpha": {
                   "type": "number",
+                  "description": "ロゴの透明度です。",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.95
@@ -369,20 +440,24 @@
         },
         "animation": {
           "type": "object",
+          "description": "枠線のフェードアウトの設定です。",
           "additionalProperties": false,
           "properties": {
             "duration": {
               "type": "number",
+              "description": "枠線が消えるまでの時間（秒）です。",
               "minimum": 0,
               "default": 0.5
             },
             "fadeSteps": {
               "type": "integer",
+              "description": "フェードアニメーションの分割数です。",
               "minimum": 0,
               "default": 18
             },
             "spaceSwitchDelay": {
               "type": "number",
+              "description": "Space切り替え後に表示を待つ時間（秒）です。",
               "minimum": 0,
               "default": 0.3
             }
@@ -390,10 +465,12 @@
         },
         "window": {
           "type": "object",
+          "description": "対象ウィンドウの条件です。",
           "additionalProperties": false,
           "properties": {
             "minSize": {
               "type": "number",
+              "description": "枠線を表示する最小ウィンドウサイズです。",
               "minimum": 0,
               "default": 480
             }
@@ -403,33 +480,41 @@
     },
     "borderVisual": {
       "type": "object",
+      "description": "枠線の太さと色です。",
       "additionalProperties": false,
       "properties": {
         "width": {
           "type": "number",
+          "description": "枠線の太さです。",
           "minimum": 0
         },
         "color": {
-          "$ref": "#/definitions/color"
+          "$ref": "#/definitions/color",
+          "description": "枠線の色です。"
         }
       }
     },
     "hintStateStyle": {
       "type": "object",
+      "description": "ヒントと対象ウィンドウの状態別スタイルです。未指定の項目は normal を継承します。",
       "additionalProperties": false,
       "properties": {
         "bgColor": {
-          "$ref": "#/definitions/color"
+          "$ref": "#/definitions/color",
+          "description": "ヒントの背景色です。"
         },
         "highlight": {
           "type": "object",
+          "description": "ヒントが指すウィンドウ上のオーバーレイの色です。",
           "additionalProperties": false,
           "properties": {
             "fillColor": {
-              "$ref": "#/definitions/color"
+              "$ref": "#/definitions/color",
+              "description": "対象ウィンドウの塗りつぶし色です。"
             },
             "borderColor": {
-              "$ref": "#/definitions/color"
+              "$ref": "#/definitions/color",
+              "description": "対象ウィンドウの枠線色です。"
             }
           }
         }
@@ -437,10 +522,12 @@
     },
     "alphaState": {
       "type": "object",
+      "description": "状態別の透明度です。",
       "additionalProperties": false,
       "properties": {
         "alpha": {
           "type": "number",
+          "description": "透明度です。",
           "minimum": 0,
           "maximum": 1
         }
@@ -448,85 +535,107 @@
     },
     "colorState": {
       "type": "object",
+      "description": "状態別の文字色です。",
       "additionalProperties": false,
       "properties": {
         "color": {
-          "$ref": "#/definitions/color"
+          "$ref": "#/definitions/color",
+          "description": "文字色です。"
         }
       }
     },
     "stateMapHint": {
       "type": "object",
+      "description": "状態(normal/dimmed/occluded/active)ごとのヒントスタイルです。",
       "additionalProperties": false,
       "properties": {
         "normal": {
-          "$ref": "#/definitions/hintStateStyle"
+          "$ref": "#/definitions/hintStateStyle",
+          "description": "選択候補になっている通常のウィンドウのスタイルです。"
         },
         "dimmed": {
-          "$ref": "#/definitions/hintStateStyle"
+          "$ref": "#/definitions/hintStateStyle",
+          "description": "入力したキーによって候補から外れたウィンドウのスタイルです。"
         },
         "occluded": {
-          "$ref": "#/definitions/hintStateStyle"
+          "$ref": "#/definitions/hintStateStyle",
+          "description": "他のウィンドウに完全に隠れたウィンドウのスタイルです。"
         },
         "active": {
-          "$ref": "#/definitions/hintStateStyle"
+          "$ref": "#/definitions/hintStateStyle",
+          "description": "Window Hintsを開いた時点でアクティブなウィンドウのスタイルです。"
         }
       }
     },
     "stateMapAlpha": {
       "type": "object",
+      "description": "状態(normal/dimmed/occluded/active)ごとの透明度です。",
       "additionalProperties": false,
       "properties": {
         "normal": {
-          "$ref": "#/definitions/alphaState"
+          "$ref": "#/definitions/alphaState",
+          "description": "通常時の透明度です。"
         },
         "dimmed": {
-          "$ref": "#/definitions/alphaState"
+          "$ref": "#/definitions/alphaState",
+          "description": "候補から外れたときの透明度です。"
         },
         "occluded": {
-          "$ref": "#/definitions/alphaState"
+          "$ref": "#/definitions/alphaState",
+          "description": "完全に隠れたウィンドウの透明度です。"
         },
         "active": {
-          "$ref": "#/definitions/alphaState"
+          "$ref": "#/definitions/alphaState",
+          "description": "現在のウィンドウの透明度です。"
         }
       }
     },
     "stateMapColor": {
       "type": "object",
+      "description": "状態(normal/dimmed/occluded/active)ごとの文字色です。",
       "additionalProperties": false,
       "properties": {
         "normal": {
-          "$ref": "#/definitions/colorState"
+          "$ref": "#/definitions/colorState",
+          "description": "通常時の文字色です。"
         },
         "dimmed": {
-          "$ref": "#/definitions/colorState"
+          "$ref": "#/definitions/colorState",
+          "description": "候補から外れたときの文字色です。"
         },
         "occluded": {
-          "$ref": "#/definitions/colorState"
+          "$ref": "#/definitions/colorState",
+          "description": "完全に隠れたウィンドウの文字色です。空にすると通常時の色を継承します。"
         },
         "active": {
-          "$ref": "#/definitions/colorState"
+          "$ref": "#/definitions/colorState",
+          "description": "現在のウィンドウの文字色です。"
         }
       }
     },
     "prefixOverride": {
       "type": "object",
+      "description": "アプリやウィンドウタイトルに応じてヒントキーの先頭文字を固定するルールです。上から順に評価され、最初に一致したものが使われます。",
       "additionalProperties": false,
       "properties": {
         "match": {
           "type": "object",
+          "description": "一致条件です。bundleID または titleGlob の少なくとも一方を指定します。",
           "additionalProperties": false,
           "properties": {
             "bundleID": {
-              "type": "string"
+              "type": "string",
+              "description": "対象アプリの bundle ID です。"
             },
             "titleGlob": {
-              "type": "string"
+              "type": "string",
+              "description": "ウィンドウタイトルのglobパターンです。* と ? を使用でき、大文字と小文字は区別されます。"
             }
           }
         },
         "prefix": {
           "type": "string",
+          "description": "ヒントキーの先頭文字です。hint.chars に含まれる1文字または2文字で指定します。",
           "minLength": 1,
           "maxLength": 2
         }
@@ -534,17 +643,21 @@
     },
     "windowHints": {
       "type": "object",
+      "description": "各ウィンドウの上にアプリアイコンとキーを表示し、キー入力やクリックで対象ウィンドウへ切り替えます。",
       "additionalProperties": false,
       "properties": {
         "hotkey": {
-          "$ref": "#/definitions/hotkey"
+          "$ref": "#/definitions/hotkey",
+          "description": "Window Hintsを開くホットキーです。デフォルトは alt+f20 です。"
         },
         "hint": {
           "type": "object",
+          "description": "ヒントの見た目とキー割当の設定です。",
           "additionalProperties": false,
           "properties": {
             "chars": {
               "type": "array",
+              "description": "ヒントキーに使用する文字です。",
               "items": {
                 "type": "string",
                 "minLength": 1
@@ -553,6 +666,7 @@
             },
             "prefixOverrides": {
               "type": "array",
+              "description": "アプリやタイトルごとのヒント先頭文字ルールです。",
               "items": {
                 "$ref": "#/definitions/prefixOverride"
               },
@@ -560,103 +674,125 @@
             },
             "padding": {
               "type": "number",
+              "description": "ヒント内側の余白です。",
               "minimum": 0,
               "default": 12
             },
             "cornerRadius": {
               "type": "number",
+              "description": "ヒント背景の角丸です。",
               "minimum": 0,
               "default": 12
             },
             "occludedScale": {
               "type": "number",
+              "description": "隠れたウィンドウのヒント倍率です。",
               "minimum": 0,
               "default": 0.85
             },
             "highlight": {
               "type": "object",
+              "description": "ヒントが指すウィンドウ上のオーバーレイの設定です。",
               "additionalProperties": false,
               "properties": {
                 "borderWidth": {
                   "type": "number",
+                  "description": "ヒントが指すウィンドウ上の枠線の太さです。",
                   "minimum": 0,
                   "default": 6
                 }
               }
             },
             "state": {
-              "$ref": "#/definitions/stateMapHint"
+              "$ref": "#/definitions/stateMapHint",
+              "description": "状態ごとのヒント背景色と対象ウィンドウのオーバーレイ色です。"
             },
             "icon": {
               "type": "object",
+              "description": "アプリアイコンの設定です。",
               "additionalProperties": false,
               "properties": {
                 "size": {
                   "type": "number",
+                  "description": "アプリアイコンの大きさです。",
                   "minimum": 0,
                   "default": 72
                 },
                 "state": {
-                  "$ref": "#/definitions/stateMapAlpha"
+                  "$ref": "#/definitions/stateMapAlpha",
+                  "description": "状態ごとのアイコン透明度です。"
                 }
               }
             },
             "key": {
               "type": "object",
+              "description": "キー表示部分の設定です。",
               "additionalProperties": false,
               "properties": {
                 "minWidth": {
                   "type": "number",
+                  "description": "キー表示部分の最小幅です。",
                   "minimum": 0,
                   "default": 72
                 },
                 "fontSize": {
                   "type": "number",
+                  "description": "キー表示の文字サイズです。",
                   "minimum": 0,
                   "default": 48
                 },
                 "keyHighlightColor": {
-                  "$ref": "#/definitions/color"
+                  "$ref": "#/definitions/color",
+                  "description": "入力済み部分を示す文字色です。"
                 },
                 "state": {
-                  "$ref": "#/definitions/stateMapColor"
+                  "$ref": "#/definitions/stateMapColor",
+                  "description": "状態ごとのキー文字色です。"
                 }
               }
             },
             "title": {
               "type": "object",
+              "description": "ウィンドウタイトル表示の設定です。",
               "additionalProperties": false,
               "properties": {
                 "show": {
                   "type": "boolean",
+                  "description": "ウィンドウタイトルを表示します。",
                   "default": true
                 },
                 "fontSize": {
                   "type": "number",
+                  "description": "タイトルの文字サイズです。",
                   "minimum": 0,
                   "default": 16
                 },
                 "maxSize": {
                   "type": "integer",
+                  "description": "表示するタイトルの最大文字数です。",
                   "minimum": 0,
                   "default": 72
                 },
                 "state": {
-                  "$ref": "#/definitions/stateMapColor"
+                  "$ref": "#/definitions/stateMapColor",
+                  "description": "状態ごとのタイトル文字色です。"
                 }
               }
             }
           }
         },
         "focusedWindowHighlight": {
-          "$ref": "#/definitions/borderVisual"
+          "$ref": "#/definitions/borderVisual",
+          "description": "現在のウィンドウを示す枠線の色と太さです。"
         },
         "focusedWindowSpotlight": {
           "type": "object",
+          "description": "現在のウィンドウ以外を覆う暗幕の設定です。",
           "additionalProperties": false,
           "properties": {
             "alpha": {
               "type": "number",
+              "description": "暗幕の透明度です。",
               "minimum": 0,
               "maximum": 1,
               "default": 0.5
@@ -665,36 +801,44 @@
         },
         "occlusion": {
           "type": "object",
+          "description": "ウィンドウの隠れ具合の判定と、隠れたウィンドウのプレビューの設定です。",
           "additionalProperties": false,
           "properties": {
             "sampling": {
-              "$ref": "#/definitions/sampling"
+              "$ref": "#/definitions/sampling",
+              "description": "隠れ具合をサンプリングで判定する設定です。"
             },
             "preview": {
               "type": "object",
+              "description": "完全に隠れたウィンドウのプレビュー表示です（要・画面収録権限）。",
               "additionalProperties": false,
               "properties": {
                 "enabled": {
                   "type": "boolean",
+                  "description": "完全に隠れたウィンドウのプレビューを表示します。",
                   "default": true
                 },
                 "mode": {
                   "type": "string",
+                  "description": "プレビューの表示方式です。background はヒント全体の背景、below はタイトル下に表示します。",
                   "enum": ["background", "below"],
                   "default": "background"
                 },
                 "width": {
                   "type": "number",
+                  "description": "プレビューの幅です。",
                   "minimum": 0,
                   "default": 140
                 },
                 "padding": {
                   "type": "number",
+                  "description": "ヒントとプレビューの間隔です。",
                   "minimum": 0,
                   "default": 6
                 },
                 "alpha": {
                   "type": "number",
+                  "description": "プレビューの透明度です。",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.64
@@ -705,26 +849,32 @@
         },
         "dock": {
           "type": "object",
+          "description": "別Spaceの候補や完全に隠れた候補を画面下部へ並べる際の設定です。",
           "additionalProperties": false,
           "properties": {
             "bottomMargin": {
               "type": "number",
+              "description": "画面下部に並べる候補の下余白です。",
               "default": 96
             },
             "itemGap": {
               "type": "number",
+              "description": "画面下部に並べる候補の間隔です。",
               "default": 12
             },
             "windowBlend": {
               "type": "object",
+              "description": "候補の位置へ元ウィンドウ位置を反映する割合です。0で中央整列、1でウィンドウ位置に揃えます。",
               "additionalProperties": false,
               "properties": {
                 "x": {
                   "type": "number",
+                  "description": "候補の横位置へ元ウィンドウ位置を反映する割合です。",
                   "default": 0.65
                 },
                 "y": {
                   "type": "number",
+                  "description": "候補の縦位置へ元ウィンドウ位置を反映する割合です。",
                   "default": 1
                 }
               }
@@ -732,48 +882,58 @@
           }
         },
         "navigation": {
-          "$ref": "#/definitions/windowHintsNavigation"
+          "$ref": "#/definitions/windowHintsNavigation",
+          "description": "ヒント表示中のナビゲーションキーと、他機能への遷移キーです。"
         },
         "behavior": {
-          "$ref": "#/definitions/windowHintsBehavior"
+          "$ref": "#/definitions/windowHintsBehavior",
+          "description": "選択対象・カーソル・表示アニメーションの設定です。"
         }
       }
     },
     "sampling": {
       "type": "object",
+      "description": "ウィンドウの隠れ具合をサンプリングで判定する設定です。",
       "additionalProperties": false,
       "properties": {
         "enabled": {
           "type": "boolean",
+          "description": "サンプリングによる判定を有効にします。",
           "default": true
         },
         "baseWidth": {
           "type": "number",
+          "description": "サンプリング密度の基準画面幅です。",
           "minimum": 1,
           "default": 1920
         },
         "baseHeight": {
           "type": "number",
+          "description": "サンプリング密度の基準画面高さです。",
           "minimum": 1,
           "default": 1080
         },
         "minCols": {
           "type": "integer",
+          "description": "横方向の最小サンプル数です。",
           "minimum": 1,
           "default": 4
         },
         "minRows": {
           "type": "integer",
+          "description": "縦方向の最小サンプル数です。",
           "minimum": 1,
           "default": 4
         },
         "maxCols": {
           "type": "integer",
+          "description": "横方向の最大サンプル数です。",
           "minimum": 1,
           "default": 8
         },
         "maxRows": {
           "type": "integer",
+          "description": "縦方向の最大サンプル数です。",
           "minimum": 1,
           "default": 8
         }
@@ -781,75 +941,92 @@
     },
     "windowHintsNavigation": {
       "type": "object",
+      "description": "ヒント表示中のナビゲーションキーと、他機能への遷移キーです。",
       "additionalProperties": false,
       "properties": {
         "focusBack": {
-          "$ref": "#/definitions/jinraiModeTrigger"
+          "$ref": "#/definitions/jinraiModeTrigger",
+          "description": "表示中にFocus Backを実行するキーです。"
         },
         "areaHints": {
-          "$ref": "#/definitions/jinraiModeTrigger"
+          "$ref": "#/definitions/jinraiModeTrigger",
+          "description": "Area Hints(エリア選択画面)へ移るキーです。"
         },
         "applicationHints": {
           "type": "object",
+          "description": "Application Hintsへの遷移の設定です。",
           "additionalProperties": false,
           "properties": {
             "key": {
-              "$ref": "#/definitions/nullableKeyName"
+              "$ref": "#/definitions/nullableKeyName",
+              "description": "Application Hintsへ移るキーです。"
             },
             "jinraiMode": {
               "type": "boolean",
+              "description": "Application Hintsへの移動時にJinraiModeを開始します。",
               "default": false
             }
           }
         },
         "direction": {
           "type": "object",
+          "description": "方向によるウィンドウ選択の設定です。",
           "additionalProperties": false,
           "properties": {
             "hints": {
               "type": "object",
+              "description": "ヒント表示中に方向で候補を選ぶ設定です。",
               "additionalProperties": false,
               "properties": {
                 "keys": {
-                  "$ref": "#/definitions/directionKeyMap"
+                  "$ref": "#/definitions/directionKeyMap",
+                  "description": "表示中に方向で候補を選ぶキーです。"
                 }
               }
             },
             "direct": {
               "type": "object",
+              "description": "Window Hintsを開かず、グローバルホットキーで隣のウィンドウへ直接フォーカス移動する設定です。modifiers と keys の両方を指定したときだけ有効になります。",
               "additionalProperties": false,
               "properties": {
                 "modifiers": {
-                  "$ref": "#/definitions/carbonModifiers"
+                  "$ref": "#/definitions/carbonModifiers",
+                  "description": "直接方向移動の修飾キーです。fn は使用できません。"
                 },
                 "keys": {
-                  "$ref": "#/definitions/directionKeyMap"
+                  "$ref": "#/definitions/directionKeyMap",
+                  "description": "直接方向移動のキーです。"
                 }
               }
             },
             "scoring": {
               "type": "object",
+              "description": "方向移動の候補評価の調整です。",
               "additionalProperties": false,
               "properties": {
                 "cardinalOverlapTieThresholdPx": {
                   "type": "number",
+                  "description": "上下左右の候補評価で重なりを同等とみなす差（ピクセル）です。",
                   "minimum": 0,
                   "default": 720
                 },
                 "maxPrimaryOverlapRatioForDetached": {
                   "type": "number",
+                  "description": "離れた候補とみなす主軸方向の最大重なり率です。",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.2
                 },
                 "minOrthogonalOverlapRatio": {
                   "type": "number",
+                  "description": "候補として優先する直交方向の最小重なり率です。",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.5
                 },
                 "preferredVisibleRatio": {
                   "type": "number",
+                  "description": "可視領域を優先評価する基準割合です。",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.4
@@ -860,17 +1037,21 @@
         },
         "spaces": {
           "type": "object",
+          "description": "Space移動の設定です。",
           "additionalProperties": false,
           "properties": {
             "numbers": {
               "type": "boolean",
+              "description": "数字キーで対応するSpaceへ移動します。",
               "default": true
             },
             "prev": {
-              "$ref": "#/definitions/jinraiModeTrigger"
+              "$ref": "#/definitions/jinraiModeTrigger",
+              "description": "前のSpaceへ移動するキーです。"
             },
             "next": {
-              "$ref": "#/definitions/jinraiModeTrigger"
+              "$ref": "#/definitions/jinraiModeTrigger",
+              "description": "次のSpaceへ移動するキーです。"
             }
           }
         }
@@ -878,46 +1059,56 @@
     },
     "windowHintsBehavior": {
       "type": "object",
+      "description": "選択対象・カーソル・表示アニメーションの設定です。",
       "additionalProperties": false,
       "properties": {
         "cursor": {
           "type": "object",
+          "description": "カーソル移動の設定です。",
           "additionalProperties": false,
           "properties": {
             "onSelect": {
               "type": "boolean",
+              "description": "選択後にカーソルを対象ウィンドウ中央へ移動します。",
               "default": true
             },
             "onStart": {
               "type": "boolean",
+              "description": "起動時にカーソルを現在のウィンドウ中央へ移動します。",
               "default": true
             }
           }
         },
         "candidates": {
           "type": "object",
+          "description": "選択候補に含めるウィンドウの設定です。",
           "additionalProperties": false,
           "properties": {
             "includeOtherSpaces": {
               "type": "boolean",
+              "description": "別のSpaceにあるウィンドウを候補に含めます。",
               "default": true
             },
             "includeActiveWindow": {
               "type": "boolean",
+              "description": "現在のウィンドウを候補に含めます。",
               "default": true
             }
           }
         },
         "selection": {
           "type": "object",
+          "description": "選択時の動作の設定です。",
           "additionalProperties": false,
           "properties": {
             "swapWindowFrame": {
               "type": "object",
+              "description": "押しながら選択すると移動元と移動先の位置・サイズを交換する設定です。",
               "additionalProperties": false,
               "properties": {
                 "modifiers": {
-                  "$ref": "#/definitions/eventModifiers"
+                  "$ref": "#/definitions/eventModifiers",
+                  "description": "押しながら選択すると位置・サイズを交換する修飾キーです。"
                 }
               }
             }
@@ -925,15 +1116,18 @@
         },
         "showFadeIn": {
           "type": "object",
+          "description": "表示時のフェードイン時間の設定です。",
           "additionalProperties": false,
           "properties": {
             "hints": {
               "type": "number",
+              "description": "ヒントのフェードイン時間（秒）です。0で即時表示します。",
               "minimum": 0,
               "default": 0.05
             },
             "spotlight": {
               "type": "number",
+              "description": "暗幕と枠線のフェードイン時間（秒）です。0で即時表示します。",
               "minimum": 0,
               "default": 0.4
             }
@@ -943,43 +1137,53 @@
     },
     "windowMover": {
       "type": "object",
+      "description": "アクティブウィンドウの位置や大きさをホットキーで変更します。",
       "additionalProperties": false,
       "properties": {
         "commands": {
-          "$ref": "#/definitions/windowMoverCommands"
+          "$ref": "#/definitions/windowMoverCommands",
+          "description": "コマンドごとのホットキーです。ホットキーを指定したコマンドだけが有効になります。"
         },
         "behavior": {
           "type": "object",
+          "description": "移動の動作の設定です。Area Hints経由の移動にも適用されます。",
           "additionalProperties": false,
           "properties": {
             "cursor": {
               "type": "object",
+              "description": "カーソル移動の設定です。",
               "additionalProperties": false,
               "properties": {
                 "afterMove": {
                   "type": "boolean",
+                  "description": "移動後にカーソルをウィンドウ中央へ移動します。",
                   "default": true
                 }
               }
             },
             "cycle": {
               "type": "object",
+              "description": "cycle系コマンドで切り替えるサイズ比率の設定です。",
               "additionalProperties": false,
               "properties": {
                 "horizontalRatios": {
-                  "$ref": "#/definitions/ratioArray"
+                  "$ref": "#/definitions/ratioArray",
+                  "description": "横幅を切り替える順番です。0より大きく1以下の値を指定します。"
                 },
                 "verticalRatios": {
-                  "$ref": "#/definitions/ratioArray"
+                  "$ref": "#/definitions/ratioArray",
+                  "description": "高さを切り替える順番です。0より大きく1以下の値を指定します。"
                 }
               }
             },
             "freeArea": {
               "type": "object",
+              "description": "空き領域(freeArea)の計算の設定です。",
               "additionalProperties": false,
               "properties": {
                 "hiddenWindowThreshold": {
                   "type": "number",
+                  "description": "前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するしきい値です。隠れた割合がこの値以上なら除外します。0で少しでも重なった背面ウィンドウを除外します。",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.5
@@ -992,6 +1196,7 @@
     },
     "ratioArray": {
       "type": "array",
+      "description": "サイズ比率の配列です。指定した順に切り替えます。",
       "items": {
         "type": "number",
         "minimum": 0,
@@ -1001,364 +1206,476 @@
     },
     "windowMoverCommand": {
       "type": "object",
+      "description": "コマンドのホットキー割当です。",
       "additionalProperties": false,
       "properties": {
         "hotkey": {
-          "$ref": "#/definitions/hotkey"
+          "$ref": "#/definitions/hotkey",
+          "description": "このコマンドを実行するホットキーです。"
         }
       }
     },
     "windowMoverCommands": {
       "type": "object",
+      "description": "コマンドごとのホットキーです。ホットキーを指定したコマンドだけが有効になります。",
       "additionalProperties": false,
       "properties": {
         "moveToNextDisplay": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "次のディスプレイへ移動し、移動先で最大化します。"
         },
         "moveToActiveDisplayFreeArea": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "現在のディスプレイにある最大の空き領域へ移動・リサイズします。"
         },
         "minimizeWindow": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "ウィンドウを最小化します。"
         },
         "maximizeWindow": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "現在のディスプレイの作業領域へ最大化します。macOSのフルスクリーンとは異なります。"
         },
         "cycleLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左端へ配置し、横幅を順番に切り替えます。"
         },
         "cycleHorizontalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "横方向中央へ配置し、横幅を順番に切り替えます。"
         },
         "cycleRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右端へ配置し、横幅を順番に切り替えます。"
         },
         "cycleTop": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "上端へ配置し、高さを順番に切り替えます。"
         },
         "cycleVerticalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "縦方向中央へ配置し、高さを順番に切り替えます。"
         },
         "cycleBottom": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "下端へ配置し、高さを順番に切り替えます。"
         },
         "halfLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左半分へ移動します。"
         },
         "halfHorizontalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "横方向中央の半分へ移動します。"
         },
         "halfRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右半分へ移動します。"
         },
         "halfTop": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "上半分へ移動します。"
         },
         "halfVerticalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "縦方向中央の半分へ移動します。"
         },
         "halfBottom": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "下半分へ移動します。"
         },
         "thirdLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左3分の1へ移動します。"
         },
         "thirdHorizontalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "横方向中央の3分の1へ移動します。"
         },
         "thirdRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右3分の1へ移動します。"
         },
         "thirdTop": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "上3分の1へ移動します。"
         },
         "thirdVerticalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "縦方向中央の3分の1へ移動します。"
         },
         "thirdBottom": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "下3分の1へ移動します。"
         },
         "quarterLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左4分の1へ移動します。"
         },
         "quarterHorizontalLeftCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "横方向左中央の4分の1へ移動します。"
         },
         "quarterHorizontalRightCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "横方向右中央の4分の1へ移動します。"
         },
         "quarterRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右4分の1へ移動します。"
         },
         "quarterTop": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "上4分の1へ移動します。"
         },
         "quarterVerticalTopCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "縦方向上中央の4分の1へ移動します。"
         },
         "quarterVerticalBottomCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "縦方向下中央の4分の1へ移動します。"
         },
         "quarterBottom": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "下4分の1へ移動します。"
         },
         "quarterTopLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左上4分の1へ移動します。"
         },
         "quarterTopRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右上4分の1へ移動します。"
         },
         "quarterBottomLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左下4分の1へ移動します。"
         },
         "quarterBottomRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右下4分の1へ移動します。"
         },
         "sixthTopLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左上6分の1へ移動します。"
         },
         "sixthTopCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "中央上6分の1へ移動します。"
         },
         "sixthTopRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右上6分の1へ移動します。"
         },
         "sixthBottomLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左下6分の1へ移動します。"
         },
         "sixthBottomCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "中央下6分の1へ移動します。"
         },
         "sixthBottomRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右下6分の1へ移動します。"
         },
         "twoThirdsLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左側3分の2へ移動します。"
         },
         "twoThirdsHorizontalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "横方向中央の3分の2へ移動します。"
         },
         "twoThirdsRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右側3分の2へ移動します。"
         },
         "twoThirdsTop": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "上側3分の2へ移動します。"
         },
         "twoThirdsVerticalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "縦方向中央の3分の2へ移動します。"
         },
         "twoThirdsBottom": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "下側3分の2へ移動します。"
         },
         "twoThirdsCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "中央の3分の2へ移動します。"
         },
         "threeQuartersLeft": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左側4分の3へ移動します。"
         },
         "threeQuartersHorizontalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "横方向中央の4分の3へ移動します。"
         },
         "threeQuartersRight": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右側4分の3へ移動します。"
         },
         "threeQuartersTop": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "上側4分の3へ移動します。"
         },
         "threeQuartersVerticalCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "縦方向中央の4分の3へ移動します。"
         },
         "threeQuartersBottom": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "下側4分の3へ移動します。"
         },
         "threeQuartersCenter": {
-          "$ref": "#/definitions/windowMoverCommand"
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "中央の4分の3へ移動します。"
         }
       }
     },
     "areaKey": {
       "type": "string",
+      "description": "選択キーです。1〜3文字で指定します。",
       "minLength": 1,
       "maxLength": 3
     },
     "nullableAreaKey": {
       "type": ["string", "null"],
+      "description": "選択キーです。1〜3文字で指定します。null で未設定にできます。",
       "minLength": 1,
       "maxLength": 3
     },
     "areaMap": {
       "type": "object",
+      "description": "エリア名と選択キー(1〜3文字)のマップです。固定サイズは 1920x1080Center のように指定します。",
       "additionalProperties": false,
       "patternProperties": {
         "^[1-9][0-9]*(?:\\.[0-9]+)?x[1-9][0-9]*(?:\\.[0-9]+)?Center$": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "ディスプレイ中央に固定サイズで配置するエリアの選択キーです。"
         }
       },
       "properties": {
         "full": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "ディスプレイ全体の選択キーです。"
         },
         "freeArea": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "最大空き領域の選択キーです。"
         },
         "halfLeft": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "左半分の選択キーです。"
         },
         "halfHorizontalCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "横方向中央の半分の選択キーです。"
         },
         "halfRight": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "右半分の選択キーです。"
         },
         "halfTop": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "上半分の選択キーです。"
         },
         "halfVerticalCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "縦方向中央の半分の選択キーです。"
         },
         "halfBottom": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "下半分の選択キーです。"
         },
         "thirdLeft": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "左3分の1の選択キーです。"
         },
         "thirdHorizontalCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "横方向中央の3分の1の選択キーです。"
         },
         "thirdRight": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "右3分の1の選択キーです。"
         },
         "thirdTop": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "上3分の1の選択キーです。"
         },
         "thirdVerticalCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "縦方向中央の3分の1の選択キーです。"
         },
         "thirdBottom": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "下3分の1の選択キーです。"
         },
         "quarterLeft": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "左4分の1の選択キーです。"
         },
         "quarterHorizontalLeftCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "横方向左中央の4分の1の選択キーです。"
         },
         "quarterHorizontalRightCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "横方向右中央の4分の1の選択キーです。"
         },
         "quarterRight": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "右4分の1の選択キーです。"
         },
         "quarterTop": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "上4分の1の選択キーです。"
         },
         "quarterVerticalTopCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "縦方向上中央の4分の1の選択キーです。"
         },
         "quarterVerticalBottomCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "縦方向下中央の4分の1の選択キーです。"
         },
         "quarterBottom": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "下4分の1の選択キーです。"
         },
         "quarterTopLeft": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "左上4分の1の選択キーです。"
         },
         "quarterTopRight": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "右上4分の1の選択キーです。"
         },
         "quarterBottomLeft": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "左下4分の1の選択キーです。"
         },
         "quarterBottomRight": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "右下4分の1の選択キーです。"
         },
         "sixthTopLeft": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "左上6分の1の選択キーです。"
         },
         "sixthTopCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "中央上6分の1の選択キーです。"
         },
         "sixthTopRight": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "右上6分の1の選択キーです。"
         },
         "sixthBottomLeft": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "左下6分の1の選択キーです。"
         },
         "sixthBottomCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "中央下6分の1の選択キーです。"
         },
         "sixthBottomRight": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "右下6分の1の選択キーです。"
         },
         "twoThirdsLeft": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "左側3分の2の選択キーです。"
         },
         "twoThirdsHorizontalCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "横方向中央の3分の2の選択キーです。"
         },
         "twoThirdsRight": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "右側3分の2の選択キーです。"
         },
         "twoThirdsTop": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "上側3分の2の選択キーです。"
         },
         "twoThirdsVerticalCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "縦方向中央の3分の2の選択キーです。"
         },
         "twoThirdsBottom": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "下側3分の2の選択キーです。"
         },
         "twoThirdsCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "中央の3分の2の選択キーです。"
         },
         "threeQuartersLeft": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "左側4分の3の選択キーです。"
         },
         "threeQuartersHorizontalCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "横方向中央の4分の3の選択キーです。"
         },
         "threeQuartersRight": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "右側4分の3の選択キーです。"
         },
         "threeQuartersTop": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "上側4分の3の選択キーです。"
         },
         "threeQuartersVerticalCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "縦方向中央の4分の3の選択キーです。"
         },
         "threeQuartersBottom": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "下側4分の3の選択キーです。"
         },
         "threeQuartersCenter": {
-          "$ref": "#/definitions/areaKey"
+          "$ref": "#/definitions/areaKey",
+          "description": "中央の4分の3の選択キーです。"
         }
       }
     },
     "areaHints": {
       "type": "object",
+      "description": "各ディスプレイ上にエリアとキーを表示し、キー入力でアクティブウィンドウをそのエリアへ移動します。",
       "additionalProperties": false,
       "properties": {
         "hotkey": {
-          "$ref": "#/definitions/hotkey"
+          "$ref": "#/definitions/hotkey",
+          "description": "Area Hintsを開くホットキーです。"
         },
         "jinraiMode": {
           "type": "object",
+          "description": "JinraiModeとしてArea Hintsを開く設定です。",
           "additionalProperties": false,
           "properties": {
             "hotkey": {
-              "$ref": "#/definitions/hotkey"
+              "$ref": "#/definitions/hotkey",
+              "description": "JinraiModeとしてArea Hintsを開くホットキーです。"
             }
           }
         },
         "screens": {
           "type": "object",
-          "description": "ディスプレイUUIDごとのエリア名と選択キーのマップです。",
+          "description": "ディスプレイUUIDごとのエリア名と選択キーのマップです。未設定の状態でArea Hintsを開くと、各ディスプレイ上にUUIDが表示されます。",
           "additionalProperties": {
             "$ref": "#/definitions/areaMap"
           }
         },
         "defaultScreen": {
+          "description": "screensに設定がないディスプレイで使う、エリア名と選択キーのマップです。",
           "anyOf": [
             {
               "$ref": "#/definitions/areaMap"
@@ -1370,50 +1687,62 @@
         },
         "actions": {
           "type": "object",
+          "description": "エリア選択中に実行できるウィンドウ操作のキーです。",
           "additionalProperties": false,
           "properties": {
             "closeWindow": {
-              "$ref": "#/definitions/nullableAreaKey"
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウを閉じるキーです。"
             },
             "minimizeWindow": {
-              "$ref": "#/definitions/nullableAreaKey"
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウを最小化するキーです。"
             },
             "maximizeWindow": {
-              "$ref": "#/definitions/nullableAreaKey"
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウを最大化するキーです。"
             },
             "quitApplication": {
-              "$ref": "#/definitions/nullableAreaKey"
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウのアプリケーションを通常終了するキーです。"
             },
             "detachChromeTabToNewWindow": {
-              "$ref": "#/definitions/nullableAreaKey"
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にGoogle Chromeの現在のタブを新しいChromeウィンドウとして分離するキーです。"
             }
           }
         },
         "navigation": {
           "type": "object",
+          "description": "他機能への遷移キーです。",
           "additionalProperties": false,
           "properties": {
             "windowHints": {
-              "$ref": "#/definitions/jinraiModeTrigger"
+              "$ref": "#/definitions/jinraiModeTrigger",
+              "description": "選択画面を閉じてWindow Hintsを開くキーです。"
             }
           }
         },
         "labels": {
           "type": "object",
+          "description": "エリアと選択キーのラベル表示の設定です。",
           "additionalProperties": false,
           "properties": {
             "show": {
               "type": "boolean",
+              "description": "エリアと選択キーのラベルを画面上に表示します。false でもキー入力は有効です。",
               "default": true
             }
           }
         },
         "activeWindowSpotlight": {
           "type": "object",
+          "description": "アクティブウィンドウ以外を覆う暗幕の設定です。",
           "additionalProperties": false,
           "properties": {
             "alpha": {
               "type": "number",
+              "description": "暗幕の透明度です。",
               "minimum": 0,
               "maximum": 1,
               "default": 0.5
@@ -1422,18 +1751,22 @@
         },
         "activeWindowHighlight": {
           "type": "object",
+          "description": "アクティブウィンドウを示す枠線の設定です。",
           "additionalProperties": false,
           "properties": {
             "borderColor": {
-              "$ref": "#/definitions/color"
+              "$ref": "#/definitions/color",
+              "description": "アクティブウィンドウを示す枠線色です。"
             },
             "borderWidth": {
               "type": "number",
+              "description": "アクティブウィンドウを示す枠線の太さです。",
               "minimum": 0,
               "default": 13
             },
             "cornerRadius": {
               "type": "number",
+              "description": "アクティブウィンドウを示す枠線の角丸です。",
               "minimum": 0,
               "default": 12
             }
@@ -1441,36 +1774,45 @@
         },
         "appearance": {
           "type": "object",
+          "description": "ラベルボックスの見た目の設定です。",
           "additionalProperties": false,
           "properties": {
             "state": {
               "type": "object",
+              "description": "状態(normal/dimmed)ごとのラベルの色です。",
               "additionalProperties": false,
               "properties": {
                 "normal": {
                   "type": "object",
+                  "description": "候補になっているラベルの色です。",
                   "additionalProperties": false,
                   "properties": {
                     "bgColor": {
-                      "$ref": "#/definitions/color"
+                      "$ref": "#/definitions/color",
+                      "description": "通常時のラベル背景色です。"
                     },
                     "textColor": {
-                      "$ref": "#/definitions/color"
+                      "$ref": "#/definitions/color",
+                      "description": "通常時の選択キー文字色です。"
                     },
                     "typedTextColor": {
-                      "$ref": "#/definitions/color"
+                      "$ref": "#/definitions/color",
+                      "description": "入力済み部分を示す文字色です。"
                     }
                   }
                 },
                 "dimmed": {
                   "type": "object",
+                  "description": "キー入力で候補から外れたラベルの色です。",
                   "additionalProperties": false,
                   "properties": {
                     "bgColor": {
-                      "$ref": "#/definitions/color"
+                      "$ref": "#/definitions/color",
+                      "description": "候補から外れたラベルの背景色です。"
                     },
                     "textColor": {
-                      "$ref": "#/definitions/color"
+                      "$ref": "#/definitions/color",
+                      "description": "候補から外れた選択キーの文字色です。"
                     }
                   }
                 }
@@ -1482,30 +1824,37 @@
     },
     "applicationHintsApp": {
       "type": "object",
+      "description": "起動・新規ウィンドウ作成の対象アプリです。",
       "additionalProperties": false,
       "required": ["bundleID", "key"],
       "properties": {
         "bundleID": {
           "type": "string",
+          "description": "起動するアプリの bundle ID です。",
           "minLength": 1
         },
         "key": {
           "type": "string",
+          "description": "アプリを選択する1文字または2文字のキーです。",
           "minLength": 1,
           "maxLength": 2
         },
         "name": {
-          "type": ["string", "null"]
+          "type": ["string", "null"],
+          "description": "画面に表示するアプリ名です。未指定の場合はアプリ名から自動で決定します。"
         },
         "newWindow": {
           "type": "object",
+          "description": "起動済みアプリで新しいウィンドウを作る方法です。既定は Cmd+N です。",
           "additionalProperties": false,
           "properties": {
             "url": {
-              "type": "string"
+              "type": "string",
+              "description": "ホットキーの代わりに開くURLです。指定すると hotkey より優先されます。"
             },
             "hotkey": {
-              "$ref": "#/definitions/eventHotkey"
+              "$ref": "#/definitions/eventHotkey",
+              "description": "起動済みアプリで新規ウィンドウを作るキーストロークです。"
             }
           }
         }
@@ -1513,19 +1862,23 @@
     },
     "applicationHints": {
       "type": "object",
+      "description": "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。",
       "additionalProperties": false,
       "required": ["apps"],
       "properties": {
         "hotkey": {
-          "$ref": "#/definitions/hotkey"
+          "$ref": "#/definitions/hotkey",
+          "description": "Application Hintsを直接開くホットキーです。"
         },
         "windowWaitTimeout": {
           "type": "number",
+          "description": "新規ウィンドウが現れるまで待つ最大時間（秒）です。",
           "exclusiveMinimum": 0,
           "default": 10
         },
         "apps": {
           "type": "array",
+          "description": "対象アプリの一覧です。1件以上必須です。",
           "minItems": 1,
           "items": {
             "$ref": "#/definitions/applicationHintsApp"
@@ -1533,54 +1886,67 @@
         },
         "appearance": {
           "type": "object",
+          "description": "アプリ項目の見た目の設定です。",
           "additionalProperties": false,
           "properties": {
             "itemWidth": {
               "type": "number",
+              "description": "アプリ項目の幅です。",
               "exclusiveMinimum": 0,
               "default": 220
             },
             "itemHeight": {
               "type": "number",
+              "description": "アプリ項目の高さです。",
               "exclusiveMinimum": 0,
               "default": 112
             },
             "gap": {
               "type": "number",
+              "description": "アプリ項目同士の間隔です。",
               "default": 12
             },
             "columns": {
               "type": "integer",
+              "description": "1行に表示するアプリ数です。",
               "minimum": 1,
               "default": 3
             },
             "iconSize": {
               "type": "number",
+              "description": "アプリアイコンの大きさです。",
               "exclusiveMinimum": 0,
               "default": 64
             },
             "cornerRadius": {
               "type": "number",
+              "description": "アプリ項目背景の角丸です。",
               "minimum": 0,
               "default": 12
             },
             "bgColor": {
-              "$ref": "#/definitions/color"
+              "$ref": "#/definitions/color",
+              "description": "通常時の背景色です。"
             },
             "dimmedBgColor": {
-              "$ref": "#/definitions/color"
+              "$ref": "#/definitions/color",
+              "description": "候補から外れた項目の背景色です。"
             },
             "textColor": {
-              "$ref": "#/definitions/color"
+              "$ref": "#/definitions/color",
+              "description": "通常時の文字色です。"
             },
             "dimmedTextColor": {
-              "$ref": "#/definitions/color"
+              "$ref": "#/definitions/color",
+              "description": "候補から外れた項目の文字色です。"
             },
             "stateColor": {
-              "$ref": "#/definitions/color"
+              "$ref": "#/definitions/color",
+              "description": "OPENまたはNEWの状態表示色です。"
             },
             "keyHighlightColor": {
-              "$ref": "#/definitions/color"
+              "$ref": "#/definitions/color",
+              "description": "入力済み部分を示す文字色です。"
             }
           }
         }

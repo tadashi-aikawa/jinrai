@@ -4,7 +4,9 @@ import Foundation
 /// Window Hints / Application Hints と同格の「ヒント選択UI」としてトップレベルに置く。
 public struct AreaHintsConfig: Sendable {
     public struct HotkeyBinding: Equatable, Sendable {
+        /// ホットキーの修飾キー
         public var modifiers: [String]
+        /// ホットキーのキー
         public var key: String
     }
 
@@ -24,19 +26,27 @@ public struct AreaHintsConfig: Sendable {
     /// エリアと選択キーのラベルを画面上に表示するか(false でもキー入力は有効)
     public var showLabels: Bool
 
+    /// アクティブウィンドウ以外を覆う暗幕の透明度(activeWindowSpotlight.alpha)
     public var activeWindowSpotlightAlpha: Double
+    /// アクティブウィンドウを示す枠線色(activeWindowHighlight.borderColor)
     public var activeWindowHighlightColor: ConfigColor
+    /// アクティブウィンドウを示す枠線の太さ(activeWindowHighlight.borderWidth)
     public var activeWindowHighlightWidth: Double
+    /// アクティブウィンドウを示す枠線の角丸(activeWindowHighlight.cornerRadius)
     public var activeWindowHighlightCornerRadius: Double
 
     /// エリア種類別の色
     public var styleColors: [String: ConfigColor]
     public var styleDimmedColors: [String: ConfigColor]
-    /// ラベルボックスの状態別色(appearance.state)
+    /// 通常時のラベル背景色(appearance.state.normal.bgColor)
     public var normalBgColor: ConfigColor
+    /// 通常時の選択キー文字色(appearance.state.normal.textColor)
     public var normalTextColor: ConfigColor
+    /// 入力済み部分を示す文字色(appearance.state.normal.typedTextColor)
     public var typedTextColor: ConfigColor
+    /// 候補から外れたラベルの背景色(appearance.state.dimmed.bgColor)
     public var dimmedBgColor: ConfigColor
+    /// 候補から外れた選択キーの文字色(appearance.state.dimmed.textColor)
     public var dimmedTextColor: ConfigColor
 
     /// 表示中に JinraiMode を開始するキー(jinraiMode.triggers.areaHints.key。RootConfigBuilder が注入)

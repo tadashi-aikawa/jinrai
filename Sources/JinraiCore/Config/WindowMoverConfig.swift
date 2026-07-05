@@ -4,15 +4,23 @@ import Foundation
 /// エリア選択画面(Area Hints)の設定は AreaHintsConfig に分離している。
 public struct WindowMoverConfig: Sendable {
     public struct HotkeyBinding: Equatable, Sendable {
+        /// ホットキーの修飾キー
         public var modifiers: [String]
+        /// ホットキーのキー
         public var key: String
     }
 
     /// コマンド名 → ホットキー(未設定のコマンドは含まれない)
     public var commandHotkeys: [String: HotkeyBinding]
+    /// 移動後にカーソルをウィンドウ中央へ移動するか(behavior.cursor.afterMove)。
+    /// Area Hints 経由の移動にも適用される
     public var cursorAfterMove: Bool
+    /// cycle 系コマンドで横幅を切り替える比率の順番(behavior.cycle.horizontalRatios)
     public var horizontalRatios: [Double]
+    /// cycle 系コマンドで高さを切り替える比率の順番(behavior.cycle.verticalRatios)
     public var verticalRatios: [Double]
+    /// 前面ウィンドウに隠れた背面ウィンドウを freeArea 計算から除外するしきい値
+    /// (behavior.freeArea.hiddenWindowThreshold)。Area Hints の freeArea にも適用される
     public var hiddenWindowThreshold: Double
 }
 

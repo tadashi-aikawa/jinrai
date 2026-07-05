@@ -5,12 +5,19 @@ import Foundation
 /// ウィンドウ面をサンプル格子で走査し、前面矩形群による被覆を判定する。
 public enum Occlusion {
     public struct SamplingConfig: Sendable {
+        /// サンプリングによる隠れ具合の判定を有効にするか(occlusion.sampling.enabled)
         public var enabled: Bool
+        /// サンプリング密度の基準画面幅(occlusion.sampling.baseWidth)
         public var baseWidth: CGFloat
+        /// サンプリング密度の基準画面高さ(occlusion.sampling.baseHeight)
         public var baseHeight: CGFloat
+        /// 横方向の最小サンプル数(occlusion.sampling.minCols)
         public var minCols: Int
+        /// 縦方向の最小サンプル数(occlusion.sampling.minRows)
         public var minRows: Int
+        /// 横方向の最大サンプル数(occlusion.sampling.maxCols)
         public var maxCols: Int
+        /// 縦方向の最大サンプル数(occlusion.sampling.maxRows)
         public var maxRows: Int
 
         public init(

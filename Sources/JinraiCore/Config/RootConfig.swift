@@ -2,7 +2,9 @@ import Foundation
 
 /// macOS ネイティブタブ利用アプリの設定(元 init.lua の macosNativeTabs 正規化)
 public struct MacosNativeTabsConfig: Equatable, Sendable {
+    /// 補正対象アプリの bundle ID またはアプリ名(組み込み対象+ユーザー指定)
     public var apps: [String]
+    /// タブ状態を同期する間隔(秒。stateSyncInterval)
     public var stateSyncInterval: Double
 
     public static let `default` = MacosNativeTabsConfig(
@@ -13,12 +15,19 @@ public struct MacosNativeTabsConfig: Equatable, Sendable {
 
 /// config.jsonc 全体。各機能はセクションが存在するときだけ有効(元 setup(config) と同じ)。
 public struct RootConfig {
+    /// macOS ネイティブタブを使うアプリのウィンドウ追跡の補正(常時有効)
     public var macosNativeTabs: MacosNativeTabsConfig
+    /// 直前にアクティブだったウィンドウへ戻る(セクション記述で有効)
     public var focusBack: FocusBackConfig?
+    /// フォーカスしたウィンドウを枠線で強調(セクション記述で有効)
     public var focusBorder: FocusBorderConfig?
+    /// キーヒントからウィンドウを選択(セクション記述で有効)
     public var windowHints: WindowHintsConfig?
+    /// アクティブウィンドウをホットキーで移動・リサイズ(セクション記述で有効)
     public var windowMover: WindowMoverConfig?
+    /// エリアとキーを表示してウィンドウの移動先を選択(セクション記述で有効)
     public var areaHints: AreaHintsConfig?
+    /// 登録アプリの起動・新規ウィンドウ作成(セクション記述で有効。apps 必須)
     public var applicationHints: ApplicationHintsConfig?
     /// セクションなしでもデフォルト値を持つ(元 init.lua の normalizeJinraiMode)
     public var jinraiMode: JinraiModeConfig = .default
