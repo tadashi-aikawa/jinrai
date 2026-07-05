@@ -223,11 +223,30 @@ final class WindowMoverFeature {
         let focusedWindowFrame = chooserTargetWindow()?.frame
         var hasAnyMapping = false
         let displayCount = NSScreen.screens.count
-        for screen in NSScreen.screens {
-            let uuid = ScreenUtil.uuid(of: screen)
-            let mapping =
-                uuid.flatMap { areaHints.screens[$0]?.resolve(displayCount: displayCount) }
-                ?? areaHints.defaultScreen?.resolve(displayCount: displayCount)
+
+        // defaultScreen が複数ディスプレイに適用されると同じキーが並び最初の画面しか
+        // 選択できないため、2枚目以降のキーへ数字プレフィックスを付ける
+        let screenInfos: [(screen: NSScreen, uuid: String?, mapping: [String: String]?, isDefault: Bool)] =
+            NSScreen.screens.map { screen in
+                let uuid = ScreenUtil.uuid(of: screen)
+                let configured = uuid.flatMap {
+                    areaHints.screens[$0]?.resolve(displayCount: displayCount)
+                }
+                let mapping =
+                    configured ?? areaHints.defaultScreen?.resolve(displayCount: displayCount)
+                return (screen, uuid, mapping, configured == nil && mapping != nil)
+            }
+        var reservedKeys = Set(areaHints.actions.values)
+        if let windowHintsKey = areaHints.windowHintsKey {
+            reservedKeys.insert(windowHintsKey)
+        }
+        let effectiveMappings = DefaultScreenDisambiguator.disambiguate(
+            mappings: screenInfos.map { ($0.mapping ?? [:], $0.isDefault) },
+            reservedKeys: reservedKeys)
+
+        for (info, mapping) in zip(screenInfos, effectiveMappings) {
+            let screen = info.screen
+            let uuid = info.uuid
             let screenFrame = ScreenUtil.visibleFrame(of: screen)
             let overlay = OverlayWindow(frame: screenFrame, level: .hints)
             guard let root = overlay.rootLayer else { continue }
@@ -254,7 +273,7 @@ final class WindowMoverFeature {
                 }
             }
 
-            if let mapping, !mapping.isEmpty {
+            if !mapping.isEmpty {
                 hasAnyMapping = true
                 drawAreas(
                     mapping: mapping, screen: screen, screenFrame: screenFrame, root: root)
