@@ -4,10 +4,12 @@ import JinraiCore
 import JinraiPlatform
 
 /// ウィンドウ移動(元 window_mover.lua)。
-/// ホットキーによる直接移動・サイクル・最大空き領域・エリア選択画面。
+/// ホットキーによる直接移動・サイクル・最大空き領域と、
+/// Area Hints(エリア選択画面)の表示・キー処理を担う。
 @MainActor
 final class WindowMoverFeature {
     private let config: WindowMoverConfig
+    private let areaHints: AreaHintsConfig
     private var hotkeys: [Hotkey] = []
     private var cycleState = CycleState()
     private let eventTap = EventTap()
@@ -44,8 +46,9 @@ final class WindowMoverFeature {
     /// focusedWindow は frontmostApplication ベースで focus 直後は古いため明示する)
     private var chooserTarget: (windowID: UInt32, pid: pid_t)?
 
-    init(config: WindowMoverConfig) {
+    init(config: WindowMoverConfig, areaHints: AreaHintsConfig) {
         self.config = config
+        self.areaHints = areaHints
 
         for (command, binding) in config.commandHotkeys {
             let hotkey = Hotkey(modifiers: binding.modifiers, key: binding.key) {
@@ -56,6 +59,19 @@ final class WindowMoverFeature {
                 hotkeys.append(hotkey)
             } else {
                 NSLog("[jinrai.windowMover] ホットキーの登録に失敗: %@", binding.key)
+            }
+        }
+
+        // Area Hints のホットキー(通常起動 / JinraiMode 起動)
+        if let binding = areaHints.hotkey {
+            registerAreaHintsHotkey(binding) { [weak self] in
+                self?.openAreaChooser()
+            }
+        }
+        if let binding = areaHints.jinraiModeHotkey {
+            registerAreaHintsHotkey(binding) { [weak self] in
+                self?.onJinraiModeStart?()
+                self?.openAreaChooser(jinraiMode: true)
             }
         }
 
@@ -73,6 +89,17 @@ final class WindowMoverFeature {
         }
     }
 
+    private func registerAreaHintsHotkey(
+        _ binding: AreaHintsConfig.HotkeyBinding, handler: @escaping () -> Void
+    ) {
+        if let hotkey = Hotkey(modifiers: binding.modifiers, key: binding.key, handler: handler)
+        {
+            hotkeys.append(hotkey)
+        } else {
+            NSLog("[jinrai.areaHints] ホットキーの登録に失敗: %@", binding.key)
+        }
+    }
+
     // MARK: - コマンド実行
 
     func run(command: String) {
@@ -81,11 +108,6 @@ final class WindowMoverFeature {
             moveToNextDisplay()
         case "moveToActiveDisplayFreeArea":
             moveToFreeArea()
-        case "moveToSelectedArea":
-            openAreaChooser()
-        case "moveToSelectedAreaInJinraiMode":
-            onJinraiModeStart?()
-            openAreaChooser(jinraiMode: true)
         case "minimizeWindow":
             WindowEnumerator.focusedWindow()?.minimize()
         case "maximizeWindow":
@@ -213,8 +235,8 @@ final class WindowMoverFeature {
         for screen in NSScreen.screens {
             let uuid = ScreenUtil.uuid(of: screen)
             let mapping =
-                uuid.flatMap { config.selectedArea.screens[$0] }
-                ?? config.selectedArea.defaultScreen
+                uuid.flatMap { areaHints.screens[$0] }
+                ?? areaHints.defaultScreen
             let screenFrame = ScreenUtil.visibleFrame(of: screen)
             let overlay = OverlayWindow(frame: screenFrame, level: .hints)
             guard let root = overlay.rootLayer else { continue }
@@ -225,7 +247,7 @@ final class WindowMoverFeature {
                         windowFrame: focusedWindowFrame,
                         screenFrame: screenFrame,
                         overlayHeight: screenFrame.height,
-                        alpha: CGFloat(config.selectedArea.activeWindowSpotlightAlpha),
+                        alpha: CGFloat(areaHints.activeWindowSpotlightAlpha),
                         fadeIn: fadeSpotlight))
                 if screenFrame.intersects(focusedWindowFrame) {
                     root.addSublayer(
@@ -233,11 +255,11 @@ final class WindowMoverFeature {
                             windowFrame: focusedWindowFrame,
                             screenFrame: screenFrame,
                             overlayHeight: screenFrame.height,
-                            borderColor: config.selectedArea.activeWindowHighlightColor,
+                            borderColor: areaHints.activeWindowHighlightColor,
                             borderWidth: CGFloat(
-                                config.selectedArea.activeWindowHighlightWidth),
+                                areaHints.activeWindowHighlightWidth),
                             cornerRadius: CGFloat(
-                                config.selectedArea.activeWindowHighlightCornerRadius)))
+                                areaHints.activeWindowHighlightCornerRadius)))
                 }
             }
 
@@ -259,7 +281,7 @@ final class WindowMoverFeature {
         }
         isChooserVisible = true
         if !hasAnyMapping {
-            NSLog("[jinrai.windowMover] selectedArea.screens が未設定です(画面に UUID を表示中)")
+            NSLog("[jinrai.areaHints] screens が未設定です(画面に UUID を表示中)")
         }
     }
 
@@ -310,7 +332,7 @@ final class WindowMoverFeature {
             guard let areaFrame else { continue }
             chooserCandidates.append((key: key, areaName: areaName, frame: areaFrame))
 
-            guard config.selectedArea.showHints else { continue }
+            guard areaHints.showLabels else { continue }
             let detail = AreaLabelLayout.detailLabel(for: areaName)
             let keyWidth = AreaLabelLayout.keyBoxWidth(
                 measuredTextWidth: measureText(
@@ -328,7 +350,7 @@ final class WindowMoverFeature {
             candidateAreaFrames.append(areaFrame)
         }
 
-        guard config.selectedArea.showHints, !labelCandidates.isEmpty else { return }
+        guard areaHints.showLabels, !labelCandidates.isEmpty else { return }
 
         let labelFrames = AreaLabelLayout.resolveLabelFrames(
             candidates: labelCandidates, screenFrame: screenFrame)
@@ -507,8 +529,8 @@ final class WindowMoverFeature {
     private func drawScreenInfo(uuid: String?, screenFrame: CGRect, root: CALayer) {
         let label = CATextLayer()
         label.string = """
-            Jinrai Window Mover: このディスプレイのエリアが未設定です
-            selectedArea.screens["\(uuid ?? "不明")"] にエリアとキーを設定してください
+            Jinrai Area Hints: このディスプレイのエリアが未設定です
+            areaHints.screens["\(uuid ?? "不明")"] にエリアとキーを設定してください
             """
         label.font = NSFont.systemFont(ofSize: 18)
         label.fontSize = 18
@@ -561,9 +583,9 @@ final class WindowMoverFeature {
             return true
         }
 
-        // JinraiMode 開始(triggers.windowMover.key。選択画面は開いたまま)
+        // JinraiMode 開始(triggers.areaHints.key。選択画面は開いたまま)
         if let name = chooserKeyName(of: event),
-            name == config.jinraiModeKey
+            name == areaHints.jinraiModeKey
         {
             if !chooserJinraiMode {
                 chooserJinraiMode = true
@@ -574,7 +596,7 @@ final class WindowMoverFeature {
 
         // "space" 等の特殊キーは Window Hints への遷移キーとしてのみ扱う
         if event.keyCode == UInt32(kVK_Space),
-            config.selectedArea.windowHintsKey == "SPACE"
+            areaHints.windowHintsKey == "SPACE"
         {
             transitionToWindowHints()
             return true
@@ -588,12 +610,12 @@ final class WindowMoverFeature {
         let input = chooserInput + character
 
         // Window Hints への遷移
-        if let hintsKey = config.selectedArea.windowHintsKey, input == hintsKey {
+        if let hintsKey = areaHints.windowHintsKey, input == hintsKey {
             transitionToWindowHints()
             return true
         }
         // アクション(対象は closeChooser でクリアされる前に解決しておく)
-        if let action = config.selectedArea.actions.first(where: { $0.value == input }) {
+        if let action = areaHints.actions.first(where: { $0.value == input }) {
             let wasJinrai = chooserJinraiMode
             let win = chooserTargetWindow()
             closeChooser()
@@ -616,8 +638,8 @@ final class WindowMoverFeature {
         }
         // 接頭辞一致があれば入力継続
         let allKeys =
-            chooserCandidates.map(\.key) + config.selectedArea.actions.values
-            + (config.selectedArea.windowHintsKey.map { [$0] } ?? [])
+            chooserCandidates.map(\.key) + areaHints.actions.values
+            + (areaHints.windowHintsKey.map { [$0] } ?? [])
         if allKeys.contains(where: { $0.hasPrefix(input) }) {
             chooserInput = input
             updateChooserHighlight()
@@ -648,7 +670,7 @@ final class WindowMoverFeature {
 
     /// 入力状態に応じて各ラベルボックスの色を適用する(元 updateAreaCandidateCanvas)
     private func applyChooserStyles() {
-        let selected = config.selectedArea
+        let selected = areaHints
         for refs in areaLabels {
             let active = chooserInput.isEmpty || refs.key.hasPrefix(chooserInput)
             let styleColor =

@@ -305,7 +305,7 @@ final class WindowHintsFeature {
     private func reservedChars() -> Set<String> {
         var reserved = Set<String>()
         if let key = config.navigationFocusBackKey { reserved.insert(key.uppercased()) }
-        if let key = config.windowMoverKey { reserved.insert(key.uppercased()) }
+        if let key = config.areaHintsKey { reserved.insert(key.uppercased()) }
         if let key = config.applicationHintsKey { reserved.insert(key.uppercased()) }
         if let key = config.jinraiModeKey { reserved.insert(key.uppercased()) }
         for key in config.directionHintKeys.keys { reserved.insert(key.uppercased()) }
@@ -965,7 +965,7 @@ final class WindowHintsFeature {
         }
         // Window Mover のエリア選択へ遷移
         if let name = keyName(of: event),
-            name == config.windowMoverKey,
+            name == config.areaHintsKey,
             let onOpenWindowMover
         {
             let jinrai = isJinraiMode

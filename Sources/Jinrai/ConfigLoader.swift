@@ -35,12 +35,15 @@ enum ConfigLoader {
             // "windowMover": {
             //     "commands": {
             //         "cycleLeft": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "h" } },
-            //         "cycleRight": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "l" } },
-            //         "moveToSelectedArea": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "s" } }
-            //     },
-            //     "selectedArea": {
-            //         "defaultScreen": { "halfLeft": "H", "halfRight": "L", "full": "F" }
+            //         "cycleRight": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "l" } }
             //     }
+            // },
+
+            // エリア選択画面。ホットキーで開き、キー入力でウィンドウを配置する
+            // 例:
+            // "areaHints": {
+            //     "hotkey": { "modifiers": ["cmd", "alt"], "key": "s" },
+            //     "defaultScreen": { "halfLeft": "H", "halfRight": "L", "full": "F" }
             // },
 
             // アプリランチャー。Window Hints から navigation.applicationHints.key で開く。

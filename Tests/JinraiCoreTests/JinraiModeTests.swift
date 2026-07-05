@@ -86,7 +86,7 @@ struct JinraiModeConfigTests {
             "triggers": [
                 "windowHints": ["key": "return"],
                 "applicationHints": ["key": "return"],
-                "windowMover": ["key": "return"],
+                "areaHints": ["key": "return"],
             ],
             "combo": [
                 "character": ["enabled": true],
@@ -95,7 +95,7 @@ struct JinraiModeConfigTests {
         ])
         #expect(config.windowHintsTriggerKey == "return")
         #expect(config.applicationHintsTriggerKey == "return")
-        #expect(config.windowMoverTriggerKey == "return")
+        #expect(config.areaHintsTriggerKey == "return")
         #expect(config.comboCharacter.enabled)
         #expect(config.comboText.enabled)
         // enabled 以外はデフォルト維持
@@ -114,19 +114,19 @@ struct JinraiModeConfigTests {
         let config = try RootConfigBuilder.build(text: """
             {
                 "windowHints": {},
-                "windowMover": {},
+                "areaHints": {},
                 "applicationHints": { "apps": [{ "bundleID": "a.b", "key": "G" }] },
                 "jinraiMode": {
                     "triggers": {
                         "windowHints": { "key": "return" },
                         "applicationHints": { "key": "return" },
-                        "windowMover": { "key": "return" }
+                        "areaHints": { "key": "return" }
                     }
                 }
             }
             """)
         #expect(config.windowHints?.jinraiModeKey == "return")
-        #expect(config.windowMover?.jinraiModeKey == "return")
+        #expect(config.areaHints?.jinraiModeKey == "return")
         #expect(config.applicationHints?.jinraiModeKey == "return")
     }
 }

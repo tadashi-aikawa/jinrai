@@ -9,6 +9,7 @@ if CommandLine.arguments.contains("--check-config") {
         if config.focusBack != nil { enabled.append("focusBack") }
         if config.windowHints != nil { enabled.append("windowHints") }
         if config.windowMover != nil { enabled.append("windowMover") }
+        if config.areaHints != nil { enabled.append("areaHints") }
         if config.applicationHints != nil { enabled.append("applicationHints") }
         print("OK: \(ConfigLoader.configFileURL.path)")
         print("enabled: \(enabled.joined(separator: ", "))")

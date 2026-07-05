@@ -4,7 +4,7 @@ icon: lucide/repeat
 
 # JinraiMode
 
-JinraiModeは、[Window Hints](window-hints.md)によるウィンドウ選択と、[Window Mover](window-mover.md)による移動先選択を交互に繰り返すモードです。
+JinraiModeは、[Window Hints](window-hints.md)によるウィンドウ選択と、[Area Hints](area-hints.md)による移動先選択を交互に繰り返すモードです。
 
 ==TODO: 動画==
 
@@ -16,8 +16,8 @@ JinraiModeは次の方法で開始できます。
 - [Window Hints](window-hints.md)の表示中に`triggers.windowHints.key`を押す
 - [Application Hints](application-hints.md)の表示中に`triggers.applicationHints.key`を押す
 - [Window Hints](window-hints.md)の`navigation.applicationHints.jinraiMode`を有効にしてApplication Hintsを開く
-- [Window Mover](window-mover.md)のエリア選択中に`triggers.windowMover.key`を押す
-- [Window Mover](window-mover.md)の`moveToSelectedAreaInJinraiMode`ホットキーを押す
+- [Area Hints](area-hints.md)の表示中に`triggers.areaHints.key`を押す
+- [Area Hints](area-hints.md)の`jinraiMode.hotkey`を押す
 
 [Window Hints](window-hints.md)から開始した場合は、ウィンドウを選択すると移動先の候補が開きます。移動先を選択すると[Window Hints](window-hints.md)へ戻り、次のウィンドウを続けて選べます。
 
@@ -41,11 +41,11 @@ JinraiModeは次の方法で開始できます。
 
 ### 機能間を直接移動
 
-[Window Mover](window-mover.md)のエリア選択中にウィンドウを選び直すキーも設定できます。
+[Area Hints](area-hints.md)の表示中にウィンドウを選び直すキーも設定できます。
 
 ```json
-"windowMover": {
-  "selectedArea": {
+"areaHints": {
+  "navigation": {
     "windowHints": {
       "key": "space"
     }

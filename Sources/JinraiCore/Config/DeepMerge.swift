@@ -84,14 +84,6 @@ public struct ConfigDict {
         )
     }
 
-    /// レガシーキーが使われていたらエラー(元 checkLegacyFlatKeys)
-    public func rejectLegacyKeys(_ legacyKeys: Set<String>) throws {
-        for key in raw.keys where legacyKeys.contains(key) {
-            throw ConfigError(
-                "[jinrai.\(context)] legacy flat key '\(key)' is no longer supported; use nested config"
-            )
-        }
-    }
 }
 
 /// 色(各成分 0〜1)。描画層で NSColor / CGColor に変換する

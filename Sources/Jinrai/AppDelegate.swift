@@ -69,8 +69,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             focusBack = FocusBackFeature(config: focusBackConfig, focusHistory: history)
         }
 
-        if let windowMoverConfig = config.windowMover {
-            windowMover = WindowMoverFeature(config: windowMoverConfig)
+        // Area Hints は Window Mover の移動エンジンを使うため、どちらかの
+        // セクションがあれば WindowMoverFeature を生成し、無い方はデフォルトで補う
+        if config.windowMover != nil || config.areaHints != nil {
+            do {
+                let moverConfig = try config.windowMover ?? WindowMoverConfigBuilder.build()
+                let areaHintsConfig = try config.areaHints ?? AreaHintsConfigBuilder.build()
+                windowMover = WindowMoverFeature(
+                    config: moverConfig, areaHints: areaHintsConfig)
+            } catch {
+                showConfigError(error)
+            }
         }
 
         if let windowHintsConfig = config.windowHints {

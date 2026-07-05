@@ -50,6 +50,7 @@ nav = [
   { "機能" = [
     { "Window Hints" = "window-hints.md" },
     { "Application Hints" = "application-hints.md" },
+    { "Area Hints" = "area-hints.md" },
     { "Window Mover" = "window-mover.md" },
     { "JinraiMode" = "jinrai-mode.md" },
     { "Focus Border" = "focus-border.md" },

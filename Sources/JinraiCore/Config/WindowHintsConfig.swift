@@ -66,13 +66,13 @@ public struct WindowHintsConfig: Sendable {
     public var dockWindowYBlend: Double
 
     public var navigationFocusBackKey: String?
-    /// Window Mover のエリア選択画面へ遷移するキー
-    public var windowMoverKey: String?
+    /// Area Hints(エリア選択画面)へ遷移するキー
+    public var areaHintsKey: String?
     /// Application Hints へ遷移するキー
     public var applicationHintsKey: String?
     /// Application Hints へ遷移するとき JinraiMode を開始するか
     public var applicationHintsJinraiMode: Bool
-    /// Hints 表示中に JinraiMode を開始するキー(jinrai_mode.triggers.windowHints.key)
+    /// Hints 表示中に JinraiMode を開始するキー(jinraiMode.triggers.windowHints.key)
     public var jinraiModeKey: String?
     public var directionHintKeys: [String: Direction]
     /// Hints 非表示時のグローバル方向移動ホットキー(nil で無効)
@@ -98,27 +98,7 @@ public struct WindowHintsConfig: Sendable {
 }
 
 public enum WindowHintsConfigBuilder {
-    static var legacyFlatKeys: Set<String> {
-        [
-            "hotkeyModifiers", "hotkeyKey", "hintChars", "iconSize", "keyBoxSize",
-            "keyBoxMinWidth", "keyBoxHorizontalPadding", "keyGap", "padding", "fontName",
-            "fontSize", "titleFontSize", "rowGap", "titleMaxSize", "showTitles", "bgColor",
-            "dimmedBgAlpha", "textColor", "dimmedTextColor", "titleTextColor",
-            "dimmedTitleTextColor", "keyHighlightColor", "iconAlpha", "dimmedIconAlpha",
-            "keyFontName", "titleFontName", "bumpMove", "showPreviewForOccluded",
-            "previewMode", "appPrefixOverrides", "occlusionSamplingEnabled",
-            "occlusionSamplingBaseWidth", "occlusionSamplingBaseHeight",
-            "occlusionSamplingMinCols", "occlusionSamplingMinRows", "occlusionSamplingMaxCols",
-            "occlusionSamplingMaxRows", "previewWidth", "previewPadding", "occludedScale",
-            "occludedBgAlpha", "occludedIconAlpha", "occludedPreviewAlpha",
-            "activeOverlayBorderColor", "activeOverlayBorderWidth", "hintOverlayColor",
-            "hintOverlayBorderColor", "dimmedHintOverlayBorderColor",
-        ]
-    }
-
     public static func build(_ options: [String: Any] = [:]) throws -> WindowHintsConfig {
-        let raw = ConfigDict(options, context: "windowHints")
-        try raw.rejectLegacyKeys(legacyFlatKeys)
         let merged = ConfigDict(options, context: "windowHints")
 
         // 状態別スタイル(occluded 等の未指定項目は normal を継承)
@@ -325,12 +305,11 @@ public enum WindowHintsConfigBuilder {
             dockWindowXBlend: merged.double("dock.windowBlend.x") ?? 0.65,
             dockWindowYBlend: merged.double("dock.windowBlend.y") ?? 1,
             navigationFocusBackKey: merged.string("navigation.focusBack.key")?.lowercased(),
-            windowMoverKey: merged.string("navigation.windowMover.moveToSelectedArea.key")?
-                .lowercased(),
+            areaHintsKey: merged.string("navigation.areaHints.key")?.lowercased(),
             applicationHintsKey: merged.string("navigation.applicationHints.key")?.lowercased(),
             applicationHintsJinraiMode: merged.bool("navigation.applicationHints.jinraiMode")
                 ?? false,
-            jinraiModeKey: nil,  // RootConfigBuilder が jinrai_mode.triggers から注入
+            jinraiModeKey: nil,  // RootConfigBuilder が jinraiMode.triggers から注入
             directionHintKeys: directionKeys,
             directDirectionHotkeys: directHotkeys,
             directionScoring: scoring,

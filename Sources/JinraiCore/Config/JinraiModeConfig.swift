@@ -35,7 +35,7 @@ public struct JinraiModeConfig: Sendable {
     /// 各機能の表示中に JinraiMode を開始するキー
     public var windowHintsTriggerKey: String?
     public var applicationHintsTriggerKey: String?
-    public var windowMoverTriggerKey: String?
+    public var areaHintsTriggerKey: String?
     public var logo: Logo
     public var comboCharacter: ComboElement
     public var comboText: ComboElement
@@ -44,7 +44,7 @@ public struct JinraiModeConfig: Sendable {
         position: "activeWindow",
         windowHintsTriggerKey: nil,
         applicationHintsTriggerKey: nil,
-        windowMoverTriggerKey: nil,
+        areaHintsTriggerKey: nil,
         logo: Logo(enabled: true, size: 480, alpha: 0.25, animation: .default),
         comboCharacter: ComboElement(
             enabled: false, alpha: 0.7,
@@ -69,8 +69,8 @@ public enum JinraiModeConfigBuilder {
             merged.string("triggers.windowHints.key")?.lowercased()
         config.applicationHintsTriggerKey =
             merged.string("triggers.applicationHints.key")?.lowercased()
-        config.windowMoverTriggerKey =
-            merged.string("triggers.windowMover.key")?.lowercased()
+        config.areaHintsTriggerKey =
+            merged.string("triggers.areaHints.key")?.lowercased()
 
         func animation(_ path: String, base: JinraiModeConfig.Animation)
             -> JinraiModeConfig.Animation

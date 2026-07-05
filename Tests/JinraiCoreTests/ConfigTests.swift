@@ -87,19 +87,6 @@ struct FocusBackConfigTests {
         #expect(!config.centerCursor)
     }
 
-    @Test("レガシーフラットキーはエラー")
-    func rejectsLegacyFlatKeys() {
-        #expect(throws: ConfigError.self) {
-            try FocusBackConfigBuilder.build(["hotkeyKey": "w"])
-        }
-    }
-
-    @Test("レガシーネストキー behavior.centerCursor はエラー")
-    func rejectsLegacyNestedKey() {
-        #expect(throws: ConfigError.self) {
-            try FocusBackConfigBuilder.build(["behavior": ["centerCursor": true]])
-        }
-    }
 }
 
 @Suite("FocusBorderConfigBuilder")
@@ -125,12 +112,6 @@ struct FocusBorderConfigTests {
         #expect(config.logo?.source == nil)
     }
 
-    @Test("レガシーフラットキーはエラー")
-    func rejectsLegacyFlatKeys() {
-        #expect(throws: ConfigError.self) {
-            try FocusBorderConfigBuilder.build(["borderWidth": 4])
-        }
-    }
 }
 
 @Suite("WindowHintsConfigBuilder")
@@ -245,46 +226,143 @@ struct WindowHintsConfigTests {
 
 @Suite("WindowMoverConfigBuilder")
 struct WindowMoverConfigTests {
-    @Test("Area Hints の spotlight alpha はデフォルト値を持つ")
-    func spotlightAlphaDefault() throws {
-        let config = try WindowMoverConfigBuilder.build()
-        #expect(config.selectedArea.activeWindowSpotlightAlpha == 0.5)
-    }
-
-    @Test("Area Hints の spotlight alpha を上書きできる")
-    func spotlightAlphaOverride() throws {
+    @Test("commands のホットキーを収集する")
+    func collectsCommandHotkeys() throws {
         let config = try WindowMoverConfigBuilder.build([
-            "selectedArea": ["activeWindowSpotlight": ["alpha": 0.36]]
+            "commands": [
+                "cycleLeft": ["hotkey": ["modifiers": ["ctrl", "alt"], "key": "h"]]
+            ]
         ])
-        #expect(config.selectedArea.activeWindowSpotlightAlpha == 0.36)
+        #expect(config.commandHotkeys["cycleLeft"]?.key == "h")
     }
 
-    @Test("Area Hints のアクティブ枠はデフォルト値を持つ")
-    func activeWindowHighlightDefault() throws {
-        let config = try WindowMoverConfigBuilder.build()
-        #expect(
-            config.selectedArea.activeWindowHighlightColor
-                == ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95))
-        #expect(config.selectedArea.activeWindowHighlightWidth == 13)
-        #expect(config.selectedArea.activeWindowHighlightCornerRadius == 12)
-    }
-
-    @Test("Area Hints のアクティブ枠を上書きできる")
-    func activeWindowHighlightOverride() throws {
-        let config = try WindowMoverConfigBuilder.build([
-            "selectedArea": [
-                "activeWindowHighlight": [
-                    "borderColor": ["red": 0.1, "green": 0.2, "blue": 0.3, "alpha": 0.4],
-                    "borderWidth": 8,
-                    "cornerRadius": 6,
+    @Test("不明なコマンド名はエラー")
+    func rejectsUnknownCommand() {
+        #expect(throws: ConfigError.self) {
+            try WindowMoverConfigBuilder.build([
+                "commands": [
+                    "moveToSelectedArea": ["hotkey": ["modifiers": [], "key": "s"]]
                 ]
+            ])
+        }
+    }
+}
+
+@Suite("AreaHintsConfigBuilder")
+struct AreaHintsConfigTests {
+    @Test("spotlight alpha はデフォルト値を持つ")
+    func spotlightAlphaDefault() throws {
+        let config = try AreaHintsConfigBuilder.build()
+        #expect(config.activeWindowSpotlightAlpha == 0.5)
+    }
+
+    @Test("spotlight alpha を上書きできる")
+    func spotlightAlphaOverride() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "activeWindowSpotlight": ["alpha": 0.36]
+        ])
+        #expect(config.activeWindowSpotlightAlpha == 0.36)
+    }
+
+    @Test("アクティブ枠はデフォルト値を持つ")
+    func activeWindowHighlightDefault() throws {
+        let config = try AreaHintsConfigBuilder.build()
+        #expect(
+            config.activeWindowHighlightColor
+                == ConfigColor(red: 0.95, green: 0.68, blue: 0.40, alpha: 0.95))
+        #expect(config.activeWindowHighlightWidth == 13)
+        #expect(config.activeWindowHighlightCornerRadius == 12)
+    }
+
+    @Test("アクティブ枠を上書きできる")
+    func activeWindowHighlightOverride() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "activeWindowHighlight": [
+                "borderColor": ["red": 0.1, "green": 0.2, "blue": 0.3, "alpha": 0.4],
+                "borderWidth": 8,
+                "cornerRadius": 6,
             ]
         ])
         #expect(
-            config.selectedArea.activeWindowHighlightColor
+            config.activeWindowHighlightColor
                 == ConfigColor(red: 0.1, green: 0.2, blue: 0.3, alpha: 0.4))
-        #expect(config.selectedArea.activeWindowHighlightWidth == 8)
-        #expect(config.selectedArea.activeWindowHighlightCornerRadius == 6)
+        #expect(config.activeWindowHighlightWidth == 8)
+        #expect(config.activeWindowHighlightCornerRadius == 6)
+    }
+
+    @Test("hotkey と jinraiMode.hotkey をパースする")
+    func parsesHotkeys() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "hotkey": ["modifiers": ["ctrl", "alt"], "key": "s"],
+            "jinraiMode": ["hotkey": ["modifiers": ["ctrl", "alt"], "key": "j"]],
+        ])
+        #expect(config.hotkey == .init(modifiers: ["ctrl", "alt"], key: "s"))
+        #expect(config.jinraiModeHotkey == .init(modifiers: ["ctrl", "alt"], key: "j"))
+    }
+
+    @Test("hotkey 未指定なら nil")
+    func hotkeyDefaultsToNil() throws {
+        let config = try AreaHintsConfigBuilder.build()
+        #expect(config.hotkey == nil)
+        #expect(config.jinraiModeHotkey == nil)
+    }
+
+    @Test("screens のエリア名とキーを検証して大文字化する")
+    func parsesScreens() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "screens": ["UUID-A": ["halfLeft": "s", "1920x1080Center": "m"]],
+            "defaultScreen": ["full": "a"],
+        ])
+        #expect(config.screens["UUID-A"]?["halfLeft"] == "S")
+        #expect(config.screens["UUID-A"]?["1920x1080Center"] == "M")
+        #expect(config.defaultScreen?["full"] == "A")
+    }
+
+    @Test("不明なエリア名はエラー")
+    func rejectsUnknownArea() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["centerLeft": "S"]]
+            ])
+        }
+    }
+
+    @Test("不明なアクション名はエラー")
+    func rejectsUnknownAction() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "actions": ["explodeWindow": "X"]
+            ])
+        }
+    }
+
+    @Test("エリアキーとアクションキーの重複はエラー")
+    func rejectsDuplicateKeys() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["halfLeft": "C"]],
+                "actions": ["closeWindow": "C"],
+            ])
+        }
+    }
+
+    @Test("一方が他方の接頭辞になるキーはエラー")
+    func rejectsPrefixConflict() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["halfLeft": "K", "halfRight": "KD"]]
+            ])
+        }
+    }
+
+    @Test("navigation.windowHints.key と labels.show をパースする")
+    func parsesNavigationAndLabels() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "navigation": ["windowHints": ["key": "h"]],
+            "labels": ["show": false],
+        ])
+        #expect(config.windowHintsKey == "H")
+        #expect(config.showLabels == false)
     }
 }
 
@@ -316,15 +394,23 @@ struct RootConfigTests {
         #expect(config.macosNativeTabs == .default)
     }
 
-    @Test(
-        "旧 snake_case セクション名はエラーになる",
-        arguments: [
-            "macos_native_tabs", "focus_back", "focus_border", "window_hints",
-            "window_mover", "application_hints", "jinrai_mode",
-        ])
-    func rejectsLegacySnakeCaseSections(key: String) {
-        #expect(throws: ConfigError.self) {
-            try RootConfigBuilder.build(text: #"{ "\#(key)": {} }"#)
-        }
+    @Test("areaHints セクションで Area Hints が有効になる")
+    func areaHintsSection() throws {
+        let config = try RootConfigBuilder.build(text: """
+            { "areaHints": { "hotkey": { "modifiers": ["ctrl", "alt"], "key": "s" } } }
+            """)
+        #expect(config.areaHints?.hotkey?.key == "s")
+        #expect(config.windowMover == nil)
+    }
+
+    @Test("jinraiMode.triggers.areaHints は areaHints へ注入される")
+    func areaHintsTriggerInjection() throws {
+        let config = try RootConfigBuilder.build(text: """
+            {
+                "areaHints": {},
+                "jinraiMode": { "triggers": { "areaHints": { "key": "return" } } }
+            }
+            """)
+        #expect(config.areaHints?.jinraiModeKey == "return")
     }
 }

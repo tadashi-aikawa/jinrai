@@ -4,9 +4,9 @@ icon: lucide/layout-grid
 
 # 利用可能なエリア
 
-[Window Mover](window-mover.md)の固定配置コマンドや`selectedArea.screens`では、次のエリア名を使用できます。
+[Window Mover](window-mover.md)の固定配置コマンドや[Area Hints](area-hints.md)の`screens`では、次のエリア名を使用できます。
 
-エリア名の方角はディスプレイの向きにかかわらず変わりません。`selectedArea.screens`の選択キーには1〜3文字を使用できます。
+エリア名の方角はディスプレイの向きにかかわらず変わりません。`screens`の選択キーには1〜3文字を使用できます。
 
 ## 全体・空き領域・固定サイズ
 
@@ -16,7 +16,7 @@ icon: lucide/layout-grid
 | <img src="./attachments/window-mover/areas/full.svg" alt="full" width="48"> | `full` | ディスプレイ全体 | ディスプレイ全体 |
 | <img src="./attachments/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイ内に収まるよう調整 |
 
-`freeArea`は`selectedArea.screens`で使用できます。固定サイズは、たとえば`1920x1080Center`のように指定します。
+`freeArea`は[Area Hints](area-hints.md)の`screens`で使用できます。固定サイズは、たとえば`1920x1080Center`のように指定します。
 
 ## 2分割
 

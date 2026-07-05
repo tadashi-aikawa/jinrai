@@ -18,6 +18,7 @@ public struct RootConfig {
     public var focusBorder: FocusBorderConfig?
     public var windowHints: WindowHintsConfig?
     public var windowMover: WindowMoverConfig?
+    public var areaHints: AreaHintsConfig?
     public var applicationHints: ApplicationHintsConfig?
     /// セクションなしでもデフォルト値を持つ(元 init.lua の normalizeJinraiMode)
     public var jinraiMode: JinraiModeConfig = .default
@@ -28,6 +29,7 @@ public struct RootConfig {
         focusBorder: FocusBorderConfig? = nil,
         windowHints: WindowHintsConfig? = nil,
         windowMover: WindowMoverConfig? = nil,
+        areaHints: AreaHintsConfig? = nil,
         applicationHints: ApplicationHintsConfig? = nil
     ) {
         self.macosNativeTabs = macosNativeTabs
@@ -35,6 +37,7 @@ public struct RootConfig {
         self.focusBorder = focusBorder
         self.windowHints = windowHints
         self.windowMover = windowMover
+        self.areaHints = areaHints
         self.applicationHints = applicationHints
     }
 }
@@ -46,24 +49,7 @@ public enum RootConfigBuilder {
         return try build(root)
     }
 
-    /// 旧 snake_case セクション名 → 現行 camelCase 名
-    static let legacySectionKeys: [String: String] = [
-        "macos_native_tabs": "macosNativeTabs",
-        "focus_back": "focusBack",
-        "focus_border": "focusBorder",
-        "window_hints": "windowHints",
-        "window_mover": "windowMover",
-        "application_hints": "applicationHints",
-        "jinrai_mode": "jinraiMode",
-    ]
-
     public static func build(_ root: [String: Any]) throws -> RootConfig {
-        for (legacy, current) in legacySectionKeys where root[legacy] != nil {
-            throw ConfigError(
-                "[jinrai] セクション名 '\(legacy)' は '\(current)' に変更されました。config.jsonc を更新してください"
-            )
-        }
-
         var config = RootConfig()
 
         if let tabs = root["macosNativeTabs"] as? [String: Any] {
@@ -92,6 +78,9 @@ public enum RootConfigBuilder {
         if let section = root["windowMover"] as? [String: Any] {
             config.windowMover = try WindowMoverConfigBuilder.build(section)
         }
+        if let section = root["areaHints"] as? [String: Any] {
+            config.areaHints = try AreaHintsConfigBuilder.build(section)
+        }
         if let section = root["applicationHints"] as? [String: Any] {
             // Window Hints からの遷移キー(navigation.applicationHints.key)を渡す
             let windowHintsSection = root["windowHints"] as? [String: Any]
@@ -107,7 +96,7 @@ public enum RootConfigBuilder {
         }
         // トリガキーを各機能の config へ配布(元 init.lua の internal.jinraiMode 注入)
         config.windowHints?.jinraiModeKey = config.jinraiMode.windowHintsTriggerKey
-        config.windowMover?.jinraiModeKey = config.jinraiMode.windowMoverTriggerKey
+        config.areaHints?.jinraiModeKey = config.jinraiMode.areaHintsTriggerKey
         config.applicationHints?.jinraiModeKey = config.jinraiMode.applicationHintsTriggerKey
         return config
     }

@@ -41,14 +41,7 @@ public enum FocusBorderConfigBuilder {
         ],
     ] }
 
-    static let legacyFlatKeys: Set<String> = [
-        "borderWidth", "borderColor", "outlineWidth", "outlineColor",
-        "duration", "fadeSteps", "spaceSwitchDelay", "cornerRadius", "minWindowSize",
-    ]
-
     public static func build(_ options: [String: Any] = [:]) throws -> FocusBorderConfig {
-        let raw = ConfigDict(options, context: "focusBorder")
-        try raw.rejectLegacyKeys(legacyFlatKeys)
         let merged = ConfigDict(
             DeepMerge.merge(defaults: defaults, overrides: options), context: "focusBorder")
 
