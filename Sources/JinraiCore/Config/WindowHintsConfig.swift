@@ -302,8 +302,8 @@ public enum WindowHintsConfigBuilder {
         }
 
         return WindowHintsConfig(
-            hotkeyModifiers: merged.stringArray("hotkey.modifiers") ?? ["alt"],
-            hotkeyKey: merged.string("hotkey.key") ?? "f20",
+            hotkeyModifiers: merged.stringArray("hotkey.modifiers") ?? [],
+            hotkeyKey: merged.string("hotkey.key"),
             hintChars: merged.stringArray("hint.chars") ?? HintKeyAssignment.defaultHintChars,
             prefixOverrides: overrides,
             padding: merged.double("hint.padding") ?? 12,

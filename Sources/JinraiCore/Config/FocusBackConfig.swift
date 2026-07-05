@@ -14,13 +14,9 @@ public struct FocusBackConfig: Equatable, Sendable {
 
 public enum FocusBackConfigBuilder {
     static var defaults: [String: Any] { [
-        "hotkey": [
-            "modifiers": ["option"],
-            "key": "w",
-        ],
         "behavior": [
             "cursor": ["onSelect": true]
-        ],
+        ]
     ] }
 
     public static func build(_ options: [String: Any] = [:]) throws -> FocusBackConfig {

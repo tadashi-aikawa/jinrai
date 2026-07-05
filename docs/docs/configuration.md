@@ -148,9 +148,9 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
   "windowHints": {
     "hotkey": {
       // Window Hintsを開く修飾キーです。
-      "modifiers": ["alt"],
-      // Window Hintsを開くキーです。
-      "key": "f20"
+      "modifiers": null,
+      // Window Hintsを開くキーです。未指定ならホットキーは登録されません。
+      "key": null
     },
     "hint": {
       // ヒントキーに使用する文字です。
@@ -386,9 +386,9 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
   "focusBack": {
     "hotkey": {
       // Focus Backを実行する修飾キーです。
-      "modifiers": ["option"],
-      // Focus Backを実行するキーです。
-      "key": "w"
+      "modifiers": null,
+      // Focus Backを実行するキーです。未指定ならホットキーは登録されません。
+      "key": null
     },
     "urlEvent": {
       // jinrai://<名前> のURLから実行する場合の名前です。

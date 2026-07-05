@@ -361,7 +361,7 @@
       "properties": {
         "hotkey": {
           "$ref": "#/definitions/hotkey",
-          "description": "Focus Backを実行するホットキーです。デフォルトは option+w です。"
+          "description": "Focus Backを実行するホットキーです。未指定なら登録されません。"
         },
         "urlEvent": {
           "type": "object",
@@ -649,7 +649,7 @@
       "properties": {
         "hotkey": {
           "$ref": "#/definitions/hotkey",
-          "description": "Window Hintsを開くホットキーです。デフォルトは alt+f20 です。"
+          "description": "Window Hintsを開くホットキーです。未指定なら登録されません。"
         },
         "hint": {
           "type": "object",

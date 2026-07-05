@@ -65,11 +65,11 @@ struct DeepMergeTests {
 
 @Suite("FocusBackConfigBuilder")
 struct FocusBackConfigTests {
-    @Test("デフォルト値: option+w, カーソル追従あり")
+    @Test("デフォルト値: ホットキーなし, カーソル追従あり")
     func defaults() throws {
         let config = try FocusBackConfigBuilder.build()
-        #expect(config.hotkeyModifiers == ["option"])
-        #expect(config.hotkeyKey == "w")
+        #expect(config.hotkeyModifiers == [])
+        #expect(config.hotkeyKey == nil)
         #expect(config.urlEventName == nil)
         #expect(config.centerCursor)
     }
@@ -116,6 +116,13 @@ struct FocusBorderConfigTests {
 
 @Suite("WindowHintsConfigBuilder")
 struct WindowHintsConfigTests {
+    @Test("hotkey 未指定なら nil(登録されない)")
+    func hotkeyDefaultsToNil() throws {
+        let config = try WindowHintsConfigBuilder.build()
+        #expect(config.hotkeyModifiers == [])
+        #expect(config.hotkeyKey == nil)
+    }
+
     @Test("spotlight alpha はデフォルト値を持つ")
     func spotlightAlphaDefault() throws {
         let config = try WindowHintsConfigBuilder.build()
@@ -530,6 +537,34 @@ struct RootConfigTests {
             """)
         #expect(config.areaHints?.hotkey?.key == "s")
         #expect(config.windowMover == nil)
+    }
+
+    @Test("初回起動テンプレートはパースでき、全機能が意図したキーマップで有効になる")
+    func defaultConfigTemplateParses() throws {
+        let config = try RootConfigBuilder.build(text: DefaultConfigTemplate.text)
+        #expect(config.focusBorder != nil)
+
+        #expect(config.focusBack?.hotkeyModifiers == ["alt"])
+        #expect(config.focusBack?.hotkeyKey == "w")
+
+        #expect(config.windowHints?.hotkeyModifiers == ["ctrl", "alt"])
+        #expect(config.windowHints?.hotkeyKey == "f")
+
+        let commands = try #require(config.windowMover?.commandHotkeys)
+        #expect(
+            Set(commands.keys) == [
+                "cycleLeft", "cycleRight", "maximizeWindow", "moveToNextDisplay",
+            ])
+
+        let areas = config.areaHints?.defaultScreen?.resolve(displayCount: 1)
+        #expect(areas?["halfLeft"] == "H")
+        #expect(config.areaHints?.hotkey?.key == "s")
+
+        #expect(config.applicationHints?.apps.count == 2)
+
+        // JinraiMode トリガーが各ヒントへ注入される
+        #expect(config.jinraiMode.windowHintsTriggerKey == "return")
+        #expect(config.jinraiMode.areaHintsTriggerKey == "return")
     }
 
     @Test("jinraiMode.triggers.areaHints は areaHints へ注入される")
