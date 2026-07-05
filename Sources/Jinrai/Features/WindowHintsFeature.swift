@@ -258,6 +258,7 @@ final class WindowHintsFeature {
             let onScreenIDs = Set(ordered.map(\.id))
             let activeSpaces = Spaces.activeSpaceIDs()
             let spaceNumbers = Spaces.spaceNumbersByID()
+            let fullscreenSpaces = Spaces.fullscreenSpaceIDs()
             let others = WindowEnumerator.allSpacesWindows()
                 .filter {
                     $0.pid != ProcessInfo.processInfo.processIdentifier
@@ -266,17 +267,30 @@ final class WindowHintsFeature {
             // Space 判定を先に行い、Space 解決不能なゴースト窓を除外する
             // (AX 呼び出し前に絞ることで大量の無関係ウィンドウへの IPC も避ける)
             var offSpace: [WindowInfo] = []
+            var fullscreenWindows: [(id: UInt32, spaceID: UInt64, frame: CGRect)] = []
             for var win in others {
                 guard let spaceID = Spaces.spaceID(of: win.id) else { continue }
                 // 現Space にあるのに画面にない(最小化等)ものは対象外
                 guard !activeSpaces.contains(spaceID) else { continue }
                 win.spaceNumber = spaceNumbers[spaceID]
+                win.isFullscreenSpace = fullscreenSpaces.contains(spaceID)
+                if win.isFullscreenSpace {
+                    fullscreenWindows.append((win.id, spaceID, win.frame))
+                }
                 offSpace.append(win)
             }
-            for win in WindowEnumerator.offSpaceStandardWindows(from: offSpace) {
+            // フルスクリーン Space の本体ウィンドウは AX 未観測でも候補にする
+            // (同じ Space に載る補助ウィンドウは面積の足切りで除外)
+            let fullscreenWindowIDs = FullscreenSpaceWindows.mainWindowIDs(
+                windows: fullscreenWindows)
+            for win in WindowEnumerator.offSpaceStandardWindows(
+                from: offSpace, alwaysInclude: fullscreenWindowIDs)
+            {
                 // ネイティブタブアプリで Space 不明な候補は幽霊タブの可能性があるため除外
                 let appKey = win.bundleID ?? win.appName
-                if macosNativeTabsApps.contains(appKey), win.spaceNumber == nil {
+                if macosNativeTabsApps.contains(appKey), win.spaceNumber == nil,
+                    !win.isFullscreenSpace
+                {
                     continue
                 }
                 offSpaceWindowIDs.insert(win.id)
@@ -582,6 +596,9 @@ final class WindowHintsFeature {
         ConfigColor(red: 0.68, green: 0.42, blue: 0.90, alpha: 0.60),
         ConfigColor(red: 0.92, green: 0.38, blue: 0.58, alpha: 0.60),
     ]
+    /// フルスクリーン Space バッジ(「F」)の色。番号付き Space と区別するためグレー
+    private static let fullscreenBadgeColor = ConfigColor(
+        red: 0.55, green: 0.58, blue: 0.62, alpha: 0.60)
 
     /// ヒント1個分のレイヤー(角丸背景+アイコン+キー+タイトル)
     private func hintContainer(for hint: HintKeyAssignment.Hint) -> CALayer {
@@ -608,7 +625,8 @@ final class WindowHintsFeature {
         // 他スペースのウィンドウは選ぶ頻度が低いため中身を減光して控えめにするが、
         // 背景は不透明に保つ(コンテナ全体の減光だと裏のコンテンツが透けて
         // 背景次第で読めなくなるため)
-        let isOtherSpace = hint.entry.window.spaceNumber != nil
+        let isOtherSpace =
+            hint.entry.window.spaceNumber != nil || hint.entry.window.isFullscreenSpace
         let contentDim: Float = isOtherSpace ? Self.otherSpaceContentDim : 1.0
 
         let winFrame = hint.entry.window.frame
@@ -761,12 +779,17 @@ final class WindowHintsFeature {
             container.addSublayer(title)
         }
 
-        // Space 番号バッジ(別Space候補のみ、右上角を三角コーナーで塗って数字を表示)
-        if let spaceNumber = hint.entry.window.spaceNumber {
+        // Space 番号バッジ(別Space候補のみ、右上角を三角コーナーで塗って数字を表示。
+        // フルスクリーン Space は番号を持たないため「F」を表示)
+        if hint.entry.window.spaceNumber != nil || hint.entry.window.isFullscreenSpace {
+            let spaceNumber = hint.entry.window.spaceNumber
             let side: CGFloat = 84
             let w = container.bounds.width
             let h = container.bounds.height
-            let color = Self.spaceBadgeColors[(spaceNumber - 1) % Self.spaceBadgeColors.count]
+            let color =
+                spaceNumber.map {
+                    Self.spaceBadgeColors[($0 - 1) % Self.spaceBadgeColors.count]
+                } ?? Self.fullscreenBadgeColor
 
             // container を masksToBounds にするとシャドウごと切られるため、
             // 角丸クリップ用のラッパーを1枚挟んで三角を角丸に沿わせる
@@ -798,7 +821,7 @@ final class WindowHintsFeature {
             clip.addSublayer(hypotenuse)
 
             let number = CATextLayer()
-            number.string = String(spaceNumber)
+            number.string = spaceNumber.map(String.init) ?? "F"
             number.font = NSFont.boldSystemFont(ofSize: 36)
             number.fontSize = 36
             number.alignmentMode = .center
@@ -1190,7 +1213,9 @@ final class WindowHintsFeature {
             // 他スペースヒントの背景は hintContainer と同じ不透明寄りの黒を維持する
             // (中身の減光は構築時にレイヤーへ設定済みのため触らない)
             var bgColor = style.bgColor
-            if matches, hint.entry.window.spaceNumber != nil {
+            if matches,
+                hint.entry.window.spaceNumber != nil || hint.entry.window.isFullscreenSpace
+            {
                 bgColor.alpha = Self.otherSpaceBgAlpha
             }
             container.backgroundColor = cgColor(bgColor)

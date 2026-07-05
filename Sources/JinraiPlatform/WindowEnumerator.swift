@@ -79,10 +79,15 @@ public enum WindowEnumerator {
     /// subrole を判定する(キャッシュ済み要素への属性読み取りは Space をまたいでも有効)。
     /// 未観測のウィンドウは候補にしない。常駐アプリの不可視ウィンドウ
     /// (Shottr 等。CGWindowList には載るが AX には現れない)を幽霊候補として
-    /// 拾わないためで、キャッシュ済みのみ対象なのは元 hs.window.filter と同じ性質
-    public static func offSpaceStandardWindows(from windows: [WindowInfo]) -> [WindowInfo] {
+    /// 拾わないためで、キャッシュ済みのみ対象なのは元 hs.window.filter と同じ性質。
+    /// alwaysInclude のウィンドウ(フルスクリーン Space の本体ウィンドウ等、
+    /// 標準ウィンドウであることが構造的に保証されるもの)は未観測でも候補にする
+    public static func offSpaceStandardWindows(
+        from windows: [WindowInfo], alwaysInclude: Set<CGWindowID> = []
+    ) -> [WindowInfo] {
         var axCache: [pid_t: [AXWindow]] = [:]
         return windows.filter { win in
+            if alwaysInclude.contains(win.id) { return true }
             let axWindows = axCache[win.pid] ?? AXWindow.windows(pid: win.pid)
             axCache[win.pid] = axWindows
             if let ax = axWindows.first(where: { $0.windowID == win.id }) {

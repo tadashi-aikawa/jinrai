@@ -137,9 +137,45 @@ final class WindowMoverFeature {
     }
 
     private func apply(frame: CGRect, to window: AXWindow) {
+        // ネイティブフルスクリーン中は位置・サイズを変更できないため、
+        // 解除して(アニメーション完了を待って)から適用する
+        if window.isFullScreen {
+            window.setFullScreen(false)
+            waitForFullScreenExit(of: window, retries: 20) { [weak self] exited in
+                guard exited else {
+                    NSLog("[jinrai.windowMover] フルスクリーン解除を待ちきれませんでした")
+                    return
+                }
+                // AXFullScreen が false になった直後はまだ遷移中のことがあるため少し待つ
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    self?.applyDirectly(frame: frame, to: window)
+                }
+            }
+            return
+        }
+        applyDirectly(frame: frame, to: window)
+    }
+
+    private func applyDirectly(frame: CGRect, to window: AXWindow) {
         window.setFrame(frame)
         if config.cursorAfterMove {
             Mouse.moveToCenter(of: window.frame ?? frame)
+        }
+    }
+
+    /// フルスクリーン解除アニメーションの完了を 100ms 間隔でポーリングして待つ
+    private func waitForFullScreenExit(
+        of window: AXWindow, retries: Int, completion: @escaping (Bool) -> Void
+    ) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if !window.isFullScreen {
+                completion(true)
+            } else if retries > 0 {
+                self.waitForFullScreenExit(
+                    of: window, retries: retries - 1, completion: completion)
+            } else {
+                completion(false)
+            }
         }
     }
 

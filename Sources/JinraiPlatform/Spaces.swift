@@ -10,6 +10,8 @@ public enum Spaces {
         public var displayUUID: String
         /// ユーザー Space の ID(Mission Control の並び順)
         public var spaceIDs: [UInt64]
+        /// フルスクリーン Space(type 4)の ID
+        public var fullscreenSpaceIDs: [UInt64]
         public var currentSpaceID: UInt64?
     }
 
@@ -21,11 +23,18 @@ public enum Spaces {
         else { return [] }
         return raw.map { display in
             let spaces = display["Spaces"] as? [[String: Any]] ?? []
-            // type 0 = ユーザー Space(フルスクリーン Space 等を除く)
+            func spaceID(_ space: [String: Any]) -> UInt64? {
+                (space["id64"] as? NSNumber)?.uint64Value
+                    ?? (space["ManagedSpaceID"] as? NSNumber)?.uint64Value
+            }
+            // type 0 = ユーザー Space、type 4 = フルスクリーン Space
             let userSpaceIDs = spaces.compactMap { space -> UInt64? in
                 guard (space["type"] as? Int ?? 0) == 0 else { return nil }
-                return (space["id64"] as? NSNumber)?.uint64Value
-                    ?? (space["ManagedSpaceID"] as? NSNumber)?.uint64Value
+                return spaceID(space)
+            }
+            let fullscreenIDs = spaces.compactMap { space -> UInt64? in
+                guard (space["type"] as? Int ?? 0) == 4 else { return nil }
+                return spaceID(space)
             }
             let current =
                 ((display["Current Space"] as? [String: Any])?["id64"] as? NSNumber)?
@@ -33,9 +42,15 @@ public enum Spaces {
             return DisplaySpaces(
                 displayUUID: display["Display Identifier"] as? String ?? "",
                 spaceIDs: userSpaceIDs,
+                fullscreenSpaceIDs: fullscreenIDs,
                 currentSpaceID: current
             )
         }
+    }
+
+    /// 全ディスプレイのフルスクリーン Space の ID
+    public static func fullscreenSpaceIDs() -> Set<UInt64> {
+        Set(managedDisplaySpaces().flatMap(\.fullscreenSpaceIDs))
     }
 
     /// Space ID → Mission Control 上の番号(全ディスプレイ通し、1始まり)

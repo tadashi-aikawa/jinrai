@@ -12,6 +12,8 @@ public struct WindowInfo: Equatable, Sendable {
     public var title: String
     public var frame: CGRect
     public var spaceNumber: Int?
+    /// フルスクリーン Space(番号を持たない専用 Space)に属するか
+    public var isFullscreenSpace: Bool
     public var isFocused: Bool
 
     public init(
@@ -22,6 +24,7 @@ public struct WindowInfo: Equatable, Sendable {
         title: String = "",
         frame: CGRect = .zero,
         spaceNumber: Int? = nil,
+        isFullscreenSpace: Bool = false,
         isFocused: Bool = false
     ) {
         self.id = id
@@ -31,6 +34,7 @@ public struct WindowInfo: Equatable, Sendable {
         self.title = title
         self.frame = frame
         self.spaceNumber = spaceNumber
+        self.isFullscreenSpace = isFullscreenSpace
         self.isFocused = isFocused
     }
 }

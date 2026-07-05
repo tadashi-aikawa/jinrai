@@ -62,6 +62,11 @@ public struct AXWindow {
         attribute(kAXMinimizedAttribute) as? Bool ?? false
     }
 
+    /// ネイティブフルスクリーン状態(kAXFullScreenAttribute は公開ヘッダにないため文字列で指定)
+    public var isFullScreen: Bool {
+        attribute("AXFullScreen") as? Bool ?? false
+    }
+
     /// 標準ウィンドウか(元 isStandardWindow: subrole が AXStandardWindow)
     public var isStandard: Bool {
         (attribute(kAXSubroleAttribute) as? String) == kAXStandardWindowSubrole
@@ -112,6 +117,11 @@ public struct AXWindow {
 
     public func minimize() {
         AXUIElementSetAttributeValue(element, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
+    }
+
+    public func setFullScreen(_ value: Bool) {
+        AXUIElementSetAttributeValue(
+            element, "AXFullScreen" as CFString, value ? kCFBooleanTrue : kCFBooleanFalse)
     }
 
     public func close() {
