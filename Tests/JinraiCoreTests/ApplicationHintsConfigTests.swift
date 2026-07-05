@@ -79,6 +79,14 @@ struct ApplicationHintsConfigTests {
         }
     }
 
+    @Test("windowHintsKey の space は S と衝突しない")
+    func spaceWindowHintsKeyDoesNotConflictWithSAppKey() throws {
+        let config = try ApplicationHintsConfigBuilder.build(
+            ["apps": [["bundleID": "a.b", "key": "S"]]],
+            windowHintsKey: "space")
+        #expect(config.windowHintsKey == "SPACE")
+    }
+
     @Test("newWindow.hotkey で送出キーを上書きできる")
     func newWindowHotkey() throws {
         let config = try ApplicationHintsConfigBuilder.build([

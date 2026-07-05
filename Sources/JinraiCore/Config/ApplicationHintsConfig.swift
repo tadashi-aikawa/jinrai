@@ -80,7 +80,7 @@ public enum ApplicationHintsConfigBuilder {
 
     /// 完全一致 or 一方が他方の接頭辞なら衝突(元 keysConflict)
     static func keysConflict(_ a: String, _ b: String) -> Bool {
-        a == b || a.hasPrefix(b) || b.hasPrefix(a)
+        ConfigKeyDescriptor.sequence(a).conflicts(with: ConfigKeyDescriptor.sequence(b))
     }
 
     public static func build(
@@ -146,7 +146,9 @@ public enum ApplicationHintsConfigBuilder {
         }
         // windowHintsKey との衝突
         if let windowHintsKey = windowHintsKey?.uppercased() {
-            for app in apps where keysConflict(app.key, windowHintsKey) {
+            let windowHintsDescriptor = ConfigKeyDescriptor.keyName(windowHintsKey)
+            for app in apps
+            where ConfigKeyDescriptor.sequence(app.key).conflicts(with: windowHintsDescriptor) {
                 throw ConfigError(
                     "[jinrai.applicationHints] キー '\(app.key)' が Window Hints 遷移キー '\(windowHintsKey)' と衝突します"
                 )

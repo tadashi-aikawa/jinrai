@@ -452,6 +452,24 @@ struct AreaHintsConfigTests {
         }
     }
 
+    @Test("navigation.windowHints.key の space は S と衝突しない")
+    func allowsSpaceWindowHintsKeyWithSAreaKey() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "screens": ["UUID-A": ["full": "S"]],
+            "navigation": ["windowHints": ["key": "space"]],
+        ])
+        #expect(config.windowHintsKey == "SPACE")
+    }
+
+    @Test("navigation.windowHints.key の tab は T と衝突しない")
+    func allowsTabWindowHintsKeyWithTAreaKey() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "screens": ["UUID-A": ["full": "T"]],
+            "navigation": ["windowHints": ["key": "tab"]],
+        ])
+        #expect(config.windowHintsKey == "TAB")
+    }
+
     @Test("navigation.windowHints.key と labels.show をパースする")
     func parsesNavigationAndLabels() throws {
         let config = try AreaHintsConfigBuilder.build([

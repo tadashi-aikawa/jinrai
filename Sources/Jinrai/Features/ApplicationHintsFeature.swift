@@ -250,7 +250,9 @@ final class ApplicationHintsFeature {
         }
         // JinraiMode 開始(triggers.applicationHints.key。表示は開いたまま)
         if let name = jinraiKeyName(of: event),
-            name == config.jinraiModeKey
+            ConfigKeyDescriptor.matches(
+                configuredKeyName: config.jinraiModeKey,
+                inputKeyName: name)
         {
             if !showJinraiMode {
                 showJinraiMode = true
@@ -261,8 +263,11 @@ final class ApplicationHintsFeature {
             return true
         }
         // Window Hints へ戻る
-        if let name = event.character?.uppercased(),
-            name == config.windowHintsKey, let onOpenWindowHints
+        if let name = jinraiKeyName(of: event),
+            ConfigKeyDescriptor.matches(
+                configuredKeyName: config.windowHintsKey,
+                inputKeyName: name),
+            let onOpenWindowHints
         {
             let wasJinrai = showJinraiMode
             close()

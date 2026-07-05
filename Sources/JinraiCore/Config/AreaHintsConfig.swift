@@ -126,9 +126,11 @@ public enum AreaHintsConfigBuilder {
                 mappings.append((label, fallback))
             }
             for (variantContext, mapping) in mappings {
-                var allKeys = Array(mapping.values.map { $0.uppercased() })
-                allKeys.append(contentsOf: actions.values)
-                if let windowHintsKey { allKeys.append(windowHintsKey) }
+                var allKeys = Array(mapping.values.map { ConfigKeyDescriptor.sequence($0) })
+                allKeys.append(contentsOf: actions.values.map { ConfigKeyDescriptor.sequence($0) })
+                if let windowHintsKey {
+                    allKeys.append(ConfigKeyDescriptor.keyName(windowHintsKey))
+                }
                 try validateKeyConflicts(allKeys, context: variantContext)
             }
         }
@@ -254,17 +256,17 @@ public enum AreaHintsConfigBuilder {
     }
 
     /// 重複と接頭辞包含("K" と "KD" の共存)を禁止
-    static func validateKeyConflicts(_ keys: [String], context: String) throws {
+    static func validateKeyConflicts(_ keys: [ConfigKeyDescriptor], context: String) throws {
         for i in keys.indices {
             for j in keys.indices where i < j {
                 let a = keys[i]
                 let b = keys[j]
                 if a == b {
-                    throw ConfigError("[jinrai.areaHints] duplicate key '\(a)' in \(context)")
+                    throw ConfigError("[jinrai.areaHints] duplicate key '\(a.display)' in \(context)")
                 }
-                if a.hasPrefix(b) || b.hasPrefix(a) {
+                if a.conflicts(with: b) {
                     throw ConfigError(
-                        "[jinrai.areaHints] key '\(a)' conflicts with '\(b)' (prefix) in \(context)"
+                        "[jinrai.areaHints] key '\(a.display)' conflicts with '\(b.display)' (prefix) in \(context)"
                     )
                 }
             }

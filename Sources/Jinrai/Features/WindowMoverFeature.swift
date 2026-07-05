@@ -586,7 +586,9 @@ final class WindowMoverFeature {
 
         // JinraiMode 開始(triggers.areaHints.key。選択画面は開いたまま)
         if let name = chooserKeyName(of: event),
-            name == areaHints.jinraiModeKey
+            ConfigKeyDescriptor.matches(
+                configuredKeyName: areaHints.jinraiModeKey,
+                inputKeyName: name)
         {
             if !chooserJinraiMode {
                 chooserJinraiMode = true
@@ -595,9 +597,11 @@ final class WindowMoverFeature {
             return true
         }
 
-        // "space" 等の特殊キーは Window Hints への遷移キーとしてのみ扱う
-        if event.keyCode == UInt32(kVK_Space),
-            areaHints.windowHintsKey == "SPACE"
+        // 特殊キー名を含む Window Hints への遷移
+        if let name = chooserKeyName(of: event),
+            ConfigKeyDescriptor.matches(
+                configuredKeyName: areaHints.windowHintsKey,
+                inputKeyName: name)
         {
             transitionToWindowHints()
             return true
@@ -640,7 +644,10 @@ final class WindowMoverFeature {
         // 接頭辞一致があれば入力継続
         let allKeys =
             chooserCandidates.map(\.key) + areaHints.actions.values
-            + (areaHints.windowHintsKey.map { [$0] } ?? [])
+            + (areaHints.windowHintsKey.flatMap {
+                ConfigKeyDescriptor.typedSequence(forKeyName: $0)
+            }
+                .map { [$0] } ?? [])
         if allKeys.contains(where: { $0.hasPrefix(input) }) {
             chooserInput = input
             updateChooserHighlight()
