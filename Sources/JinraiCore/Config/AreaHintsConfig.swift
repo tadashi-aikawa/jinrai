@@ -10,15 +10,36 @@ public struct AreaHintsConfig: Sendable {
         public var key: String
     }
 
+    /// エリアマップ({ エリア名: 選択キー })を接続中のディスプレイ数で切り替える。
+    /// フラットに書いた場合はディスプレイ数によらず fallback が使われる。
+    public struct AreaMappingVariants: Equatable, Sendable {
+        /// ディスプレイ数 → エリアマップ
+        public var byDisplayCount: [Int: [String: String]]
+        /// 一致するディスプレイ数がないときのマップ(フラット形式 or "default")
+        public var fallback: [String: String]?
+
+        public init(
+            byDisplayCount: [Int: [String: String]] = [:],
+            fallback: [String: String]? = nil
+        ) {
+            self.byDisplayCount = byDisplayCount
+            self.fallback = fallback
+        }
+
+        public func resolve(displayCount: Int) -> [String: String]? {
+            byDisplayCount[displayCount] ?? fallback
+        }
+    }
+
     /// エリア選択画面を開くホットキー
     public var hotkey: HotkeyBinding?
     /// JinraiMode として開くホットキー
     public var jinraiModeHotkey: HotkeyBinding?
 
-    /// ディスプレイUUID → { エリア名: 選択キー(1〜3文字) }
-    public var screens: [String: [String: String]]
-    /// screens に設定がないディスプレイで使うマップ
-    public var defaultScreen: [String: String]?
+    /// ディスプレイUUID → エリアマップ(ディスプレイ数分岐可)
+    public var screens: [String: AreaMappingVariants]
+    /// screens に設定がないディスプレイで使うマップ(ディスプレイ数分岐可)
+    public var defaultScreen: AreaMappingVariants?
     /// アクション名(closeWindow 等)→ キー
     public var actions: [String: String]
     /// Window Hints へ遷移するキー(navigation.windowHints.key)
@@ -64,20 +85,20 @@ public enum AreaHintsConfigBuilder {
     public static func build(_ options: [String: Any] = [:]) throws -> AreaHintsConfig {
         let merged = ConfigDict(options, context: "areaHints")
 
-        // screens: UUID → { エリア名: キー }
-        var screens: [String: [String: String]] = [:]
+        // screens: UUID → エリアマップ(フラット or ディスプレイ数分岐)
+        var screens: [String: AreaHintsConfig.AreaMappingVariants] = [:]
         if let rawScreens = merged.dict("screens") {
             for (uuid, value) in rawScreens {
-                guard let mapping = value as? [String: String] else {
+                guard let raw = value as? [String: Any] else {
                     throw ConfigError(
                         "[jinrai.areaHints] screens['\(uuid)'] must map area names to keys")
                 }
-                screens[uuid] = try validateAreaMapping(mapping, context: uuid)
+                screens[uuid] = try parseMappingVariants(raw, context: "screens['\(uuid)']")
             }
         }
-        var defaultScreen: [String: String]?
-        if let mapping = merged.dict("defaultScreen") as? [String: String] {
-            defaultScreen = try validateAreaMapping(mapping, context: "defaultScreen")
+        var defaultScreen: AreaHintsConfig.AreaMappingVariants?
+        if let raw = merged.dict("defaultScreen") {
+            defaultScreen = try parseMappingVariants(raw, context: "defaultScreen")
         }
 
         var actions: [String: String] = [:]
@@ -94,12 +115,28 @@ public enum AreaHintsConfigBuilder {
 
         let windowHintsKey = merged.string("navigation.windowHints.key")?.uppercased()
 
-        // キー衝突の検証(エリアキー + アクションキー + windowHints キー)
-        for (uuid, mapping) in screens {
-            var allKeys = Array(mapping.values.map { $0.uppercased() })
-            allKeys.append(contentsOf: actions.values)
-            if let windowHintsKey { allKeys.append(windowHintsKey) }
-            try validateKeyConflicts(allKeys, context: "screens['\(uuid)']")
+        // キー衝突の検証(エリアキー + アクションキー + windowHints キー)。変種ごとに行う
+        func validateVariantConflicts(
+            _ variants: AreaHintsConfig.AreaMappingVariants, context: String
+        ) throws {
+            var mappings: [(String, [String: String])] = variants.byDisplayCount
+                .map { ("\(context)[\($0.key)]", $0.value) }
+            if let fallback = variants.fallback {
+                let label = variants.byDisplayCount.isEmpty ? context : "\(context)[default]"
+                mappings.append((label, fallback))
+            }
+            for (variantContext, mapping) in mappings {
+                var allKeys = Array(mapping.values.map { $0.uppercased() })
+                allKeys.append(contentsOf: actions.values)
+                if let windowHintsKey { allKeys.append(windowHintsKey) }
+                try validateKeyConflicts(allKeys, context: variantContext)
+            }
+        }
+        for (uuid, variants) in screens {
+            try validateVariantConflicts(variants, context: "screens['\(uuid)']")
+        }
+        if let defaultScreen {
+            try validateVariantConflicts(defaultScreen, context: "defaultScreen")
         }
 
         let defaultStyles: [String: ConfigColor] = [
@@ -154,6 +191,49 @@ public enum AreaHintsConfigBuilder {
                 ?? ConfigColor(red: 0.96, green: 1.0, blue: 0.98, alpha: 0.32),
             jinraiModeKey: nil  // RootConfigBuilder が jinraiMode.triggers から注入
         )
+    }
+
+    /// フラットなエリアマップ、またはディスプレイ数("1"〜 / "default")で分岐するマップをパースする。
+    /// キーがすべて純数字か "default" なら分岐形式、1つもなければフラット形式、混在はエラー
+    static func parseMappingVariants(
+        _ raw: [String: Any], context: String
+    ) throws -> AreaHintsConfig.AreaMappingVariants {
+        func displayCount(of key: String) -> Int? {
+            guard key.allSatisfy(\.isNumber), let count = Int(key) else { return nil }
+            return count
+        }
+        let variantKeys = raw.keys.filter { displayCount(of: $0) != nil || $0 == "default" }
+        if variantKeys.isEmpty {
+            guard let mapping = raw as? [String: String] else {
+                throw ConfigError("[jinrai.areaHints] \(context) must map area names to keys")
+            }
+            return .init(fallback: try validateAreaMapping(mapping, context: context))
+        }
+        guard variantKeys.count == raw.count else {
+            throw ConfigError(
+                "[jinrai.areaHints] \(context) must not mix display counts and area names")
+        }
+
+        var byDisplayCount: [Int: [String: String]] = [:]
+        var fallback: [String: String]?
+        for (key, value) in raw {
+            guard let mapping = value as? [String: String] else {
+                throw ConfigError(
+                    "[jinrai.areaHints] \(context)['\(key)'] must map area names to keys")
+            }
+            let variantContext = "\(context)['\(key)']"
+            if key == "default" {
+                fallback = try validateAreaMapping(mapping, context: variantContext)
+            } else {
+                guard let count = displayCount(of: key), count >= 1 else {
+                    throw ConfigError(
+                        "[jinrai.areaHints] \(variantContext) display count must be 1 or more")
+                }
+                byDisplayCount[count] = try validateAreaMapping(
+                    mapping, context: variantContext)
+            }
+        }
+        return .init(byDisplayCount: byDisplayCount, fallback: fallback)
     }
 
     static func validateAreaMapping(

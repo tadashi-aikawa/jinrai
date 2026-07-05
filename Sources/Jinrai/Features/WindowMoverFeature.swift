@@ -232,11 +232,12 @@ final class WindowMoverFeature {
 
         let focusedWindowFrame = chooserTargetWindow()?.frame
         var hasAnyMapping = false
+        let displayCount = NSScreen.screens.count
         for screen in NSScreen.screens {
             let uuid = ScreenUtil.uuid(of: screen)
             let mapping =
-                uuid.flatMap { areaHints.screens[$0] }
-                ?? areaHints.defaultScreen
+                uuid.flatMap { areaHints.screens[$0]?.resolve(displayCount: displayCount) }
+                ?? areaHints.defaultScreen?.resolve(displayCount: displayCount)
             let screenFrame = ScreenUtil.visibleFrame(of: screen)
             let overlay = OverlayWindow(frame: screenFrame, level: .hints)
             guard let root = overlay.rootLayer else { continue }

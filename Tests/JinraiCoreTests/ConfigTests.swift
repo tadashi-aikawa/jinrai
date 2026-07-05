@@ -313,9 +313,106 @@ struct AreaHintsConfigTests {
             "screens": ["UUID-A": ["halfLeft": "s", "1920x1080Center": "m"]],
             "defaultScreen": ["full": "a"],
         ])
-        #expect(config.screens["UUID-A"]?["halfLeft"] == "S")
-        #expect(config.screens["UUID-A"]?["1920x1080Center"] == "M")
-        #expect(config.defaultScreen?["full"] == "A")
+        let mapping = config.screens["UUID-A"]?.resolve(displayCount: 1)
+        #expect(mapping?["halfLeft"] == "S")
+        #expect(mapping?["1920x1080Center"] == "M")
+        // フラット形式はディスプレイ数によらず同じマップを返す
+        #expect(config.screens["UUID-A"]?.resolve(displayCount: 3) == mapping)
+        #expect(config.defaultScreen?.resolve(displayCount: 2)?["full"] == "A")
+    }
+
+    @Test("screens はディスプレイ数で分岐できる(数一致 → default → nil)")
+    func parsesScreensByDisplayCount() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "screens": [
+                "UUID-A": [
+                    "1": ["halfLeft": "h"],
+                    "2": ["halfLeft": "jh"],
+                    "default": ["halfLeft": "z"],
+                ]
+            ]
+        ])
+        let variants = config.screens["UUID-A"]
+        #expect(variants?.resolve(displayCount: 1)?["halfLeft"] == "H")
+        #expect(variants?.resolve(displayCount: 2)?["halfLeft"] == "JH")
+        #expect(variants?.resolve(displayCount: 3)?["halfLeft"] == "Z")
+    }
+
+    @Test("default なしで一致するディスプレイ数がなければ nil")
+    func resolvesNilWithoutMatchingDisplayCount() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "screens": ["UUID-A": ["2": ["halfLeft": "h"]]]
+        ])
+        #expect(config.screens["UUID-A"]?.resolve(displayCount: 1) == nil)
+    }
+
+    @Test("defaultScreen もディスプレイ数で分岐できる")
+    func parsesDefaultScreenByDisplayCount() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "defaultScreen": [
+                "1": ["halfLeft": "h"],
+                "2": ["halfLeft": "jh"],
+            ]
+        ])
+        #expect(config.defaultScreen?.resolve(displayCount: 1)?["halfLeft"] == "H")
+        #expect(config.defaultScreen?.resolve(displayCount: 2)?["halfLeft"] == "JH")
+        #expect(config.defaultScreen?.resolve(displayCount: 3) == nil)
+    }
+
+    @Test("ディスプレイ数とエリア名の混在はエラー")
+    func rejectsMixedDisplayCountAndAreaNames() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": [
+                    "UUID-A": [
+                        "1": ["halfLeft": "h"],
+                        "halfRight": "l",
+                    ] as [String: Any]
+                ]
+            ])
+        }
+    }
+
+    @Test("ディスプレイ数 0 はエラー")
+    func rejectsZeroDisplayCount() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["0": ["halfLeft": "h"]]]
+            ])
+        }
+    }
+
+    @Test("キー衝突は変種ごとに検証する(別変種間の同一キーは許可)")
+    func validatesKeyConflictsPerVariant() throws {
+        // 別変種間なら同じキーを使える
+        let config = try AreaHintsConfigBuilder.build([
+            "screens": [
+                "UUID-A": [
+                    "1": ["halfLeft": "h"],
+                    "2": ["halfRight": "h"],
+                ]
+            ]
+        ])
+        #expect(config.screens["UUID-A"]?.resolve(displayCount: 2)?["halfRight"] == "H")
+
+        // 変種内の接頭辞衝突はエラー
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": [
+                    "UUID-A": ["1": ["halfLeft": "K", "halfRight": "KD"]]
+                ]
+            ])
+        }
+    }
+
+    @Test("defaultScreen もアクションキーとの衝突を検証する")
+    func validatesDefaultScreenKeyConflicts() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "defaultScreen": ["halfLeft": "C"],
+                "actions": ["closeWindow": "C"],
+            ])
+        }
     }
 
     @Test("不明なエリア名はエラー")

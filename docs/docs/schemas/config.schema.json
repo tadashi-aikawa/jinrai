@@ -1451,6 +1451,31 @@
       "minLength": 1,
       "maxLength": 3
     },
+    "areaMapOrByDisplayCount": {
+      "description": "エリア名と選択キーのマップです。フラットに書くか、接続中のディスプレイ数(または default)ごとに分岐して書けます。",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/areaMap"
+        },
+        {
+          "type": "object",
+          "description": "接続中のディスプレイ数ごとのエリアマップです。一致する数がないときは default が使われます。",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[1-9][0-9]*$": {
+              "$ref": "#/definitions/areaMap",
+              "description": "このディスプレイ数のときに使うエリアマップです。"
+            }
+          },
+          "properties": {
+            "default": {
+              "$ref": "#/definitions/areaMap",
+              "description": "一致するディスプレイ数がないときに使うエリアマップです。"
+            }
+          }
+        }
+      ]
+    },
     "areaMap": {
       "type": "object",
       "description": "エリア名と選択キー(1〜3文字)のマップです。固定サイズは 1920x1080Center のように指定します。",
@@ -1670,16 +1695,16 @@
         },
         "screens": {
           "type": "object",
-          "description": "ディスプレイUUIDごとのエリア名と選択キーのマップです。未設定の状態でArea Hintsを開くと、各ディスプレイ上にUUIDが表示されます。",
+          "description": "ディスプレイUUIDごとのエリア名と選択キーのマップです。接続中のディスプレイ数(または default)ごとの分岐も指定できます。未設定の状態でArea Hintsを開くと、各ディスプレイ上にUUIDが表示されます。",
           "additionalProperties": {
-            "$ref": "#/definitions/areaMap"
+            "$ref": "#/definitions/areaMapOrByDisplayCount"
           }
         },
         "defaultScreen": {
-          "description": "screensに設定がないディスプレイで使う、エリア名と選択キーのマップです。",
+          "description": "screensに設定がないディスプレイで使う、エリア名と選択キーのマップです。接続中のディスプレイ数(または default)ごとの分岐も指定できます。",
           "anyOf": [
             {
-              "$ref": "#/definitions/areaMap"
+              "$ref": "#/definitions/areaMapOrByDisplayCount"
             },
             {
               "type": "null"
