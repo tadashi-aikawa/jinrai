@@ -18,7 +18,11 @@ fi
 # ad-hoc フォールバックのままリリースする事故を防ぐ。
 # CI 以外(ローカル検証)では jinrai-dev 証明書が無いことがあるためスキップする
 if [[ "${CI:-}" == "true" ]]; then
-  codesign -dvv "$APP" 2>&1 | tee /dev/stderr | grep -q "Authority=jinrai-dev"
+  # grep -q をパイプ終端に置くとマッチ時点で先行プロセスが SIGPIPE(exit 141)に
+  # なり pipefail に拾われるため、一旦変数に受ける
+  CODESIGN_INFO="$(codesign -dvv "$APP" 2>&1)"
+  echo "$CODESIGN_INFO"
+  grep -q "Authority=jinrai-dev" <<<"$CODESIGN_INFO"
 fi
 
 rm -rf "$DIST_DIR"
@@ -29,6 +33,8 @@ mkdir -p "$DIST_DIR"
 ditto -c -k --keepParent "$APP" "$ARCHIVE"
 
 unzip -tq "$ARCHIVE"
-unzip -Z1 "$ARCHIVE" | grep -qx "JINRAI.app/Contents/Info.plist"
+# grep -q だと SIGPIPE で unzip が exit 141 になり pipefail に拾われうる(-q なしの
+# grep は入力を最後まで読むため安全)
+unzip -Z1 "$ARCHIVE" | grep -x "JINRAI.app/Contents/Info.plist" >/dev/null
 
 echo "Built and validated $ARCHIVE (version $VERSION)"

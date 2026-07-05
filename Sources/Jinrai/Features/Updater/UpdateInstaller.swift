@@ -61,6 +61,7 @@ enum UpdateInstaller {
     /// 新しいバンドルを起動して自分は終了する。
     /// open は LaunchServices 経由なので置換後の新バンドルが確実に起動される。
     /// -n は付けない(旧プロセスは直後に terminate するため同時起動を避ける)
+    @MainActor
     static func relaunch() {
         let appPath = Bundle.main.bundleURL.path
         let process = Process()
