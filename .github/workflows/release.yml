@@ -1,8 +1,7 @@
 name: Release
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,7 +11,17 @@ jobs:
     # ci.yml と同じ理由(古い SDK は ScreenCaptureKit の Sendable 注釈が欠ける)
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - name: Verify release branch
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "Releases must run from the main branch." >&2
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # semantic-release がタグとコミット履歴から次バージョンを算出するため全履歴が必要
+          fetch-depth: 0
 
       # 自己署名証明書 jinrai-dev を一時 keychain に import する。
       # ad-hoc 署名だとリリース毎に署名が変わり、TCC(アクセシビリティ・画面収録)の
@@ -37,41 +46,21 @@ jobs:
           security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
           rm "$RUNNER_TEMP/cert.p12"
 
-      - name: Extract version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
 
-      - name: Build app bundle
-        run: ./scripts/make-app.sh release "$VERSION"
+      - name: Install pnpm
+        run: npm install --global pnpm@11.9.0
 
-      # ad-hoc フォールバックのままリリースする事故を防ぐ
-      - name: Verify signature
+      - name: Release
         run: |
-          codesign -dvv .build/JINRAI.app 2>&1 | tee /dev/stderr | grep -q "Authority=jinrai-dev"
-
-      # ditto zip: 拡張属性・署名メタデータを保持しつつダブルクリック展開できる。
-      # --keepParent が無いと展開時に JINRAI.app の中身がばらける
-      - name: Archive
-        run: ditto -c -k --keepParent .build/JINRAI.app "JINRAI-$VERSION.zip"
-
-      - name: Create GitHub Release
+          pnpm dlx \
+            --package semantic-release@25.0.2 \
+            --package conventional-changelog-conventionalcommits@9.3.1 \
+            --package @semantic-release/exec \
+            semantic-release
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "$GITHUB_REF_NAME" "JINRAI-$VERSION.zip" \
-            --title "$GITHUB_REF_NAME" --generate-notes
-
-      - name: Update Homebrew tap
-        env:
-          TAP_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
-        run: |
-          SHA256=$(shasum -a 256 "JINRAI-$VERSION.zip" | cut -d' ' -f1)
-          git clone "https://x-access-token:${TAP_TOKEN}@github.com/tadashi-aikawa/homebrew-tap.git" "$RUNNER_TEMP/tap"
-          cd "$RUNNER_TEMP/tap"
-          sed -i '' \
-            -e "s/^  version .*/  version \"$VERSION\"/" \
-            -e "s/^  sha256 .*/  sha256 \"$SHA256\"/" \
-            Casks/jinrai.rb
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "jinrai $VERSION"
-          git push
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}

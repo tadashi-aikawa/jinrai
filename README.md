@@ -94,12 +94,15 @@ pkill -x Jinrai && ./scripts/make-app.sh && open .build/Jinrai.app  # 再起動
 
 ### リリース
 
-`v*` タグを push すると [release.yml](.github/workflows/release.yml) が走り、
-ビルド → 自己署名 → zip 化 → GitHub Release 作成 → [homebrew-tap](https://github.com/tadashi-aikawa/homebrew-tap) の cask 更新まで自動で行われる。
+GitHub Actions の [Release ワークフロー](.github/workflows/release.yml) を main ブランチで手動実行(workflow_dispatch)すると、
+semantic-release が conventional commits から次バージョンを算出し、
+ビルド → 自己署名 → zip 化 → タグ・GitHub Release 作成 → [homebrew-tap](https://github.com/tadashi-aikawa/homebrew-tap) の cask 更新まで自動で行われる。
 
 ```bash
-git tag v0.1.0 && git push origin v0.1.0
+gh workflow run Release
 ```
+
+バージョンの決定ルールやリリースノートのセクション構成は [release.config.cjs](release.config.cjs) を参照。前回リリース以降にリリース対象のコミット(feat/fix など)が無い場合は何もせず終了する。
 
 署名には自己署名証明書 `jinrai-dev` を使う(ad-hoc だとリリース毎に署名が変わり、更新のたびに TCC 許可が剥がれるため)。必要な GitHub Secrets:
 
