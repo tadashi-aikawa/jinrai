@@ -64,18 +64,21 @@ final class UpdaterFeature {
         }
     }
 
-    /// brew 管理下では自前更新すると cask の version/sha256 と乖離するため案内のみ
+    /// brew 管理下では自前更新すると cask の version/sha256 と乖離するため案内のみ。
+    /// 起動中のプロセスは brew が .app を置き換えても古いまま動き続けるため、
+    /// コピー時に自分から終了し、コマンド末尾の open -a で新バージョンを起動させる
     private func promptBrewUpgrade(_ release: UpdateChecker.LatestRelease) {
-        let command = "brew upgrade --cask jinrai"
+        let command = "brew update && brew upgrade --cask jinrai && open -a JINRAI"
         let alert = NSAlert()
         alert.messageText = "v\(release.version.description) が利用可能です"
         alert.informativeText =
-            "Homebrew でインストールされているため、以下のコマンドで更新してください。\n\n\(command)"
-        alert.addButton(withTitle: "コマンドをコピー")
+            "Homebrew でインストールされているため、以下のコマンドで更新してください。\n\n\(command)\n\nコピーすると JINRAI は終了します(更新完了後に自動で起動します)。"
+        alert.addButton(withTitle: "コマンドをコピーして終了")
         alert.addButton(withTitle: "閉じる")
         if alert.runModal() == .alertFirstButtonReturn {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(command, forType: .string)
+            NSApp.terminate(nil)
         }
     }
 
