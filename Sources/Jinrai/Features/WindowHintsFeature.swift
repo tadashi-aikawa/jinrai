@@ -551,11 +551,11 @@ final class WindowHintsFeature {
 
     /// Space 番号バッジの色パレット(元 spaceBadge.spaceColors: 青/緑/橙/紫/桃)
     private static let spaceBadgeColors: [ConfigColor] = [
-        ConfigColor(red: 0.34, green: 0.64, blue: 0.96, alpha: 0.56),
-        ConfigColor(red: 0.30, green: 0.78, blue: 0.47, alpha: 0.56),
-        ConfigColor(red: 0.95, green: 0.60, blue: 0.25, alpha: 0.56),
-        ConfigColor(red: 0.68, green: 0.42, blue: 0.90, alpha: 0.56),
-        ConfigColor(red: 0.92, green: 0.38, blue: 0.58, alpha: 0.56),
+        ConfigColor(red: 0.34, green: 0.64, blue: 0.96, alpha: 0.60),
+        ConfigColor(red: 0.30, green: 0.78, blue: 0.47, alpha: 0.60),
+        ConfigColor(red: 0.95, green: 0.60, blue: 0.25, alpha: 0.60),
+        ConfigColor(red: 0.68, green: 0.42, blue: 0.90, alpha: 0.60),
+        ConfigColor(red: 0.92, green: 0.38, blue: 0.58, alpha: 0.60),
     ]
 
     /// ヒント1個分のレイヤー(角丸背景+アイコン+キー+タイトル)
@@ -580,6 +580,12 @@ final class WindowHintsFeature {
         // 隠れウィンドウのプレビュー(要・画面収録権限。未許可時はスキップ)。
         // ScreenCaptureKit は非同期 API のため、ここではウィンドウの frame から
         // サイズだけ確保し、画像は撮影完了後に差し込む(buildOverlays 末尾の Task)
+        // 他スペースのウィンドウは選ぶ頻度が低いため、ヒント全体を半透明にして
+        // 背景に馴染ませ、現スペースのヒントに先に目が行くようにする。
+        // 黒スクリムだと明るい背景で逆に高コントラストになり悪目立ちするため、
+        // 背景色に適応して後退する opacity 方式を採る
+        let isOtherSpace = hint.entry.window.spaceNumber != nil
+
         let winFrame = hint.entry.window.frame
         let expectsPreview =
             isDockHint(hint) && config.previewEnabled && WindowCapture.hasPermission
@@ -627,6 +633,9 @@ final class WindowHintsFeature {
         container.bounds = CGRect(x: 0, y: 0, width: containerWidth, height: containerHeight)
         container.backgroundColor = cgColor(style.bgColor)
         container.cornerRadius = CGFloat(config.cornerRadius)
+        if isOtherSpace {
+            container.opacity = 0.65
+        }
 
         // ヒント箱の overlay 塗り(アクティブ=橙 / 通常=青)。dock(occluded)には描かない
         let isDock = isDockHint(hint)
@@ -721,27 +730,58 @@ final class WindowHintsFeature {
             container.addSublayer(title)
         }
 
-        // Space 番号バッジ(別Space候補のみ、右上に表示)
+        // Space 番号バッジ(別Space候補のみ、右上角を三角コーナーで塗って数字を表示)
         if let spaceNumber = hint.entry.window.spaceNumber {
-            let badgeSize: CGFloat = 32
+            let side: CGFloat = 84
+            let w = container.bounds.width
+            let h = container.bounds.height
             let color = Self.spaceBadgeColors[(spaceNumber - 1) % Self.spaceBadgeColors.count]
-            let badge = CATextLayer()
-            badge.string = String(spaceNumber)
-            badge.font = NSFont.boldSystemFont(ofSize: 18)
-            badge.fontSize = 18
-            badge.alignmentMode = .center
-            badge.foregroundColor = CGColor(gray: 1, alpha: 0.92)
-            badge.backgroundColor = CGColor(
+
+            // container を masksToBounds にするとシャドウごと切られるため、
+            // 角丸クリップ用のラッパーを1枚挟んで三角を角丸に沿わせる
+            let clip = CALayer()
+            clip.frame = container.bounds
+            clip.cornerRadius = CGFloat(config.cornerRadius)
+            clip.masksToBounds = true
+
+            let trianglePath = CGMutablePath()
+            trianglePath.move(to: CGPoint(x: w - side, y: h))
+            trianglePath.addLine(to: CGPoint(x: w, y: h))
+            trianglePath.addLine(to: CGPoint(x: w, y: h - side))
+            trianglePath.closeSubpath()
+            let triangle = CAShapeLayer()
+            triangle.path = trianglePath
+            triangle.fillColor = CGColor(
                 red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
-            badge.borderColor = CGColor(red: 0.98, green: 0.99, blue: 1.00, alpha: 0.72)
-            badge.borderWidth = 1
-            badge.cornerRadius = badgeSize / 2
-            badge.contentsScale = NSScreen.main?.backingScaleFactor ?? 2
-            badge.frame = CGRect(
-                x: container.bounds.width - badgeSize - 4,
-                y: container.bounds.height - badgeSize - 4,
-                width: badgeSize, height: badgeSize)
-            container.addSublayer(badge)
+            clip.addSublayer(triangle)
+
+            // 斜辺の細い白ライン(暗い背景でも境界が分かるように)
+            let hypotenusePath = CGMutablePath()
+            hypotenusePath.move(to: CGPoint(x: w - side, y: h))
+            hypotenusePath.addLine(to: CGPoint(x: w, y: h - side))
+            let hypotenuse = CAShapeLayer()
+            hypotenuse.path = hypotenusePath
+            hypotenuse.fillColor = nil
+            hypotenuse.strokeColor = CGColor(gray: 1, alpha: 0.25)
+            hypotenuse.lineWidth = 1
+            clip.addSublayer(hypotenuse)
+
+            let number = CATextLayer()
+            number.string = String(spaceNumber)
+            number.font = NSFont.boldSystemFont(ofSize: 36)
+            number.fontSize = 36
+            number.alignmentMode = .center
+            number.foregroundColor = CGColor(gray: 1, alpha: 0.85)
+            number.contentsScale = NSScreen.main?.backingScaleFactor ?? 2
+            // CATextLayer は上寄せ描画のため、実寸を取って三角の重心付近に中央配置
+            let numberSize = number.preferredFrameSize()
+            number.frame = CGRect(
+                x: w - side * 0.27 - numberSize.width / 2,
+                y: h - side * 0.32 - numberSize.height / 2,
+                width: numberSize.width, height: numberSize.height)
+            clip.addSublayer(number)
+
+            container.addSublayer(clip)
         }
 
         // ヒント箱の枠線(アクティブ=橙 / 通常=青 / 候補外=灰)
@@ -1117,7 +1157,9 @@ final class WindowHintsFeature {
             let state: HintState = matches ? hintState(of: hint) : .dimmed
             let style = config.states[state] ?? config.states[.normal]!
             container.backgroundColor = cgColor(style.bgColor)
-            container.opacity = matches ? 1.0 : 0.35
+            // 他スペースヒントは候補中でも減光したまま(hintContainer と同じ値)
+            let matchedOpacity: Float = hint.entry.window.spaceNumber != nil ? 0.65 : 1.0
+            container.opacity = matches ? matchedOpacity : 0.35
 
             // ヒント箱の overlay 塗り・枠線を状態に合わせて更新
             if let fill = hintOverlayFills[hint.key],
