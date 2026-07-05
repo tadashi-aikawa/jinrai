@@ -39,13 +39,13 @@ JinraiModeは次の方法で開始できます。
 
 [Window Mover](window-mover.md)のエリア選択中にウィンドウを選び直すキーも設定できます。
 
-```lua
-window_mover = {
-  selectedArea = {
-    windowHints = {
-      key = "space",
-    },
-  },
+```json
+"window_mover": {
+  "selectedArea": {
+    "windowHints": {
+      "key": "space"
+    }
+  }
 }
 ```
 

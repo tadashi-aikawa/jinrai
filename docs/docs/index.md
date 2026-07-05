@@ -3,7 +3,7 @@
     <img src="./attachments/jinrai.svg" width="256" />
     <p>
     <h3>迅雷</h3>
-    <div>思考の速度で素早くウィンドウの切り替えや認識を行うためのHammerspoonスクリプト</div>
+    <div>思考の速度で素早くウィンドウ操作を行うmacOS用ツール</div>
     </p>
     <p>
         <a href="https://github.com/tadashi-aikawa/jinrai/releases/latest"><img src="https://img.shields.io/github/release/tadashi-aikawa/jinrai" alt="release" /></a>
@@ -14,7 +14,7 @@
 
 ---
 
-JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択・移動するためのHammerspoon Spoonです。
+JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択・移動するためのメニューバー常駐アプリです。
 
 ## 主な機能
 
@@ -37,7 +37,7 @@ JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択
 
 ## はじめる
 
-[セットアップ](setup.md)では、HammerspoonとJINRAIのインストール、最小設定、アップデート方法を説明します。
+[セットアップ](setup.md)では、JINRAIのインストール、権限の許可、設定ファイル、アップデート方法を説明します。
 
 各機能の使い方や設定は、次のページを参照してください。
 
@@ -56,17 +56,12 @@ JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択
 
 ## デモ動画
 
-<iframe width="700" height="393" src="https://www.youtube.com/embed/clwLqNw0kXw?si=O4erjEct74Pt4Lvj" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-<iframe width="700" height="393" src="https://www.youtube.com/embed/KPzN_dWQKaA?si=fPjtHrxLwNuRsWOF" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-<iframe width="700" height="393" src="https://www.youtube.com/embed/UnIfdg4emzU?si=e71kGttbS3O_CBfy" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+==TODO==
 
 ## 関連リンク
 
 - [GitHub](https://github.com/tadashi-aikawa/jinrai)
 - [Deep Wiki](https://deepwiki.com/tadashi-aikawa/jinrai)
-- [至高のウィンドウ切り替えを目指して『JINRAI(迅雷)』をつくった](https://minerva.mamansoft.net/2026-03-01-jinrai-ultimate-window-switching)
 
 ## ライセンス
 

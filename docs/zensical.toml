@@ -17,7 +17,7 @@ site_name = "JINRAI(迅雷)"
 # meaningful description of the site content for use by search engines.
 #
 # Read more: https://zensical.org/docs/setup/basics/#site_description
-site_description = "思考の速度で素早くウィンドウの切り替えや認識を行うためのhammerspoonスクリプト"
+site_description = "思考の速度で素早くウィンドウ操作を行うmacOS用ツール"
 
 # The site_author attribute. This is used in the HTML head element.
 #

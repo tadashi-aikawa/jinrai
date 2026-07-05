@@ -4,23 +4,22 @@
 
 ## 枠線を設定
 
-`focus_border = {}`で有効になります。
+`"focus_border": {}`で有効になります。
 [全設定](configuration.md)に、Focus Borderの全項目、デフォルト値、各項目の説明を掲載しています。
 
 ## ロゴを表示
 
 フォーカスしたウィンドウの中央に画像を表示できます。
 
-```lua
-focus_border = {
-  visual = {
-    logo = {
-      source = nil,
-      size = 480,
-      alpha = 0.95,
-    },
-  },
+```json
+"focus_border": {
+  "visual": {
+    "logo": {
+      "size": 480,
+      "alpha": 0.95
+    }
+  }
 }
 ```
 
-`source`を省略するとJINRAI同梱ロゴを使います。ローカル画像のパスまたはURLも指定できます。`logo = nil`または`false`で非表示になります。
+`source`を省略するとJINRAI同梱ロゴを使います。`source`にはローカル画像のパスまたはURLも指定できます。`logo`を未指定にすると非表示になります。
