@@ -549,6 +549,13 @@ final class WindowHintsFeature {
         return .normal
     }
 
+    /// 他スペースヒントの背景アルファ。裏のコンテンツに左右されず一定の暗い下地を
+    /// 保証しつつ、現スペース(occluded: 0.70)よりわずかに薄くして後退させる
+    private static let otherSpaceBgAlpha = 0.60
+    /// 他スペースヒントの中身(プレビュー・アイコン・キー・タイトル)の減光率。
+    /// 背景ではなく中身側で控えめさを出し、現スペースのヒントに先に目が行くようにする
+    private static let otherSpaceContentDim: Float = 0.65
+
     /// Space 番号バッジの色パレット(元 spaceBadge.spaceColors: 青/緑/橙/紫/桃)
     private static let spaceBadgeColors: [ConfigColor] = [
         ConfigColor(red: 0.34, green: 0.64, blue: 0.96, alpha: 0.60),
@@ -580,11 +587,11 @@ final class WindowHintsFeature {
         // 隠れウィンドウのプレビュー(要・画面収録権限。未許可時はスキップ)。
         // ScreenCaptureKit は非同期 API のため、ここではウィンドウの frame から
         // サイズだけ確保し、画像は撮影完了後に差し込む(buildOverlays 末尾の Task)
-        // 他スペースのウィンドウは選ぶ頻度が低いため、ヒント全体を半透明にして
-        // 背景に馴染ませ、現スペースのヒントに先に目が行くようにする。
-        // 黒スクリムだと明るい背景で逆に高コントラストになり悪目立ちするため、
-        // 背景色に適応して後退する opacity 方式を採る
+        // 他スペースのウィンドウは選ぶ頻度が低いため中身を減光して控えめにするが、
+        // 背景は不透明に保つ(コンテナ全体の減光だと裏のコンテンツが透けて
+        // 背景次第で読めなくなるため)
         let isOtherSpace = hint.entry.window.spaceNumber != nil
+        let contentDim: Float = isOtherSpace ? Self.otherSpaceContentDim : 1.0
 
         let winFrame = hint.entry.window.frame
         let expectsPreview =
@@ -631,11 +638,12 @@ final class WindowHintsFeature {
 
         let container = CALayer()
         container.bounds = CGRect(x: 0, y: 0, width: containerWidth, height: containerHeight)
-        container.backgroundColor = cgColor(style.bgColor)
-        container.cornerRadius = CGFloat(config.cornerRadius)
+        var bgColor = style.bgColor
         if isOtherSpace {
-            container.opacity = 0.65
+            bgColor.alpha = Self.otherSpaceBgAlpha
         }
+        container.backgroundColor = cgColor(bgColor)
+        container.cornerRadius = CGFloat(config.cornerRadius)
 
         // ヒント箱の overlay 塗り(アクティブ=橙 / 通常=青)。dock(occluded)には描かない
         let isDock = isDockHint(hint)
@@ -659,18 +667,20 @@ final class WindowHintsFeature {
             previewLayer.masksToBounds = true
             previewLayer.cornerRadius = container.cornerRadius
             previewLayer.frame = container.bounds
-            previewLayer.opacity = Float(config.previewAlpha)
+            previewLayer.opacity = Float(config.previewAlpha) * contentDim
             container.addSublayer(previewLayer)
             previewLayersByWindowID[hint.entry.window.id] = previewLayer
         }
 
         // プレビュー付きヒントは背後のウィンドウと色が近いと境界が消えるため、
-        // シャドウ(明るい背景で効く)と淡い縁取り(暗い背景で効く)を併用する
+        // シャドウ(明るい背景で効く)と淡い縁取り(暗い背景で効く)を併用する。
+        // 他スペースは「浮き」と「明るいリム」が悪目立ちするため両方とも弱める
         if expectsPreview {
             container.borderWidth = 1
-            container.borderColor = NSColor(white: 1, alpha: 0.3).cgColor
+            container.borderColor =
+                NSColor(white: 1, alpha: isOtherSpace ? 0.1 : 0.3).cgColor
             container.shadowColor = NSColor.black.cgColor
-            container.shadowOpacity = 0.5
+            container.shadowOpacity = isOtherSpace ? 0.1 : 0.5
             container.shadowRadius = 6
             container.shadowOffset = CGSize(width: 0, height: -2)
             container.shadowPath = CGPath(
@@ -688,8 +698,9 @@ final class WindowHintsFeature {
             previewLayer.cornerRadius = 4
             // ヒント箱の背景色とプレビュー内容が近くても境界が分かるよう縁取り
             previewLayer.borderWidth = 1
-            previewLayer.borderColor = NSColor(white: 1, alpha: 0.3).cgColor
-            previewLayer.opacity = Float(config.previewAlpha)
+            previewLayer.borderColor =
+                NSColor(white: 1, alpha: isOtherSpace ? 0.1 : 0.3).cgColor
+            previewLayer.opacity = Float(config.previewAlpha) * contentDim
             previewLayer.frame = CGRect(
                 x: (container.bounds.width - belowPreviewSize.width) / 2,
                 y: bottomY,
@@ -710,7 +721,7 @@ final class WindowHintsFeature {
             var rect = CGRect(origin: .zero, size: icon.size)
             iconLayer.contents = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil)
             iconLayer.frame = CGRect(x: topRowX, y: topRowY, width: iconSize, height: iconSize)
-            iconLayer.opacity = Float(style.iconAlpha)
+            iconLayer.opacity = Float(style.iconAlpha) * contentDim
             container.addSublayer(iconLayer)
         }
 
@@ -718,6 +729,7 @@ final class WindowHintsFeature {
             x: topRowX + iconSize + 8,
             y: topRowY + (iconSize - keySize.height) / 2,
             width: keySize.width, height: keySize.height)
+        keyText.opacity = contentDim
         container.addSublayer(keyText)
         hintKeyLayers[hint.key] = keyText
 
@@ -727,6 +739,7 @@ final class WindowHintsFeature {
                 x: (container.bounds.width - titleSize.width) / 2,
                 y: bottomY,
                 width: titleSize.width, height: titleSize.height)
+            title.opacity = contentDim
             container.addSublayer(title)
         }
 
@@ -1156,10 +1169,14 @@ final class WindowHintsFeature {
             let matches = currentInput.isEmpty || hint.key.hasPrefix(currentInput)
             let state: HintState = matches ? hintState(of: hint) : .dimmed
             let style = config.states[state] ?? config.states[.normal]!
-            container.backgroundColor = cgColor(style.bgColor)
-            // 他スペースヒントは候補中でも減光したまま(hintContainer と同じ値)
-            let matchedOpacity: Float = hint.entry.window.spaceNumber != nil ? 0.65 : 1.0
-            container.opacity = matches ? matchedOpacity : 0.35
+            // 他スペースヒントの背景は hintContainer と同じ不透明寄りの黒を維持する
+            // (中身の減光は構築時にレイヤーへ設定済みのため触らない)
+            var bgColor = style.bgColor
+            if matches, hint.entry.window.spaceNumber != nil {
+                bgColor.alpha = Self.otherSpaceBgAlpha
+            }
+            container.backgroundColor = cgColor(bgColor)
+            container.opacity = matches ? 1.0 : 0.35
 
             // ヒント箱の overlay 塗り・枠線を状態に合わせて更新
             if let fill = hintOverlayFills[hint.key],
