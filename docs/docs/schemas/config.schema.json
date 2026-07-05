@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://tadashi-aikawa.github.io/jinrai/schemas/config.schema.json",
+  "allowTrailingCommas": true,
   "title": "JINRAI config.jsonc",
   "description": "JINRAI の config.jsonc 用 JSON Schema です。",
   "type": "object",
