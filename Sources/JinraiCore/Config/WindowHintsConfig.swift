@@ -14,6 +14,13 @@ public struct HintStateStyle: Equatable, Sendable {
 
 /// Window Hints の設定(元 window_hints_config.lua のフェーズ1サブセット)
 public struct WindowHintsConfig: Sendable {
+    /// Hints を開かずに直接方向フォーカス移動するホットキー(navigation.direction.direct)
+    public struct DirectDirectionHotkeys: Equatable, Sendable {
+        public var modifiers: [String]
+        /// 方向 → キー名(方向ごとに1ホットキーを登録するため hints.keys とは向きが逆)
+        public var keys: [Direction: String]
+    }
+
     public var hotkeyModifiers: [String]
     public var hotkeyKey: String?
     public var hintChars: [String]
@@ -68,6 +75,8 @@ public struct WindowHintsConfig: Sendable {
     /// Hints 表示中に JinraiMode を開始するキー(jinrai_mode.triggers.windowHints.key)
     public var jinraiModeKey: String?
     public var directionHintKeys: [String: Direction]
+    /// Hints 非表示時のグローバル方向移動ホットキー(nil で無効)
+    public var directDirectionHotkeys: DirectDirectionHotkeys?
     public var directionScoring: DirectionScoring.Config
     public var spacesNumbers: Bool
     public var prevSpaceKey: String?
@@ -194,6 +203,54 @@ public enum WindowHintsConfigBuilder {
             }
         }
 
+        // 直接方向移動ホットキー: navigation.direction.direct = { modifiers, keys }
+        // keys が空なら黙って無効。keys があるのに modifiers が空ならエラー(元 normalizeDirectDirectionHotkeys)
+        var directHotkeys: WindowHintsConfig.DirectDirectionHotkeys?
+        if merged.dict("navigation.direction.direct") != nil {
+            var directKeys: [Direction: String] = [:]
+            var usedDirectKeys: Set<String> = []
+            if let rawKeys = merged.dict("navigation.direction.direct.keys") {
+                for (directionName, keyValue) in rawKeys {
+                    guard let direction = Direction(rawValue: directionName) else {
+                        throw ConfigError(
+                            "[jinrai.window_hints] unknown direction '\(directionName)' in navigation.direction.direct.keys"
+                        )
+                    }
+                    if let key = keyValue as? String, !key.isEmpty {
+                        let lowered = key.lowercased()
+                        guard usedDirectKeys.insert(lowered).inserted else {
+                            throw ConfigError(
+                                "[jinrai.window_hints] duplicate key '\(lowered)' in navigation.direction.direct.keys"
+                            )
+                        }
+                        directKeys[direction] = lowered
+                    }
+                }
+            }
+            if !directKeys.isEmpty {
+                guard
+                    let directModifiers = merged.stringArray(
+                        "navigation.direction.direct.modifiers"),
+                    !directModifiers.isEmpty
+                else {
+                    throw ConfigError(
+                        "[jinrai.window_hints] navigation.direction.direct.modifiers is required when keys are set"
+                    )
+                }
+                // Carbon RegisterEventHotKey は fn 修飾非対応(黙って無視され fn なしで登録されるため明示エラー)
+                let allowedModifiers: Set<String> = [
+                    "cmd", "command", "alt", "option", "ctrl", "control", "shift",
+                ]
+                for modifier in directModifiers
+                where !allowedModifiers.contains(modifier.lowercased()) {
+                    throw ConfigError(
+                        "[jinrai.window_hints] unsupported modifier '\(modifier)' in navigation.direction.direct.modifiers (use cmd/alt/ctrl/shift)"
+                    )
+                }
+                directHotkeys = .init(modifiers: directModifiers, keys: directKeys)
+            }
+        }
+
         let sampling = Occlusion.SamplingConfig(
             enabled: merged.bool("occlusion.sampling.enabled") ?? true,
             baseWidth: merged.double("occlusion.sampling.baseWidth") ?? 1920,
@@ -275,6 +332,7 @@ public enum WindowHintsConfigBuilder {
                 ?? false,
             jinraiModeKey: nil,  // RootConfigBuilder が jinrai_mode.triggers から注入
             directionHintKeys: directionKeys,
+            directDirectionHotkeys: directHotkeys,
             directionScoring: scoring,
             spacesNumbers: merged.bool("navigation.spaces.numbers") ?? true,
             prevSpaceKey: merged.string("navigation.spaces.prev.key")?.lowercased(),

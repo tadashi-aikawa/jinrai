@@ -148,6 +148,99 @@ struct WindowHintsConfigTests {
         ])
         #expect(config.focusedSpotlightAlpha == 0.42)
     }
+
+    @Test("direction.direct はデフォルトで無効")
+    func directDirectionDefault() throws {
+        let config = try WindowHintsConfigBuilder.build()
+        #expect(config.directDirectionHotkeys == nil)
+    }
+
+    @Test("direction.direct は modifiers と keys でパースされ、キーは小文字化される")
+    func directDirectionParse() throws {
+        let config = try WindowHintsConfigBuilder.build([
+            "navigation": [
+                "direction": [
+                    "direct": [
+                        "modifiers": ["ctrl", "alt"],
+                        "keys": [
+                            "left": "h", "down": "j", "up": "k", "right": "L",
+                            "upLeft": "y",
+                        ],
+                    ]
+                ]
+            ]
+        ])
+        let direct = try #require(config.directDirectionHotkeys)
+        #expect(direct.modifiers == ["ctrl", "alt"])
+        #expect(direct.keys[.left] == "h")
+        #expect(direct.keys[.right] == "l")
+        #expect(direct.keys[.upLeft] == "y")
+    }
+
+    @Test("direction.direct の keys が空なら無効になる")
+    func directDirectionEmptyKeys() throws {
+        let config = try WindowHintsConfigBuilder.build([
+            "navigation": [
+                "direction": [
+                    "direct": ["modifiers": ["ctrl", "alt"], "keys": [String: Any]()]
+                ]
+            ]
+        ])
+        #expect(config.directDirectionHotkeys == nil)
+    }
+
+    @Test("direction.direct で keys があるのに modifiers がなければエラー")
+    func directDirectionMissingModifiers() {
+        #expect(throws: ConfigError.self) {
+            try WindowHintsConfigBuilder.build([
+                "navigation": [
+                    "direction": ["direct": ["keys": ["left": "h"]]]
+                ]
+            ])
+        }
+    }
+
+    @Test("direction.direct の不正な方向名はエラー")
+    func directDirectionUnknownDirection() {
+        #expect(throws: ConfigError.self) {
+            try WindowHintsConfigBuilder.build([
+                "navigation": [
+                    "direction": [
+                        "direct": ["modifiers": ["ctrl"], "keys": ["lefty": "h"]]
+                    ]
+                ]
+            ])
+        }
+    }
+
+    @Test("direction.direct のキー重複はエラー")
+    func directDirectionDuplicateKey() {
+        #expect(throws: ConfigError.self) {
+            try WindowHintsConfigBuilder.build([
+                "navigation": [
+                    "direction": [
+                        "direct": [
+                            "modifiers": ["ctrl"],
+                            "keys": ["left": "h", "right": "H"],
+                        ]
+                    ]
+                ]
+            ])
+        }
+    }
+
+    @Test("direction.direct の fn 修飾キーはエラー")
+    func directDirectionFnModifier() {
+        #expect(throws: ConfigError.self) {
+            try WindowHintsConfigBuilder.build([
+                "navigation": [
+                    "direction": [
+                        "direct": ["modifiers": ["fn"], "keys": ["left": "h"]]
+                    ]
+                ]
+            ])
+        }
+    }
 }
 
 @Suite("WindowMoverConfigBuilder")

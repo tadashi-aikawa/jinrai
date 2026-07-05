@@ -10,6 +10,8 @@ final class WindowHintsFeature {
     private let config: WindowHintsConfig
     private let focusHistory: FocusHistoryFeature?
     private var hotkey: Hotkey?
+    /// Hints 非表示時の直接方向移動ホットキー(navigation.direction.direct)
+    private var directDirectionHotkeys: [Hotkey] = []
     private let eventTap = EventTap()
 
     private var overlays: [OverlayWindow] = []
@@ -99,6 +101,22 @@ final class WindowHintsFeature {
             }
             if hotkey == nil {
                 NSLog("[jinrai.window_hints] ホットキーの登録に失敗: %@", key)
+            }
+        }
+
+        // 直接方向移動(表示中は EventTap が keyDown を消費するため hints.keys が優先され、
+        // このホットキーは非表示時のみ発火する)
+        if let direct = config.directDirectionHotkeys {
+            for (direction, key) in direct.keys {
+                let directHotkey = Hotkey(modifiers: direct.modifiers, key: key) { [weak self] in
+                    guard let self, !self.isVisible else { return }
+                    self.runDirectionalMove(direction)
+                }
+                if let directHotkey {
+                    directDirectionHotkeys.append(directHotkey)
+                } else {
+                    NSLog("[jinrai.window_hints] direct方向ホットキーの登録に失敗: %@", key)
+                }
             }
         }
 
@@ -1226,5 +1244,9 @@ final class WindowHintsFeature {
         stopJinraiMode()
         hotkey?.unregister()
         hotkey = nil
+        for directHotkey in directDirectionHotkeys {
+            directHotkey.unregister()
+        }
+        directDirectionHotkeys = []
     }
 }
