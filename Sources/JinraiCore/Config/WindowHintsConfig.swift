@@ -117,9 +117,9 @@ public enum WindowHintsConfigBuilder {
     }
 
     public static func build(_ options: [String: Any] = [:]) throws -> WindowHintsConfig {
-        let raw = ConfigDict(options, context: "window_hints")
+        let raw = ConfigDict(options, context: "windowHints")
         try raw.rejectLegacyKeys(legacyFlatKeys)
-        let merged = ConfigDict(options, context: "window_hints")
+        let merged = ConfigDict(options, context: "windowHints")
 
         // 状態別スタイル(occluded 等の未指定項目は normal を継承)
         func stateStyle(_ state: HintState) -> HintStateStyle {
@@ -167,20 +167,20 @@ public enum WindowHintsConfigBuilder {
             for (index, rule) in rules.enumerated() {
                 guard let match = rule["match"] as? [String: Any] else {
                     throw ConfigError(
-                        "[jinrai.window_hints] hint.prefixOverrides[\(index)].match must be a table"
+                        "[jinrai.windowHints] hint.prefixOverrides[\(index)].match must be a table"
                     )
                 }
                 let bundleID = match["bundleID"] as? String
                 let titleGlob = match["titleGlob"] as? String
                 guard bundleID != nil || titleGlob != nil else {
                     throw ConfigError(
-                        "[jinrai.window_hints] hint.prefixOverrides[\(index)].match requires bundleID or titleGlob"
+                        "[jinrai.windowHints] hint.prefixOverrides[\(index)].match requires bundleID or titleGlob"
                     )
                 }
                 guard let prefix = rule["prefix"] as? String, (1...2).contains(prefix.count)
                 else {
                     throw ConfigError(
-                        "[jinrai.window_hints] hint.prefixOverrides[\(index)].prefix must be 1 or 2 chars"
+                        "[jinrai.windowHints] hint.prefixOverrides[\(index)].prefix must be 1 or 2 chars"
                     )
                 }
                 overrides.append(
@@ -194,7 +194,7 @@ public enum WindowHintsConfigBuilder {
             for (directionName, keyValue) in keys {
                 guard let direction = Direction(rawValue: directionName) else {
                     throw ConfigError(
-                        "[jinrai.window_hints] unknown direction '\(directionName)' in navigation.direction.hints.keys"
+                        "[jinrai.windowHints] unknown direction '\(directionName)' in navigation.direction.hints.keys"
                     )
                 }
                 if let key = keyValue as? String, !key.isEmpty {
@@ -213,14 +213,14 @@ public enum WindowHintsConfigBuilder {
                 for (directionName, keyValue) in rawKeys {
                     guard let direction = Direction(rawValue: directionName) else {
                         throw ConfigError(
-                            "[jinrai.window_hints] unknown direction '\(directionName)' in navigation.direction.direct.keys"
+                            "[jinrai.windowHints] unknown direction '\(directionName)' in navigation.direction.direct.keys"
                         )
                     }
                     if let key = keyValue as? String, !key.isEmpty {
                         let lowered = key.lowercased()
                         guard usedDirectKeys.insert(lowered).inserted else {
                             throw ConfigError(
-                                "[jinrai.window_hints] duplicate key '\(lowered)' in navigation.direction.direct.keys"
+                                "[jinrai.windowHints] duplicate key '\(lowered)' in navigation.direction.direct.keys"
                             )
                         }
                         directKeys[direction] = lowered
@@ -234,7 +234,7 @@ public enum WindowHintsConfigBuilder {
                     !directModifiers.isEmpty
                 else {
                     throw ConfigError(
-                        "[jinrai.window_hints] navigation.direction.direct.modifiers is required when keys are set"
+                        "[jinrai.windowHints] navigation.direction.direct.modifiers is required when keys are set"
                     )
                 }
                 // Carbon RegisterEventHotKey は fn 修飾非対応(黙って無視され fn なしで登録されるため明示エラー)
@@ -244,7 +244,7 @@ public enum WindowHintsConfigBuilder {
                 for modifier in directModifiers
                 where !allowedModifiers.contains(modifier.lowercased()) {
                     throw ConfigError(
-                        "[jinrai.window_hints] unsupported modifier '\(modifier)' in navigation.direction.direct.modifiers (use cmd/alt/ctrl/shift)"
+                        "[jinrai.windowHints] unsupported modifier '\(modifier)' in navigation.direction.direct.modifiers (use cmd/alt/ctrl/shift)"
                     )
                 }
                 directHotkeys = .init(modifiers: directModifiers, keys: directKeys)

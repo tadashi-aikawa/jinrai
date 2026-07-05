@@ -42,16 +42,16 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
 ```json
 {
     // フォーカス移動時にウィンドウを枠線で強調
-    "focus_border": {},
+    "focusBorder": {},
 
     // option+w で直前のウィンドウへ戻る
-    "focus_back": {},
+    "focusBack": {},
 
     // ウィンドウヒント(デフォルトのホットキーは alt+f20)
-    "window_hints": {},
+    "windowHints": {},
 
     // ウィンドウ移動。コマンドにホットキーを割り当てて有効化する
-    "window_mover": {
+    "windowMover": {
         "commands": {
             "moveToNextDisplay": {
                 "hotkey": {
@@ -66,7 +66,7 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
 
 設定を変更したら、メニューバーのJINRAIアイコンから`設定を再読込`を実行してください。
 
-`focus_border`、`window_hints`、`focus_back`、`window_mover`、`application_hints`は、それぞれ設定を記述した機能だけが有効になります。
+`focusBorder`、`windowHints`、`focusBack`、`windowMover`、`applicationHints`は、それぞれ設定を記述した機能だけが有効になります。
 
 すべての設定項目、デフォルト値、各項目の概要は[全設定](configuration.md)を参照してください。
 値の選択肢や機能固有の制約は各機能ページに記載しています。

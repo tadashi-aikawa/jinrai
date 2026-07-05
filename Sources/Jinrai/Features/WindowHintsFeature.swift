@@ -100,7 +100,7 @@ final class WindowHintsFeature {
                 self?.toggle()
             }
             if hotkey == nil {
-                NSLog("[jinrai.window_hints] ホットキーの登録に失敗: %@", key)
+                NSLog("[jinrai.windowHints] ホットキーの登録に失敗: %@", key)
             }
         }
 
@@ -115,7 +115,7 @@ final class WindowHintsFeature {
                 if let directHotkey {
                     directDirectionHotkeys.append(directHotkey)
                 } else {
-                    NSLog("[jinrai.window_hints] direct方向ホットキーの登録に失敗: %@", key)
+                    NSLog("[jinrai.windowHints] direct方向ホットキーの登録に失敗: %@", key)
                 }
             }
         }
@@ -155,7 +155,7 @@ final class WindowHintsFeature {
         guard !hints.isEmpty else { return }
 
         guard eventTap.start() else {
-            NSLog("[jinrai.window_hints] キー捕捉を開始できません(権限またはセキュア入力)")
+            NSLog("[jinrai.windowHints] キー捕捉を開始できません(権限またはセキュア入力)")
             return
         }
 

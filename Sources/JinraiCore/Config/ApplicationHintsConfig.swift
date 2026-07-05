@@ -70,25 +70,25 @@ public enum ApplicationHintsConfigBuilder {
         _ options: [String: Any], windowHintsKey: String? = nil
     ) throws -> ApplicationHintsConfig {
         let merged = ConfigDict(
-            DeepMerge.merge(defaults: defaults, overrides: options), context: "application_hints")
+            DeepMerge.merge(defaults: defaults, overrides: options), context: "applicationHints")
 
         guard let rawApps = merged.value("apps") as? [[String: Any]], !rawApps.isEmpty else {
-            throw ConfigError("[jinrai.application_hints] apps は1件以上必要です")
+            throw ConfigError("[jinrai.applicationHints] apps は1件以上必要です")
         }
 
         var apps: [ApplicationHintsConfig.AppEntry] = []
         for (index, rawApp) in rawApps.enumerated() {
             guard let bundleID = rawApp["bundleID"] as? String, !bundleID.isEmpty else {
                 throw ConfigError(
-                    "[jinrai.application_hints] apps[\(index)].bundleID は必須です")
+                    "[jinrai.applicationHints] apps[\(index)].bundleID は必須です")
             }
             guard let rawKey = rawApp["key"] as? String, !rawKey.isEmpty else {
-                throw ConfigError("[jinrai.application_hints] apps[\(index)].key は必須です")
+                throw ConfigError("[jinrai.applicationHints] apps[\(index)].key は必須です")
             }
             let key = rawKey.uppercased()
             guard (1...2).contains(key.count) else {
                 throw ConfigError(
-                    "[jinrai.application_hints] apps[\(index)].key は1〜2文字です: \(rawKey)")
+                    "[jinrai.applicationHints] apps[\(index)].key は1〜2文字です: \(rawKey)")
             }
 
             var modifiers = ["cmd"]
@@ -122,7 +122,7 @@ public enum ApplicationHintsConfigBuilder {
             for j in apps.indices where i < j {
                 if keysConflict(apps[i].key, apps[j].key) {
                     throw ConfigError(
-                        "[jinrai.application_hints] キー '\(apps[i].key)' と '\(apps[j].key)' が衝突します"
+                        "[jinrai.applicationHints] キー '\(apps[i].key)' と '\(apps[j].key)' が衝突します"
                     )
                 }
             }
@@ -131,7 +131,7 @@ public enum ApplicationHintsConfigBuilder {
         if let windowHintsKey = windowHintsKey?.uppercased() {
             for app in apps where keysConflict(app.key, windowHintsKey) {
                 throw ConfigError(
-                    "[jinrai.application_hints] キー '\(app.key)' が Window Hints 遷移キー '\(windowHintsKey)' と衝突します"
+                    "[jinrai.applicationHints] キー '\(app.key)' が Window Hints 遷移キー '\(windowHintsKey)' と衝突します"
                 )
             }
         }
@@ -139,7 +139,7 @@ public enum ApplicationHintsConfigBuilder {
         func positiveDouble(_ path: String, _ fallback: Double) throws -> Double {
             let value = merged.double(path) ?? fallback
             guard value > 0 else {
-                throw ConfigError("[jinrai.application_hints] \(path) は正の数が必要です")
+                throw ConfigError("[jinrai.applicationHints] \(path) は正の数が必要です")
             }
             return value
         }

@@ -120,8 +120,8 @@ struct ApplicationHintsConfigTests {
     func rootConfigWiresWindowHintsKey() {
         let text = """
             {
-                "window_hints": { "navigation": { "applicationHints": { "key": "n" } } },
-                "application_hints": { "apps": [{ "bundleID": "a.b", "key": "N" }] }
+                "windowHints": { "navigation": { "applicationHints": { "key": "n" } } },
+                "applicationHints": { "apps": [{ "bundleID": "a.b", "key": "N" }] }
             }
             """
         #expect(throws: ConfigError.self) {

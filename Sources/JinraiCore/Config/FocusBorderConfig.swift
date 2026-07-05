@@ -47,10 +47,10 @@ public enum FocusBorderConfigBuilder {
     ]
 
     public static func build(_ options: [String: Any] = [:]) throws -> FocusBorderConfig {
-        let raw = ConfigDict(options, context: "focus_border")
+        let raw = ConfigDict(options, context: "focusBorder")
         try raw.rejectLegacyKeys(legacyFlatKeys)
         let merged = ConfigDict(
-            DeepMerge.merge(defaults: defaults, overrides: options), context: "focus_border")
+            DeepMerge.merge(defaults: defaults, overrides: options), context: "focusBorder")
 
         var logo: FocusBorderConfig.Logo?
         if merged.dict("visual.logo") != nil {

@@ -12,13 +12,13 @@ bundle IDまたはアプリ名を指定します。
 
 ```json
 {
-  "macos_native_tabs": {
+  "macosNativeTabs": {
     "apps": [
       "com.example.terminal"
     ]
   },
-  "window_hints": {},
-  "focus_back": {}
+  "windowHints": {},
+  "focusBack": {}
 }
 ```
 

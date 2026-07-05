@@ -5,15 +5,15 @@ if CommandLine.arguments.contains("--check-config") {
     do {
         let config = try ConfigLoader.load()
         var enabled: [String] = []
-        if config.focusBorder != nil { enabled.append("focus_border") }
-        if config.focusBack != nil { enabled.append("focus_back") }
-        if config.windowHints != nil { enabled.append("window_hints") }
-        if config.windowMover != nil { enabled.append("window_mover") }
-        if config.applicationHints != nil { enabled.append("application_hints") }
+        if config.focusBorder != nil { enabled.append("focusBorder") }
+        if config.focusBack != nil { enabled.append("focusBack") }
+        if config.windowHints != nil { enabled.append("windowHints") }
+        if config.windowMover != nil { enabled.append("windowMover") }
+        if config.applicationHints != nil { enabled.append("applicationHints") }
         print("OK: \(ConfigLoader.configFileURL.path)")
         print("enabled: \(enabled.joined(separator: ", "))")
         if let mover = config.windowMover {
-            print("window_mover hotkeys: \(mover.commandHotkeys.count) commands")
+            print("windowMover hotkeys: \(mover.commandHotkeys.count) commands")
         }
         exit(0)
     } catch {

@@ -50,7 +50,7 @@ final class JinraiModeVisuals {
     private func loadLogoImage() -> NSImage? {
         if let logoImage { return logoImage }
         guard let url = Bundle.main.url(forResource: "jinrai", withExtension: "svg") else {
-            NSLog("[jinrai.jinrai_mode] jinrai.svg が見つかりません")
+            NSLog("[jinrai.jinraiMode] jinrai.svg が見つかりません")
             return nil
         }
         logoImage = NSImage(contentsOf: url)
@@ -62,7 +62,7 @@ final class JinraiModeVisuals {
         guard
             let url = Bundle.main.url(forResource: "jinrai\(index)", withExtension: "webp")
         else {
-            NSLog("[jinrai.jinrai_mode] jinrai%d.webp が見つかりません", index)
+            NSLog("[jinrai.jinraiMode] jinrai%d.webp が見つかりません", index)
             return nil
         }
         let image = NSImage(contentsOf: url)

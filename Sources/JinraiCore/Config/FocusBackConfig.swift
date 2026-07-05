@@ -24,15 +24,15 @@ public enum FocusBackConfigBuilder {
     ]
 
     public static func build(_ options: [String: Any] = [:]) throws -> FocusBackConfig {
-        let raw = ConfigDict(options, context: "focus_back")
+        let raw = ConfigDict(options, context: "focusBack")
         try raw.rejectLegacyKeys(legacyFlatKeys)
         if raw.value("behavior.centerCursor") != nil {
             throw ConfigError(
-                "[jinrai.focus_back] legacy nested key 'behavior.centerCursor' is no longer supported; use 'behavior.cursor.onSelect'"
+                "[jinrai.focusBack] legacy nested key 'behavior.centerCursor' is no longer supported; use 'behavior.cursor.onSelect'"
             )
         }
         let merged = ConfigDict(
-            DeepMerge.merge(defaults: defaults, overrides: options), context: "focus_back")
+            DeepMerge.merge(defaults: defaults, overrides: options), context: "focusBack")
         return FocusBackConfig(
             hotkeyModifiers: merged.stringArray("hotkey.modifiers") ?? [],
             hotkeyKey: merged.string("hotkey.key"),

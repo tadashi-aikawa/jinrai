@@ -55,7 +55,7 @@ final class WindowMoverFeature {
             if let hotkey {
                 hotkeys.append(hotkey)
             } else {
-                NSLog("[jinrai.window_mover] ホットキーの登録に失敗: %@", binding.key)
+                NSLog("[jinrai.windowMover] ホットキーの登録に失敗: %@", binding.key)
             }
         }
 
@@ -253,13 +253,13 @@ final class WindowMoverFeature {
         }
 
         guard eventTap.start() else {
-            NSLog("[jinrai.window_mover] キー捕捉を開始できません")
+            NSLog("[jinrai.windowMover] キー捕捉を開始できません")
             closeChooser()
             return
         }
         isChooserVisible = true
         if !hasAnyMapping {
-            NSLog("[jinrai.window_mover] selectedArea.screens が未設定です(画面に UUID を表示中)")
+            NSLog("[jinrai.windowMover] selectedArea.screens が未設定です(画面に UUID を表示中)")
         }
     }
 
@@ -749,7 +749,7 @@ final class WindowMoverFeature {
         for path in menuTitles {
             if selectMenuItem(app: app, path: path) { return }
         }
-        NSLog("[jinrai.window_mover] Chrome のタブ分離メニューが見つかりません")
+        NSLog("[jinrai.windowMover] Chrome のタブ分離メニューが見つかりません")
     }
 
     private func selectMenuItem(app: AXUIElement, path: [String]) -> Bool {

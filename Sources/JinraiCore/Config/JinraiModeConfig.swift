@@ -55,13 +55,13 @@ public struct JinraiModeConfig: Sendable {
 
 public enum JinraiModeConfigBuilder {
     public static func build(_ options: [String: Any] = [:]) throws -> JinraiModeConfig {
-        let merged = ConfigDict(options, context: "jinrai_mode")
+        let merged = ConfigDict(options, context: "jinraiMode")
         var config = JinraiModeConfig.default
 
         if let position = merged.string("position") {
             guard position == "activeWindow" || position == "activeDisplay" else {
                 throw ConfigError(
-                    "[jinrai.jinrai_mode] position は activeWindow か activeDisplay です")
+                    "[jinrai.jinraiMode] position は activeWindow か activeDisplay です")
             }
             config.position = position
         }

@@ -113,10 +113,10 @@ struct JinraiModeConfigTests {
     func rootConfigDistributesTriggers() throws {
         let config = try RootConfigBuilder.build(text: """
             {
-                "window_hints": {},
-                "window_mover": {},
-                "application_hints": { "apps": [{ "bundleID": "a.b", "key": "G" }] },
-                "jinrai_mode": {
+                "windowHints": {},
+                "windowMover": {},
+                "applicationHints": { "apps": [{ "bundleID": "a.b", "key": "G" }] },
+                "jinraiMode": {
                     "triggers": {
                         "windowHints": { "key": "return" },
                         "applicationHints": { "key": "return" },

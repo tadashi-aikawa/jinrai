@@ -84,14 +84,14 @@ public enum WindowMoverConfigBuilder {
     }
 
     public static func build(_ options: [String: Any] = [:]) throws -> WindowMoverConfig {
-        let merged = ConfigDict(options, context: "window_mover")
+        let merged = ConfigDict(options, context: "windowMover")
 
         // commands.<name>.hotkey の収集
         var commandHotkeys: [String: WindowMoverConfig.HotkeyBinding] = [:]
         if let commands = merged.dict("commands") {
             for (name, value) in commands {
                 guard commandNames.contains(name) else {
-                    throw ConfigError("[jinrai.window_mover] unknown command '\(name)'")
+                    throw ConfigError("[jinrai.windowMover] unknown command '\(name)'")
                 }
                 guard let command = value as? [String: Any],
                     let hotkey = command["hotkey"] as? [String: Any],
@@ -108,7 +108,7 @@ public enum WindowMoverConfigBuilder {
             for (uuid, value) in rawScreens {
                 guard let mapping = value as? [String: String] else {
                     throw ConfigError(
-                        "[jinrai.window_mover] selectedArea.screens['\(uuid)'] must map area names to keys"
+                        "[jinrai.windowMover] selectedArea.screens['\(uuid)'] must map area names to keys"
                     )
                 }
                 screens[uuid] = try validateAreaMapping(mapping, context: uuid)
@@ -123,7 +123,7 @@ public enum WindowMoverConfigBuilder {
         if let rawActions = merged.dict("selectedArea.actions") {
             for (name, value) in rawActions {
                 guard actionNames.contains(name) else {
-                    throw ConfigError("[jinrai.window_mover] unknown action '\(name)'")
+                    throw ConfigError("[jinrai.windowMover] unknown action '\(name)'")
                 }
                 if let key = value as? String, !key.isEmpty {
                     actions[name] = key.uppercased()
@@ -208,11 +208,11 @@ public enum WindowMoverConfigBuilder {
         for (areaName, key) in mapping {
             guard AreaSpec.kind(of: areaName) != nil else {
                 throw ConfigError(
-                    "[jinrai.window_mover] unknown area '\(areaName)' in \(context)")
+                    "[jinrai.windowMover] unknown area '\(areaName)' in \(context)")
             }
             guard (1...3).contains(key.count) else {
                 throw ConfigError(
-                    "[jinrai.window_mover] key for '\(areaName)' must be 1-3 chars in \(context)"
+                    "[jinrai.windowMover] key for '\(areaName)' must be 1-3 chars in \(context)"
                 )
             }
             result[areaName] = key.uppercased()
@@ -228,11 +228,11 @@ public enum WindowMoverConfigBuilder {
                 let b = keys[j]
                 if a == b {
                     throw ConfigError(
-                        "[jinrai.window_mover] duplicate key '\(a)' in \(context)")
+                        "[jinrai.windowMover] duplicate key '\(a)' in \(context)")
                 }
                 if a.hasPrefix(b) || b.hasPrefix(a) {
                     throw ConfigError(
-                        "[jinrai.window_mover] key '\(a)' conflicts with '\(b)' (prefix) in \(context)"
+                        "[jinrai.windowMover] key '\(a)' conflicts with '\(b)' (prefix) in \(context)"
                     )
                 }
             }

@@ -89,7 +89,7 @@ final class ApplicationHintsFeature {
             ?? CGPoint(x: screenFrame.midX, y: screenFrame.midY)
 
         guard eventTap.start() else {
-            NSLog("[jinrai.application_hints] キー捕捉を開始できません")
+            NSLog("[jinrai.applicationHints] キー捕捉を開始できません")
             return
         }
 
@@ -434,7 +434,7 @@ final class ApplicationHintsFeature {
     }
 
     private func reportError(_ message: String) {
-        NSLog("[jinrai.application_hints] %@", message)
+        NSLog("[jinrai.applicationHints] %@", message)
         // UNUserNotificationCenter は .app バンドル外(swift run 等)から触ると
         // クラッシュするため、バンドルで動いているときだけ通知を出す
         guard Bundle.main.bundleIdentifier != nil else { return }

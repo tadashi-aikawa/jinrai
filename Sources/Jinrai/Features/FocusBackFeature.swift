@@ -18,7 +18,7 @@ final class FocusBackFeature {
                 self?.run()
             }
             if hotkey == nil {
-                NSLog("[jinrai.focus_back] ホットキーの登録に失敗: %@", key)
+                NSLog("[jinrai.focusBack] ホットキーの登録に失敗: %@", key)
             }
         }
     }

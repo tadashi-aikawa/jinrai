@@ -10,16 +10,16 @@ struct JSONCTests {
         let text = """
             {
                 // フォーカスバック設定
-                "focus_back": {
+                "focusBack": {
                     "hotkey": { "modifiers": ["alt"], "key": "w", },
                 },
                 /* ブロックコメント */
-                "focus_border": {},
+                "focusBorder": {},
             }
             """
         let dict = try JSONC.parseObject(text)
-        #expect(dict["focus_back"] != nil)
-        #expect(dict["focus_border"] != nil)
+        #expect(dict["focusBack"] != nil)
+        #expect(dict["focusBorder"] != nil)
     }
 
     @Test("文字列内の // やカンマは保護される")
@@ -292,16 +292,16 @@ struct WindowMoverConfigTests {
 struct RootConfigTests {
     @Test("セクションが存在する機能だけ有効になる")
     func sectionPresenceEnablesFeatures() throws {
-        let config = try RootConfigBuilder.build(text: #"{ "focus_back": {} }"#)
+        let config = try RootConfigBuilder.build(text: #"{ "focusBack": {} }"#)
         #expect(config.focusBack != nil)
         #expect(config.focusBorder == nil)
         #expect(config.windowHints == nil)
     }
 
-    @Test("macos_native_tabs はデフォルトにユーザー指定を追記する")
+    @Test("macosNativeTabs はデフォルトにユーザー指定を追記する")
     func macosNativeTabsMerge() throws {
         let config = try RootConfigBuilder.build(text: """
-            { "macos_native_tabs": { "apps": ["com.example.app"], "stateSyncInterval": 1.0 } }
+            { "macosNativeTabs": { "apps": ["com.example.app"], "stateSyncInterval": 1.0 } }
             """)
         #expect(
             config.macosNativeTabs.apps == [
@@ -310,9 +310,21 @@ struct RootConfigTests {
         #expect(config.macosNativeTabs.stateSyncInterval == 1.0)
     }
 
-    @Test("セクションなしでもデフォルトの macos_native_tabs を持つ")
+    @Test("セクションなしでもデフォルトの macosNativeTabs を持つ")
     func defaultsWithoutSection() throws {
         let config = try RootConfigBuilder.build(text: "{}")
         #expect(config.macosNativeTabs == .default)
+    }
+
+    @Test(
+        "旧 snake_case セクション名はエラーになる",
+        arguments: [
+            "macos_native_tabs", "focus_back", "focus_border", "window_hints",
+            "window_mover", "application_hints", "jinrai_mode",
+        ])
+    func rejectsLegacySnakeCaseSections(key: String) {
+        #expect(throws: ConfigError.self) {
+            try RootConfigBuilder.build(text: #"{ "\#(key)": {} }"#)
+        }
     }
 }

@@ -40,7 +40,7 @@ JinraiModeは次の方法で開始できます。
 [Window Mover](window-mover.md)のエリア選択中にウィンドウを選び直すキーも設定できます。
 
 ```json
-"window_mover": {
+"windowMover": {
   "selectedArea": {
     "windowHints": {
       "key": "space"

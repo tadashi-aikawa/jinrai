@@ -21,18 +21,18 @@ enum ConfigLoader {
             // 各機能はセクションが存在するときだけ有効になります
 
             // フォーカス移動時にウィンドウを枠線で強調
-            "focus_border": {},
+            "focusBorder": {},
 
             // option+w で直前のウィンドウへ戻る
-            "focus_back": {},
+            "focusBack": {},
 
             // ウィンドウヒント(デフォルトのホットキーは alt+f20)
             // "hotkey": { "modifiers": ["alt"], "key": "f20" } で変更可
-            "window_hints": {},
+            "windowHints": {},
 
             // ウィンドウ移動。コマンドにホットキーを割り当てて有効化する
             // 例:
-            // "window_mover": {
+            // "windowMover": {
             //     "commands": {
             //         "cycleLeft": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "h" } },
             //         "cycleRight": { "hotkey": { "modifiers": ["cmd", "alt"], "key": "l" } },
@@ -46,7 +46,7 @@ enum ConfigLoader {
             // アプリランチャー。Window Hints から navigation.applicationHints.key で開く。
             // 起動済みアプリは新規ウィンドウ(既定 Cmd+N)、未起動なら起動する。
             // 例:
-            // "application_hints": {
+            // "applicationHints": {
             //     "appearance": { "columns": 4 },
             //     "apps": [
             //         { "bundleID": "com.mitchellh.ghostty", "key": "G",
