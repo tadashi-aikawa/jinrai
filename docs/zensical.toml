@@ -70,7 +70,7 @@ nav = [
 #
 # Read more: https://zensical.org/docs/customization/#additional-css
 #
-#extra_css = ["stylesheets/extra.css"]
+extra_css = ["stylesheets/jinrai.css"]
 
 # With the `extra_javascript` option you can add your own JavaScript to your
 # project to customize the behavior according to your needs.
@@ -305,14 +305,9 @@ repo = "fontawesome/brands/github"
 # - https://zensical.org/docs/setup/colors/
 # ----------------------------------------------------------------------------
 [[project.theme.palette]]
-scheme = "default"
-toggle.icon = "lucide/sun"
-toggle.name = "Switch to dark mode"
-
-[[project.theme.palette]]
 scheme = "slate"
-toggle.icon = "lucide/moon"
-toggle.name = "Switch to light mode"
+primary = "custom"
+accent = "custom"
 
 # ----------------------------------------------------------------------------
 # The "extra" section contains miscellaneous settings.

@@ -1,0 +1,123 @@
+:root > * {
+  --jinrai-yellow: #ffd400;
+  --jinrai-yellow-light: #ffe76a;
+  --jinrai-yellow-dark: #d6a900;
+  --jinrai-black: #050505;
+  --jinrai-black-soft: #111318;
+  --jinrai-blue: #66adfa;
+  --jinrai-orange: #ff7514;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 220;
+  --md-default-bg-color: #08090d;
+  --md-default-bg-color--light: #10131a;
+  --md-default-bg-color--lighter: #171b24;
+  --md-default-bg-color--lightest: #202633;
+  --md-default-fg-color: rgba(246, 248, 252, 0.88);
+  --md-default-fg-color--light: rgba(246, 248, 252, 0.66);
+  --md-default-fg-color--lighter: rgba(246, 248, 252, 0.42);
+  --md-default-fg-color--lightest: rgba(246, 248, 252, 0.16);
+  --md-primary-fg-color: var(--jinrai-yellow);
+  --md-primary-fg-color--light: var(--jinrai-yellow-light);
+  --md-primary-fg-color--dark: var(--jinrai-yellow-dark);
+  --md-primary-bg-color: rgba(0, 0, 0, 0.92);
+  --md-primary-bg-color--light: rgba(0, 0, 0, 0.62);
+  --md-accent-fg-color: var(--jinrai-yellow);
+  --md-accent-fg-color--transparent: rgba(255, 212, 0, 0.16);
+  --md-accent-bg-color: rgba(0, 0, 0, 0.92);
+  --md-accent-bg-color--light: rgba(0, 0, 0, 0.62);
+  --md-typeset-a-color: var(--jinrai-yellow);
+  --md-typeset-mark-color: rgba(255, 212, 0, 0.28);
+  --md-code-bg-color: #0f1219;
+  --md-code-fg-color: rgba(246, 248, 252, 0.88);
+  --md-code-hl-color: rgba(102, 173, 250, 0.22);
+  --md-code-hl-color--light: rgba(102, 173, 250, 0.12);
+  --md-footer-bg-color: #050505;
+  --md-footer-bg-color--dark: #000000;
+  --color-background: 8 9 13;
+  --color-background-subtle: 16 19 26;
+  --color-backdrop: 0 0 0;
+}
+
+[data-md-color-scheme="slate"] .md-header,
+[data-md-color-scheme="slate"] .md-tabs {
+  background: linear-gradient(180deg, #050505 0%, #0c0e13 100%);
+  border-bottom: 1px solid rgba(255, 212, 0, 0.28);
+}
+
+[data-md-color-scheme="slate"] .md-header__button,
+[data-md-color-scheme="slate"] .md-header__title,
+[data-md-color-scheme="slate"] .md-tabs__link {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-md-color-scheme="slate"] .md-header__button:hover,
+[data-md-color-scheme="slate"] .md-tabs__link:hover,
+[data-md-color-scheme="slate"] .md-tabs__link--active {
+  color: var(--jinrai-yellow);
+}
+
+[data-md-color-scheme="slate"] .md-logo img,
+[data-md-color-scheme="slate"] .md-logo svg {
+  filter: drop-shadow(0 0 0.25rem rgba(255, 212, 0, 0.45));
+}
+
+[data-md-color-scheme="slate"] .md-search__form {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 212, 0, 0.18);
+}
+
+[data-md-color-scheme="slate"] .md-search__form:hover,
+[data-md-color-scheme="slate"] .md-search__input:focus + .md-search__icon {
+  color: var(--jinrai-yellow);
+}
+
+[data-md-color-scheme="slate"] .md-typeset a:hover {
+  color: var(--jinrai-yellow-light);
+}
+
+[data-md-color-scheme="slate"] .md-typeset h1,
+[data-md-color-scheme="slate"] .md-typeset h2,
+[data-md-color-scheme="slate"] .md-typeset h3 {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+[data-md-color-scheme="slate"] .md-typeset h2 {
+  border-bottom: 1px solid rgba(255, 212, 0, 0.18);
+  padding-bottom: 0.25em;
+}
+
+[data-md-color-scheme="slate"] .md-nav__link--active,
+[data-md-color-scheme="slate"] .md-nav__link:focus,
+[data-md-color-scheme="slate"] .md-nav__link:hover,
+[data-md-color-scheme="slate"] .md-nav__title {
+  color: var(--jinrai-yellow);
+}
+
+[data-md-color-scheme="slate"] .md-typeset :not(pre) > code {
+  background-color: rgba(102, 173, 250, 0.12);
+  color: rgba(246, 248, 252, 0.92);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .admonition,
+[data-md-color-scheme="slate"] .md-typeset details {
+  border-color: rgba(255, 212, 0, 0.42);
+}
+
+[data-md-color-scheme="slate"] .md-button {
+  border-color: var(--jinrai-yellow);
+  color: var(--jinrai-yellow);
+}
+
+[data-md-color-scheme="slate"] .md-button:focus,
+[data-md-color-scheme="slate"] .md-button:hover {
+  background-color: var(--jinrai-yellow);
+  border-color: var(--jinrai-yellow);
+  color: var(--jinrai-black);
+}
+
+[data-md-color-scheme="slate"] ::selection {
+  background: rgba(255, 117, 20, 0.34);
+  color: #ffffff;
+}
