@@ -441,6 +441,8 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
         "verticalRatios": [0.5, 0.3333, 0.6667]
       },
       "freeArea": {
+        // 前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するかを指定します。
+        "excludeHiddenWindows": true,
         // 前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するしきい値です。
         "hiddenWindowThreshold": 0.5
       }
@@ -673,7 +675,7 @@ Area Hints経由の移動は、`windowMover.behavior`(カーソル追従・freeA
 
 エリアマップの代わりに、接続中のディスプレイ数（または`default`）をキーにしたマップを指定すると、
 ディスプレイ数ごとに割り当てを切り替えられます。数字とエリア名は混在できません。
-詳細は[Area Hints](area-hints.md#ディスプレイ数で設定を切り替える)を参照してください。
+詳細は[Area Hints](area-hints.md#display-count-branches)を参照してください。
 
 ```json
 "areaHints": {

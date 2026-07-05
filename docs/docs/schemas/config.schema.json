@@ -1182,9 +1182,14 @@
               "description": "空き領域(freeArea)の計算の設定です。",
               "additionalProperties": false,
               "properties": {
+                "excludeHiddenWindows": {
+                  "type": "boolean",
+                  "description": "前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するかを指定します。falseにすると、完全に隠れているウィンドウも障害物として扱います。",
+                  "default": true
+                },
                 "hiddenWindowThreshold": {
                   "type": "number",
-                  "description": "前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するしきい値です。隠れた割合がこの値以上なら除外します。0で少しでも重なった背面ウィンドウを除外します。",
+                  "description": "前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するしきい値です。excludeHiddenWindowsがtrueのとき、隠れた割合がこの値以上なら除外します。0で少しでも重なった背面ウィンドウを除外します。",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.5

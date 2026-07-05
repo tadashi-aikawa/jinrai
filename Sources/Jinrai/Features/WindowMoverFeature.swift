@@ -185,7 +185,7 @@ final class WindowMoverFeature {
         }
     }
 
-    /// 前面ウィンドウに一定以上隠れた背面ウィンドウを障害物から除外して空き領域を探す
+    /// 設定に応じて隠れた背面ウィンドウを障害物から除外し、空き領域を探す
     private func computeFreeArea(
         screen: NSScreen, screenFrame: CGRect, excluding activeWindowID: CGWindowID?
     ) -> CGRect? {
@@ -193,22 +193,12 @@ final class WindowMoverFeature {
             .filter { $0.pid != ProcessInfo.processInfo.processIdentifier }
         let standard = WindowEnumerator.standardWindows(from: ordered)
 
-        var frontFrames: [CGRect] = []
-        var occupied: [CGRect] = []
-        for win in standard {
-            guard let intersection = Geometry.intersect(win.frame, screenFrame) else {
-                continue
-            }
-            let isActive = win.id == activeWindowID
-            let hidden = Geometry.isHiddenByFrontFrames(
-                intersection, frontFrames: frontFrames,
-                threshold: CGFloat(config.hiddenWindowThreshold))
-            // アクティブウィンドウ自身と隠れた背面ウィンドウは障害物にしない
-            if !isActive && !hidden {
-                occupied.append(intersection)
-            }
-            frontFrames.append(intersection)
-        }
+        let occupied = FreeArea.occupiedFrames(
+            screenFrame: screenFrame,
+            standardWindows: standard,
+            activeWindowID: activeWindowID,
+            hiddenWindowThreshold: CGFloat(config.hiddenWindowThreshold),
+            excludeHiddenWindows: config.excludeHiddenWindows)
 
         let activeFrame = ordered.first { $0.id == activeWindowID }?.frame
         return FreeArea.bestFreeFrame(

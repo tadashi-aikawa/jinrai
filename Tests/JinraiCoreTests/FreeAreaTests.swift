@@ -66,4 +66,30 @@ struct FreeAreaTests {
             screenFrame: screen, occupiedFrames: occupied)
         #expect(frames == [CGRect(x: 960, y: 540, width: 960, height: 540)])
     }
+
+    @Test("隠れた背面ウィンドウは設定により障害物から除外される")
+    func occupiedFramesExcludeHiddenWindows() {
+        let front = WindowInfo(id: 1, frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        let hidden = WindowInfo(id: 2, frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        let standard = [front, hidden]
+        let screenFrame = CGRect(x: 0, y: 0, width: 200, height: 100)
+
+        #expect(
+            FreeArea.occupiedFrames(
+                screenFrame: screenFrame,
+                standardWindows: standard,
+                activeWindowID: nil,
+                hiddenWindowThreshold: 1,
+                excludeHiddenWindows: true
+            ) == [front.frame])
+
+        #expect(
+            FreeArea.occupiedFrames(
+                screenFrame: screenFrame,
+                standardWindows: standard,
+                activeWindowID: nil,
+                hiddenWindowThreshold: 1,
+                excludeHiddenWindows: false
+            ) == [front.frame, hidden.frame])
+    }
 }

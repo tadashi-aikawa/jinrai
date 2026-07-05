@@ -12,7 +12,7 @@ icon: lucide/layout-grid
 
 | アイコン | エリア | 位置 | サイズ |
 | --- | --- | --- | --- |
-| <img src="./attachments/window-mover/areas/freeArea.svg" alt="freeArea" width="48"> | `freeArea` | 選択したディスプレイの最大空き領域 | 前面ウィンドウに一定以上隠れた背面ウィンドウを除く、他の可視な標準ウィンドウと重ならない最大サイズ |
+| <img src="./attachments/window-mover/areas/freeArea.svg" alt="freeArea" width="48"> | `freeArea` | 選択したディスプレイの最大空き領域 | 設定に応じて前面ウィンドウに隠れた背面ウィンドウを除き、他の可視な標準ウィンドウと重ならない最大サイズ |
 | <img src="./attachments/window-mover/areas/full.svg" alt="full" width="48"> | `full` | ディスプレイ全体 | ディスプレイ全体 |
 | <img src="./attachments/window-mover/areas/fixedSizeCenter.svg" alt="fixedSizeCenter" width="48"> | `<width>x<height>Center` | ディスプレイ中央 | 固定サイズ。ディスプレイ内に収まるよう調整 |
 

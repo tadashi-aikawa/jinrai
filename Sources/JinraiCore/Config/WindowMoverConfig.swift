@@ -22,6 +22,9 @@ public struct WindowMoverConfig: Sendable {
     /// 前面ウィンドウに隠れた背面ウィンドウを freeArea 計算から除外するしきい値
     /// (behavior.freeArea.hiddenWindowThreshold)。Area Hints の freeArea にも適用される
     public var hiddenWindowThreshold: Double
+    /// 前面ウィンドウに隠れた背面ウィンドウを freeArea 計算から除外するか
+    /// (behavior.freeArea.excludeHiddenWindows)。Area Hints の freeArea にも適用される
+    public var excludeHiddenWindows: Bool
 }
 
 public enum WindowMoverConfigBuilder {
@@ -85,7 +88,8 @@ public enum WindowMoverConfigBuilder {
             verticalRatios: doubleArray(merged.value("behavior.cycle.verticalRatios"))
                 ?? CycleState.defaultRatios.map(Double.init),
             hiddenWindowThreshold: merged.double("behavior.freeArea.hiddenWindowThreshold")
-                ?? 0.5
+                ?? 0.5,
+            excludeHiddenWindows: merged.bool("behavior.freeArea.excludeHiddenWindows") ?? true
         )
     }
 

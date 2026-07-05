@@ -226,6 +226,20 @@ struct WindowHintsConfigTests {
 
 @Suite("WindowMoverConfigBuilder")
 struct WindowMoverConfigTests {
+    @Test("freeArea の隠れウィンドウ除外設定はデフォルトで有効")
+    func freeAreaExcludeHiddenWindowsDefault() throws {
+        let config = try WindowMoverConfigBuilder.build()
+        #expect(config.excludeHiddenWindows)
+    }
+
+    @Test("freeArea の隠れウィンドウ除外設定を無効にできる")
+    func freeAreaExcludeHiddenWindowsOverride() throws {
+        let config = try WindowMoverConfigBuilder.build([
+            "behavior": ["freeArea": ["excludeHiddenWindows": false]]
+        ])
+        #expect(!config.excludeHiddenWindows)
+    }
+
     @Test("commands のホットキーを収集する")
     func collectsCommandHotkeys() throws {
         let config = try WindowMoverConfigBuilder.build([
