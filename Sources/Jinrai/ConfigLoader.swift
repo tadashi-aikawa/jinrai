@@ -17,6 +17,8 @@ enum ConfigLoader {
     /// 初回起動時に生成するテンプレート
     static let defaultConfigTemplate = """
         {
+            "$schema": "https://tadashi-aikawa.github.io/jinrai/schemas/config.schema.json",
+
             // Jinrai 設定ファイル(JSONC: コメント・末尾カンマ可)
             // 各機能はセクションが存在するときだけ有効になります
 

@@ -1,0 +1,1590 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tadashi-aikawa.github.io/jinrai/schemas/config.schema.json",
+  "title": "JINRAI config.jsonc",
+  "description": "JINRAI の config.jsonc 用 JSON Schema です。",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema の参照先です。",
+      "default": "https://tadashi-aikawa.github.io/jinrai/schemas/config.schema.json"
+    },
+    "macosNativeTabs": {
+      "$ref": "#/definitions/macosNativeTabs"
+    },
+    "jinraiMode": {
+      "$ref": "#/definitions/jinraiMode"
+    },
+    "focusBack": {
+      "$ref": "#/definitions/focusBack"
+    },
+    "focusBorder": {
+      "$ref": "#/definitions/focusBorder"
+    },
+    "windowHints": {
+      "$ref": "#/definitions/windowHints"
+    },
+    "windowMover": {
+      "$ref": "#/definitions/windowMover"
+    },
+    "areaHints": {
+      "$ref": "#/definitions/areaHints"
+    },
+    "applicationHints": {
+      "$ref": "#/definitions/applicationHints"
+    }
+  },
+  "definitions": {
+    "color": {
+      "type": "object",
+      "description": "色です。各成分は 0 から 1 の数値です。",
+      "additionalProperties": false,
+      "properties": {
+        "red": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0
+        },
+        "green": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0
+        },
+        "blue": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0
+        },
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1
+        }
+      }
+    },
+    "carbonModifierName": {
+      "type": "string",
+      "description": "Carbon グローバルホットキーで使える修飾キー名です。",
+      "enum": ["cmd", "command", "alt", "option", "ctrl", "control", "shift"]
+    },
+    "eventModifierName": {
+      "type": "string",
+      "description": "キーストローク送出で使える修飾キー名です。",
+      "enum": ["cmd", "command", "alt", "option", "ctrl", "control", "shift", "fn"]
+    },
+    "carbonModifiers": {
+      "type": ["array", "null"],
+      "items": {
+        "$ref": "#/definitions/carbonModifierName"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "eventModifiers": {
+      "type": ["array", "null"],
+      "items": {
+        "$ref": "#/definitions/eventModifierName"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "keyName": {
+      "type": "string",
+      "description": "キー名です。文字キー、return、escape、left、right、f1 から f20 などを指定できます。",
+      "examples": ["a", "return", "escape", "left", "f20"]
+    },
+    "nullableKeyName": {
+      "type": ["string", "null"],
+      "description": "キー名です。null で未設定にできます。",
+      "examples": ["a", "return", null]
+    },
+    "hotkey": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modifiers": {
+          "$ref": "#/definitions/carbonModifiers"
+        },
+        "key": {
+          "$ref": "#/definitions/nullableKeyName"
+        }
+      }
+    },
+    "eventHotkey": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modifiers": {
+          "$ref": "#/definitions/eventModifiers"
+        },
+        "key": {
+          "$ref": "#/definitions/nullableKeyName"
+        }
+      }
+    },
+    "direction": {
+      "type": "string",
+      "enum": ["left", "right", "up", "down", "upLeft", "upRight", "downLeft", "downRight"]
+    },
+    "directionKeyMap": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "left": {
+          "$ref": "#/definitions/keyName"
+        },
+        "right": {
+          "$ref": "#/definitions/keyName"
+        },
+        "up": {
+          "$ref": "#/definitions/keyName"
+        },
+        "down": {
+          "$ref": "#/definitions/keyName"
+        },
+        "upLeft": {
+          "$ref": "#/definitions/keyName"
+        },
+        "upRight": {
+          "$ref": "#/definitions/keyName"
+        },
+        "downLeft": {
+          "$ref": "#/definitions/keyName"
+        },
+        "downRight": {
+          "$ref": "#/definitions/keyName"
+        }
+      }
+    },
+    "animation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fade": {
+          "type": "boolean",
+          "default": true
+        },
+        "scale": {
+          "type": "number",
+          "default": 1
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0.16
+        },
+        "easing": {
+          "type": "string",
+          "enum": ["linear", "easeOut", "easeInOut"],
+          "default": "linear"
+        }
+      }
+    },
+    "macosNativeTabs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "apps": {
+          "type": "array",
+          "description": "組み込み対象へ追加する bundle ID またはアプリ名です。",
+          "items": {
+            "type": "string"
+          },
+          "default": ["com.mitchellh.ghostty", "com.apple.finder"]
+        },
+        "stateSyncInterval": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0.5
+        }
+      }
+    },
+    "jinraiModeTrigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/nullableKeyName"
+        }
+      }
+    },
+    "jinraiModeElement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "animation": {
+          "$ref": "#/definitions/animation"
+        }
+      }
+    },
+    "jinraiModeLogo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "size": {
+          "type": "number",
+          "minimum": 0,
+          "default": 480
+        },
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.25
+        },
+        "animation": {
+          "$ref": "#/definitions/animation"
+        }
+      }
+    },
+    "jinraiMode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "type": "string",
+          "enum": ["activeWindow", "activeDisplay"],
+          "default": "activeWindow"
+        },
+        "triggers": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "windowHints": {
+              "$ref": "#/definitions/jinraiModeTrigger"
+            },
+            "applicationHints": {
+              "$ref": "#/definitions/jinraiModeTrigger"
+            },
+            "areaHints": {
+              "$ref": "#/definitions/jinraiModeTrigger"
+            }
+          }
+        },
+        "logo": {
+          "$ref": "#/definitions/jinraiModeLogo"
+        },
+        "combo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "character": {
+              "$ref": "#/definitions/jinraiModeElement"
+            },
+            "text": {
+              "$ref": "#/definitions/jinraiModeElement"
+            }
+          }
+        }
+      }
+    },
+    "focusBack": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotkey": {
+          "$ref": "#/definitions/hotkey"
+        },
+        "urlEvent": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": ["string", "null"],
+              "description": "URL イベント名です。"
+            }
+          }
+        },
+        "behavior": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cursor": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "onSelect": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "focusBorder": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "visual": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "border": {
+              "$ref": "#/definitions/borderVisual"
+            },
+            "outline": {
+              "$ref": "#/definitions/borderVisual"
+            },
+            "logo": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "type": ["string", "null"]
+                },
+                "size": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 480
+                },
+                "alpha": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.95
+                }
+              }
+            }
+          }
+        },
+        "animation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "duration": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0.5
+            },
+            "fadeSteps": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 18
+            },
+            "spaceSwitchDelay": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0.3
+            }
+          }
+        },
+        "window": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minSize": {
+              "type": "number",
+              "minimum": 0,
+              "default": 480
+            }
+          }
+        }
+      }
+    },
+    "borderVisual": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "color": {
+          "$ref": "#/definitions/color"
+        }
+      }
+    },
+    "hintStateStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bgColor": {
+          "$ref": "#/definitions/color"
+        },
+        "highlight": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fillColor": {
+              "$ref": "#/definitions/color"
+            },
+            "borderColor": {
+              "$ref": "#/definitions/color"
+            }
+          }
+        }
+      }
+    },
+    "alphaState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "colorState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "$ref": "#/definitions/color"
+        }
+      }
+    },
+    "stateMapHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "normal": {
+          "$ref": "#/definitions/hintStateStyle"
+        },
+        "dimmed": {
+          "$ref": "#/definitions/hintStateStyle"
+        },
+        "occluded": {
+          "$ref": "#/definitions/hintStateStyle"
+        },
+        "active": {
+          "$ref": "#/definitions/hintStateStyle"
+        }
+      }
+    },
+    "stateMapAlpha": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "normal": {
+          "$ref": "#/definitions/alphaState"
+        },
+        "dimmed": {
+          "$ref": "#/definitions/alphaState"
+        },
+        "occluded": {
+          "$ref": "#/definitions/alphaState"
+        },
+        "active": {
+          "$ref": "#/definitions/alphaState"
+        }
+      }
+    },
+    "stateMapColor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "normal": {
+          "$ref": "#/definitions/colorState"
+        },
+        "dimmed": {
+          "$ref": "#/definitions/colorState"
+        },
+        "occluded": {
+          "$ref": "#/definitions/colorState"
+        },
+        "active": {
+          "$ref": "#/definitions/colorState"
+        }
+      }
+    },
+    "prefixOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "match": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "bundleID": {
+              "type": "string"
+            },
+            "titleGlob": {
+              "type": "string"
+            }
+          }
+        },
+        "prefix": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2
+        }
+      }
+    },
+    "windowHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotkey": {
+          "$ref": "#/definitions/hotkey"
+        },
+        "hint": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "chars": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "default": ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M"]
+            },
+            "prefixOverrides": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/prefixOverride"
+              },
+              "default": []
+            },
+            "padding": {
+              "type": "number",
+              "minimum": 0,
+              "default": 12
+            },
+            "cornerRadius": {
+              "type": "number",
+              "minimum": 0,
+              "default": 12
+            },
+            "occludedScale": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0.85
+            },
+            "highlight": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "borderWidth": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 6
+                }
+              }
+            },
+            "state": {
+              "$ref": "#/definitions/stateMapHint"
+            },
+            "icon": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "size": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 72
+                },
+                "state": {
+                  "$ref": "#/definitions/stateMapAlpha"
+                }
+              }
+            },
+            "key": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "minWidth": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 72
+                },
+                "fontSize": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 48
+                },
+                "keyHighlightColor": {
+                  "$ref": "#/definitions/color"
+                },
+                "state": {
+                  "$ref": "#/definitions/stateMapColor"
+                }
+              }
+            },
+            "title": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "show": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "fontSize": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 16
+                },
+                "maxSize": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "default": 72
+                },
+                "state": {
+                  "$ref": "#/definitions/stateMapColor"
+                }
+              }
+            }
+          }
+        },
+        "focusedWindowHighlight": {
+          "$ref": "#/definitions/borderVisual"
+        },
+        "focusedWindowSpotlight": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "alpha": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.5
+            }
+          }
+        },
+        "occlusion": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sampling": {
+              "$ref": "#/definitions/sampling"
+            },
+            "preview": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "mode": {
+                  "type": "string",
+                  "enum": ["background", "below"],
+                  "default": "background"
+                },
+                "width": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 140
+                },
+                "padding": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 6
+                },
+                "alpha": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.64
+                }
+              }
+            }
+          }
+        },
+        "dock": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "bottomMargin": {
+              "type": "number",
+              "default": 96
+            },
+            "itemGap": {
+              "type": "number",
+              "default": 12
+            },
+            "windowBlend": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "default": 0.65
+                },
+                "y": {
+                  "type": "number",
+                  "default": 1
+                }
+              }
+            }
+          }
+        },
+        "navigation": {
+          "$ref": "#/definitions/windowHintsNavigation"
+        },
+        "behavior": {
+          "$ref": "#/definitions/windowHintsBehavior"
+        }
+      }
+    },
+    "sampling": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "baseWidth": {
+          "type": "number",
+          "minimum": 1,
+          "default": 1920
+        },
+        "baseHeight": {
+          "type": "number",
+          "minimum": 1,
+          "default": 1080
+        },
+        "minCols": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 4
+        },
+        "minRows": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 4
+        },
+        "maxCols": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 8
+        },
+        "maxRows": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 8
+        }
+      }
+    },
+    "windowHintsNavigation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "focusBack": {
+          "$ref": "#/definitions/jinraiModeTrigger"
+        },
+        "areaHints": {
+          "$ref": "#/definitions/jinraiModeTrigger"
+        },
+        "applicationHints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "$ref": "#/definitions/nullableKeyName"
+            },
+            "jinraiMode": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "direction": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hints": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "keys": {
+                  "$ref": "#/definitions/directionKeyMap"
+                }
+              }
+            },
+            "direct": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "modifiers": {
+                  "$ref": "#/definitions/carbonModifiers"
+                },
+                "keys": {
+                  "$ref": "#/definitions/directionKeyMap"
+                }
+              }
+            },
+            "scoring": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "cardinalOverlapTieThresholdPx": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 720
+                },
+                "maxPrimaryOverlapRatioForDetached": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.2
+                },
+                "minOrthogonalOverlapRatio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.5
+                },
+                "preferredVisibleRatio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.4
+                }
+              }
+            }
+          }
+        },
+        "spaces": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "numbers": {
+              "type": "boolean",
+              "default": true
+            },
+            "prev": {
+              "$ref": "#/definitions/jinraiModeTrigger"
+            },
+            "next": {
+              "$ref": "#/definitions/jinraiModeTrigger"
+            }
+          }
+        }
+      }
+    },
+    "windowHintsBehavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "onSelect": {
+              "type": "boolean",
+              "default": true
+            },
+            "onStart": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "candidates": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "includeOtherSpaces": {
+              "type": "boolean",
+              "default": true
+            },
+            "includeActiveWindow": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "swapWindowFrame": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "modifiers": {
+                  "$ref": "#/definitions/eventModifiers"
+                }
+              }
+            }
+          }
+        },
+        "showFadeIn": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hints": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0.05
+            },
+            "spotlight": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0.4
+            }
+          }
+        }
+      }
+    },
+    "windowMover": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "commands": {
+          "$ref": "#/definitions/windowMoverCommands"
+        },
+        "behavior": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cursor": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "afterMove": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            },
+            "cycle": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "horizontalRatios": {
+                  "$ref": "#/definitions/ratioArray"
+                },
+                "verticalRatios": {
+                  "$ref": "#/definitions/ratioArray"
+                }
+              }
+            },
+            "freeArea": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "hiddenWindowThreshold": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.5
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ratioArray": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "default": [0.5, 0.3333333333333333, 0.6666666666666666]
+    },
+    "windowMoverCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotkey": {
+          "$ref": "#/definitions/hotkey"
+        }
+      }
+    },
+    "windowMoverCommands": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "moveToNextDisplay": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "moveToActiveDisplayFreeArea": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "minimizeWindow": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "maximizeWindow": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "cycleLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "cycleHorizontalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "cycleRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "cycleTop": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "cycleVerticalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "cycleBottom": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "halfLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "halfHorizontalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "halfRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "halfTop": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "halfVerticalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "halfBottom": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "thirdLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "thirdHorizontalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "thirdRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "thirdTop": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "thirdVerticalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "thirdBottom": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterHorizontalLeftCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterHorizontalRightCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterTop": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterVerticalTopCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterVerticalBottomCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterBottom": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterTopLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterTopRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterBottomLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "quarterBottomRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "sixthTopLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "sixthTopCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "sixthTopRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "sixthBottomLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "sixthBottomCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "sixthBottomRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "twoThirdsLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "twoThirdsHorizontalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "twoThirdsRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "twoThirdsTop": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "twoThirdsVerticalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "twoThirdsBottom": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "twoThirdsCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "threeQuartersLeft": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "threeQuartersHorizontalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "threeQuartersRight": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "threeQuartersTop": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "threeQuartersVerticalCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "threeQuartersBottom": {
+          "$ref": "#/definitions/windowMoverCommand"
+        },
+        "threeQuartersCenter": {
+          "$ref": "#/definitions/windowMoverCommand"
+        }
+      }
+    },
+    "areaKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3
+    },
+    "nullableAreaKey": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 3
+    },
+    "areaMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[1-9][0-9]*(?:\\.[0-9]+)?x[1-9][0-9]*(?:\\.[0-9]+)?Center$": {
+          "$ref": "#/definitions/areaKey"
+        }
+      },
+      "properties": {
+        "full": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "freeArea": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "halfLeft": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "halfHorizontalCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "halfRight": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "halfTop": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "halfVerticalCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "halfBottom": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "thirdLeft": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "thirdHorizontalCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "thirdRight": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "thirdTop": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "thirdVerticalCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "thirdBottom": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterLeft": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterHorizontalLeftCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterHorizontalRightCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterRight": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterTop": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterVerticalTopCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterVerticalBottomCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterBottom": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterTopLeft": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterTopRight": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterBottomLeft": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "quarterBottomRight": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "sixthTopLeft": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "sixthTopCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "sixthTopRight": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "sixthBottomLeft": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "sixthBottomCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "sixthBottomRight": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "twoThirdsLeft": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "twoThirdsHorizontalCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "twoThirdsRight": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "twoThirdsTop": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "twoThirdsVerticalCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "twoThirdsBottom": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "twoThirdsCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "threeQuartersLeft": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "threeQuartersHorizontalCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "threeQuartersRight": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "threeQuartersTop": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "threeQuartersVerticalCenter": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "threeQuartersBottom": {
+          "$ref": "#/definitions/areaKey"
+        },
+        "threeQuartersCenter": {
+          "$ref": "#/definitions/areaKey"
+        }
+      }
+    },
+    "areaHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotkey": {
+          "$ref": "#/definitions/hotkey"
+        },
+        "jinraiMode": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hotkey": {
+              "$ref": "#/definitions/hotkey"
+            }
+          }
+        },
+        "screens": {
+          "type": "object",
+          "description": "ディスプレイUUIDごとのエリア名と選択キーのマップです。",
+          "additionalProperties": {
+            "$ref": "#/definitions/areaMap"
+          }
+        },
+        "defaultScreen": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/areaMap"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "closeWindow": {
+              "$ref": "#/definitions/nullableAreaKey"
+            },
+            "minimizeWindow": {
+              "$ref": "#/definitions/nullableAreaKey"
+            },
+            "maximizeWindow": {
+              "$ref": "#/definitions/nullableAreaKey"
+            },
+            "quitApplication": {
+              "$ref": "#/definitions/nullableAreaKey"
+            },
+            "detachChromeTabToNewWindow": {
+              "$ref": "#/definitions/nullableAreaKey"
+            }
+          }
+        },
+        "navigation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "windowHints": {
+              "$ref": "#/definitions/jinraiModeTrigger"
+            }
+          }
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "show": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "activeWindowSpotlight": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "alpha": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.5
+            }
+          }
+        },
+        "activeWindowHighlight": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "borderColor": {
+              "$ref": "#/definitions/color"
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "default": 13
+            },
+            "cornerRadius": {
+              "type": "number",
+              "minimum": 0,
+              "default": 12
+            }
+          }
+        },
+        "appearance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "normal": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "bgColor": {
+                      "$ref": "#/definitions/color"
+                    },
+                    "textColor": {
+                      "$ref": "#/definitions/color"
+                    },
+                    "typedTextColor": {
+                      "$ref": "#/definitions/color"
+                    }
+                  }
+                },
+                "dimmed": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "bgColor": {
+                      "$ref": "#/definitions/color"
+                    },
+                    "textColor": {
+                      "$ref": "#/definitions/color"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "applicationHintsApp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bundleID", "key"],
+      "properties": {
+        "bundleID": {
+          "type": "string",
+          "minLength": 1
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2
+        },
+        "name": {
+          "type": ["string", "null"]
+        },
+        "newWindow": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "hotkey": {
+              "$ref": "#/definitions/eventHotkey"
+            }
+          }
+        }
+      }
+    },
+    "applicationHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["apps"],
+      "properties": {
+        "hotkey": {
+          "$ref": "#/definitions/hotkey"
+        },
+        "windowWaitTimeout": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 10
+        },
+        "apps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/applicationHintsApp"
+          }
+        },
+        "appearance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "itemWidth": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "default": 220
+            },
+            "itemHeight": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "default": 112
+            },
+            "gap": {
+              "type": "number",
+              "default": 12
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 3
+            },
+            "iconSize": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "default": 64
+            },
+            "cornerRadius": {
+              "type": "number",
+              "minimum": 0,
+              "default": 12
+            },
+            "bgColor": {
+              "$ref": "#/definitions/color"
+            },
+            "dimmedBgColor": {
+              "$ref": "#/definitions/color"
+            },
+            "textColor": {
+              "$ref": "#/definitions/color"
+            },
+            "dimmedTextColor": {
+              "$ref": "#/definitions/color"
+            },
+            "stateColor": {
+              "$ref": "#/definitions/color"
+            },
+            "keyHighlightColor": {
+              "$ref": "#/definitions/color"
+            }
+          }
+        }
+      }
+    }
+  }
+}
