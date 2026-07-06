@@ -2,16 +2,16 @@
 icon: lucide/repeat
 ---
 
-# JinraiMode
+# JINRAI Mode
 
-JinraiModeは、[Window Hints](window-hints.md)によるウィンドウ選択と、[Area Hints](area-hints.md)による移動先選択を交互に繰り返すモードです。
+JINRAI Modeは、[Window Hints](window-hints.md)によるウィンドウ選択と、[Area Hints](area-hints.md)による移動先選択を交互に繰り返すモードです。
 
 ==TODO: 動画==
 
 
 ## 使い方
 
-JinraiModeは次の方法で開始できます。
+JINRAI Modeは次の方法で開始できます。
 
 - [Window Hints](window-hints.md)の表示中に`triggers.windowHints.key`を押す
 - [Application Hints](application-hints.md)の表示中に`triggers.applicationHints.key`を押す
@@ -21,11 +21,11 @@ JinraiModeは次の方法で開始できます。
 
 [Window Hints](window-hints.md)から開始した場合は、ウィンドウを選択すると移動先の候補が開きます。移動先を選択すると[Window Hints](window-hints.md)へ戻り、次のウィンドウを続けて選べます。
 
-`escape`、候補外のクリック、または表示中のホットキーをもう一度押して操作をキャンセルすると、JinraiModeも終了します。
+`escape`、候補外のクリック、または表示中のホットキーをもう一度押して操作をキャンセルすると、JINRAI Modeも終了します。
 
 ## 設定
 
-[全設定](configuration.md)に、JinraiModeの全項目、デフォルト値、各項目の説明を掲載しています。
+[全設定](configuration.md)に、JINRAI Modeの全項目、デフォルト値、各項目の説明を掲載しています。
 
 `position`は`activeWindow`または`activeDisplay`から指定します。
 それぞれ、アクティブウィンドウ中央またはアクティブディスプレイ中央にロゴなどを表示します。
@@ -53,6 +53,6 @@ JinraiModeは次の方法で開始できます。
 }
 ```
 
-このキーは通常の操作でも利用できます。JinraiMode中に使った場合は、モードを終了せず[Window Hints](window-hints.md)へ戻ります。
+このキーは通常の操作でも利用できます。JINRAI Mode中に使った場合は、モードを終了せず[Window Hints](window-hints.md)へ戻ります。
 
-JinraiModeの開始キーや戻るキーは、同じ画面で使うエリアキーやアクションキーと重複させないでください。`K`と`KD`のような、一方がもう一方の先頭に一致する組み合わせも使用できません。
+JINRAI Modeの開始キーや戻るキーは、同じ画面で使うエリアキーやアクションキーと重複させないでください。`K`と`KD`のような、一方がもう一方の先頭に一致する組み合わせも使用できません。

@@ -109,7 +109,7 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
         ]
     },
 
-    // JinraiMode: ヒント表示中に return で開始し、ウィンドウ選択→配置を連続操作
+    // JINRAI Mode: ヒント表示中に return で開始し、ウィンドウ選択→配置を連続操作
     "jinraiMode": {
         "triggers": {
             "windowHints": { "key": "return" },
@@ -154,7 +154,7 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
 | --- | --- |
 | `space` | Window Hints ⇄ Area Hints を切り替え |
 | `tab` | Window Hints から[Application Hints](application-hints.md)を開く |
-| `return` | [JinraiMode](jinrai-mode.md)を開始 |
+| `return` | [JINRAI Mode](jinrai-mode.md)を開始 |
 
 設定を変更したら、メニューバーのJINRAIアイコンから`設定を再読込`を実行してください。
 

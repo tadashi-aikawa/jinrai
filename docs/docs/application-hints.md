@@ -142,9 +142,9 @@ Ghosttyのように新規ウィンドウのキーが異なるアプリは、`new
 
 Window Hints表示中に設定キーを押すとApplication Hintsへ切り替わります。同じキーをもう一度押すとWindow Hintsへ戻り、`escape`で閉じます。
 
-`"jinraiMode": true`を指定すると、Window Hintsが通常表示中でもJinraiModeを開始してApplication Hintsへ切り替わります。
+`"jinraiMode": true`を指定すると、Window Hintsが通常表示中でもJINRAI Modeを開始してApplication Hintsへ切り替わります。
 
-## JinraiModeを開始
+## JINRAI Modeを開始
 
 ```json
 "jinraiMode": {
@@ -156,10 +156,10 @@ Window Hints表示中に設定キーを押すとApplication Hintsへ切り替わ
 }
 ```
 
-Application Hints表示中に`triggers.applicationHints.key`を押すとJinraiModeを開始し、ロゴ・キャラクター・COMBOテキストを表示します。
+Application Hints表示中に`triggers.applicationHints.key`を押すとJINRAI Modeを開始し、ロゴ・キャラクター・COMBOテキストを表示します。
 
 ## キーの制約
 
 - アプリキーは1文字または2文字で指定します。
-- アプリキー、Window Hintsとの切り替えキー、JinraiMode開始キーは重複できません。
+- アプリキー、Window Hintsとの切り替えキー、JINRAI Mode開始キーは重複できません。
 - `A`と`AB`のような、一方がもう一方の先頭に一致する組み合わせも使用できません。

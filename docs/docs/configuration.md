@@ -51,15 +51,15 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
     // ロゴなどの中心位置です。
     "position": "activeWindow",
     "triggers": {
-      // Window Hints表示中にJinraiModeを開始するキーです。
+      // Window Hints表示中にJINRAI Modeを開始するキーです。
       "windowHints": { "key": null },
-      // Application Hints表示中にJinraiModeを開始するキーです。
+      // Application Hints表示中にJINRAI Modeを開始するキーです。
       "applicationHints": { "key": null },
-      // Area Hints表示中にJinraiModeを開始するキーです。
+      // Area Hints表示中にJINRAI Modeを開始するキーです。
       "areaHints": { "key": null }
     },
     "logo": {
-      // JinraiMode中にJINRAIロゴを表示します。
+      // JINRAI Mode中にJINRAIロゴを表示します。
       "enabled": true,
       // ロゴの大きさです。
       "size": 480,
@@ -357,7 +357,7 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
       "applicationHints": {
         // Application Hintsへ移るキーです。
         "key": null,
-        // Application Hintsへの移動時にJinraiModeを開始します。
+        // Application Hintsへの移動時にJINRAI Modeを開始します。
         "jinraiMode": false
       }
     },
@@ -466,9 +466,9 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
     },
     "jinraiMode": {
       "hotkey": {
-        // JinraiModeとしてArea Hintsを開く修飾キーです。
+        // JINRAI ModeとしてArea Hintsを開く修飾キーです。
         "modifiers": null,
-        // JinraiModeとしてArea Hintsを開くキーです。
+        // JINRAI ModeとしてArea Hintsを開くキーです。
         "key": null
       }
     },
@@ -671,7 +671,7 @@ Area Hints経由の移動は、`windowMover.behavior`(カーソル追従・freeA
 { "red": 0.40, "green": 0.68, "blue": 0.98, "alpha": 0.95 }
 ```
 
-### JinraiModeの位置とアニメーション
+### JINRAI Modeの位置とアニメーション
 
 `jinraiMode.position`は次の値から指定します。
 

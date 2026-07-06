@@ -315,7 +315,7 @@
     },
     "jinraiModeElement": {
       "type": "object",
-      "description": "JinraiModeのコンボ表示要素の設定です。",
+      "description": "JINRAI Modeのコンボ表示要素の設定です。",
       "additionalProperties": false,
       "properties": {
         "enabled": {
@@ -366,12 +366,12 @@
     },
     "jinraiModeLogo": {
       "type": "object",
-      "description": "JinraiMode中のロゴ表示の設定です。",
+      "description": "JINRAI Mode中のロゴ表示の設定です。",
       "additionalProperties": false,
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "JinraiMode中にJINRAIロゴを表示します。",
+          "description": "JINRAI Mode中にJINRAIロゴを表示します。",
           "default": true
         },
         "size": {
@@ -406,26 +406,26 @@
         },
         "triggers": {
           "type": "object",
-          "description": "各機能の表示中にJinraiModeを開始するキーです。",
+          "description": "各機能の表示中にJINRAI Modeを開始するキーです。",
           "additionalProperties": false,
           "properties": {
             "windowHints": {
               "$ref": "#/definitions/jinraiModeTrigger",
-              "description": "Window Hints表示中にJinraiModeを開始するキーです。"
+              "description": "Window Hints表示中にJINRAI Modeを開始するキーです。"
             },
             "applicationHints": {
               "$ref": "#/definitions/jinraiModeTrigger",
-              "description": "Application Hints表示中にJinraiModeを開始するキーです。"
+              "description": "Application Hints表示中にJINRAI Modeを開始するキーです。"
             },
             "areaHints": {
               "$ref": "#/definitions/jinraiModeTrigger",
-              "description": "Area Hints表示中にJinraiModeを開始するキーです。"
+              "description": "Area Hints表示中にJINRAI Modeを開始するキーです。"
             }
           }
         },
         "logo": {
           "$ref": "#/definitions/jinraiModeLogo",
-          "description": "JinraiMode中のロゴ表示です。"
+          "description": "JINRAI Mode中のロゴ表示です。"
         },
         "combo": {
           "type": "object",
@@ -1061,7 +1061,7 @@
             },
             "jinraiMode": {
               "type": "boolean",
-              "description": "Application Hintsへの移動時にJinraiModeを開始します。",
+              "description": "Application Hintsへの移動時にJINRAI Modeを開始します。",
               "default": false
             }
           }
@@ -1786,12 +1786,12 @@
         },
         "jinraiMode": {
           "type": "object",
-          "description": "JinraiModeとしてArea Hintsを開く設定です。",
+          "description": "JINRAI ModeとしてArea Hintsを開く設定です。",
           "additionalProperties": false,
           "properties": {
             "hotkey": {
               "$ref": "#/definitions/hotkey",
-              "description": "JinraiModeとしてArea Hintsを開くホットキーです。"
+              "description": "JINRAI ModeとしてArea Hintsを開くホットキーです。"
             }
           }
         },
