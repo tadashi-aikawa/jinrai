@@ -135,7 +135,7 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
 }
 ```
 
-`$schema`によりJSON Schema対応エディタで補完と静的チェックが有効になります([全設定](configuration.md#エディタ補完)参照)。
+`$schema`によりJSON Schema対応エディタで補完と静的チェックが有効になります([全設定](configuration.md#editor-completion)参照)。
 
 ### 初期キーマップ
 
