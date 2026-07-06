@@ -116,4 +116,38 @@ struct DockLayoutTests {
                 xBlend: 0.65, yBlend: 1
             ).isEmpty)
     }
+
+    @Test("densityScale: 合計面積が上限内なら縮小しない")
+    func densityScaleWithinBudget() {
+        let sizes = [CGSize(width: 400, height: 300), CGSize(width: 400, height: 300)]
+        #expect(
+            DockLayout.densityScale(boxSizes: sizes, screenFrame: screen, maxFillRatio: 0.5)
+                == 1)
+    }
+
+    @Test("densityScale: 超過時は縮小後の合計面積が上限に一致する")
+    func densityScaleShrinksToBudget() {
+        // 800×600 × 10 = 4.8M > 1920×1080×0.5 ≈ 1.04M
+        let sizes = (0..<10).map { _ in CGSize(width: 800, height: 600) }
+        let scale = DockLayout.densityScale(
+            boxSizes: sizes, screenFrame: screen, maxFillRatio: 0.5)
+        #expect(scale < 1)
+        let scaledArea = sizes.reduce(CGFloat(0)) {
+            $0 + $1.width * scale * $1.height * scale
+        }
+        let budget = screen.width * screen.height * 0.5
+        #expect(abs(scaledArea - budget) < 0.001)
+    }
+
+    @Test("densityScale: 空入力・ゼロ画面では 1 を返す")
+    func densityScaleDegenerateInputs() {
+        #expect(
+            DockLayout.densityScale(boxSizes: [], screenFrame: screen, maxFillRatio: 0.5)
+                == 1)
+        #expect(
+            DockLayout.densityScale(
+                boxSizes: [CGSize(width: 800, height: 600)], screenFrame: .zero,
+                maxFillRatio: 0.5
+            ) == 1)
+    }
 }

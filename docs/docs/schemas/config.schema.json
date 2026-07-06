@@ -843,6 +843,13 @@
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.64
+                },
+                "maxFillRatio": {
+                  "type": "number",
+                  "description": "background モードのプレビュー箱の合計面積が画面面積に占めてよい最大割合です。超過するとすべての箱を一律に縮小し、候補が多いときの重なりを防ぎます。",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.5
                 }
               }
             }

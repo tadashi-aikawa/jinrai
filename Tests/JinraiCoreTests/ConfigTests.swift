@@ -137,6 +137,20 @@ struct WindowHintsConfigTests {
         #expect(config.focusedSpotlightAlpha == 0.42)
     }
 
+    @Test("preview.maxFillRatio はデフォルト値を持つ")
+    func previewMaxFillRatioDefault() throws {
+        let config = try WindowHintsConfigBuilder.build()
+        #expect(config.previewMaxFillRatio == 0.5)
+    }
+
+    @Test("preview.maxFillRatio を上書きできる")
+    func previewMaxFillRatioOverride() throws {
+        let config = try WindowHintsConfigBuilder.build([
+            "occlusion": ["preview": ["maxFillRatio": 0.3]]
+        ])
+        #expect(config.previewMaxFillRatio == 0.3)
+    }
+
     @Test("direction.direct はデフォルトで無効")
     func directDirectionDefault() throws {
         let config = try WindowHintsConfigBuilder.build()

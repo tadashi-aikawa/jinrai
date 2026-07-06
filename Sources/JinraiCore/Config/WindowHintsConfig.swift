@@ -85,6 +85,9 @@ public struct WindowHintsConfig: Sendable {
     public var previewPadding: Double
     /// プレビューの透明度(occlusion.preview.alpha)
     public var previewAlpha: Double
+    /// 背景プレビュー箱の合計面積が画面面積に占めてよい最大割合
+    /// (occlusion.preview.maxFillRatio)。超過時は全箱を一律縮小する
+    public var previewMaxFillRatio: Double
     /// 画面下部に並べる候補の下余白(dock.bottomMargin)
     public var dockBottomMargin: Double
     /// 画面下部に並べる候補の間隔(dock.itemGap)
@@ -340,6 +343,7 @@ public enum WindowHintsConfigBuilder {
             previewWidth: merged.double("occlusion.preview.width") ?? 140,
             previewPadding: merged.double("occlusion.preview.padding") ?? 6,
             previewAlpha: merged.double("occlusion.preview.alpha") ?? 0.64,
+            previewMaxFillRatio: merged.double("occlusion.preview.maxFillRatio") ?? 0.5,
             dockBottomMargin: merged.double("dock.bottomMargin") ?? 96,
             dockItemGap: merged.double("dock.itemGap") ?? 12,
             dockWindowXBlend: merged.double("dock.windowBlend.x") ?? 0.65,

@@ -33,6 +33,19 @@ public enum DockLayout {
         public var frame: CGRect
     }
 
+    /// ドックヒント箱の合計面積が screenArea × maxFillRatio を超える場合の一律縮小率。
+    /// 収まっていれば 1.0。箱の数に応じて全体をなだらかに縮め、多数ウィンドウ時に
+    /// HintLayout が空き位置を見つけられず重なりを許容する破綻を防ぐ。
+    /// 面積比のため各辺の縮小率は √ を取る
+    public static func densityScale(
+        boxSizes: [CGSize], screenFrame: CGRect, maxFillRatio: CGFloat
+    ) -> CGFloat {
+        let totalArea = boxSizes.reduce(CGFloat(0)) { $0 + $1.width * $1.height }
+        let budget = screenFrame.width * screenFrame.height * maxFillRatio
+        guard totalArea > 0, budget > 0, totalArea > budget else { return 1 }
+        return sqrt(budget / totalArea)
+    }
+
     static func clamp(_ value: CGFloat, _ lo: CGFloat, _ hi: CGFloat) -> CGFloat {
         if value < lo { return lo }
         if value > hi { return hi }

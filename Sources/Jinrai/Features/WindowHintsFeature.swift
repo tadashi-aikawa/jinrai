@@ -530,9 +530,35 @@ final class WindowHintsFeature {
         }
         guard !dockHints.isEmpty else { return }
 
+        // 密度適応スケーリング: 背景プレビュー箱の希望サイズ(ウィンドウ実サイズ比例)の
+        // 合計が画面の一定割合を超えるなら全箱を一律縮小し、置き場がなく重なる破綻を防ぐ。
+        // hintContainer と同じ式で window frame から純粋計算する(コンテンツ下限は
+        // 実構築時に max で効くため、ここでは考慮不要)
+        var previewScale: CGFloat = 1
+        if config.previewEnabled, config.previewMode == "background",
+            WindowCapture.hasPermission
+        {
+            let shorterSide = min(screenFrame.width, screenFrame.height)
+            if shorterSide > 0 {
+                let scaleFactor = 2 * CGFloat(config.previewWidth) / shorterSide
+                let boxSizes = dockHints.compactMap { hint -> CGSize? in
+                    let winFrame = hint.entry.window.frame
+                    guard Geometry.isValidFrame(winFrame) else { return nil }
+                    return CGSize(
+                        width: winFrame.width * scaleFactor,
+                        height: winFrame.height * scaleFactor)
+                }
+                previewScale = DockLayout.densityScale(
+                    boxSizes: boxSizes, screenFrame: screenFrame,
+                    maxFillRatio: CGFloat(config.previewMaxFillRatio))
+            }
+        }
+
         // ラベルを natural サイズで構築し、DockLayout(PAV + 画面内シフト + 行分割)で配置
         let containers = Dictionary(
-            uniqueKeysWithValues: dockHints.map { ($0.key, hintContainer(for: $0)) })
+            uniqueKeysWithValues: dockHints.map {
+                ($0.key, hintContainer(for: $0, previewScale: previewScale))
+            })
         let items = dockHints.map { hint -> DockLayout.Item in
             let size = containers[hint.key]!.bounds.size
             let winFrame = hint.entry.window.frame
@@ -600,8 +626,12 @@ final class WindowHintsFeature {
     private static let fullscreenBadgeColor = ConfigColor(
         red: 0.55, green: 0.58, blue: 0.62, alpha: 0.60)
 
-    /// ヒント1個分のレイヤー(角丸背景+アイコン+キー+タイトル)
-    private func hintContainer(for hint: HintKeyAssignment.Hint) -> CALayer {
+    /// ヒント1個分のレイヤー(角丸背景+アイコン+キー+タイトル)。
+    /// previewScale は背景プレビュー箱の一律縮小率(密度適応スケーリング)。
+    /// コンテンツサイズとの max が下限になるためキーの可読性は保たれる
+    private func hintContainer(
+        for hint: HintKeyAssignment.Hint, previewScale: CGFloat = 1
+    ) -> CALayer {
         let state = hintState(of: hint)
         let style = config.states[state] ?? config.states[.normal]!
 
@@ -665,7 +695,8 @@ final class WindowHintsFeature {
                 let screenFrame = ScreenUtil.frame(of: screen)
                 let shorterSide = min(screenFrame.width, screenFrame.height)
                 if shorterSide > 0 {
-                    let scaleFactor = 2 * CGFloat(config.previewWidth) / shorterSide
+                    let scaleFactor =
+                        2 * CGFloat(config.previewWidth) / shorterSide * previewScale
                     containerWidth = max(containerWidth, (winFrame.width * scaleFactor).rounded(.down))
                     containerHeight = max(containerHeight, (winFrame.height * scaleFactor).rounded(.down))
                 }
