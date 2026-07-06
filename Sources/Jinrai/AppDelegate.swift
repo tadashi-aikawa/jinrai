@@ -13,6 +13,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var applicationHints: ApplicationHintsFeature?
     private let updater = UpdaterFeature()
     private var accessibilityGranted = false
+    private var lastDisplayUUIDs: Set<String> = []
+    private var displayChangeDebounce: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = StatusItem()
@@ -45,6 +47,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     WindowRegistry.shared.warmUpCurrentSpace()
                 }
             }
+            // ディスプレイ構成の変化を監視し、profiles のマッチ結果を追従させる
+            self.lastDisplayUUIDs = Set(ScreenUtil.connectedDisplayUUIDs())
+            NotificationCenter.default.addObserver(
+                forName: NSApplication.didChangeScreenParametersNotification,
+                object: nil, queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    self?.displayParametersDidChange()
+                }
+            }
+        }
+    }
+
+    /// ディスプレイ構成変化時に設定をリロードする。
+    /// 接続直後は通知が連発するためデバウンスし、解像度変更などで UUID 集合が
+    /// 変わらない場合はリロードしない(profiles のマッチ結果が変わり得ないため)
+    private func displayParametersDidChange() {
+        displayChangeDebounce?.cancel()
+        displayChangeDebounce = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled, let self else { return }
+            let current = Set(ScreenUtil.connectedDisplayUUIDs())
+            guard current != self.lastDisplayUUIDs else { return }
+            self.lastDisplayUUIDs = current
+            self.reloadConfig()
         }
     }
 

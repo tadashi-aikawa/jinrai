@@ -1,5 +1,6 @@
 import AppKit
 import JinraiCore
+import JinraiPlatform
 
 /// ~/.config/jinrai/config.jsonc の読込($XDG_CONFIG_HOME 尊重)
 enum ConfigLoader {
@@ -15,6 +16,7 @@ enum ConfigLoader {
     }
 
     /// 設定を読み込む。ファイルがなければテンプレートを生成して読み込む
+    @MainActor
     static func load() throws -> RootConfig {
         let url = configFileURL
         if !FileManager.default.fileExists(atPath: url.path) {
@@ -23,6 +25,7 @@ enum ConfigLoader {
             try? DefaultConfigTemplate.text.write(to: url, atomically: true, encoding: .utf8)
         }
         let text = try String(contentsOf: url, encoding: .utf8)
-        return try RootConfigBuilder.build(text: text)
+        return try RootConfigBuilder.build(
+            text: text, connectedDisplayUUIDs: ScreenUtil.connectedDisplayUUIDs())
     }
 }

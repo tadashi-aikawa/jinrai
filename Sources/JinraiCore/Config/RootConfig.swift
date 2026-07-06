@@ -52,13 +52,22 @@ public struct RootConfig {
 }
 
 public enum RootConfigBuilder {
-    /// JSONC テキストから RootConfig を組み立てる
-    public static func build(text: String) throws -> RootConfig {
+    /// JSONC テキストから RootConfig を組み立てる。
+    /// connectedDisplayUUIDs は profiles(接続ディスプレイ別オーバーライド)の判定に使う
+    public static func build(text: String, connectedDisplayUUIDs: [String] = []) throws
+        -> RootConfig
+    {
         let root = try JSONC.parseObject(text)
-        return try build(root)
+        return try build(root, connectedDisplayUUIDs: connectedDisplayUUIDs)
     }
 
-    public static func build(_ root: [String: Any]) throws -> RootConfig {
+    public static func build(_ root: [String: Any], connectedDisplayUUIDs: [String] = [])
+        throws -> RootConfig
+    {
+        // profiles を先に解決し、以降の各セクション Builder はオーバーライド済みの
+        // dict だけを見る(どのセクションでも一律にオーバーライド可能)
+        let root = try ProfilesResolver.apply(
+            root: root, connectedDisplayUUIDs: connectedDisplayUUIDs)
         var config = RootConfig()
 
         if let tabs = root["macosNativeTabs"] as? [String: Any] {

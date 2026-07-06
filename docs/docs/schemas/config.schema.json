@@ -43,9 +43,69 @@
     "applicationHints": {
       "$ref": "#/definitions/applicationHints",
       "description": "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。有効化にはappsへ1件以上の指定が必要です。"
+    },
+    "profiles": {
+      "type": "array",
+      "description": "特定のディスプレイが接続されているときだけ設定を上書きするプロファイルです。マッチした要素のoverridesが定義順にdeep mergeされます(辞書は再帰マージ、配列は置換)。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["displays", "overrides"],
+        "properties": {
+          "displays": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" },
+            "description": "ディスプレイUUIDの一覧です。いずれか1つでも接続されていればこのプロファイルが適用されます。大文字小文字は区別しません。"
+          },
+          "overrides": {
+            "$ref": "#/definitions/overridableConfig",
+            "description": "上書きする設定です。ルートと同じ構造ですが、$schemaとprofilesは指定できません。"
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "overridableConfig": {
+      "type": "object",
+      "description": "profilesで上書きできる設定です。ルートのプロパティ($schemaとprofilesを除く)と同期させてください。",
+      "additionalProperties": false,
+      "properties": {
+        "macosNativeTabs": {
+          "$ref": "#/definitions/macosNativeTabs",
+          "description": "macOSネイティブタブを使うアプリのウィンドウ追跡を補正します。"
+        },
+        "jinraiMode": {
+          "$ref": "#/definitions/jinraiMode",
+          "description": "Window HintsとArea Hintsを連続して操作するモードです。"
+        },
+        "focusBack": {
+          "$ref": "#/definitions/focusBack",
+          "description": "直前にアクティブだったウィンドウへ戻ります。セクションを記述すると有効になります。"
+        },
+        "focusBorder": {
+          "$ref": "#/definitions/focusBorder",
+          "description": "フォーカスしたウィンドウを枠線で強調します。セクションを記述すると有効になります。"
+        },
+        "windowHints": {
+          "$ref": "#/definitions/windowHints",
+          "description": "キーヒントからウィンドウを選択します。セクションを記述すると有効になります。"
+        },
+        "windowMover": {
+          "$ref": "#/definitions/windowMover",
+          "description": "アクティブウィンドウをホットキーで移動・リサイズします。セクションを記述すると有効になります。"
+        },
+        "areaHints": {
+          "$ref": "#/definitions/areaHints",
+          "description": "エリアとキーを表示してウィンドウの移動先を選択します。セクションを記述すると有効になります。"
+        },
+        "applicationHints": {
+          "$ref": "#/definitions/applicationHints",
+          "description": "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。有効化にはappsへ1件以上の指定が必要です。"
+        }
+      }
+    },
     "color": {
       "type": "object",
       "description": "色です。各成分は 0 から 1 の数値です。",

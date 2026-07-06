@@ -116,6 +116,22 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
             "areaHints": { "key": "return" }
         }
     },
+
+    // 特定のディスプレイが接続されているときだけ設定を上書き
+    // 例:
+    // "profiles": [
+    //     {
+    //         "displays": ["DISPLAY_UUID"],
+    //         "overrides": {
+    //             "jinraiMode": {
+    //                 "combo": {
+    //                     "character": { "enabled": true },
+    //                     "text": { "enabled": true }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // ],
 }
 ```
 

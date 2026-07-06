@@ -66,6 +66,11 @@ public enum ScreenUtil {
         return uuidString as String
     }
 
+    /// 接続中の全ディスプレイの UUID(profiles のマッチ判定に使う)
+    public static func connectedDisplayUUIDs() -> [String] {
+        NSScreen.screens.compactMap { uuid(of: $0) }
+    }
+
     /// 次のディスプレイ(元 hs.screen:next())
     public static func nextScreen(after screen: NSScreen) -> NSScreen? {
         let screens = NSScreen.screens
