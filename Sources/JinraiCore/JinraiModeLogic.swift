@@ -12,6 +12,14 @@ public enum JinraiModeLogic {
         count <= 0 ? 0 : ((count - 1) % 9) + 1
     }
 
+    /// コンボ数 → ユーザー指定画像配列の index。
+    /// 1枚だけなら常に 0、2枚以上なら 0 を開始用、1... をコンボ数で巡回する。
+    public static func comboUserImageIndex(count: Int, imageCount: Int) -> Int? {
+        guard imageCount > 0 else { return nil }
+        guard imageCount > 1 else { return 0 }
+        return count <= 0 ? 0 : ((count - 1) % (imageCount - 1)) + 1
+    }
+
     public static func animationSteps(duration: Double) -> Int {
         max(0, Int((duration / animationInterval).rounded(.up)))
     }

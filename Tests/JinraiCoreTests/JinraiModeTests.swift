@@ -16,6 +16,19 @@ struct JinraiModeLogicTests {
         #expect(JinraiModeLogic.comboImageIndex(count: 19) == 1)
     }
 
+    @Test("ユーザー指定コンボ画像 index: 0 は開始、1... を巡回")
+    func comboUserImageIndex() {
+        #expect(JinraiModeLogic.comboUserImageIndex(count: 0, imageCount: 0) == nil)
+        #expect(JinraiModeLogic.comboUserImageIndex(count: 0, imageCount: 1) == 0)
+        #expect(JinraiModeLogic.comboUserImageIndex(count: 12, imageCount: 1) == 0)
+        #expect(JinraiModeLogic.comboUserImageIndex(count: 0, imageCount: 3) == 0)
+        #expect(JinraiModeLogic.comboUserImageIndex(count: 1, imageCount: 3) == 1)
+        #expect(JinraiModeLogic.comboUserImageIndex(count: 2, imageCount: 3) == 2)
+        #expect(JinraiModeLogic.comboUserImageIndex(count: 3, imageCount: 3) == 1)
+        #expect(JinraiModeLogic.comboUserImageIndex(count: 10, imageCount: 11) == 10)
+        #expect(JinraiModeLogic.comboUserImageIndex(count: 11, imageCount: 11) == 1)
+    }
+
     @Test("アニメーション進捗と easing")
     func animationProgress() {
         #expect(JinraiModeLogic.animationProgress(0.5, easing: .linear) == 0.5)
@@ -77,6 +90,7 @@ struct JinraiModeConfigTests {
         #expect(config.logo.animation.duration == 0.16)
         #expect(!config.comboCharacter.enabled)
         #expect(config.comboCharacter.animation.scale == 1.18)
+        #expect(config.comboCharacter.images == nil)
         #expect(!config.comboText.enabled)
     }
 
@@ -100,6 +114,42 @@ struct JinraiModeConfigTests {
         #expect(config.comboText.enabled)
         // enabled 以外はデフォルト維持
         #expect(config.comboCharacter.alpha == 0.7)
+    }
+
+    @Test("combo.character.images を読める")
+    func comboCharacterImages() throws {
+        let config = try JinraiModeConfigBuilder.build([
+            "combo": [
+                "character": [
+                    "enabled": true,
+                    "images": ["~/Pictures/start.png", "images/1.png", "/tmp/2.png"],
+                ]
+            ]
+        ])
+
+        #expect(config.comboCharacter.enabled)
+        #expect(config.comboCharacter.images == [
+            "~/Pictures/start.png", "images/1.png", "/tmp/2.png",
+        ])
+    }
+
+    @Test("combo.character.images は空配列・空文字・非文字列を拒否")
+    func invalidComboCharacterImages() {
+        #expect(throws: ConfigError.self) {
+            try JinraiModeConfigBuilder.build([
+                "combo": ["character": ["images": []]]
+            ])
+        }
+        #expect(throws: ConfigError.self) {
+            try JinraiModeConfigBuilder.build([
+                "combo": ["character": ["images": ["ok.png", "  "]]]
+            ])
+        }
+        #expect(throws: ConfigError.self) {
+            try JinraiModeConfigBuilder.build([
+                "combo": ["character": ["images": ["ok.png", 1]]]
+            ])
+        }
     }
 
     @Test("不正な position はエラー")

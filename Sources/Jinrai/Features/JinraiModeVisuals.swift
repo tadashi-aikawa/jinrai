@@ -8,6 +8,7 @@ import JinraiPlatform
 @MainActor
 final class JinraiModeVisuals {
     private let config: JinraiModeConfig
+    private let configDirectoryURL: URL
 
     private var logoWindow: OverlayWindow?
     private var logoLayer: CALayer?
@@ -22,7 +23,8 @@ final class JinraiModeVisuals {
     private let textAnimator = AnimationRunner()
 
     private var logoImage: NSImage?
-    private var comboImages: [Int: NSImage] = [:]
+    private var bundledComboImages: [Int: NSImage] = [:]
+    private var userComboImages: [Int: NSImage] = [:]
 
     /// 表示先の基準ウィンドウ。frontmostApplication は更新が非同期で遅れるため、
     /// ヒント選択直後などは選択したウィンドウを明示して追従させる
@@ -41,8 +43,9 @@ final class JinraiModeVisuals {
 
     private static let comboTextColor = ConfigColor(red: 1, green: 0.46, blue: 0.08)
 
-    init(config: JinraiModeConfig) {
+    init(config: JinraiModeConfig, configDirectoryURL: URL) {
         self.config = config
+        self.configDirectoryURL = configDirectoryURL
     }
 
     // MARK: - 画像リソース
@@ -58,7 +61,7 @@ final class JinraiModeVisuals {
     }
 
     private func loadComboImage(index: Int) -> NSImage? {
-        if let image = comboImages[index] { return image }
+        if let image = bundledComboImages[index] { return image }
         guard
             let url = Bundle.main.url(forResource: "jinrai\(index)", withExtension: "webp")
         else {
@@ -66,8 +69,44 @@ final class JinraiModeVisuals {
             return nil
         }
         let image = NSImage(contentsOf: url)
-        comboImages[index] = image
+        bundledComboImages[index] = image
         return image
+    }
+
+    private func loadUserComboImage(count: Int) -> NSImage? {
+        guard let images = config.comboCharacter.images,
+              let imageIndex = JinraiModeLogic.comboUserImageIndex(
+                count: count, imageCount: images.count)
+        else { return nil }
+        if let image = userComboImages[imageIndex] { return image }
+
+        let path = images[imageIndex]
+        let url = resolveImageURL(path)
+        guard let image = NSImage(contentsOf: url) else {
+            NSLog(
+                "[jinrai.jinraiMode] combo.character.images[%d] を読み込めません: %@",
+                imageIndex, url.path)
+            return nil
+        }
+        userComboImages[imageIndex] = image
+        return image
+    }
+
+    private func resolveImageURL(_ path: String) -> URL {
+        let expanded: String
+        if path == "~" {
+            expanded = FileManager.default.homeDirectoryForCurrentUser.path
+        } else if path.hasPrefix("~/") {
+            expanded =
+                FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent(String(path.dropFirst(2))).path
+        } else {
+            expanded = path
+        }
+        if expanded.hasPrefix("/") {
+            return URL(fileURLWithPath: expanded)
+        }
+        return configDirectoryURL.appendingPathComponent(expanded)
     }
 
     // MARK: - 表示コンテキスト
@@ -191,8 +230,9 @@ final class JinraiModeVisuals {
             root.addSublayer(layer)
             characterLayers.append(layer)
         }
-        let imageIndex = JinraiModeLogic.comboImageIndex(count: count)
-        guard let image = loadComboImage(index: imageIndex) else { return }
+        let fallbackImageIndex = JinraiModeLogic.comboImageIndex(count: count)
+        guard let image = loadUserComboImage(count: count) ?? loadComboImage(index: fallbackImageIndex)
+        else { return }
 
         currentCharacterIndex = (currentCharacterIndex + 1) % 2
         let layer = characterLayers[currentCharacterIndex]

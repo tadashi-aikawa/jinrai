@@ -42,6 +42,18 @@ public struct JinraiModeConfig: Sendable {
         public var animation: Animation
     }
 
+    /// 操作回数に応じたキャラクター画像の表示(combo.character)
+    public struct ComboCharacter: Equatable, Sendable {
+        /// この表示を有効にするか
+        public var enabled: Bool
+        /// 表示の透明度
+        public var alpha: Double
+        /// 表示切り替えアニメーション
+        public var animation: Animation
+        /// ユーザー指定のキャラクター画像パス配列(nil で同梱画像)
+        public var images: [String]?
+    }
+
     /// ロゴ・コンボの表示位置基準("activeWindow" = フォーカスウィンドウ中央)
     public var position: String
     /// Window Hints 表示中に JinraiMode を開始するキー(triggers.windowHints.key)
@@ -53,7 +65,7 @@ public struct JinraiModeConfig: Sendable {
     /// JinraiMode 中のロゴ表示(logo)
     public var logo: Logo
     /// 操作回数に応じたキャラクター画像の表示(combo.character)
-    public var comboCharacter: ComboElement
+    public var comboCharacter: ComboCharacter
     /// 継続回数を示す COMBO テキストの表示(combo.text)
     public var comboText: ComboElement
 
@@ -63,9 +75,10 @@ public struct JinraiModeConfig: Sendable {
         applicationHintsTriggerKey: nil,
         areaHintsTriggerKey: nil,
         logo: Logo(enabled: true, size: 480, alpha: 0.25, animation: .default),
-        comboCharacter: ComboElement(
+        comboCharacter: ComboCharacter(
             enabled: false, alpha: 0.7,
-            animation: Animation(fade: true, scale: 1.18, duration: 0.16, easing: .linear)),
+            animation: Animation(fade: true, scale: 1.18, duration: 0.16, easing: .linear),
+            images: nil),
         comboText: ComboElement(enabled: false, alpha: 0.7, animation: .default)
     )
 }
@@ -117,6 +130,19 @@ public enum JinraiModeConfigBuilder {
         }
         config.comboCharacter.animation = animation(
             "combo.character.animation", base: config.comboCharacter.animation)
+        if let imagesValue = merged.value("combo.character.images") {
+            guard let images = imagesValue as? [String] else {
+                throw ConfigError("[jinrai.jinraiMode] combo.character.images は文字列配列です")
+            }
+            guard !images.isEmpty else {
+                throw ConfigError("[jinrai.jinraiMode] combo.character.images は1件以上必要です")
+            }
+            guard !images.contains(where: { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty })
+            else {
+                throw ConfigError("[jinrai.jinraiMode] combo.character.images に空文字は指定できません")
+            }
+            config.comboCharacter.images = images
+        }
 
         if let enabled = merged.bool("combo.text.enabled") {
             config.comboText.enabled = enabled

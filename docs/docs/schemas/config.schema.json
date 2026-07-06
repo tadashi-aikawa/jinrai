@@ -334,6 +334,36 @@
         }
       }
     },
+    "jinraiModeComboCharacter": {
+      "type": "object",
+      "description": "操作回数に応じたキャラクター画像の表示設定です。",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "キャラクター画像を表示します。"
+        },
+        "images": {
+          "type": "array",
+          "description": "キャラクター画像のパス配列です。未指定ならJINRAI同梱画像を使います。1枚だけならすべてのcomboで同じ画像、2枚以上なら0枚目を開始用、1枚目以降をcombo用として巡回します。",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "alpha": {
+          "type": "number",
+          "description": "表示の透明度です。",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "animation": {
+          "$ref": "#/definitions/animation",
+          "description": "表示切り替えアニメーションです。"
+        }
+      }
+    },
     "jinraiModeLogo": {
       "type": "object",
       "description": "JinraiMode中のロゴ表示の設定です。",
@@ -403,7 +433,7 @@
           "additionalProperties": false,
           "properties": {
             "character": {
-              "$ref": "#/definitions/jinraiModeElement",
+              "$ref": "#/definitions/jinraiModeComboCharacter",
               "description": "操作回数に応じたキャラクター画像の表示です。"
             },
             "text": {

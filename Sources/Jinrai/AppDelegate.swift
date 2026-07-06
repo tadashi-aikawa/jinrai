@@ -114,7 +114,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 config: windowHintsConfig,
                 focusHistory: focusHistory,
                 macosNativeTabs: config.macosNativeTabs,
-                jinraiMode: config.jinraiMode)
+                jinraiMode: config.jinraiMode,
+                configDirectoryURL: ConfigLoader.configFileURL.deletingLastPathComponent())
         }
 
         if let applicationHintsConfig = config.applicationHints {

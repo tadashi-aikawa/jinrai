@@ -88,12 +88,14 @@ final class WindowHintsFeature {
         config: WindowHintsConfig,
         focusHistory: FocusHistoryFeature?,
         macosNativeTabs: MacosNativeTabsConfig = .default,
-        jinraiMode: JinraiModeConfig = .default
+        jinraiMode: JinraiModeConfig = .default,
+        configDirectoryURL: URL
     ) {
         self.config = config
         self.focusHistory = focusHistory
         self.macosNativeTabsApps = Set(macosNativeTabs.apps)
-        self.jinraiVisuals = JinraiModeVisuals(config: jinraiMode)
+        self.jinraiVisuals = JinraiModeVisuals(
+            config: jinraiMode, configDirectoryURL: configDirectoryURL)
 
         if let key = config.hotkeyKey {
             hotkey = Hotkey(modifiers: config.hotkeyModifiers, key: key) { [weak self] in

@@ -82,7 +82,10 @@ public enum DefaultConfigTemplate {
             //         "overrides": {
             //             "jinraiMode": {
             //                 "combo": {
-            //                     "character": { "enabled": true },
+            //                     "character": {
+            //                         "enabled": true,
+            //                         "images": ["~/Pictures/jinrai-combo.png"]
+            //                     },
             //                     "text": { "enabled": true }
             //                 }
             //             }
