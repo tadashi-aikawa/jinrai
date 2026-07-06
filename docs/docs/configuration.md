@@ -673,15 +673,8 @@ Area Hints経由の移動は、`windowMover.behavior`(カーソル追従・freeA
 
 ### JINRAI Modeの位置とアニメーション
 
-`jinraiMode.position`は次の値から指定します。
-
-| 値 | 説明 |
-| --- | --- |
-| `activeWindow` | アクティブウィンドウの中央に表示します。 |
-| `activeDisplay` | アクティブディスプレイの中央に表示します。 |
-
-各`animation.easing`は`linear`、`easeOut`、`easeInOut`から指定します。
-`scale`は`0`より大きい値、`duration`は`0`以上の秒数です。
+`jinraiMode.position`の値と各`animation`の指定方法は
+[JINRAI Mode](jinrai-mode.md#position-and-animation)を参照してください。
 
 ### Window Hintsの状態
 

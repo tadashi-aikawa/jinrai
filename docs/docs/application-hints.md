@@ -127,7 +127,7 @@ Ghosttyのように新規ウィンドウのキーが異なるアプリは、`new
 }
 ```
 
-## Window Hintsから開く
+## Window Hintsから開く {#from-window-hints}
 
 ```json
 "windowHints": {
