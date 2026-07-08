@@ -1,4 +1,19 @@
-{% extends "base.html" %} {% block extrahead %} {{ super() }}
+{% extends "base.html" %}
+
+{# トップページはサイト名のみをタイトルにする (Zensicalはpage.is_homepageを提供しないため自前判定) #}
+{% block htmltitle %}
+  {% if page.meta and page.meta.title %}
+    <title>{{ page.meta.title }} - {{ config.site_name }}</title>
+  {% elif page.url in ["", ".", "./", "index.html"] %}
+    <title>{{ config.site_name }}</title>
+  {% elif page.title %}
+    <title>{{ page.title | striptags }} - {{ config.site_name }}</title>
+  {% else %}
+    <title>{{ config.site_name }}</title>
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %} {{ super() }}
 <meta
   property="og:image"
   content="https://tadashi-aikawa.github.io/jinrai/attachments/jinrai-ogp.jpg"

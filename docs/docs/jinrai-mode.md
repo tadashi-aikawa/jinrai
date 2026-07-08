@@ -6,9 +6,6 @@ icon: lucide/repeat
 
 JINRAI Modeは、[Window Hints](window-hints.md)によるウィンドウ選択と、[Area Hints](area-hints.md)による移動先選択を交互に繰り返すモードです。
 
-==TODO: 動画==
-
-
 ## 使い方
 
 JINRAI Modeは次の方法で開始できます。
@@ -144,4 +141,4 @@ JINRAI Mode中に選択操作をするたびにcombo数が1ずつ増えます。
 
 このキーは通常の操作でも利用できます。JINRAI Mode中に使った場合は、モードを終了せず[Window Hints](window-hints.md)へ戻ります。
 
-JINRAI Modeの開始キーや戻るキーは、同じ画面で使うエリアキーやアクションキーと重複させないでください。`K`と`KD`のような、一方がもう一方の先頭に一致する組み合わせも使用できません。
+JINRAI Modeの開始キーや戻るキーは、同じ画面で使うエリアキーやアクションキーと重複できません。詳細は[Area Hints](area-hints.md#key-constraints)の「キーの制約」を参照してください。

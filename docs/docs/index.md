@@ -5,10 +5,8 @@ icon: lucide/zap
 <div align="center">
     <h1>JINRAI</h1>
     <img src="./attachments/jinrai.svg" width="256" />
-    <p>
     <h3>迅雷</h3>
-    <div>思考の速度で素早くウィンドウ操作を行うmacOS用ツール</div>
-    </p>
+    <p>思考の速度で素早くウィンドウ操作を行うmacOS用ツール</p>
     <p>
         <a href="https://github.com/tadashi-aikawa/jinrai/releases/latest"><img src="https://img.shields.io/github/release/tadashi-aikawa/jinrai" alt="release" /></a>
         <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml"><img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
@@ -22,50 +20,31 @@ JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択
 
 ## 主な機能
 
-- **[Window Hints](window-hints.md)**
-    - アプリアイコンとキーヒントからウィンドウを選択
-    - 別のSpaceや他のウィンドウに隠れたウィンドウも候補として表示
-    - キー入力、方向キー、マウスクリックによる選択
-- **[Application Hints](application-hints.md)**
-    - 固定キーからアプリを起動、または新しいウィンドウを作成
-    - JINRAI Modeで作成したウィンドウを続けて配置
-- **[Area Hints](area-hints.md)**
-    - 画面上に表示したエリアとキーヒントからウィンドウの移動先を選択
-- **[Window Mover](window-mover.md)**
-    - ウィンドウを別ディスプレイ、空き領域、指定した画面領域へ移動
-    - 最大化、最小化、画面分割レイアウトへの配置
-- **[Window Layouts](window-layouts.md)**
-    - 定義済みレイアウトへ複数ウィンドウをホットキーで一括配置
-- **[JINRAI Mode](jinrai-mode.md)**
-    - [Window Hints](window-hints.md)と[Area Hints](area-hints.md)を交互に連続実行
-- **[Focus Border](focus-border.md)**
-    - フォーカスしたウィンドウを一時的な枠線で強調
-- **[Focus Back](focus-back.md)**
-    - 直前に使用していたウィンドウへ戻る
+| 機能 | 説明 |
+| --- | --- |
+| [Window Hints](window-hints.md) | ウィンドウに表示したキーヒントから、切り替え先のウィンドウを選択します。別のSpaceや他のウィンドウに隠れたウィンドウも候補にできます。 |
+| [Application Hints](application-hints.md) | 固定キーからアプリを起動、または新しいウィンドウを作成します。 |
+| [Area Hints](area-hints.md) | 画面上に表示したエリアとキーヒントから、ウィンドウの移動先を選択します。 |
+| [Window Mover](window-mover.md) | ホットキーでウィンドウを別ディスプレイ、空き領域、指定した画面領域へ移動します。 |
+| [Window Layouts](window-layouts.md) | 定義済みレイアウトへ複数のウィンドウを一括配置します。 |
+| [JINRAI Mode](jinrai-mode.md) | Window HintsとArea Hintsを交互に連続実行します。 |
+| [Focus Border](focus-border.md) | フォーカスしたウィンドウを一時的な枠線で強調します。 |
+| [Focus Back](focus-back.md) | 直前に使用していたウィンドウへ戻ります。 |
 
 ## はじめる
 
 [セットアップ](setup.md)では、JINRAIのインストール、権限の許可、設定ファイル、アップデート方法を説明します。
+各機能の使い方と設定は、上の表の各ページを参照してください。
 
-各機能の使い方や設定は、次のページを参照してください。
+## リファレンス
 
-- [Window Hints](window-hints.md)
-- [Application Hints](application-hints.md)
-- [Area Hints](area-hints.md)
-- [Window Mover](window-mover.md)
-- [JINRAI Mode](jinrai-mode.md)
-- [Focus Border](focus-border.md)
-- [Focus Back](focus-back.md)
-
-補足設定やリファレンスは、次のページを参照してください。
-
-- [全設定](configuration.md)
-- [利用可能なエリア](window-mover-areas.md)
-- [macOS Native Tabs](macos-native-tabs.md)
-
-## デモ動画
-
-==TODO==
+| ページ | 内容 |
+| --- | --- |
+| [全設定](configuration.md) | 全機能の設定項目、デフォルト値、各項目の説明です。 |
+| [ディスプレイ別名](display-aliases.md) | ディスプレイUUIDへ付ける任意の別名です。 |
+| [プロファイル](profiles.md) | 接続ディスプレイによる設定の切り替えです。 |
+| [利用可能なエリア](window-mover-areas.md) | ウィンドウの移動先に指定できるエリアの一覧です。 |
+| [macOS Native Tabs](macos-native-tabs.md) | macOSネイティブタブを使うアプリのウィンドウ追跡の補正です。 |
 
 ## 関連リンク
 

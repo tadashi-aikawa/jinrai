@@ -1,12 +1,8 @@
-# jinrai
-
 <div align="center">
     <h1>JINRAI</h1>
     <img src="./jinrai.png" width="256" />
-    <p>
     <h3>迅雷</h3>
-    <div>思考の速度で素早くウィンドウ操作を行うmacOS用ツール</div>
-    </p>
+    <p>思考の速度で素早くウィンドウ操作を行うmacOS用ツール</p>
     <p>
         <a href="https://github.com/tadashi-aikawa/jinrai/releases/latest"><img src="https://img.shields.io/github/release/tadashi-aikawa/jinrai" alt="release" /></a>
         <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml"><img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
@@ -26,7 +22,7 @@
 ### Homebrew(推奨)
 
 ```bash
-brew install tadashi-aikawa/tap/jinrai
+brew install --cask tadashi-aikawa/tap/jinrai
 ```
 
 ### 手動
@@ -46,7 +42,7 @@ macOS 15 以降は「右クリック → 開く」のバイパスが廃止され
 
 ### 権限
 
-初回起動時に**アクセシビリティ権限**を求められる。システム設定 → プライバシーとセキュリティ → アクセシビリティで JINRAI を許可すると機能が有効になる。ウィンドウヒント機能を使う場合は**画面収録**の許可も必要。
+初回起動時に**アクセシビリティ権限**を求められる。システム設定 → プライバシーとセキュリティ → アクセシビリティで JINRAI を許可すると機能が有効になる。ウィンドウヒントで隠れたウィンドウのプレビューを表示する場合は**画面収録**の許可も必要。
 
 ### アップデート
 
@@ -69,13 +65,21 @@ macOS 15 以降は「右クリック → 開く」のバイパスが廃止され
 ### コマンド
 
 ```bash
-swift build          # ビルド
-swift test           # ユニットテスト(JinraiCore の純粋ロジック)
-./scripts/make-app.sh && open .build/Jinrai.app   # 実機確認
-pkill -x Jinrai && ./scripts/make-app.sh && open .build/Jinrai.app  # 再起動
+# ビルド
+swift build
+
+# ユニットテスト(JinraiCore の純粋ロジック)
+swift test
+
+# 実機確認
+./scripts/make-app.sh && open .build/JINRAI.app
+# 実機 再起動
+pkill -x JINRAI && ./scripts/make-app.sh && open .build/JINRAI.app
+# 実機 再起動 (ログを参照しながら)
+pkill -x JINRAI && ./scripts/make-app.sh && open .build/JINRAI.app --stdout /tmp/jinrai.out --stderr /tmp/jinrai.err && tail -f /tmp/jinrai.out /tmp/jinrai.err
 ```
 
-初回起動時に**アクセシビリティ権限**を求められる。システム設定 → プライバシーとセキュリティ → アクセシビリティで Jinrai を許可すると機能が有効になる。
+初回起動時に**アクセシビリティ権限**を求められる。システム設定 → プライバシーとセキュリティ → アクセシビリティで JINRAI を許可すると機能が有効になる。
 
 > [!WARNING]
 > ad-hoc 署名は再ビルドで署名が変わり、アクセシビリティ許可が剥がれることがある。

@@ -8,8 +8,6 @@ Application Hintsは、登録したアプリを固定キーから起動し、新
 
 Window Hintsとは異なり、現在存在するウィンドウではなく、起動可能なアプリを表示します。
 
-==TODO: 動画==
-
 ## 基本設定
 
 [全設定](configuration.md)に、Application Hintsの全項目、
