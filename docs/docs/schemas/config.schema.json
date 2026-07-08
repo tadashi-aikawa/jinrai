@@ -2269,6 +2269,11 @@
                 "description": "レイアウトの説明です。ピッカーの一覧に表示され、検索対象になります。",
                 "minLength": 1
               },
+              "closeUnlistedWindows": {
+                "type": "boolean",
+                "description": "true の場合、レイアウト適用時に現在のSpaceで表示されている標準ウィンドウのうち、配置対象に選ばれなかったものを閉じます。",
+                "default": false
+              },
               "windows": {
                 "type": "array",
                 "description": "配置対象のウィンドウ一覧です。1件以上必須です。focus=true のエントリがあればそのウィンドウへ、なければ配列の最後にマッチしたウィンドウへフォーカスします。",

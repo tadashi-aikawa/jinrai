@@ -116,6 +116,14 @@ public enum WindowLayoutPlanner {
         }
     }
 
+    /// レイアウト適用で確保したウィンドウ以外を、閉じる候補として返す。
+    /// 呼び出し側でオンスクリーン標準ウィンドウに絞ったスナップショットを渡す。
+    public static func unlistedWindows(
+        from windows: [WindowInfo], keeping keptIDs: Set<UInt32>
+    ) -> [WindowInfo] {
+        windows.filter { !keptIDs.contains($0.id) }
+    }
+
     /// screen UUID → エリア frame の解決。未指定・未接続はメインディスプレイへフォールバック
     public static func resolveFrame(
         entry: WindowLayoutsConfig.WindowEntry, screens: [ScreenInput]

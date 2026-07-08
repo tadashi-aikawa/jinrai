@@ -36,6 +36,7 @@ struct WindowLayoutsConfigTests {
         let layout = config.layouts[0]
         #expect(layout.name == "dev")
         #expect(layout.hotkey == .init(modifiers: ["ctrl", "alt"], key: "1"))
+        #expect(layout.closeUnlistedWindows == false)
         #expect(
             layout.windows[0]
                 == .init(
@@ -52,6 +53,17 @@ struct WindowLayoutsConfigTests {
     func windowWaitTimeoutDefault() throws {
         let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": validLayout()]])
         #expect(config.windowWaitTimeout == 10)
+    }
+
+    @Test("closeUnlistedWindows のデフォルトは false で true をパースできる")
+    func closeUnlistedWindowsParse() throws {
+        let defaults = try WindowLayoutsConfigBuilder.build(["layouts": ["a": validLayout()]])
+        #expect(defaults.layouts[0].closeUnlistedWindows == false)
+
+        var layout = validLayout()
+        layout["closeUnlistedWindows"] = true
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+        #expect(config.layouts[0].closeUnlistedWindows == true)
     }
 
     @Test("layouts は名前昇順に整列される")

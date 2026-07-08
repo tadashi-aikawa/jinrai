@@ -170,6 +170,18 @@ struct WindowLayoutPlannerTests {
         #expect(plan.fallbackFocusEntryIndex == 1)
     }
 
+    @Test("unlistedWindows は確保済みID以外を返す")
+    func unlistedWindowsExcludesKeptIDs() {
+        let targets = WindowLayoutPlanner.unlistedWindows(
+            from: [
+                WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A"),
+                WindowInfo(id: 2, pid: 101, bundleID: "dev.warp.Warp-Stable", title: "B"),
+                WindowInfo(id: 3, pid: 102, bundleID: "md.obsidian", title: "C"),
+            ],
+            keeping: [1, 3])
+        #expect(targets.map(\.id) == [2])
+    }
+
     @Test("エリア名から配置 frame を算出する(halfLeft)")
     func areaFrameComputed() {
         let plan = WindowLayoutPlanner.makePlan(

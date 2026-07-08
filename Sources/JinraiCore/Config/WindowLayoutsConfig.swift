@@ -33,6 +33,8 @@ public struct WindowLayoutsConfig: Sendable {
         public var description: String?
         /// レイアウトを直接適用するホットキー(省略時はピッカーからのみ呼び出せる)
         public var hotkey: HotkeyBinding?
+        /// レイアウト適用時、配置対象に選ばれなかったオンスクリーン標準ウィンドウを閉じるか
+        public var closeUnlistedWindows: Bool
         /// 配置対象ウィンドウ(1件以上。focus 指定がなければ配列の最後にマッチしたエントリへフォーカス)
         public var windows: [WindowEntry]
     }
@@ -243,6 +245,8 @@ public enum WindowLayoutsConfigBuilder {
         }
 
         return WindowLayoutsConfig.Layout(
-            name: name, description: description, hotkey: hotkey, windows: windows)
+            name: name, description: description, hotkey: hotkey,
+            closeUnlistedWindows: raw["closeUnlistedWindows"] as? Bool ?? false,
+            windows: windows)
     }
 }

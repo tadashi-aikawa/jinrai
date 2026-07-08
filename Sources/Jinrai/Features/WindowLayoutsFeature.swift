@@ -267,6 +267,7 @@ final class WindowLayoutsFeature {
             return
         }
         bringAppliedWindowsToFront(session, focusTarget: target)
+        closeUnlistedWindowsIfNeeded(session)
         ax.focus()
         if cursorAfterMove, let frame = ax.frame {
             Mouse.moveToCenter(of: frame)
@@ -291,6 +292,21 @@ final class WindowLayoutsFeature {
         targets.append(focusTarget)
         for target in targets {
             AXWindow.resolve(windowID: target.windowID, pid: target.pid)?.focus()
+        }
+    }
+
+    private func closeUnlistedWindowsIfNeeded(_ session: Session) {
+        guard session.layout.closeUnlistedWindows else { return }
+        let standardWindows = WindowEnumerator.standardWindows(from: WindowEnumerator.orderedWindows())
+        let targets = WindowLayoutPlanner.unlistedWindows(
+            from: standardWindows, keeping: session.claimedIDs)
+        for target in targets {
+            AXWindow.resolve(windowID: target.id, pid: target.pid)?.close()
+        }
+        if !targets.isEmpty {
+            NSLog(
+                "[jinrai.windowLayouts] 未記述ウィンドウを閉じました: %d",
+                targets.count)
         }
     }
 
