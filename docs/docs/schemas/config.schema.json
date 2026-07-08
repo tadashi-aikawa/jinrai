@@ -12,6 +12,10 @@
       "description": "JSON Schema の参照先です。",
       "default": "https://tadashi-aikawa.github.io/jinrai/schemas/config.schema.json"
     },
+    "displayAliases": {
+      "$ref": "#/definitions/displayAliases",
+      "description": "ディスプレイUUIDへ任意の別名を付けます。profiles[].displays、areaHints.screens、windowLayouts の screen でUUIDの代わりに使用できます。"
+    },
     "macosNativeTabs": {
       "$ref": "#/definitions/macosNativeTabs",
       "description": "macOSネイティブタブを使うアプリのウィンドウ追跡を補正します。"
@@ -60,20 +64,34 @@
             "type": "array",
             "minItems": 1,
             "items": { "type": "string" },
-            "description": "ディスプレイUUIDの一覧です。いずれか1つでも接続されていればこのプロファイルが適用されます。大文字小文字は区別しません。"
+            "description": "ディスプレイUUIDまたはdisplayAliasesで定義した別名の一覧です。いずれか1つでも接続されていればこのプロファイルが適用されます。UUIDの大文字小文字は区別しません。"
           },
           "overrides": {
             "$ref": "#/definitions/overridableConfig",
-            "description": "上書きする設定です。ルートと同じ構造ですが、$schemaとprofilesは指定できません。"
+            "description": "上書きする設定です。ルートと同じ構造ですが、$schema、profiles、displayAliasesは指定できません。"
           }
         }
       }
     }
   },
   "definitions": {
+    "displayAliases": {
+      "type": "object",
+      "description": "ディスプレイUUIDへ任意の別名を付けるマップです。別名は空文字とUUID形式を避けてください。",
+      "propertyNames": {
+        "minLength": 1,
+        "not": {
+          "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
+        }
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
+      }
+    },
     "overridableConfig": {
       "type": "object",
-      "description": "profilesで上書きできる設定です。ルートのプロパティ($schemaとprofilesを除く)と同期させてください。",
+      "description": "profilesで上書きできる設定です。ルートのプロパティ($schema、profiles、displayAliasesを除く)と同期させてください。",
       "additionalProperties": false,
       "properties": {
         "macosNativeTabs": {
@@ -1837,7 +1855,7 @@
         },
         "screens": {
           "type": "object",
-          "description": "ディスプレイUUIDごとのエリア名と選択キーのマップです。接続中のディスプレイ数(または default)ごとの分岐も指定できます。未設定の状態でArea Hintsを開くと、各ディスプレイ上にUUIDが表示されます。",
+          "description": "ディスプレイUUIDまたはdisplayAliasesで定義した別名ごとのエリア名と選択キーのマップです。接続中のディスプレイ数(または default)ごとの分岐も指定できます。未設定の状態でArea Hintsを開くと、各ディスプレイ上にUUIDが表示されます。",
           "additionalProperties": {
             "$ref": "#/definitions/areaMapOrByDisplayCount"
           }
@@ -2199,7 +2217,7 @@
         },
         "screen": {
           "type": "string",
-          "description": "配置先ディスプレイのUUIDです。省略時や未接続時はメインディスプレイに配置します。"
+          "description": "配置先ディスプレイのUUIDまたはdisplayAliasesで定義した別名です。省略時や未接続時はメインディスプレイに配置します。"
         },
         "area": {
           "allOf": [{ "$ref": "#/definitions/windowLayoutsArea" }],

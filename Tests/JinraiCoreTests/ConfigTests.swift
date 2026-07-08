@@ -556,6 +556,9 @@ struct AreaHintsConfigTests {
 
 @Suite("RootConfigBuilder")
 struct RootConfigTests {
+    private let uuidA = "37D8832A-2D66-02CA-B9F7-8F30A301B230"
+    private let uuidB = "11111111-2222-3333-4444-555555555555"
+
     @Test("セクションが存在する機能だけ有効になる")
     func sectionPresenceEnablesFeatures() throws {
         let config = try RootConfigBuilder.build(text: #"{ "focusBack": {} }"#)
@@ -617,6 +620,112 @@ struct RootConfigTests {
         // JinraiMode トリガーが各ヒントへ注入される
         #expect(config.jinraiMode.windowHintsTriggerKey == "return")
         #expect(config.jinraiMode.areaHintsTriggerKey == "return")
+    }
+
+    @Test("displayAliases を areaHints.screens と windowLayouts.screen で使える")
+    func displayAliasesResolveDisplayReferences() throws {
+        let config = try RootConfigBuilder.build(text: """
+            {
+                "displayAliases": {
+                    "macbook": "\(uuidA)",
+                    "desk": "\(uuidB)"
+                },
+                "areaHints": {
+                    "screens": {
+                        "macbook": { "full": "F" }
+                    }
+                },
+                "windowLayouts": {
+                    "layouts": {
+                        "dev": {
+                            "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
+                            "windows": [
+                                { "bundleID": "com.google.Chrome", "screen": "desk", "area": "halfLeft" }
+                            ]
+                        }
+                    }
+                }
+            }
+            """)
+        #expect(config.areaHints?.screens[uuidA]?.resolve(displayCount: 1)?["full"] == "F")
+        #expect(config.windowLayouts?.layouts[0].windows[0].screenUUID == uuidB)
+    }
+
+    @Test("profiles の overrides 内でも displayAliases を解決する")
+    func displayAliasesResolveProfileOverrides() throws {
+        let config = try RootConfigBuilder.build(
+            text: """
+                {
+                    "displayAliases": {
+                        "macbook": "\(uuidA)",
+                        "desk": "\(uuidB)"
+                    },
+                    "profiles": [{
+                        "displays": ["desk"],
+                        "overrides": {
+                            "areaHints": {
+                                "screens": {
+                                    "macbook": { "full": "F" }
+                                }
+                            },
+                            "windowLayouts": {
+                                "layouts": {
+                                    "dev": {
+                                        "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
+                                        "windows": [
+                                            { "bundleID": "com.google.Chrome", "screen": "desk", "area": "halfLeft" }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }]
+                }
+                """,
+            connectedDisplayUUIDs: [uuidB])
+        #expect(config.areaHints?.screens[uuidA]?.resolve(displayCount: 1)?["full"] == "F")
+        #expect(config.windowLayouts?.layouts[0].windows[0].screenUUID == uuidB)
+    }
+
+    @Test("displayAliases の不正値と未定義別名はエラー")
+    func rejectsInvalidDisplayAliases() {
+        #expect(throws: ConfigError.self) {
+            _ = try RootConfigBuilder.build(text: #"{ "displayAliases": [] }"#)
+        }
+        #expect(throws: ConfigError.self) {
+            _ = try RootConfigBuilder.build(text: """
+                { "displayAliases": { "desk": "not-a-uuid" } }
+                """)
+        }
+        #expect(throws: ConfigError.self) {
+            _ = try RootConfigBuilder.build(text: """
+                {
+                    "displayAliases": { "\(uuidA)": "\(uuidB)" }
+                }
+                """)
+        }
+        #expect(throws: ConfigError.self) {
+            _ = try RootConfigBuilder.build(text: """
+                { "profiles": [{ "displays": ["desk"], "overrides": {} }] }
+                """)
+        }
+    }
+
+    @Test("areaHints.screens で同じUUIDへ解決される指定はエラー")
+    func rejectsDuplicateResolvedAreaHintScreens() {
+        #expect(throws: ConfigError.self) {
+            _ = try RootConfigBuilder.build(text: """
+                {
+                    "displayAliases": { "macbook": "\(uuidA)" },
+                    "areaHints": {
+                        "screens": {
+                            "macbook": { "full": "F" },
+                            "\(uuidA)": { "halfLeft": "H" }
+                        }
+                    }
+                }
+                """)
+        }
     }
 
     @Test("jinraiMode.triggers.areaHints は areaHints へ注入される")

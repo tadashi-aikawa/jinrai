@@ -74,11 +74,17 @@ public enum DefaultConfigTemplate {
                 }
             },
 
+            // ディスプレイUUIDに別名を付けると、profiles / areaHints.screens / windowLayouts の screen で使えます
+            // 例:
+            // "displayAliases": {
+            //     "desk": "DISPLAY_UUID"
+            // },
+
             // 特定のディスプレイが接続されているときだけ設定を上書き
             // 例:
             // "profiles": [
             //     {
-            //         "displays": ["DISPLAY_UUID"],
+            //         "displays": ["desk"],
             //         "overrides": {
             //             "jinraiMode": {
             //                 "combo": {

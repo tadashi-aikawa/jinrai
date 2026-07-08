@@ -68,10 +68,15 @@ public enum RootConfigBuilder {
     public static func build(_ root: [String: Any], connectedDisplayUUIDs: [String] = [])
         throws -> RootConfig
     {
+        let displayAliases = try DisplayAliasResolver.aliases(from: root)
+        let rootWithResolvedProfileDisplays = try DisplayAliasResolver.resolveProfileDisplays(
+            in: root, aliases: displayAliases)
         // profiles を先に解決し、以降の各セクション Builder はオーバーライド済みの
         // dict だけを見る(どのセクションでも一律にオーバーライド可能)
-        let root = try ProfilesResolver.apply(
-            root: root, connectedDisplayUUIDs: connectedDisplayUUIDs)
+        let appliedRoot = try ProfilesResolver.apply(
+            root: rootWithResolvedProfileDisplays, connectedDisplayUUIDs: connectedDisplayUUIDs)
+        let root = try DisplayAliasResolver.resolveDisplayReferences(
+            in: appliedRoot, aliases: displayAliases)
         var config = RootConfig()
 
         if let tabs = root["macosNativeTabs"] as? [String: Any] {

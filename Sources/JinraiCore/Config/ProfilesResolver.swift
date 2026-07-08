@@ -33,6 +33,9 @@ public enum ProfilesResolver {
             if overrides["profiles"] != nil {
                 throw ConfigError("[jinrai.\(context)] overrides の中に profiles は書けません")
             }
+            if overrides["displayAliases"] != nil {
+                throw ConfigError("[jinrai.\(context)] overrides の中に displayAliases は書けません")
+            }
             let matched = displays.contains { connected.contains($0.uppercased()) }
             if matched {
                 resolved = DeepMerge.merge(defaults: resolved, overrides: overrides)

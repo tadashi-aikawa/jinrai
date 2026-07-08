@@ -129,6 +129,29 @@ struct ProfilesResolverTests {
         #expect(config.jinraiMode.comboCharacter.enabled)
     }
 
+    @Test("displayAliases の別名で接続中ディスプレイにマッチする")
+    func matchesDisplayAlias() throws {
+        let text = """
+            {
+                "displayAliases": { "desk": "\(uuidA)" },
+                "jinraiMode": {
+                    "combo": {
+                        "character": { "enabled": false },
+                        "text": { "enabled": false }
+                    }
+                },
+                "profiles": [{
+                    "displays": ["desk"],
+                    "overrides": {
+                        "jinraiMode": { "combo": { "character": { "enabled": true } } }
+                    }
+                }]
+            }
+            """
+        let config = try RootConfigBuilder.build(text: text, connectedDisplayUUIDs: [uuidA])
+        #expect(config.jinraiMode.comboCharacter.enabled)
+    }
+
     @Test("profiles なし・空配列は後方互換(ベース設定のまま)")
     func backwardCompatible() throws {
         let noProfiles = """
@@ -209,6 +232,22 @@ struct ProfilesResolverTests {
         #expect(throws: ConfigError.self) {
             _ = try RootConfigBuilder.build(
                 text: #"{ "profiles": [{ "displays": ["X"], "overrides": { "profiles": [] } }] }"#)
+        }
+    }
+
+    @Test("overrides の中の displayAliases はエラー")
+    func rejectsNestedDisplayAliases() {
+        #expect(throws: ConfigError.self) {
+            _ = try RootConfigBuilder.build(
+                text: """
+                    {
+                        "displayAliases": { "desk": "\(uuidA)" },
+                        "profiles": [{
+                            "displays": ["desk"],
+                            "overrides": { "displayAliases": { "other": "\(uuidB)" } }
+                        }]
+                    }
+                    """)
         }
     }
 }
