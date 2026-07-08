@@ -63,6 +63,8 @@ public enum AreaLabelLayout {
         case "quarterBottomLeft": return .grid(cols: 2, rows: 2, col: 1, row: 2)
         case "quarterBottomRight": return .grid(cols: 2, rows: 2, col: 2, row: 2)
 
+        case "sixthLeft": return .slot(slots: 6, index: 1, span: 1, vertical: false)
+        case "sixthRight": return .slot(slots: 6, index: 6, span: 1, vertical: false)
         case "sixthTopLeft": return .grid(cols: 3, rows: 2, col: 1, row: 1)
         case "sixthTopCenter": return .grid(cols: 3, rows: 2, col: 2, row: 1)
         case "sixthTopRight": return .grid(cols: 3, rows: 2, col: 3, row: 1)

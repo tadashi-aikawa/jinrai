@@ -96,6 +96,10 @@ public enum AreaSpec {
         case "quarterBottomLeft": return cell(1 / 2, 1 / 2, 0, 1 / 2)
         case "quarterBottomRight": return cell(1 / 2, 1 / 2, 1 / 2, 1 / 2)
 
+        // 6分割(横ストリップ)
+        case "sixthLeft": return hStrip(1 / 6, 0)
+        case "sixthRight": return hStrip(1 / 6, 5 / 6)
+
         // 6分割(3列×2行)
         case "sixthTopLeft": return cell(1 / 3, 1 / 2, 0, 0)
         case "sixthTopCenter": return cell(1 / 3, 1 / 2, 1 / 3, 0)

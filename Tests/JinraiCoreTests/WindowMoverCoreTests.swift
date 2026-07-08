@@ -118,8 +118,14 @@ struct AreaSpecTests {
                 == CGRect(x: 600, y: 0, width: 300, height: 900))
     }
 
-    @Test("sixth は 3列×2行")
+    @Test("sixth は左右端ストリップと 3列×2行")
     func sixths() {
+        #expect(
+            AreaSpec.frame(for: "sixthLeft", screenFrame: screen)
+                == CGRect(x: 0, y: 0, width: 200, height: 900))
+        #expect(
+            AreaSpec.frame(for: "sixthRight", screenFrame: screen)
+                == CGRect(x: 1000, y: 0, width: 200, height: 900))
         #expect(
             AreaSpec.frame(for: "sixthBottomCenter", screenFrame: screen)
                 == CGRect(x: 400, y: 450, width: 400, height: 450))

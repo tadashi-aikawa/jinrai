@@ -1467,6 +1467,14 @@
           "$ref": "#/definitions/windowMoverCommand",
           "description": "右下4分の1へ移動します。"
         },
+        "sixthLeft": {
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "左端6分の1へ移動します。"
+        },
+        "sixthRight": {
+          "$ref": "#/definitions/windowMoverCommand",
+          "description": "右端6分の1へ移動します。"
+        },
         "sixthTopLeft": {
           "$ref": "#/definitions/windowMoverCommand",
           "description": "左上6分の1へ移動します。"
@@ -1700,6 +1708,14 @@
         "quarterBottomRight": {
           "$ref": "#/definitions/areaKey",
           "description": "右下4分の1の選択キーです。"
+        },
+        "sixthLeft": {
+          "$ref": "#/definitions/areaKey",
+          "description": "左端6分の1の選択キーです。"
+        },
+        "sixthRight": {
+          "$ref": "#/definitions/areaKey",
+          "description": "右端6分の1の選択キーです。"
         },
         "sixthTopLeft": {
           "$ref": "#/definitions/areaKey",
@@ -2088,6 +2104,67 @@
         }
       }
     },
+    "windowLayoutsArea": {
+      "description": "エリア名です。固定サイズは 1920x1080Center のように指定します(freeAreaは使用できません)。",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "full",
+            "halfLeft",
+            "halfHorizontalCenter",
+            "halfRight",
+            "halfTop",
+            "halfVerticalCenter",
+            "halfBottom",
+            "thirdLeft",
+            "thirdHorizontalCenter",
+            "thirdRight",
+            "thirdTop",
+            "thirdVerticalCenter",
+            "thirdBottom",
+            "quarterLeft",
+            "quarterHorizontalLeftCenter",
+            "quarterHorizontalRightCenter",
+            "quarterRight",
+            "quarterTop",
+            "quarterVerticalTopCenter",
+            "quarterVerticalBottomCenter",
+            "quarterBottom",
+            "quarterTopLeft",
+            "quarterTopRight",
+            "quarterBottomLeft",
+            "quarterBottomRight",
+            "sixthLeft",
+            "sixthRight",
+            "sixthTopLeft",
+            "sixthTopCenter",
+            "sixthTopRight",
+            "sixthBottomLeft",
+            "sixthBottomCenter",
+            "sixthBottomRight",
+            "twoThirdsLeft",
+            "twoThirdsHorizontalCenter",
+            "twoThirdsRight",
+            "twoThirdsTop",
+            "twoThirdsVerticalCenter",
+            "twoThirdsBottom",
+            "twoThirdsCenter",
+            "threeQuartersLeft",
+            "threeQuartersHorizontalCenter",
+            "threeQuartersRight",
+            "threeQuartersTop",
+            "threeQuartersVerticalCenter",
+            "threeQuartersBottom",
+            "threeQuartersCenter"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*(?:\\.[0-9]+)?x[1-9][0-9]*(?:\\.[0-9]+)?Center$"
+        }
+      ]
+    },
     "windowLayoutsWindow": {
       "type": "object",
       "description": "レイアウトで配置するウィンドウ1件の定義です。",
@@ -2109,9 +2186,8 @@
           "description": "配置先ディスプレイのUUIDです。省略時や未接続時はメインディスプレイに配置します。"
         },
         "area": {
-          "type": "string",
-          "description": "配置先のエリア名です（halfLeftなど。freeAreaは使用できません）。1200x900Centerのような固定サイズ中央配置も指定できます。",
-          "minLength": 1
+          "allOf": [{ "$ref": "#/definitions/windowLayoutsArea" }],
+          "description": "配置先のエリア名です（halfLeftなど。freeAreaは使用できません）。1200x900Centerのような固定サイズ中央配置も指定できます。"
         },
         "launch": {
           "type": "boolean",

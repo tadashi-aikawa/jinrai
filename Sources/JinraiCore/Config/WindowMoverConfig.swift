@@ -51,6 +51,7 @@ public enum WindowMoverConfigBuilder {
             "quarterRight", "quarterTop", "quarterVerticalTopCenter",
             "quarterVerticalBottomCenter", "quarterBottom",
             "quarterTopLeft", "quarterTopRight", "quarterBottomLeft", "quarterBottomRight",
+            "sixthLeft", "sixthRight",
             "sixthTopLeft", "sixthTopCenter", "sixthTopRight",
             "sixthBottomLeft", "sixthBottomCenter", "sixthBottomRight",
             "twoThirdsLeft", "twoThirdsHorizontalCenter", "twoThirdsRight",

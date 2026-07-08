@@ -61,6 +61,8 @@ icon: lucide/layout-grid
 
 | アイコン | エリア | 位置 | サイズ |
 | --- | --- | --- | --- |
+| <img src="./attachments/window-mover/areas/sixthLeft.svg" alt="sixthLeft" width="48"> | `sixthLeft` | 左端 | 横幅 1/6、高さ全体 |
+| <img src="./attachments/window-mover/areas/sixthRight.svg" alt="sixthRight" width="48"> | `sixthRight` | 右端 | 横幅 1/6、高さ全体 |
 | <img src="./attachments/window-mover/areas/sixthTopLeft.svg" alt="sixthTopLeft" width="48"> | `sixthTopLeft` | 左上 | 横幅 1/3、高さ 1/2 |
 | <img src="./attachments/window-mover/areas/sixthTopCenter.svg" alt="sixthTopCenter" width="48"> | `sixthTopCenter` | 中央上 | 横幅 1/3、高さ 1/2 |
 | <img src="./attachments/window-mover/areas/sixthTopRight.svg" alt="sixthTopRight" width="48"> | `sixthTopRight` | 右上 | 横幅 1/3、高さ 1/2 |
