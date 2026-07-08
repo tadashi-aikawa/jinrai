@@ -19,7 +19,7 @@ public struct WindowLayoutsConfig: Sendable {
         public var screenUUID: String?
         /// 配置先エリア名(AreaSpec の名前。freeArea は不可)
         public var area: String
-        /// 未起動なら起動してウィンドウ出現を待つか(デフォルト false = スキップ)
+        /// ウィンドウが1枚も存在しなければ起動(reopen)してウィンドウ出現を待つか(デフォルト false = スキップ)
         public var launch: Bool
         /// レイアウト適用後にこのエントリのウィンドウへフォーカスするか(デフォルト false)
         public var focus: Bool

@@ -37,7 +37,7 @@ public enum WindowLayoutPlanner {
     public struct Plan: Equatable, Sendable {
         /// 即時配置するウィンドウ
         public var placements: [Placement]
-        /// 未起動かつ launch=true で、起動→出現待ちに回すエントリのインデックス
+        /// ウィンドウが1枚も存在せず launch=true で、起動(reopen)→出現待ちに回すエントリのインデックス
         public var pendingLaunchIndices: [Int]
         /// 明示フォーカス指定があればそのエントリ、なければ最後にマッチしたエントリのインデックス
         public var focusEntryIndex: Int?
@@ -54,11 +54,12 @@ public enum WindowLayoutPlanner {
         entries: [WindowLayoutsConfig.WindowEntry],
         onScreenWindows: [WindowInfo],
         minimizedWindows: [WindowInfo],
-        runningBundleIDs: Set<String>,
         screens: [ScreenInput]
     ) -> Plan {
         var placements: [Placement] = []
         var pendingLaunchIndices: [Int] = []
+        let bundleIDsWithWindows = Set(
+            onScreenWindows.compactMap(\.bundleID) + minimizedWindows.compactMap(\.bundleID))
         let preferredFocusEntryIndex = entries.firstIndex(where: \.focus)
         var preferredMatchedFocusEntryIndex: Int?
         var fallbackFocusEntryIndex: Int?
@@ -71,7 +72,7 @@ public enum WindowLayoutPlanner {
                 ?? match(entry: entry, in: minimizedWindows, excluding: claimedIDs)
                 .map { (window: $0, needsUnminimize: true) }
             guard let matched else {
-                if entry.launch, !runningBundleIDs.contains(entry.bundleID) {
+                if entry.launch, !bundleIDsWithWindows.contains(entry.bundleID) {
                     pendingLaunchIndices.append(index)
                 }
                 continue

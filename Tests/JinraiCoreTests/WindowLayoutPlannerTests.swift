@@ -30,7 +30,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "Middle"),
                 WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "Back"),
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         // Pass 1 の最前面1枚に続き、Pass 2 で残りが Z順に追加される
         #expect(plan.placements.map(\.windowID) == [1, 2, 3])
@@ -48,7 +48,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B"),
                 WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "C"),
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         // 従来どおり前面から1枚ずつ。3枚目は両エントリにマッチしうるので触らない
         #expect(plan.placements.map(\.windowID) == [1, 2])
@@ -64,7 +64,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "Wiki - GitHub"),
                 WindowInfo(id: 4, pid: 100, bundleID: "com.google.Chrome", title: "Calendar"),
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         // Pass 1: entry0 が 1(GitHub)、entry1 が 2(Gmail)。
         // Pass 2: 3(GitHub)は両エントリにマッチしうるので競合、4(Calendar)は entry1 のみなので全取り
@@ -80,7 +80,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "Front"),
                 WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "Back"),
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         #expect(plan.focusEntryIndex == 0)
         // Feature 側は first(where: entryIndex == focusEntryIndex) でフォーカス先を選ぶ
@@ -96,7 +96,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 5, pid: 100, bundleID: "com.google.Chrome", title: "Min1"),
                 WindowInfo(id: 6, pid: 100, bundleID: "com.google.Chrome", title: "Min2"),
             ],
-            runningBundleIDs: ["com.google.Chrome"], screens: [mainScreen])
+            screens: [mainScreen])
         #expect(plan.placements.map(\.windowID) == [5])
     }
 
@@ -110,7 +110,7 @@ struct WindowLayoutPlannerTests {
         let plan = WindowLayoutPlanner.makePlan(
             entries: [entry()],
             onScreenWindows: windows,
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         let unlisted = WindowLayoutPlanner.unlistedWindows(
             from: windows, keeping: Set(plan.placements.map(\.windowID)))
@@ -125,7 +125,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "Gmail"),
                 WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "PR - GitHub"),
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         #expect(plan.placements.map(\.windowID) == [2])
     }
@@ -137,7 +137,7 @@ struct WindowLayoutPlannerTests {
             onScreenWindows: [
                 WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A")
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         #expect(plan.placements.map(\.entryIndex) == [1])
         #expect(plan.pendingLaunchIndices.isEmpty)
@@ -152,7 +152,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A"),
                 WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B"),
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         #expect(plan.placements.map(\.windowID) == [1, 2])
     }
@@ -165,7 +165,7 @@ struct WindowLayoutPlannerTests {
             minimizedWindows: [
                 WindowInfo(id: 5, pid: 100, bundleID: "com.google.Chrome", title: "Min")
             ],
-            runningBundleIDs: ["com.google.Chrome"], screens: [mainScreen])
+            screens: [mainScreen])
         #expect(plan.placements.count == 1)
         #expect(plan.placements[0].windowID == 5)
         #expect(plan.placements[0].needsUnminimize)
@@ -188,7 +188,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "C", frame: onSub),
                 WindowInfo(id: 4, pid: 100, bundleID: "com.google.Chrome", title: "D"),
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen, subScreen])
         #expect(plan.placements[0].frame == subScreen.visibleFrame)
         #expect(plan.placements[1].frame == subScreen.visibleFrame)
@@ -206,26 +206,53 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(
                     id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A", frame: straddling)
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen, subScreen])
         #expect(plan.placements[0].frame == subScreen.visibleFrame)
     }
 
-    @Test("未起動かつ launch=true のエントリだけが起動待ちに回る")
+    @Test("ウィンドウが1枚も存在せず launch=true のエントリだけが起動待ちに回る")
     func pendingLaunch() {
         let plan = WindowLayoutPlanner.makePlan(
             entries: [
-                entry(bundleID: "not.running.launch", launch: true),
-                entry(bundleID: "not.running.no.launch"),
-                entry(bundleID: "running.but.no.match", launch: true),
+                entry(bundleID: "no.window.launch", launch: true),
+                entry(bundleID: "no.window.no.launch"),
+                entry(bundleID: "has.window", titleGlob: "no-match", launch: true),
             ],
-            onScreenWindows: [], minimizedWindows: [],
-            runningBundleIDs: ["running.but.no.match"],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "has.window", title: "A")
+            ],
+            minimizedWindows: [],
             screens: [mainScreen])
         #expect(plan.placements.isEmpty)
-        // 起動済みでマッチしない場合は launch=true でもスキップ
+        // ウィンドウが存在して titleGlob 不一致の場合は launch=true でもスキップ
         #expect(plan.pendingLaunchIndices == [0])
         #expect(plan.focusEntryIndex == nil)
+    }
+
+    @Test("起動済みでもウィンドウが0枚なら launch=true で起動待ちに回る")
+    func pendingLaunchForRunningAppWithoutWindows() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry(bundleID: "running.no.window", launch: true)],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "other.app", title: "A")
+            ],
+            minimizedWindows: [],
+            screens: [mainScreen])
+        // Planner はプロセスの起動有無を見ない(スナップショットにウィンドウが無ければ launch)
+        #expect(plan.pendingLaunchIndices == [0])
+    }
+
+    @Test("最小化ウィンドウしか無いアプリは launch 対象にならない")
+    func minimizedWindowSuppressesLaunch() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry(titleGlob: "no-match", launch: true)],
+            onScreenWindows: [],
+            minimizedWindows: [
+                WindowInfo(id: 5, pid: 100, bundleID: "com.google.Chrome", title: "Min")
+            ],
+            screens: [mainScreen])
+        #expect(plan.pendingLaunchIndices.isEmpty)
     }
 
     @Test("focusEntryIndex は配列で最後にマッチしたエントリ")
@@ -236,7 +263,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A"),
                 WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B"),
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         #expect(plan.focusEntryIndex == 2)
         #expect(plan.preferredFocusEntryIndex == nil)
@@ -251,7 +278,7 @@ struct WindowLayoutPlannerTests {
                 WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A"),
                 WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B"),
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         #expect(plan.focusEntryIndex == 0)
         #expect(plan.preferredFocusEntryIndex == 0)
@@ -265,7 +292,7 @@ struct WindowLayoutPlannerTests {
             onScreenWindows: [
                 WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B")
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         #expect(plan.focusEntryIndex == 1)
         #expect(plan.preferredFocusEntryIndex == 0)
@@ -291,7 +318,7 @@ struct WindowLayoutPlannerTests {
             onScreenWindows: [
                 WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A")
             ],
-            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            minimizedWindows: [],
             screens: [mainScreen])
         #expect(plan.placements[0].frame == CGRect(x: 0, y: 25, width: 800, height: 875))
     }

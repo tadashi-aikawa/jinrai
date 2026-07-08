@@ -116,7 +116,6 @@ final class WindowLayoutsFeature {
             entries: layout.windows,
             onScreenWindows: WindowEnumerator.orderedWindows(),
             minimizedWindows: collectMinimizedWindows(for: layout),
-            runningBundleIDs: runningBundleIDs(for: layout),
             screens: screens
         )
         // unlistedWindows 指定時は配置対象が1件もなくても続行する(未記述ウィンドウ処理だけを行う)
@@ -358,13 +357,6 @@ final class WindowLayoutsFeature {
                 isMain: index == 0
             )
         }
-    }
-
-    private func runningBundleIDs(for layout: WindowLayoutsConfig.Layout) -> Set<String> {
-        Set(
-            Set(layout.windows.map(\.bundleID)).filter {
-                !NSRunningApplication.runningApplications(withBundleIdentifier: $0).isEmpty
-            })
     }
 
     /// 最小化ウィンドウは CGWindowList(オンスクリーン)に載らないため AX から合成する
