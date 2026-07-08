@@ -31,6 +31,10 @@ final class ApplicationHintsFeature {
     /// 現在の表示が JinraiMode 文脈か
     private var showJinraiMode = false
 
+    /// show() 時点の基準ディスプレイの visibleFrame(top-left 座標)。
+    /// 新規ウィンドウがこの外に出現したら中へ移動する
+    private var targetVisibleFrame: CGRect?
+
     private struct AppCell {
         let entry: ApplicationHintsConfig.AppEntry
         let container: CALayer
@@ -83,6 +87,7 @@ final class ApplicationHintsFeature {
         let screen =
             focusFrame.flatMap { ScreenUtil.screenContaining($0) } ?? NSScreen.main
         guard let screen else { return }
+        targetVisibleFrame = ScreenUtil.visibleFrame(of: screen)
         let screenFrame = ScreenUtil.frame(of: screen)
         let center =
             focusFrame.map { CGPoint(x: $0.midX, y: $0.midY) }
@@ -391,12 +396,14 @@ final class ApplicationHintsFeature {
                 at: appURL, configuration: NSWorkspace.OpenConfiguration())
         }
 
-        startWindowWait(entry: entry, previousIDs: previousIDs)
+        startWindowWait(
+            entry: entry, previousIDs: previousIDs, targetVisibleFrame: targetVisibleFrame)
     }
 
-    /// 新規ウィンドウ出現を 0.1s ポーリングし、focus 確認後に閉じる
+    /// 新規ウィンドウ出現を 0.1s ポーリングし、基準ディスプレイ内へ移動 + focus 後に閉じる
     private func startWindowWait(
-        entry: ApplicationHintsConfig.AppEntry, previousIDs: Set<UInt32>
+        entry: ApplicationHintsConfig.AppEntry, previousIDs: Set<UInt32>,
+        targetVisibleFrame: CGRect?
     ) {
         waiting = true
         let deadline = Date().addingTimeInterval(config.windowWaitTimeout)
@@ -410,6 +417,9 @@ final class ApplicationHintsFeature {
                 if let newWindow = candidates.first,
                     let ax = AXWindow.resolve(windowID: newWindow.id, pid: newWindow.pid)
                 {
+                    if let target = targetVisibleFrame {
+                        self.relocateIfOutside(ax, fallbackFrame: newWindow.frame, target: target)
+                    }
                     ax.focus()
                     self.stopWait()
                     let wasJinrai = self.showJinraiMode
@@ -428,6 +438,19 @@ final class ApplicationHintsFeature {
                 }
             }
         }
+    }
+
+    /// 新規ウィンドウが基準ディスプレイ外に出現していたら中へ移動する(サイズ維持・位置のみ)
+    private func relocateIfOutside(_ ax: AXWindow, fallbackFrame: CGRect, target: CGRect) {
+        guard !ax.isFullScreen else { return }
+        let frame = ax.frame ?? fallbackFrame
+        let sourceVisible = ScreenUtil.screenContaining(frame)
+            .map { ScreenUtil.visibleFrame(of: $0) }
+        guard
+            let dest = WindowRelocation.relocatedFrame(
+                window: frame, targetVisibleFrame: target, sourceVisibleFrame: sourceVisible)
+        else { return }
+        ax.setPosition(dest.origin)
     }
 
     private func stopWait() {
