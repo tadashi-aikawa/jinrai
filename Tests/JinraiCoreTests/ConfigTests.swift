@@ -351,18 +351,18 @@ struct AreaHintsConfigTests {
         #expect(config.jinraiModeHotkey == nil)
     }
 
-    @Test("screens のエリア名とキーを検証して大文字化する")
+    @Test("screens のエリア名とキーを検証して設定表記を保持する")
     func parsesScreens() throws {
         let config = try AreaHintsConfigBuilder.build([
             "screens": ["UUID-A": ["halfLeft": "s", "1920x1080Center": "m"]],
             "defaultScreen": ["full": "a"],
         ])
         let mapping = config.screens["UUID-A"]?.resolve(displayCount: 1)
-        #expect(mapping?["halfLeft"] == "S")
-        #expect(mapping?["1920x1080Center"] == "M")
+        #expect(mapping?["halfLeft"] == "s")
+        #expect(mapping?["1920x1080Center"] == "m")
         // フラット形式はディスプレイ数によらず同じマップを返す
         #expect(config.screens["UUID-A"]?.resolve(displayCount: 3) == mapping)
-        #expect(config.defaultScreen?.resolve(displayCount: 2)?["full"] == "A")
+        #expect(config.defaultScreen?.resolve(displayCount: 2)?["full"] == "a")
     }
 
     @Test("screens はディスプレイ数で分岐できる(数一致 → default → nil)")
@@ -377,9 +377,9 @@ struct AreaHintsConfigTests {
             ]
         ])
         let variants = config.screens["UUID-A"]
-        #expect(variants?.resolve(displayCount: 1)?["halfLeft"] == "H")
-        #expect(variants?.resolve(displayCount: 2)?["halfLeft"] == "JH")
-        #expect(variants?.resolve(displayCount: 3)?["halfLeft"] == "Z")
+        #expect(variants?.resolve(displayCount: 1)?["halfLeft"] == "h")
+        #expect(variants?.resolve(displayCount: 2)?["halfLeft"] == "jh")
+        #expect(variants?.resolve(displayCount: 3)?["halfLeft"] == "z")
     }
 
     @Test("default なしで一致するディスプレイ数がなければ nil")
@@ -398,8 +398,8 @@ struct AreaHintsConfigTests {
                 "2": ["halfLeft": "jh"],
             ]
         ])
-        #expect(config.defaultScreen?.resolve(displayCount: 1)?["halfLeft"] == "H")
-        #expect(config.defaultScreen?.resolve(displayCount: 2)?["halfLeft"] == "JH")
+        #expect(config.defaultScreen?.resolve(displayCount: 1)?["halfLeft"] == "h")
+        #expect(config.defaultScreen?.resolve(displayCount: 2)?["halfLeft"] == "jh")
         #expect(config.defaultScreen?.resolve(displayCount: 3) == nil)
     }
 
@@ -437,7 +437,7 @@ struct AreaHintsConfigTests {
                 ]
             ]
         ])
-        #expect(config.screens["UUID-A"]?.resolve(displayCount: 2)?["halfRight"] == "H")
+        #expect(config.screens["UUID-A"]?.resolve(displayCount: 2)?["halfRight"] == "h")
 
         // 変種内の接頭辞衝突はエラー
         #expect(throws: ConfigError.self) {
@@ -502,7 +502,7 @@ struct AreaHintsConfigTests {
             "screens": ["UUID-A": ["full": "S"]],
             "navigation": ["windowHints": ["key": "space"]],
         ])
-        #expect(config.windowHintsKey == "SPACE")
+        #expect(config.windowHintsKey == "space")
     }
 
     @Test("navigation.windowHints.key の tab は T と衝突しない")
@@ -511,7 +511,36 @@ struct AreaHintsConfigTests {
             "screens": ["UUID-A": ["full": "T"]],
             "navigation": ["windowHints": ["key": "tab"]],
         ])
-        #expect(config.windowHintsKey == "TAB")
+        #expect(config.windowHintsKey == "tab")
+    }
+
+    @Test("大文字と小文字は別キーとして共存できる(Shift 区別)")
+    func allowsCaseSensitiveKeys() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "screens": ["UUID-A": ["halfLeft": "k", "halfRight": "K"]]
+        ])
+        let mapping = config.screens["UUID-A"]?.resolve(displayCount: 1)
+        #expect(mapping?["halfLeft"] == "k")
+        #expect(mapping?["halfRight"] == "K")
+    }
+
+    @Test("大文字キーの接頭辞衝突は検出する(K と KD)")
+    func rejectsCaseSensitivePrefixConflict() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["halfLeft": "K", "halfRight": "KD"]]
+            ])
+        }
+    }
+
+    @Test("大文字と小文字が異なれば接頭辞衝突しない(K と kd)")
+    func allowsDifferentCasePrefix() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "screens": ["UUID-A": ["halfLeft": "K", "halfRight": "kd"]]
+        ])
+        let mapping = config.screens["UUID-A"]?.resolve(displayCount: 1)
+        #expect(mapping?["halfLeft"] == "K")
+        #expect(mapping?["halfRight"] == "kd")
     }
 
     @Test("navigation.windowHints.key と labels.show をパースする")
@@ -520,7 +549,7 @@ struct AreaHintsConfigTests {
             "navigation": ["windowHints": ["key": "h"]],
             "labels": ["show": false],
         ])
-        #expect(config.windowHintsKey == "H")
+        #expect(config.windowHintsKey == "h")
         #expect(config.showLabels == false)
     }
 }

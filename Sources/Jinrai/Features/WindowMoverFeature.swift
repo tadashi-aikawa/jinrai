@@ -634,10 +634,12 @@ final class WindowMoverFeature {
             return true
         }
 
-        guard let character = event.character?.uppercased(), !character.isEmpty,
-            character.rangeOfCharacter(from: .alphanumerics) != nil
-                || character.rangeOfCharacter(from: .punctuationCharacters) != nil
+        guard let rawChar = event.character, !rawChar.isEmpty,
+            rawChar.rangeOfCharacter(from: .alphanumerics) != nil
+                || rawChar.rangeOfCharacter(from: .punctuationCharacters) != nil
         else { return true }
+        let character = event.flags.contains(.maskShift)
+            ? rawChar.uppercased() : rawChar.lowercased()
 
         let input = chooserInput + character
 
@@ -671,8 +673,8 @@ final class WindowMoverFeature {
         // 接頭辞一致があれば入力継続
         let allKeys =
             chooserCandidates.map(\.key) + areaHints.actions.values
-            + (areaHints.windowHintsKey.flatMap {
-                ConfigKeyDescriptor.typedSequence(forKeyName: $0)
+            + (areaHints.windowHintsKey.flatMap { key in
+                ConfigKeyDescriptor.keyName(key).isNamedKey ? nil : key
             }
                 .map { [$0] } ?? [])
         if allKeys.contains(where: { $0.hasPrefix(input) }) {

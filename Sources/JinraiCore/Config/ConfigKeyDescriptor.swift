@@ -30,6 +30,11 @@ public struct ConfigKeyDescriptor: Equatable, Sendable {
         return .init(normalized: normalized, display: normalized, isNamedKey: false)
     }
 
+    /// 大小文字を保持するシーケンス(Area Hints 用)。大文字は Shift+キーを意味する。
+    public static func caseSensitiveSequence(_ raw: String) -> ConfigKeyDescriptor {
+        return .init(normalized: raw, display: raw, isNamedKey: false)
+    }
+
     public static func keyName(_ raw: String) -> ConfigKeyDescriptor {
         let lowercased = raw.lowercased()
         if let named = namedKeyAliases[lowercased] {

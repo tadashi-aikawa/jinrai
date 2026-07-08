@@ -108,12 +108,12 @@ public enum AreaHintsConfigBuilder {
                     throw ConfigError("[jinrai.areaHints] unknown action '\(name)'")
                 }
                 if let key = value as? String, !key.isEmpty {
-                    actions[name] = key.uppercased()
+                    actions[name] = key
                 }
             }
         }
 
-        let windowHintsKey = merged.string("navigation.windowHints.key")?.uppercased()
+        let windowHintsKey = merged.string("navigation.windowHints.key")
 
         // キー衝突の検証(エリアキー + アクションキー + windowHints キー)。変種ごとに行う
         func validateVariantConflicts(
@@ -126,8 +126,8 @@ public enum AreaHintsConfigBuilder {
                 mappings.append((label, fallback))
             }
             for (variantContext, mapping) in mappings {
-                var allKeys = Array(mapping.values.map { ConfigKeyDescriptor.sequence($0) })
-                allKeys.append(contentsOf: actions.values.map { ConfigKeyDescriptor.sequence($0) })
+                var allKeys = Array(mapping.values.map { ConfigKeyDescriptor.caseSensitiveSequence($0) })
+                allKeys.append(contentsOf: actions.values.map { ConfigKeyDescriptor.caseSensitiveSequence($0) })
                 if let windowHintsKey {
                     allKeys.append(ConfigKeyDescriptor.keyName(windowHintsKey))
                 }
@@ -250,7 +250,7 @@ public enum AreaHintsConfigBuilder {
                 throw ConfigError(
                     "[jinrai.areaHints] key for '\(areaName)' must be 1-3 chars in \(context)")
             }
-            result[areaName] = key.uppercased()
+            result[areaName] = key
         }
         return result
     }
