@@ -52,6 +52,7 @@ nav = [
     { "Application Hints" = "application-hints.md" },
     { "Area Hints" = "area-hints.md" },
     { "Window Mover" = "window-mover.md" },
+    { "Window Layouts" = "window-layouts.md" },
     { "JINRAI Mode" = "jinrai-mode.md" },
     { "Focus Border" = "focus-border.md" },
     { "Focus Back" = "focus-back.md" },

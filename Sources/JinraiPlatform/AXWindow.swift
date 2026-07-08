@@ -119,6 +119,10 @@ public struct AXWindow {
         AXUIElementSetAttributeValue(element, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
     }
 
+    public func unminimize() {
+        AXUIElementSetAttributeValue(element, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
+    }
+
     public func setFullScreen(_ value: Bool) {
         AXUIElementSetAttributeValue(
             element, "AXFullScreen" as CFString, value ? kCFBooleanTrue : kCFBooleanFalse)

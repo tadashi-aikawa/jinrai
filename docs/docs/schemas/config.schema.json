@@ -44,6 +44,10 @@
       "$ref": "#/definitions/applicationHints",
       "description": "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。有効化にはappsへ1件以上の指定が必要です。"
     },
+    "windowLayouts": {
+      "$ref": "#/definitions/windowLayouts",
+      "description": "定義済みレイアウト（複数ウィンドウの配置）をホットキーで一括適用します。有効化にはlayoutsへ1件以上の指定が必要です。"
+    },
     "profiles": {
       "type": "array",
       "description": "特定のディスプレイが接続されているときだけ設定を上書きするプロファイルです。マッチした要素のoverridesが定義順にdeep mergeされます(辞書は再帰マージ、配列は置換)。",
@@ -103,6 +107,10 @@
         "applicationHints": {
           "$ref": "#/definitions/applicationHints",
           "description": "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。有効化にはappsへ1件以上の指定が必要です。"
+        },
+        "windowLayouts": {
+          "$ref": "#/definitions/windowLayouts",
+          "description": "定義済みレイアウト（複数ウィンドウの配置）をホットキーで一括適用します。有効化にはlayoutsへ1件以上の指定が必要です。"
         }
       }
     },
@@ -2075,6 +2083,76 @@
             "keyHighlightColor": {
               "$ref": "#/definitions/color",
               "description": "入力済み部分を示す文字色です。"
+            }
+          }
+        }
+      }
+    },
+    "windowLayoutsWindow": {
+      "type": "object",
+      "description": "レイアウトで配置するウィンドウ1件の定義です。",
+      "additionalProperties": false,
+      "required": ["bundleID", "area"],
+      "properties": {
+        "bundleID": {
+          "type": "string",
+          "description": "対象アプリの bundle ID です。完全一致で照合します。",
+          "minLength": 1
+        },
+        "titleGlob": {
+          "type": "string",
+          "description": "ウィンドウタイトルのglobパターンです（*は任意の文字列、?は任意の1文字）。省略するとタイトルを問いません。",
+          "minLength": 1
+        },
+        "screen": {
+          "type": "string",
+          "description": "配置先ディスプレイのUUIDです。省略時や未接続時はメインディスプレイに配置します。"
+        },
+        "area": {
+          "type": "string",
+          "description": "配置先のエリア名です（halfLeftなど。freeAreaは使用できません）。1200x900Centerのような固定サイズ中央配置も指定できます。",
+          "minLength": 1
+        },
+        "launch": {
+          "type": "boolean",
+          "description": "trueにすると、未起動のアプリを起動してウィンドウの出現を待ってから配置します。falseの場合、未起動のアプリはスキップします。",
+          "default": false
+        }
+      }
+    },
+    "windowLayouts": {
+      "type": "object",
+      "description": "定義済みレイアウト（複数ウィンドウの配置）をホットキーで一括適用します。",
+      "additionalProperties": false,
+      "required": ["layouts"],
+      "properties": {
+        "windowWaitTimeout": {
+          "type": "number",
+          "description": "launchで起動したアプリのウィンドウが現れるまで待つ最大時間（秒）です。",
+          "exclusiveMinimum": 0,
+          "default": 10
+        },
+        "layouts": {
+          "type": "object",
+          "description": "レイアウト名からレイアウト定義へのマップです。1件以上必須です。",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["hotkey", "windows"],
+            "properties": {
+              "hotkey": {
+                "allOf": [{ "$ref": "#/definitions/hotkey" }],
+                "description": "レイアウトを適用するホットキーです。他のレイアウトと重複できません。"
+              },
+              "windows": {
+                "type": "array",
+                "description": "配置対象のウィンドウ一覧です。1件以上必須です。適用後は配列の最後にマッチしたウィンドウへフォーカスします。",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/definitions/windowLayoutsWindow"
+                }
+              }
             }
           }
         }

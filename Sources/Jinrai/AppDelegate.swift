@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowHints: WindowHintsFeature?
     private var windowMover: WindowMoverFeature?
     private var applicationHints: ApplicationHintsFeature?
+    private var windowLayouts: WindowLayoutsFeature?
     private let updater = UpdaterFeature()
     private var accessibilityGranted = false
     private var lastDisplayUUIDs: Set<String> = []
@@ -122,6 +123,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             applicationHints = ApplicationHintsFeature(config: applicationHintsConfig)
         }
 
+        if let windowLayoutsConfig = config.windowLayouts {
+            // カーソル追従は Window Mover の共通設定に従う(セクションが無ければデフォルト値)
+            windowLayouts = WindowLayoutsFeature(
+                config: windowLayoutsConfig,
+                cursorAfterMove: config.windowMover?.cursorAfterMove ?? true)
+        }
+
         // 相互遷移の結線(元 init.lua のコールバック配線)。
         // Hints ↔ Area Hints の受け渡しでは spotlight をフェードさせず瞬間切替にして
         // 暗幕の連続性を保つ(クロスフェードだと画面全体がフラッシュして見える)
@@ -187,6 +195,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func teardownFeatures() {
+        windowLayouts?.teardown()
+        windowLayouts = nil
         applicationHints?.teardown()
         applicationHints = nil
         windowMover?.teardown()

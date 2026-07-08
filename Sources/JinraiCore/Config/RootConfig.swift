@@ -29,6 +29,8 @@ public struct RootConfig {
     public var areaHints: AreaHintsConfig?
     /// 登録アプリの起動・新規ウィンドウ作成(セクション記述で有効。apps 必須)
     public var applicationHints: ApplicationHintsConfig?
+    /// 定義済みレイアウトをホットキーで一括適用(セクション記述で有効。layouts 必須)
+    public var windowLayouts: WindowLayoutsConfig?
     /// セクションなしでもデフォルト値を持つ(元 init.lua の normalizeJinraiMode)
     public var jinraiMode: JinraiModeConfig = .default
 
@@ -39,7 +41,8 @@ public struct RootConfig {
         windowHints: WindowHintsConfig? = nil,
         windowMover: WindowMoverConfig? = nil,
         areaHints: AreaHintsConfig? = nil,
-        applicationHints: ApplicationHintsConfig? = nil
+        applicationHints: ApplicationHintsConfig? = nil,
+        windowLayouts: WindowLayoutsConfig? = nil
     ) {
         self.macosNativeTabs = macosNativeTabs
         self.focusBack = focusBack
@@ -48,6 +51,7 @@ public struct RootConfig {
         self.windowMover = windowMover
         self.areaHints = areaHints
         self.applicationHints = applicationHints
+        self.windowLayouts = windowLayouts
     }
 }
 
@@ -107,6 +111,10 @@ public enum RootConfigBuilder {
                     as? [String: Any])?["key"] as? String
             config.applicationHints = try ApplicationHintsConfigBuilder.build(
                 section, windowHintsKey: appHintsKey)
+        }
+
+        if let section = root["windowLayouts"] as? [String: Any] {
+            config.windowLayouts = try WindowLayoutsConfigBuilder.build(section)
         }
 
         if let section = root["jinraiMode"] as? [String: Any] {

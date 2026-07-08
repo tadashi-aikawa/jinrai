@@ -34,6 +34,8 @@ JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択
 - **[Window Mover](window-mover.md)**
     - ウィンドウを別ディスプレイ、空き領域、指定した画面領域へ移動
     - 最大化、最小化、画面分割レイアウトへの配置
+- **[Window Layouts](window-layouts.md)**
+    - 定義済みレイアウトへ複数ウィンドウをホットキーで一括配置
 - **[JINRAI Mode](jinrai-mode.md)**
     - [Window Hints](window-hints.md)と[Area Hints](area-hints.md)を交互に連続実行
 - **[Focus Border](focus-border.md)**
