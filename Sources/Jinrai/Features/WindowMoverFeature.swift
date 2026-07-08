@@ -45,7 +45,9 @@ final class WindowMoverFeature {
     var onOpenWindowHints: (() -> Void)?
     /// JinraiMode: 開始(mode 演出の起動)/ 適用後(combo+1 して Hints へ)/ キャンセル
     var onJinraiModeStart: (() -> Void)?
-    var onJinraiModeApply: (() -> Void)?
+    /// activeWindow: 適用後にアクティブであるべきウィンドウ。close 等でフォーカスが
+    /// 移る場合、focusedWindow はまだ古いため明示して演出を追従させる(WindowLayouts と同方式)
+    var onJinraiModeApply: ((_ activeWindow: (windowID: UInt32, pid: pid_t)?) -> Void)?
     var onJinraiModeCancel: (() -> Void)?
     /// エリア選択画面が JinraiMode 文脈で開かれているか
     private var chooserJinraiMode = false
@@ -666,7 +668,7 @@ final class WindowMoverFeature {
                 apply(frame: frame, to: win)
             }
             if wasJinrai {
-                onJinraiModeApply?()
+                onJinraiModeApply?(win.map { (windowID: $0.windowID, pid: $0.pid) })
             }
             return true
         }
@@ -721,7 +723,7 @@ final class WindowMoverFeature {
         let wasJinrai = chooserJinraiMode
         closeChooser()
         if wasJinrai {
-            onJinraiModeApply?()
+            onJinraiModeApply?(nil)
         } else {
             onOpenWindowHints?()
         }
@@ -797,17 +799,26 @@ final class WindowMoverFeature {
             if jinraiMode { onJinraiModeCancel?() }
             return
         }
+        // JinraiMode 演出の基準ウィンドウ。close 等でフォーカスが移る場合は移動先を渡す
+        var activeWindow: (windowID: UInt32, pid: pid_t)? = (win.windowID, win.pid)
         switch name {
         case "closeWindow":
+            let successor = successorForVanishingWindow(win)
             win.close()
+            focusSuccessor(successor)
+            activeWindow = successor.map { (windowID: $0.id, pid: $0.pid) }
         case "minimizeWindow":
+            let successor = successorForVanishingWindow(win)
             win.minimize()
+            focusSuccessor(successor)
+            activeWindow = successor.map { (windowID: $0.id, pid: $0.pid) }
         case "maximizeWindow":
             if let frame = win.frame, let screen = ScreenUtil.screenContaining(frame) {
                 apply(frame: ScreenUtil.visibleFrame(of: screen), to: win)
             }
         case "quitApplication":
             NSRunningApplication(processIdentifier: win.pid)?.terminate()
+            activeWindow = nil
         case "detachChromeTabToNewWindow":
             detachChromeTab(win)
             // JinraiMode 中は Hints に戻らず、分離されたウィンドウを続けて配置できるよう
@@ -823,8 +834,57 @@ final class WindowMoverFeature {
             break
         }
         if jinraiMode {
-            onJinraiModeApply?()
+            onJinraiModeApply?(activeWindow)
         }
+    }
+
+    /// close/minimize で対象が画面から消えた後にフォーカスすべきウィンドウを、
+    /// 消える前の状態から選定する(close は非同期なため事前に決めておく)。
+    /// すぐ背面(z-order で対象より後ろ、frame が重なる最前面)→ なければ中心距離が
+    /// 最も近いウィンドウ。対象が最前面の標準ウィンドウでない場合は、現フォーカスが
+    /// 生きているため nil(focusedWindow は focus 直後に古いことがあるので z-order で判定)
+    private func successorForVanishingWindow(_ win: AXWindow) -> WindowInfo? {
+        guard let targetFrame = win.frame else { return nil }
+        let ordered = WindowEnumerator.orderedWindows()
+            .filter { $0.pid != ProcessInfo.processInfo.processIdentifier }
+        let standard = WindowEnumerator.standardWindows(from: ordered)
+        guard standard.first?.id == win.windowID else { return nil }
+        if let overlapped = standard.dropFirst().first(where: {
+            $0.frame.intersects(targetFrame)
+        }) {
+            return overlapped
+        }
+        let center = CGPoint(x: targetFrame.midX, y: targetFrame.midY)
+        func distance2(_ frame: CGRect) -> CGFloat {
+            let dx = frame.midX - center.x
+            let dy = frame.midY - center.y
+            return dx * dx + dy * dy
+        }
+        return standard.dropFirst().min { distance2($0.frame) < distance2($1.frame) }
+    }
+
+    /// 消えたウィンドウの後継をフォーカス。閉じたアプリは close 完了後に
+    /// 自分の次ウィンドウへ非同期にフォーカスを移し、直後の focus を上書きする
+    /// (同アプリ複数ウィンドウ時に顕著。front process と AX focus が別々に落ちて
+    /// フォーカスボーダー等が分裂する)。即時フォーカスの後、確定するまで
+    /// 短い間隔で奪い返して安定させる
+    private func focusSuccessor(_ successor: WindowInfo?) {
+        guard let successor else { return }
+        focusWindow(successor)
+        Task { @MainActor [weak self] in
+            for _ in 0..<5 {
+                try? await Task.sleep(for: .seconds(0.15))
+                guard let self else { return }
+                if WindowEnumerator.focusedWindow()?.windowID == successor.id { return }
+                self.focusWindow(successor)
+            }
+        }
+    }
+
+    /// WindowServerFocus で front process を同期的に切り替えてから AX focus で仕上げる
+    private func focusWindow(_ window: WindowInfo) {
+        WindowServerFocus.focus(windowID: window.id, pid: window.pid)
+        AXWindow.resolve(windowID: window.id, pid: window.pid)?.focus()
     }
 
     /// Chrome のメニュー「タブを新しいウィンドウに移動」を AX メニュー操作で実行
