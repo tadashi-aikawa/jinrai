@@ -21,18 +21,100 @@ struct WindowLayoutPlannerTests {
               launch: launch, focus: focus)
     }
 
-    @Test("前面順で最初にマッチした1枚だけ配置する")
-    func matchesFirstInFrontOrder() {
+    @Test("マッチしうるエントリが1つだけなら全ウィンドウを同じ位置へ配置する(全取り)")
+    func uniqueEntryTakesAllMatches() {
         let plan = WindowLayoutPlanner.makePlan(
             entries: [entry()],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "Front"),
+                WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "Middle"),
+                WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "Back"),
+            ],
+            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            screens: [mainScreen])
+        // Pass 1 の最前面1枚に続き、Pass 2 で残りが Z順に追加される
+        #expect(plan.placements.map(\.windowID) == [1, 2, 3])
+        #expect(plan.placements.map(\.entryIndex) == [0, 0, 0])
+        #expect(plan.placements.allSatisfy { $0.frame == plan.placements[0].frame })
+        #expect(plan.focusEntryIndex == 0)
+    }
+
+    @Test("複数エントリにマッチしうるウィンドウは競合として全取りしない")
+    func conflictingWindowNotTakenByPass2() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry(), entry(area: "halfRight")],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A"),
+                WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B"),
+                WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "C"),
+            ],
+            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            screens: [mainScreen])
+        // 従来どおり前面から1枚ずつ。3枚目は両エントリにマッチしうるので触らない
+        #expect(plan.placements.map(\.windowID) == [1, 2])
+    }
+
+    @Test("titleGlob が重なるウィンドウは全取りせず、重ならないウィンドウだけ全取りする")
+    func globOverlapConflict() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry(titleGlob: "*GitHub*"), entry(area: "halfRight")],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "PR - GitHub"),
+                WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "Gmail"),
+                WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "Wiki - GitHub"),
+                WindowInfo(id: 4, pid: 100, bundleID: "com.google.Chrome", title: "Calendar"),
+            ],
+            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            screens: [mainScreen])
+        // Pass 1: entry0 が 1(GitHub)、entry1 が 2(Gmail)。
+        // Pass 2: 3(GitHub)は両エントリにマッチしうるので競合、4(Calendar)は entry1 のみなので全取り
+        #expect(plan.placements.map(\.windowID) == [1, 2, 4])
+        #expect(plan.placements.map(\.entryIndex) == [0, 1, 1])
+    }
+
+    @Test("focus=true のエントリに複数マッチしても最前面の placement が先頭に来る")
+    func focusPlacementIsFrontmostOnMultiMatch() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry(focus: true)],
             onScreenWindows: [
                 WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "Front"),
                 WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "Back"),
             ],
             minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
             screens: [mainScreen])
-        #expect(plan.placements.map(\.windowID) == [1])
         #expect(plan.focusEntryIndex == 0)
+        // Feature 側は first(where: entryIndex == focusEntryIndex) でフォーカス先を選ぶ
+        #expect(plan.placements.first(where: { $0.entryIndex == 0 })?.windowID == 1)
+    }
+
+    @Test("最小化ウィンドウは全取りの対象にならない")
+    func minimizedWindowsNotTakenByPass2() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry()],
+            onScreenWindows: [],
+            minimizedWindows: [
+                WindowInfo(id: 5, pid: 100, bundleID: "com.google.Chrome", title: "Min1"),
+                WindowInfo(id: 6, pid: 100, bundleID: "com.google.Chrome", title: "Min2"),
+            ],
+            runningBundleIDs: ["com.google.Chrome"], screens: [mainScreen])
+        #expect(plan.placements.map(\.windowID) == [5])
+    }
+
+    @Test("全取り分も claim され unlistedWindows に残らない")
+    func pass2PlacementsAreClaimed() {
+        let windows = [
+            WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A"),
+            WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B"),
+            WindowInfo(id: 3, pid: 101, bundleID: "md.obsidian", title: "C"),
+        ]
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry()],
+            onScreenWindows: windows,
+            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            screens: [mainScreen])
+        let unlisted = WindowLayoutPlanner.unlistedWindows(
+            from: windows, keeping: Set(plan.placements.map(\.windowID)))
+        #expect(unlisted.map(\.id) == [3])
     }
 
     @Test("titleGlob でウィンドウを絞り込む")
@@ -89,24 +171,44 @@ struct WindowLayoutPlannerTests {
         #expect(plan.placements[0].needsUnminimize)
     }
 
-    @Test("screen UUID でディスプレイを解決し、未接続はメインへフォールバック")
+    @Test("screen UUID でディスプレイを解決し、未指定・未接続はウィンドウの現在位置へフォールバック")
     func screenResolution() {
+        // サブディスプレイ上のウィンドウ frame
+        let onSub = CGRect(x: 1700, y: 100, width: 800, height: 600)
         let plan = WindowLayoutPlanner.makePlan(
             entries: [
                 entry(screen: "sub-uuid", area: "full"),  // 大小文字は無視して一致
-                entry(titleGlob: "B", screen: "GONE-UUID", area: "full"),
-                entry(titleGlob: "C", area: "full"),  // screen 未指定
+                entry(titleGlob: "B", screen: "GONE-UUID", area: "full"),  // 未接続 → 現在位置
+                entry(titleGlob: "C", area: "full"),  // screen 未指定 → 現在位置
+                entry(titleGlob: "D", area: "full"),  // 現在位置も不明(frame ゼロ)→ メイン
             ],
             onScreenWindows: [
                 WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A"),
-                WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B"),
-                WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "C"),
+                WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B", frame: onSub),
+                WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "C", frame: onSub),
+                WindowInfo(id: 4, pid: 100, bundleID: "com.google.Chrome", title: "D"),
             ],
             minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
             screens: [mainScreen, subScreen])
         #expect(plan.placements[0].frame == subScreen.visibleFrame)
-        #expect(plan.placements[1].frame == mainScreen.visibleFrame)
-        #expect(plan.placements[2].frame == mainScreen.visibleFrame)
+        #expect(plan.placements[1].frame == subScreen.visibleFrame)
+        #expect(plan.placements[2].frame == subScreen.visibleFrame)
+        #expect(plan.placements[3].frame == mainScreen.visibleFrame)
+    }
+
+    @Test("screen 未指定ならウィンドウが現在いる(交差面積が最大の)ディスプレイへ配置する")
+    func omittedScreenUsesCurrentDisplay() {
+        // 両画面をまたぐが、サブ側の面積が大きいウィンドウ
+        let straddling = CGRect(x: 1400, y: 100, width: 800, height: 600)
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry(area: "full")],
+            onScreenWindows: [
+                WindowInfo(
+                    id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A", frame: straddling)
+            ],
+            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            screens: [mainScreen, subScreen])
+        #expect(plan.placements[0].frame == subScreen.visibleFrame)
     }
 
     @Test("未起動かつ launch=true のエントリだけが起動待ちに回る")

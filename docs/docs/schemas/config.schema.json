@@ -2217,7 +2217,7 @@
         },
         "screen": {
           "type": "string",
-          "description": "配置先ディスプレイのUUIDまたはdisplayAliasesで定義した別名です。省略時や未接続時はメインディスプレイに配置します。"
+          "description": "配置先ディスプレイのUUIDまたはdisplayAliasesで定義した別名です。省略時や未接続時は、ウィンドウが現在いるディスプレイに配置します（判定できない場合はメインディスプレイ）。"
         },
         "area": {
           "allOf": [{ "$ref": "#/definitions/windowLayoutsArea" }],
@@ -2258,7 +2258,10 @@
           "additionalProperties": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["windows"],
+            "anyOf": [
+              { "required": ["windows"] },
+              { "required": ["unlistedWindows"] }
+            ],
             "properties": {
               "hotkey": {
                 "allOf": [{ "$ref": "#/definitions/hotkey" }],
@@ -2269,15 +2272,32 @@
                 "description": "レイアウトの説明です。ピッカーの一覧に表示され、検索対象になります。",
                 "minLength": 1
               },
-              "closeUnlistedWindows": {
-                "type": "boolean",
-                "description": "true の場合、レイアウト適用時に現在のSpaceで表示されている標準ウィンドウのうち、配置対象に選ばれなかったものを閉じます。",
-                "default": false
+              "unlistedWindows": {
+                "description": "レイアウト適用時、現在のSpaceで表示されている標準ウィンドウのうち、配置対象に選ばれなかったものの扱いです。\"close\"で閉じる、{ screen?, area }で指定位置へ一律配置、省略時は何もしません。",
+                "oneOf": [
+                  {
+                    "const": "close"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["area"],
+                    "properties": {
+                      "screen": {
+                        "type": "string",
+                        "description": "配置先ディスプレイのUUIDまたはdisplayAliasesで定義した別名です。省略時や未接続時は、各ウィンドウが現在いるディスプレイに配置します（判定できない場合はメインディスプレイ）。"
+                      },
+                      "area": {
+                        "allOf": [{ "$ref": "#/definitions/windowLayoutsArea" }],
+                        "description": "配置先のエリア名です（halfLeftなど。freeAreaは使用できません）。1200x900Centerのような固定サイズ中央配置も指定できます。"
+                      }
+                    }
+                  }
+                ]
               },
               "windows": {
                 "type": "array",
-                "description": "配置対象のウィンドウ一覧です。1件以上必須です。focus=true のエントリがあればそのウィンドウへ、なければ配列の最後にマッチしたウィンドウへフォーカスします。",
-                "minItems": 1,
+                "description": "配置対象のウィンドウ一覧です。unlistedWindows指定時は省略できます（windowsかunlistedWindowsのいずれかが必要です）。focus=true のエントリがあればそのウィンドウへ、なければ配列の最後にマッチしたウィンドウへフォーカスします。",
                 "items": {
                   "$ref": "#/definitions/windowLayoutsWindow"
                 }

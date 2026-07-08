@@ -76,7 +76,10 @@ public enum WindowLayoutPlanner {
                 }
                 continue
             }
-            guard let frame = resolveFrame(entry: entry, screens: screens) else { continue }
+            guard
+                let frame = resolveFrame(
+                    entry: entry, screens: screens, windowFrame: matched.window.frame)
+            else { continue }
             claimedIDs.insert(matched.window.id)
             placements.append(
                 .init(
@@ -90,6 +93,27 @@ public enum WindowLayoutPlanner {
             if index == preferredFocusEntryIndex {
                 preferredMatchedFocusEntryIndex = index
             }
+        }
+
+        // Pass 2: 未確保のオンスクリーンウィンドウのうち、ちょうど1エントリにだけ
+        // マッチするものは、そのエントリと同じ位置へ追加配置する(全取り)。
+        // 複数エントリにマッチしうるウィンドウは競合とみなし、先勝ち1枚の Pass 1 の結果に任せる
+        for window in onScreenWindows where !claimedIDs.contains(window.id) {
+            let matchedIndices = entries.indices.filter { matches(entry: entries[$0], window: window) }
+            guard matchedIndices.count == 1, let index = matchedIndices.first else { continue }
+            guard
+                let frame = resolveFrame(
+                    entry: entries[index], screens: screens, windowFrame: window.frame)
+            else { continue }
+            claimedIDs.insert(window.id)
+            placements.append(
+                .init(
+                    entryIndex: index,
+                    windowID: window.id,
+                    pid: window.pid,
+                    frame: frame,
+                    needsUnminimize: false
+                ))
         }
 
         return Plan(
@@ -109,11 +133,17 @@ public enum WindowLayoutPlanner {
         excluding claimedIDs: Set<UInt32> = []
     ) -> WindowInfo? {
         windows.first { window in
-            guard !claimedIDs.contains(window.id) else { return false }
-            guard window.bundleID == entry.bundleID else { return false }
-            guard let glob = entry.titleGlob else { return true }
-            return HintKeyAssignment.globMatch(glob, window.title)
+            !claimedIDs.contains(window.id) && matches(entry: entry, window: window)
         }
+    }
+
+    /// bundleID 完全一致 + titleGlob のマッチ判定
+    public static func matches(
+        entry: WindowLayoutsConfig.WindowEntry, window: WindowInfo
+    ) -> Bool {
+        guard window.bundleID == entry.bundleID else { return false }
+        guard let glob = entry.titleGlob else { return true }
+        return HintKeyAssignment.globMatch(glob, window.title)
     }
 
     /// レイアウト適用で確保したウィンドウ以外を、閉じる候補として返す。
@@ -124,17 +154,49 @@ public enum WindowLayoutPlanner {
         windows.filter { !keptIDs.contains($0.id) }
     }
 
-    /// screen UUID → エリア frame の解決。未指定・未接続はメインディスプレイへフォールバック
+    /// screen UUID → エリア frame の解決。未指定・未接続時はウィンドウが現在いる
+    /// ディスプレイ、それも判定できなければメインディスプレイへフォールバック
     public static func resolveFrame(
-        entry: WindowLayoutsConfig.WindowEntry, screens: [ScreenInput]
+        entry: WindowLayoutsConfig.WindowEntry, screens: [ScreenInput],
+        windowFrame: CGRect? = nil
     ) -> CGRect? {
-        let screen =
-            entry.screenUUID.flatMap { uuid in
-                screens.first { $0.uuid?.caseInsensitiveCompare(uuid) == .orderedSame }
-            }
-            ?? screens.first(where: \.isMain)
-            ?? screens.first
+        resolveFrame(
+            screenUUID: entry.screenUUID, area: entry.area, screens: screens,
+            windowFrame: windowFrame)
+    }
+
+    /// screen UUID → エリア frame の解決。未指定・未接続時はウィンドウが現在いる
+    /// ディスプレイ、それも判定できなければメインディスプレイへフォールバック
+    public static func resolveFrame(
+        screenUUID: String?, area: String, screens: [ScreenInput],
+        windowFrame: CGRect? = nil
+    ) -> CGRect? {
+        var screen: ScreenInput?
+        if let uuid = screenUUID {
+            screen = screens.first { $0.uuid?.caseInsensitiveCompare(uuid) == .orderedSame }
+        }
+        if screen == nil, let windowFrame {
+            screen = Self.screen(containing: windowFrame, in: screens)
+        }
+        if screen == nil {
+            screen = screens.first(where: \.isMain) ?? screens.first
+        }
         guard let screen else { return nil }
-        return AreaSpec.frame(for: entry.area, screenFrame: screen.visibleFrame)
+        return AreaSpec.frame(for: area, screenFrame: screen.visibleFrame)
+    }
+
+    /// ウィンドウ frame との交差面積が最大の画面(交差しなければ nil)
+    static func screen(containing frame: CGRect, in screens: [ScreenInput]) -> ScreenInput? {
+        var best: (screen: ScreenInput, area: CGFloat)?
+        for screen in screens {
+            let intersection = screen.visibleFrame.intersection(frame)
+            guard !intersection.isNull else { continue }
+            let area = intersection.width * intersection.height
+            guard area > 0 else { continue }
+            if best == nil || area > best!.area {
+                best = (screen, area)
+            }
+        }
+        return best?.screen
     }
 }

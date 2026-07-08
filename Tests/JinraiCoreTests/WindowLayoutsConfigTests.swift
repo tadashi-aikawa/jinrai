@@ -36,7 +36,7 @@ struct WindowLayoutsConfigTests {
         let layout = config.layouts[0]
         #expect(layout.name == "dev")
         #expect(layout.hotkey == .init(modifiers: ["ctrl", "alt"], key: "1"))
-        #expect(layout.closeUnlistedWindows == false)
+        #expect(layout.unlistedWindows == nil)
         #expect(
             layout.windows[0]
                 == .init(
@@ -55,15 +55,82 @@ struct WindowLayoutsConfigTests {
         #expect(config.windowWaitTimeout == 10)
     }
 
-    @Test("closeUnlistedWindows のデフォルトは false で true をパースできる")
-    func closeUnlistedWindowsParse() throws {
-        let defaults = try WindowLayoutsConfigBuilder.build(["layouts": ["a": validLayout()]])
-        #expect(defaults.layouts[0].closeUnlistedWindows == false)
+    @Test("unlistedWindows 未指定は nil(何もしない)")
+    func unlistedWindowsDefaultsToNil() throws {
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": validLayout()]])
+        #expect(config.layouts[0].unlistedWindows == nil)
+    }
 
+    @Test("unlistedWindows: \"close\" をパースできる")
+    func unlistedWindowsCloseParse() throws {
         var layout = validLayout()
-        layout["closeUnlistedWindows"] = true
+        layout["unlistedWindows"] = "close"
         let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
-        #expect(config.layouts[0].closeUnlistedWindows == true)
+        #expect(config.layouts[0].unlistedWindows == .close)
+    }
+
+    @Test("unlistedWindows: { screen?, area } をパースできる")
+    func unlistedWindowsPlaceParse() throws {
+        var layout = validLayout()
+        layout["unlistedWindows"] = [
+            "screen": "37D8832A-2D66-02CA-B9F7-8F30A301B230", "area": "full",
+        ]
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+        #expect(
+            config.layouts[0].unlistedWindows
+                == .place(screenUUID: "37D8832A-2D66-02CA-B9F7-8F30A301B230", area: "full"))
+
+        var noScreen = validLayout()
+        noScreen["unlistedWindows"] = ["area": "full"]
+        let config2 = try WindowLayoutsConfigBuilder.build(["layouts": ["a": noScreen]])
+        #expect(config2.layouts[0].unlistedWindows == .place(screenUUID: nil, area: "full"))
+    }
+
+    @Test("unlistedWindows の不正値はエラー")
+    func invalidUnlistedWindowsThrows() {
+        // "close" 以外の文字列
+        var badString = validLayout()
+        badString["unlistedWindows"] = "closeall"
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": badString]])
+        }
+        // area 欠落
+        var noArea = validLayout()
+        noArea["unlistedWindows"] = ["screen": "37D8832A-2D66-02CA-B9F7-8F30A301B230"]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": noArea]])
+        }
+        // 未知エリア
+        var unknownArea = validLayout()
+        unknownArea["unlistedWindows"] = ["area": "unknownArea"]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": unknownArea]])
+        }
+        // freeArea 禁止
+        var freeArea = validLayout()
+        freeArea["unlistedWindows"] = ["area": "freeArea"]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": freeArea]])
+        }
+        // 不正な型
+        var badType = validLayout()
+        badType["unlistedWindows"] = true
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": badType]])
+        }
+    }
+
+    @Test("廃止された closeUnlistedWindows は移行先を示すエラー")
+    func removedCloseUnlistedWindowsThrows() {
+        for value in [true, false] {
+            var layout = validLayout()
+            layout["closeUnlistedWindows"] = value
+            #expect {
+                try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+            } throws: { error in
+                "\(error)".contains("unlistedWindows")
+            }
+        }
     }
 
     @Test("layouts は名前昇順に整列される")
@@ -176,13 +243,39 @@ struct WindowLayoutsConfigTests {
         }
     }
 
-    @Test("windows が空ならエラー")
-    func emptyWindowsThrows() {
-        var layout = validLayout()
-        layout["windows"] = [[String: Any]]()
+    @Test("windows と unlistedWindows が両方ないレイアウトはエラー")
+    func layoutWithoutWindowsAndUnlistedWindowsThrows() {
+        // windows が空配列
+        var emptyWindows = validLayout()
+        emptyWindows["windows"] = [[String: Any]]()
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": emptyWindows]])
         }
+        // windows 省略
+        var noWindows = validLayout()
+        noWindows["windows"] = nil
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": noWindows]])
+        }
+    }
+
+    @Test("unlistedWindows があれば windows は省略できる")
+    func windowsOptionalWithUnlistedWindows() throws {
+        // windows 省略 + unlistedWindows: "close"
+        var closeLayout = validLayout()
+        closeLayout["windows"] = nil
+        closeLayout["unlistedWindows"] = "close"
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": closeLayout]])
+        #expect(config.layouts[0].windows.isEmpty)
+        #expect(config.layouts[0].unlistedWindows == .close)
+
+        // windows 空配列 + unlistedWindows: { area }
+        var placeLayout = validLayout()
+        placeLayout["windows"] = [[String: Any]]()
+        placeLayout["unlistedWindows"] = ["area": "full"]
+        let config2 = try WindowLayoutsConfigBuilder.build(["layouts": ["a": placeLayout]])
+        #expect(config2.layouts[0].windows.isEmpty)
+        #expect(config2.layouts[0].unlistedWindows == .place(screenUUID: nil, area: "full"))
     }
 
     @Test("bundleID は必須")

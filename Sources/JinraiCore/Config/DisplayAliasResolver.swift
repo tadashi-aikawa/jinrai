@@ -85,21 +85,31 @@ enum DisplayAliasResolver {
 
         var layouts = rawLayouts
         for (layoutName, rawLayout) in rawLayouts {
-            guard var layout = rawLayout as? [String: Any],
-                let rawWindows = layout["windows"] as? [[String: Any]]
-            else { continue }
+            guard var layout = rawLayout as? [String: Any] else { continue }
 
-            var windows: [[String: Any]] = []
-            for (index, rawWindow) in rawWindows.enumerated() {
-                var window = rawWindow
-                if let screen = window["screen"] as? String {
-                    window["screen"] = try resolve(
-                        screen, aliases: aliases,
-                        context: "windowLayouts.layouts['\(layoutName)'].windows[\(index)].screen")
+            if let rawWindows = layout["windows"] as? [[String: Any]] {
+                var windows: [[String: Any]] = []
+                for (index, rawWindow) in rawWindows.enumerated() {
+                    var window = rawWindow
+                    if let screen = window["screen"] as? String {
+                        window["screen"] = try resolve(
+                            screen, aliases: aliases,
+                            context: "windowLayouts.layouts['\(layoutName)'].windows[\(index)].screen")
+                    }
+                    windows.append(window)
                 }
-                windows.append(window)
+                layout["windows"] = windows
             }
-            layout["windows"] = windows
+
+            if var unlisted = layout["unlistedWindows"] as? [String: Any],
+                let screen = unlisted["screen"] as? String
+            {
+                unlisted["screen"] = try resolve(
+                    screen, aliases: aliases,
+                    context: "windowLayouts.layouts['\(layoutName)'].unlistedWindows.screen")
+                layout["unlistedWindows"] = unlisted
+            }
+
             layouts[layoutName] = layout
         }
         windowLayouts["layouts"] = layouts

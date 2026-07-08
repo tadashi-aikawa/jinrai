@@ -25,6 +25,14 @@ public struct WindowLayoutsConfig: Sendable {
         public var focus: Bool
     }
 
+    /// 配置対象に選ばれなかったオンスクリーン標準ウィンドウの扱い(layouts.<名前>.unlistedWindows)
+    public enum UnlistedWindowsAction: Equatable, Sendable {
+        /// 閉じる("close")
+        case close
+        /// 指定の screen + area へ一律配置する({ screen?, area })
+        case place(screenUUID: String?, area: String)
+    }
+
     /// 1つのレイアウト定義(layouts.<名前>)
     public struct Layout: Sendable {
         /// レイアウト名(layouts のキー。ピッカー表示・検索・ログ用)
@@ -33,9 +41,9 @@ public struct WindowLayoutsConfig: Sendable {
         public var description: String?
         /// レイアウトを直接適用するホットキー(省略時はピッカーからのみ呼び出せる)
         public var hotkey: HotkeyBinding?
-        /// レイアウト適用時、配置対象に選ばれなかったオンスクリーン標準ウィンドウを閉じるか
-        public var closeUnlistedWindows: Bool
-        /// 配置対象ウィンドウ(1件以上。focus 指定がなければ配列の最後にマッチしたエントリへフォーカス)
+        /// 配置対象に選ばれなかったオンスクリーン標準ウィンドウの扱い(nil = 何もしない)
+        public var unlistedWindows: UnlistedWindowsAction?
+        /// 配置対象ウィンドウ(unlistedWindows 指定時は省略可。focus 指定がなければ配列の最後にマッチしたエントリへフォーカス)
         public var windows: [WindowEntry]
     }
 
@@ -197,8 +205,13 @@ public enum WindowLayoutsConfigBuilder {
                 "[jinrai.windowLayouts] \(context).description は空にできません(不要なら省略してください)")
         }
 
-        guard let rawWindows = raw["windows"] as? [[String: Any]], !rawWindows.isEmpty else {
-            throw ConfigError("[jinrai.windowLayouts] \(context).windows は1件以上必要です")
+        let unlistedWindows = try buildUnlistedWindows(raw, context: context)
+
+        // windows は unlistedWindows 指定時のみ省略可(両方ないレイアウトは何もしないため設定ミスとみなす)
+        let rawWindows = raw["windows"] as? [[String: Any]] ?? []
+        if rawWindows.isEmpty, unlistedWindows == nil {
+            throw ConfigError(
+                "[jinrai.windowLayouts] \(context) には windows か unlistedWindows のいずれかが必要です")
         }
 
         var windows: [WindowLayoutsConfig.WindowEntry] = []
@@ -208,16 +221,7 @@ public enum WindowLayoutsConfigBuilder {
             guard let bundleID = rawWindow["bundleID"] as? String, !bundleID.isEmpty else {
                 throw ConfigError("[jinrai.windowLayouts] \(entryContext).bundleID は必須です")
             }
-            guard let area = rawWindow["area"] as? String, !area.isEmpty else {
-                throw ConfigError("[jinrai.windowLayouts] \(entryContext).area は必須です")
-            }
-            guard let kind = AreaSpec.kind(of: area) else {
-                throw ConfigError("[jinrai.windowLayouts] \(entryContext).area '\(area)' は不明なエリア名です")
-            }
-            guard kind != .freeArea else {
-                throw ConfigError(
-                    "[jinrai.windowLayouts] \(entryContext).area に freeArea は使用できません")
-            }
+            let area = try validateArea(rawWindow["area"], context: entryContext)
             let titleGlob = rawWindow["titleGlob"] as? String
             if let titleGlob, titleGlob.isEmpty {
                 throw ConfigError(
@@ -246,7 +250,49 @@ public enum WindowLayoutsConfigBuilder {
 
         return WindowLayoutsConfig.Layout(
             name: name, description: description, hotkey: hotkey,
-            closeUnlistedWindows: raw["closeUnlistedWindows"] as? Bool ?? false,
+            unlistedWindows: unlistedWindows,
             windows: windows)
+    }
+
+    /// unlistedWindows("close" | { screen?, area })のパース。未指定は nil(何もしない)
+    private static func buildUnlistedWindows(
+        _ raw: [String: Any], context: String
+    ) throws -> WindowLayoutsConfig.UnlistedWindowsAction? {
+        guard raw["closeUnlistedWindows"] == nil else {
+            throw ConfigError(
+                "[jinrai.windowLayouts] \(context).closeUnlistedWindows は廃止されました。"
+                    + "unlistedWindows: \"close\" を使用してください")
+        }
+        guard let rawValue = raw["unlistedWindows"] else { return nil }
+        switch rawValue {
+        case let string as String:
+            guard string == "close" else {
+                throw ConfigError(
+                    "[jinrai.windowLayouts] \(context).unlistedWindows の文字列指定は \"close\" のみです")
+            }
+            return .close
+        case let dict as [String: Any]:
+            let area = try validateArea(dict["area"], context: "\(context).unlistedWindows")
+            return .place(screenUUID: dict["screen"] as? String, area: area)
+        default:
+            throw ConfigError(
+                "[jinrai.windowLayouts] \(context).unlistedWindows は \"close\" または"
+                    + " { screen?, area } のオブジェクトである必要があります")
+        }
+    }
+
+    /// area の必須・既知エリア名・freeArea 禁止の検証(windows[] / unlistedWindows で共用)
+    private static func validateArea(_ rawArea: Any?, context: String) throws -> String {
+        guard let area = rawArea as? String, !area.isEmpty else {
+            throw ConfigError("[jinrai.windowLayouts] \(context).area は必須です")
+        }
+        guard let kind = AreaSpec.kind(of: area) else {
+            throw ConfigError("[jinrai.windowLayouts] \(context).area '\(area)' は不明なエリア名です")
+        }
+        guard kind != .freeArea else {
+            throw ConfigError(
+                "[jinrai.windowLayouts] \(context).area に freeArea は使用できません")
+        }
+        return area
     }
 }

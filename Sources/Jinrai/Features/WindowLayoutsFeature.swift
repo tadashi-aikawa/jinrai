@@ -10,7 +10,8 @@ final class WindowLayoutsFeature {
     /// 適用完了後にカーソルをフォーカスウィンドウ中央へ移動するか(windowMover 設定を共有)
     private let cursorAfterMove: Bool
     private var hotkeys: [Hotkey] = []
-    var onJinraiModeApply: ((_ windowID: UInt32, _ pid: pid_t) -> Void)?
+    /// activeWindow はフォーカス対象(unlistedWindows のみのレイアウトなど、フォーカス対象がなければ nil)
+    var onJinraiModeApply: ((_ activeWindow: (windowID: UInt32, pid: pid_t)?) -> Void)?
     var onJinraiModeCancel: (() -> Void)?
     var onJinraiModePickerDisplay: ((JinraiModeDisplayTarget) -> Void)?
 
@@ -118,7 +119,11 @@ final class WindowLayoutsFeature {
             runningBundleIDs: runningBundleIDs(for: layout),
             screens: screens
         )
-        guard !plan.placements.isEmpty || !plan.pendingLaunchIndices.isEmpty else {
+        // unlistedWindows 指定時は配置対象が1件もなくても続行する(未記述ウィンドウ処理だけを行う)
+        guard
+            !plan.placements.isEmpty || !plan.pendingLaunchIndices.isEmpty
+                || layout.unlistedWindows != nil
+        else {
             NSLog("[jinrai.windowLayouts] '%@' にマッチするウィンドウがありません", layout.name)
             if jinraiMode {
                 onJinraiModeCancel?()
@@ -217,7 +222,7 @@ final class WindowLayoutsFeature {
                         let matched = WindowLayoutPlanner.match(
                             entry: entry, in: candidates, excluding: session.claimedIDs),
                         let frame = WindowLayoutPlanner.resolveFrame(
-                            entry: entry, screens: session.screens),
+                            entry: entry, screens: session.screens, windowFrame: matched.frame),
                         let ax = AXWindow.resolve(windowID: matched.id, pid: matched.pid)
                     else { continue }
                     session.claimedIDs.insert(matched.id)
@@ -261,8 +266,12 @@ final class WindowLayoutsFeature {
         guard let target = session.focusTarget,
             let ax = AXWindow.resolve(windowID: target.windowID, pid: target.pid)
         else {
+            // フォーカス対象がいなくても未記述ウィンドウ処理は行う
+            // (windows 省略時など、unlistedWindows だけのレイアウトを成立させるため)。
+            // レイアウト自体は適用済みなので JinraiMode のコンボも継続する
+            handleUnlistedWindows(session)
             if session.jinraiMode {
-                onJinraiModeCancel?()
+                onJinraiModeApply?(nil)
             }
             return
         }
@@ -273,12 +282,12 @@ final class WindowLayoutsFeature {
         WindowServerFocus.focus(windowID: target.windowID, pid: target.pid)
         ax.focus()
         bringAppliedWindowsToFront(session, focusTarget: target)
-        closeUnlistedWindowsIfNeeded(session)
+        handleUnlistedWindows(session)
         if cursorAfterMove, let frame = ax.frame {
             Mouse.moveToCenter(of: frame)
         }
         if session.jinraiMode {
-            onJinraiModeApply?(target.windowID, target.pid)
+            onJinraiModeApply?((target.windowID, target.pid))
         }
     }
 
@@ -305,17 +314,35 @@ final class WindowLayoutsFeature {
         }
     }
 
-    private func closeUnlistedWindowsIfNeeded(_ session: Session) {
-        guard session.layout.closeUnlistedWindows else { return }
+    /// 配置対象に選ばれなかったオンスクリーン標準ウィンドウを、設定に応じて閉じる/一律配置する。
+    /// raise せずベストエフォートで処理するため、直前に確定した z-order は壊さない
+    private func handleUnlistedWindows(_ session: Session) {
+        guard let action = session.layout.unlistedWindows else { return }
         let standardWindows = WindowEnumerator.standardWindows(from: WindowEnumerator.orderedWindows())
         let targets = WindowLayoutPlanner.unlistedWindows(
             from: standardWindows, keeping: session.claimedIDs)
-        for target in targets {
-            AXWindow.resolve(windowID: target.id, pid: target.pid)?.close()
-        }
-        if !targets.isEmpty {
+        guard !targets.isEmpty else { return }
+        switch action {
+        case .close:
+            for target in targets {
+                AXWindow.resolve(windowID: target.id, pid: target.pid)?.close()
+            }
             NSLog(
                 "[jinrai.windowLayouts] 未記述ウィンドウを閉じました: %d",
+                targets.count)
+        case .place(let screenUUID, let area):
+            // screen 省略時は各ウィンドウが現在いるディスプレイへ配置するため、1枚ずつ解決する
+            for target in targets {
+                guard
+                    let frame = WindowLayoutPlanner.resolveFrame(
+                        screenUUID: screenUUID, area: area, screens: session.screens,
+                        windowFrame: target.frame),
+                    let ax = AXWindow.resolve(windowID: target.id, pid: target.pid)
+                else { continue }
+                WindowFrameApplier.apply(frame: frame, to: ax, moveCursor: false) { _ in }
+            }
+            NSLog(
+                "[jinrai.windowLayouts] 未記述ウィンドウを配置しました: %d",
                 targets.count)
         }
     }

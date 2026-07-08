@@ -651,6 +651,52 @@ struct RootConfigTests {
         #expect(config.windowLayouts?.layouts[0].windows[0].screenUUID == uuidB)
     }
 
+    @Test("displayAliases を windowLayouts の unlistedWindows.screen で使える")
+    func displayAliasesResolveUnlistedWindowsScreen() throws {
+        let config = try RootConfigBuilder.build(text: """
+            {
+                "displayAliases": {
+                    "desk": "\(uuidB)"
+                },
+                "windowLayouts": {
+                    "layouts": {
+                        "dev": {
+                            "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
+                            "unlistedWindows": { "screen": "desk", "area": "full" },
+                            "windows": [
+                                { "bundleID": "com.google.Chrome", "area": "halfLeft" }
+                            ]
+                        }
+                    }
+                }
+            }
+            """)
+        #expect(
+            config.windowLayouts?.layouts[0].unlistedWindows
+                == .place(screenUUID: uuidB, area: "full"))
+    }
+
+    @Test("unlistedWindows.screen の未定義別名はエラー")
+    func rejectsUnknownAliasInUnlistedWindowsScreen() {
+        #expect(throws: ConfigError.self) {
+            _ = try RootConfigBuilder.build(text: """
+                {
+                    "windowLayouts": {
+                        "layouts": {
+                            "dev": {
+                                "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
+                                "unlistedWindows": { "screen": "unknown-alias", "area": "full" },
+                                "windows": [
+                                    { "bundleID": "com.google.Chrome", "area": "halfLeft" }
+                                ]
+                            }
+                        }
+                    }
+                }
+                """)
+        }
+    }
+
     @Test("profiles の overrides 内でも displayAliases を解決する")
     func displayAliasesResolveProfileOverrides() throws {
         let config = try RootConfigBuilder.build(

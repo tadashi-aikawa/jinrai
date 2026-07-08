@@ -175,11 +175,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowMover?.onJinraiModeCancel = { [weak self] in
             self?.windowHints?.stopJinraiMode()
         }
-        windowLayouts?.onJinraiModeApply = { [weak self] windowID, pid in
+        windowLayouts?.onJinraiModeApply = { [weak self] activeWindow in
             guard let self else { return }
-            let activeWindow = (windowID: windowID, pid: pid)
             self.windowHints?.advanceJinraiModeCombo(
-                activeWindow: activeWindow, visualPositionOverride: "activeWindow")
+                activeWindow: activeWindow,
+                visualPositionOverride: activeWindow != nil ? "activeWindow" : nil)
             self.windowHints?.showJinraiMode(fadeIn: false, activeWindow: activeWindow)
         }
         windowLayouts?.onJinraiModeCancel = { [weak self] in
