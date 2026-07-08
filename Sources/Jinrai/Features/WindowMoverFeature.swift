@@ -20,6 +20,13 @@ final class WindowMoverFeature {
     private var chooserCandidates: [(key: String, areaName: String, frame: CGRect)] = []
     private(set) var isChooserVisible = false
 
+    private struct UUIDCopyTarget {
+        let uuid: String
+        let frame: CGRect
+        let label: CATextLayer
+    }
+    private var uuidCopyTargets: [UUIDCopyTarget] = []
+
     /// ラベルボックス1個分のレイヤー参照(入力に応じた再スタイル用)
     private struct AreaLabelRefs {
         let key: String
@@ -78,14 +85,8 @@ final class WindowMoverFeature {
         eventTap.onKeyDown = { [weak self] event in
             self?.handleChooserKey(event) ?? false
         }
-        eventTap.onLeftMouseDown = { [weak self] _ in
-            guard let self else { return false }
-            let wasJinrai = self.chooserJinraiMode
-            self.closeChooser()
-            if wasJinrai {
-                self.onJinraiModeCancel?()
-            }
-            return false
+        eventTap.onLeftMouseDown = { [weak self] location in
+            self?.handleChooserMouseDown(location) ?? false
         }
     }
 
@@ -254,6 +255,7 @@ final class WindowMoverFeature {
         chooserTarget = target
         chooserCandidates = []
         areaLabels = []
+        uuidCopyTargets = []
         chooserInput = ""
 
         let focusedWindowFrame = chooserTargetWindow()?.frame
@@ -354,6 +356,7 @@ final class WindowMoverFeature {
         chooserOverlays = []
         chooserCandidates = []
         areaLabels = []
+        uuidCopyTargets = []
         chooserInput = ""
     }
 
@@ -574,9 +577,11 @@ final class WindowMoverFeature {
 
     private func drawScreenInfo(uuid: String?, screenFrame: CGRect, root: CALayer) {
         let label = CATextLayer()
+        let uuidText = uuid ?? "不明"
         label.string = """
             Jinrai Area Hints: このディスプレイのエリアが未設定です
-            areaHints.screens["\(uuid ?? "不明")"] にエリアとキーを設定してください
+            areaHints.screens["\(uuidText)"] にエリアとキーを設定してください
+            このメッセージをクリックすると UUID をコピーできます
             """
         label.font = NSFont.systemFont(ofSize: 18)
         label.fontSize = 18
@@ -587,9 +592,25 @@ final class WindowMoverFeature {
         label.isWrapped = true
         label.contentsScale = 2
         label.frame = CGRect(
-            x: screenFrame.width / 2 - 360, y: screenFrame.height / 2 - 40,
-            width: 720, height: 80)
+            x: screenFrame.width / 2 - 390, y: screenFrame.height / 2 - 56,
+            width: 780, height: 112)
         root.addSublayer(label)
+
+        if let uuid {
+            uuidCopyTargets.append(
+                .init(
+                    uuid: uuid,
+                    frame: globalFrame(localFrame: label.frame, screenFrame: screenFrame),
+                    label: label))
+        }
+    }
+
+    private func globalFrame(localFrame: CGRect, screenFrame: CGRect) -> CGRect {
+        CGRect(
+            x: screenFrame.minX + localFrame.minX,
+            y: screenFrame.minY + screenFrame.height - localFrame.minY - localFrame.height,
+            width: localFrame.width,
+            height: localFrame.height)
     }
 
     private func styleKey(_ kind: AreaSpec.Kind) -> String {
@@ -701,6 +722,35 @@ final class WindowMoverFeature {
             updateChooserHighlight()
         }
         return true
+    }
+
+    private func handleChooserMouseDown(_ location: CGPoint) -> Bool {
+        guard isChooserVisible else { return false }
+        if let target = uuidCopyTargets.first(where: { $0.frame.contains(location) }) {
+            copyScreenUUID(target)
+            return true
+        }
+
+        let wasJinrai = chooserJinraiMode
+        closeChooser()
+        if wasJinrai {
+            onJinraiModeCancel?()
+        }
+        return false
+    }
+
+    private func copyScreenUUID(_ target: UUIDCopyTarget) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(target.uuid, forType: .string)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        target.label.string = """
+            UUID をコピーしました
+            \(target.uuid)
+            areaHints.screens のキーに使用できます
+            """
+        CATransaction.commit()
     }
 
     /// Window Hints への遷移(JinraiMode 中は combo+1 して Hints を mode 維持で再表示)
