@@ -147,6 +147,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowHints?.onOpenApplicationHints = { [weak self] jinraiMode in
             self?.applicationHints?.show(jinraiMode: jinraiMode)
         }
+        windowHints?.onOpenWindowLayouts = { [weak self] jinraiMode in
+            self?.windowLayouts?.showPicker(jinraiMode: jinraiMode)
+        }
         applicationHints?.onOpenWindowHints = { [weak self] jinraiMode in
             guard let self else { return }
             if jinraiMode {
@@ -171,6 +174,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         windowMover?.onJinraiModeCancel = { [weak self] in
             self?.windowHints?.stopJinraiMode()
+        }
+        windowLayouts?.onJinraiModeApply = { [weak self] windowID, pid in
+            guard let self else { return }
+            let activeWindow = (windowID: windowID, pid: pid)
+            self.windowHints?.advanceJinraiModeCombo(
+                activeWindow: activeWindow, visualPositionOverride: "activeWindow")
+            self.windowHints?.showJinraiMode(fadeIn: false, activeWindow: activeWindow)
+        }
+        windowLayouts?.onJinraiModeCancel = { [weak self] in
+            self?.windowHints?.stopJinraiMode()
+        }
+        windowLayouts?.onJinraiModePickerDisplay = { [weak self] displayTarget in
+            self?.windowHints?.redrawJinraiModeVisuals(displayTarget: displayTarget)
         }
         applicationHints?.onStartJinraiMode = { [weak self] in
             self?.windowHints?.startJinraiMode()

@@ -14,10 +14,11 @@ struct WindowLayoutPlannerTests {
 
     private func entry(
         bundleID: String = "com.google.Chrome", titleGlob: String? = nil,
-        screen: String? = nil, area: String = "halfLeft", launch: Bool = false
+        screen: String? = nil, area: String = "halfLeft", launch: Bool = false,
+        focus: Bool = false
     ) -> WindowLayoutsConfig.WindowEntry {
         .init(bundleID: bundleID, titleGlob: titleGlob, screenUUID: screen, area: area,
-              launch: launch)
+              launch: launch, focus: focus)
     }
 
     @Test("前面順で最初にマッチした1枚だけ配置する")
@@ -136,6 +137,37 @@ struct WindowLayoutPlannerTests {
             minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
             screens: [mainScreen])
         #expect(plan.focusEntryIndex == 2)
+        #expect(plan.preferredFocusEntryIndex == nil)
+        #expect(plan.fallbackFocusEntryIndex == 2)
+    }
+
+    @Test("focus=true のエントリが最後にマッチしたエントリより優先される")
+    func explicitFocusWins() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry(focus: true), entry(titleGlob: "B")],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "A"),
+                WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B"),
+            ],
+            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            screens: [mainScreen])
+        #expect(plan.focusEntryIndex == 0)
+        #expect(plan.preferredFocusEntryIndex == 0)
+        #expect(plan.fallbackFocusEntryIndex == 1)
+    }
+
+    @Test("focus=true のエントリがマッチしない場合は最後にマッチしたエントリへフォールバック")
+    func explicitFocusFallsBackWhenUnmatched() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry(bundleID: "not.running", focus: true), entry(titleGlob: "B")],
+            onScreenWindows: [
+                WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "B")
+            ],
+            minimizedWindows: [], runningBundleIDs: ["com.google.Chrome"],
+            screens: [mainScreen])
+        #expect(plan.focusEntryIndex == 1)
+        #expect(plan.preferredFocusEntryIndex == 0)
+        #expect(plan.fallbackFocusEntryIndex == 1)
     }
 
     @Test("エリア名から配置 frame を算出する(halfLeft)")

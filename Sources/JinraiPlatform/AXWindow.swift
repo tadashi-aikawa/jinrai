@@ -110,6 +110,9 @@ public struct AXWindow {
 
     /// ウィンドウをフォーカス(元 hs.window:focus())
     public func focus() {
+        let app = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(app, Self.messagingTimeout)
+        AXUIElementSetAttributeValue(app, kAXFocusedWindowAttribute as CFString, element)
         AXUIElementSetAttributeValue(element, kAXMainAttribute as CFString, kCFBooleanTrue)
         AXUIElementPerformAction(element, kAXRaiseAction as CFString)
         NSRunningApplication(processIdentifier: pid)?.activate()

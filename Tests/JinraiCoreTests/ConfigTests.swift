@@ -151,6 +151,15 @@ struct WindowHintsConfigTests {
         #expect(config.previewMaxFillRatio == 0.3)
     }
 
+    @Test("navigation.windowLayouts.key をパースする")
+    func parsesWindowLayoutsNavigationKey() throws {
+        let config = try WindowHintsConfigBuilder.build([
+            "navigation": ["windowLayouts": ["key": "l", "jinraiMode": true]]
+        ])
+        #expect(config.windowLayoutsKey == "l")
+        #expect(config.windowLayoutsJinraiMode)
+    }
+
     @Test("direction.direct はデフォルトで無効")
     func directDirectionDefault() throws {
         let config = try WindowHintsConfigBuilder.build()

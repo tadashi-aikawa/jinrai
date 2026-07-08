@@ -2,6 +2,15 @@ import AppKit
 import JinraiCore
 import JinraiPlatform
 
+/// 演出の表示先スナップショット。呼び出し元(ピッカー等)がキーウィンドウを奪って
+/// focusedWindow を解決できなくなる前に取得して渡す。中心の算出は受け取り側が
+/// jinraiMode.position に従って行う
+struct JinraiModeDisplayTarget {
+    var screenFrame: CGRect
+    var windowFrame: CGRect?
+    var screen: NSScreen
+}
+
 /// JinraiMode の演出(ロゴ・コンボキャラクター・COMBO テキスト)。
 /// 元 window_hints.lua の showJinraiModeLogo / showJinraiModeCombo 系。
 /// ダブルバッファ(レイヤー2枚)のクロスフェードを Timer + easing で再現する。
@@ -117,7 +126,20 @@ final class JinraiModeVisuals {
         var screen: NSScreen
     }
 
-    private func displayContext() -> DisplayContext? {
+    private func displayContext(
+        positionOverride: String? = nil, displayTarget: JinraiModeDisplayTarget? = nil
+    ) -> DisplayContext? {
+        if let displayTarget {
+            let center = JinraiModeLogic.displayCenter(
+                position: positionOverride ?? config.position,
+                windowFrame: displayTarget.windowFrame,
+                screenFrame: displayTarget.screenFrame)
+            return DisplayContext(
+                screenFrame: displayTarget.screenFrame,
+                center: center,
+                screen: displayTarget.screen)
+        }
+
         // アンカーがあれば AX で最新 frame を解決(移動・別ディスプレイへの追従)
         let anchorFrame = anchor.flatMap {
             AXWindow.resolve(windowID: $0.windowID, pid: $0.pid)?.frame
@@ -128,7 +150,9 @@ final class JinraiModeVisuals {
         guard let screen else { return nil }
         let screenFrame = ScreenUtil.frame(of: screen)
         let center = JinraiModeLogic.displayCenter(
-            position: config.position, windowFrame: focusedFrame, screenFrame: screenFrame)
+            position: positionOverride ?? config.position,
+            windowFrame: focusedFrame,
+            screenFrame: screenFrame)
         return DisplayContext(screenFrame: screenFrame, center: center, screen: screen)
     }
 
@@ -142,9 +166,14 @@ final class JinraiModeVisuals {
 
     // MARK: - ロゴ
 
-    func showLogo() {
+    func showLogo(
+        positionOverride: String? = nil, displayTarget: JinraiModeDisplayTarget? = nil
+    ) {
         guard config.logo.enabled else { return }
-        guard let image = loadLogoImage(), let context = displayContext() else { return }
+        guard let image = loadLogoImage(),
+              let context = displayContext(
+                positionOverride: positionOverride, displayTarget: displayTarget)
+        else { return }
 
         let window = ensureWindow(&logoWindow, screenFrame: context.screenFrame, level: .logo)
         guard let root = window.rootLayer else { return }
@@ -181,14 +210,20 @@ final class JinraiModeVisuals {
 
     // MARK: - コンボ(キャラクター+テキスト)
 
-    func showCombo(count: Int) {
+    func showCombo(
+        count: Int, positionOverride: String? = nil,
+        displayTarget: JinraiModeDisplayTarget? = nil
+    ) {
         let characterEnabled = config.comboCharacter.enabled
         let textEnabled = count > 0 && config.comboText.enabled
         guard characterEnabled || textEnabled else {
             clearCombo()
             return
         }
-        guard let context = displayContext() else { return }
+        guard
+            let context = displayContext(
+                positionOverride: positionOverride, displayTarget: displayTarget)
+        else { return }
 
         let window = ensureWindow(
             &comboWindow, screenFrame: context.screenFrame, level: .combo)

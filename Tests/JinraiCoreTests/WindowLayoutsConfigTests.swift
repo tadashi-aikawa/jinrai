@@ -24,6 +24,7 @@ struct WindowLayoutsConfigTests {
                             "bundleID": "com.google.Chrome", "titleGlob": "*GitHub*",
                             "screen": "37D8832A-2D66-02CA-B9F7-8F30A301B230",
                             "area": "halfLeft",
+                            "focus": true,
                         ],
                         ["bundleID": "md.obsidian", "area": "1200x900Center", "launch": true],
                     ],
@@ -40,8 +41,9 @@ struct WindowLayoutsConfigTests {
                 == .init(
                     bundleID: "com.google.Chrome", titleGlob: "*GitHub*",
                     screenUUID: "37D8832A-2D66-02CA-B9F7-8F30A301B230",
-                    area: "halfLeft", launch: false))
+                    area: "halfLeft", launch: false, focus: true))
         #expect(layout.windows[1].launch == true)
+        #expect(layout.windows[1].focus == false)
         #expect(layout.windows[1].titleGlob == nil)
         #expect(layout.windows[1].screenUUID == nil)
     }
@@ -70,12 +72,84 @@ struct WindowLayoutsConfigTests {
         }
     }
 
-    @Test("hotkey.key が無いレイアウトはエラー")
-    func missingHotkeyThrows() {
+    @Test("hotkey もピッカーも無い到達不能なレイアウトはエラー")
+    func unreachableLayoutThrows() {
         var layout = validLayout()
         layout["hotkey"] = nil
         #expect(throws: ConfigError.self) {
             try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+        }
+    }
+
+    @Test("ピッカーの hotkey があればレイアウト個別の hotkey は省略できる")
+    func pickerHotkeyAllowsHotkeyOmission() throws {
+        var layout = validLayout()
+        layout["hotkey"] = nil
+        let config = try WindowLayoutsConfigBuilder.build([
+            "hotkey": ["modifiers": ["ctrl", "alt"], "key": "l"],
+            "layouts": ["a": layout],
+        ])
+        #expect(config.pickerHotkey == .init(modifiers: ["ctrl", "alt"], key: "l"))
+        #expect(config.layouts[0].hotkey == nil)
+    }
+
+    @Test("Window Hintsからの導線があればレイアウト個別の hotkey は省略できる")
+    func windowHintsKeyAllowsHotkeyOmission() throws {
+        var layout = validLayout()
+        layout["hotkey"] = nil
+        let config = try WindowLayoutsConfigBuilder.build(
+            ["layouts": ["a": layout]], windowHintsKey: "l")
+        #expect(config.windowHintsKey == "L")
+        #expect(config.pickerHotkey == nil)
+        #expect(config.layouts[0].hotkey == nil)
+    }
+
+    @Test("description をパースし、空文字はエラー")
+    func descriptionValidation() throws {
+        var layout = validLayout()
+        layout["description"] = "開発用の配置"
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+        #expect(config.layouts[0].description == "開発用の配置")
+
+        layout["description"] = ""
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+        }
+    }
+
+    @Test("ピッカーとレイアウトのホットキー重複はエラー")
+    func pickerHotkeyConflictThrows() {
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build([
+                "hotkey": ["modifiers": ["ctrl", "alt"], "key": "1"],
+                "layouts": ["a": validLayout(key: "1")],
+            ])
+        }
+    }
+
+    @Test("appearance のデフォルト値と上書き")
+    func appearanceDefaultsAndOverride() throws {
+        let defaults = try WindowLayoutsConfigBuilder.build(["layouts": ["a": validLayout()]])
+        #expect(defaults.pickerWidth == 480)
+        #expect(defaults.rowHeight == 32)
+        #expect(defaults.maxVisibleRows == 8)
+        #expect(defaults.cornerRadius == 12)
+
+        let overridden = try WindowLayoutsConfigBuilder.build([
+            "layouts": ["a": validLayout()],
+            "appearance": ["pickerWidth": 600, "maxVisibleRows": 5],
+        ])
+        #expect(overridden.pickerWidth == 600)
+        #expect(overridden.maxVisibleRows == 5)
+    }
+
+    @Test("appearance.pickerWidth が0以下ならエラー")
+    func nonPositivePickerWidthThrows() {
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build([
+                "layouts": ["a": validLayout()],
+                "appearance": ["pickerWidth": 0],
+            ])
         }
     }
 
@@ -140,6 +214,18 @@ struct WindowLayoutsConfigTests {
         }
     }
 
+    @Test("focus=true は1レイアウトに1件だけ指定できる")
+    func duplicateFocusThrows() {
+        var layout = validLayout()
+        layout["windows"] = [
+            ["bundleID": "a.b", "area": "halfLeft", "focus": true],
+            ["bundleID": "c.d", "area": "halfRight", "focus": true],
+        ]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+        }
+    }
+
     @Test("windowWaitTimeout が0以下ならエラー")
     func nonPositiveTimeoutThrows() {
         #expect(throws: ConfigError.self) {
@@ -165,5 +251,24 @@ struct WindowLayoutsConfigTests {
             """
         let config = try RootConfigBuilder.build(text: text)
         #expect(config.windowLayouts?.layouts.count == 1)
+    }
+
+    @Test("RootConfig 経由で window_hints の Window Layouts 遷移キーが渡る")
+    func rootConfigWiresWindowHintsKey() throws {
+        let text = """
+            {
+                "windowHints": { "navigation": { "windowLayouts": { "key": "l" } } },
+                "windowLayouts": {
+                    "layouts": {
+                        "dev": {
+                            "windows": [{ "bundleID": "a.b", "area": "halfLeft" }]
+                        }
+                    }
+                }
+            }
+            """
+        let config = try RootConfigBuilder.build(text: text)
+        #expect(config.windowLayouts?.windowHintsKey == "L")
+        #expect(config.windowLayouts?.layouts[0].hotkey == nil)
     }
 }

@@ -39,8 +39,12 @@ public enum WindowLayoutPlanner {
         public var placements: [Placement]
         /// 未起動かつ launch=true で、起動→出現待ちに回すエントリのインデックス
         public var pendingLaunchIndices: [Int]
-        /// 現時点で最後にマッチしたエントリのインデックス(フォーカス対象)
+        /// 明示フォーカス指定があればそのエントリ、なければ最後にマッチしたエントリのインデックス
         public var focusEntryIndex: Int?
+        /// windows[] で focus=true が指定されたエントリのインデックス
+        public var preferredFocusEntryIndex: Int?
+        /// 従来互換のフォールバック先(最後にマッチしたエントリのインデックス)
+        public var fallbackFocusEntryIndex: Int?
     }
 
     /// エントリ列とスナップショットから適用計画を算出する。
@@ -55,7 +59,9 @@ public enum WindowLayoutPlanner {
     ) -> Plan {
         var placements: [Placement] = []
         var pendingLaunchIndices: [Int] = []
-        var focusEntryIndex: Int?
+        let preferredFocusEntryIndex = entries.firstIndex(where: \.focus)
+        var preferredMatchedFocusEntryIndex: Int?
+        var fallbackFocusEntryIndex: Int?
         var claimedIDs: Set<UInt32> = []
 
         for (index, entry) in entries.enumerated() {
@@ -80,13 +86,18 @@ public enum WindowLayoutPlanner {
                     frame: frame,
                     needsUnminimize: matched.needsUnminimize
                 ))
-            focusEntryIndex = index
+            fallbackFocusEntryIndex = index
+            if index == preferredFocusEntryIndex {
+                preferredMatchedFocusEntryIndex = index
+            }
         }
 
         return Plan(
             placements: placements,
             pendingLaunchIndices: pendingLaunchIndices,
-            focusEntryIndex: focusEntryIndex
+            focusEntryIndex: preferredMatchedFocusEntryIndex ?? fallbackFocusEntryIndex,
+            preferredFocusEntryIndex: preferredFocusEntryIndex,
+            fallbackFocusEntryIndex: fallbackFocusEntryIndex
         )
     }
 

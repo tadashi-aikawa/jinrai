@@ -40,12 +40,16 @@ final class WindowHintsFeature {
     private var coveringFramesByID: [UInt32: [CGRect]] = [:]  // 自分より前面のフレーム群
     private let macosNativeTabsApps: Set<String>
     private var didRequestScreenCapture = false
+    /// focus() 直後の非同期遅延を避けるため、次回表示だけ明示的にアクティブ扱いする対象
+    private var activeWindowOverride: (windowID: UInt32, pid: pid_t)?
     private(set) var isVisible = false
 
     /// Window Mover のエリア選択画面へ遷移するコールバック(jinraiMode フラグ付き)
     var onOpenWindowMover: ((Bool) -> Void)?
     /// Application Hints へ遷移するコールバック(jinraiMode フラグ付き)
     var onOpenApplicationHints: ((Bool) -> Void)?
+    /// Window Layouts ピッカーへ遷移するコールバック(jinraiMode フラグ付き)
+    var onOpenWindowLayouts: ((Bool) -> Void)?
     /// JinraiMode 中のウィンドウ選択後(→ 選択ウィンドウを対象にエリア選択画面を開く)
     var onJinraiModeSelect: ((_ windowID: UInt32, _ pid: pid_t) -> Void)?
 
@@ -71,17 +75,47 @@ final class WindowHintsFeature {
     }
 
     /// mode を維持したまま Hints を再表示(元 showJinraiMode)
-    func showJinraiMode(fadeIn: Bool = true) {
+    func showJinraiMode(
+        fadeIn: Bool = true, activeWindow: (windowID: UInt32, pid: pid_t)? = nil
+    ) {
+        if let activeWindow {
+            setJinraiModeActiveWindow(activeWindow)
+        }
         show(fadeIn: fadeIn)
     }
 
     @discardableResult
-    func advanceJinraiModeCombo() -> Bool {
+    func advanceJinraiModeCombo(
+        activeWindow: (windowID: UInt32, pid: pid_t)? = nil,
+        visualPositionOverride: String? = nil
+    ) -> Bool {
         guard isJinraiMode else { return false }
+        if let activeWindow {
+            setJinraiModeActiveWindow(activeWindow)
+        }
         comboCount += 1
-        jinraiVisuals.showLogo()
-        jinraiVisuals.showCombo(count: comboCount)
+        jinraiVisuals.showLogo(positionOverride: visualPositionOverride)
+        jinraiVisuals.showCombo(
+            count: comboCount, positionOverride: visualPositionOverride)
         return true
+    }
+
+    func redrawJinraiModeVisuals(displayTarget: JinraiModeDisplayTarget) {
+        guard isJinraiMode else { return }
+        jinraiVisuals.showLogo(displayTarget: displayTarget)
+        jinraiVisuals.showCombo(count: comboCount, displayTarget: displayTarget)
+    }
+
+    private func advanceJinraiModeComboIfStarted() {
+        guard isJinraiMode, comboCount > 0 else { return }
+        advanceJinraiModeCombo()
+    }
+
+    private func setJinraiModeActiveWindow(
+        _ activeWindow: (windowID: UInt32, pid: pid_t)
+    ) {
+        activeWindowOverride = activeWindow
+        jinraiVisuals.setAnchor(windowID: activeWindow.windowID, pid: activeWindow.pid)
     }
 
     init(
@@ -143,7 +177,11 @@ final class WindowHintsFeature {
     /// fadeIn: 直前まで spotlight が出ていた遷移(Area Hints からの受け渡し等)
     /// では false にして瞬間表示し、暗幕の連続性を保つ
     func show(fadeIn: Bool = true) {
-        guard !isVisible else { return }
+        guard !isVisible else {
+            activeWindowOverride = nil
+            return
+        }
+        defer { activeWindowOverride = nil }
 
         let entries = collectEntries()
         guard !entries.isEmpty else { return }
@@ -220,6 +258,17 @@ final class WindowHintsFeature {
             }
             standard[0].frame = freshFrame
         }
+        if let override = activeWindowOverride,
+            let ax = AXWindow.resolve(windowID: override.windowID, pid: override.pid),
+            let freshFrame = ax.frame
+        {
+            for i in ordered.indices where ordered[i].id == override.windowID {
+                ordered[i].frame = freshFrame
+            }
+            for i in standard.indices where standard[i].id == override.windowID {
+                standard[i].frame = freshFrame
+            }
+        }
         occludedWindowIDs = Set(
             standard.filter {
                 DirectionScoring.isFullyOccludedWindow(
@@ -227,7 +276,11 @@ final class WindowHintsFeature {
             }.map(\.id))
         // フォーカス中ウィンドウ = 最前面の標準ウィンドウ(CGWindowList の Z順は
         // window server 由来で速く更新され、frontmostApplication の非同期遅延に強い)
-        let focusedID = standard.first?.id
+        let overrideFocusedID = activeWindowOverride.flatMap { override in
+            standard.contains { $0.id == override.windowID && $0.pid == override.pid }
+                ? override.windowID : nil
+        }
+        let focusedID = overrideFocusedID ?? standard.first?.id
         windowZOrder = Dictionary(
             standard.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { a, _ in a })
         // 各ウィンドウを覆う「自分より前面」のフレーム群(見えている領域の中央計算用)
@@ -323,6 +376,7 @@ final class WindowHintsFeature {
         if let key = config.navigationFocusBackKey { reserved.insert(key.uppercased()) }
         if let key = config.areaHintsKey { reserved.insert(key.uppercased()) }
         if let key = config.applicationHintsKey { reserved.insert(key.uppercased()) }
+        if let key = config.windowLayoutsKey { reserved.insert(key.uppercased()) }
         if let key = config.jinraiModeKey { reserved.insert(key.uppercased()) }
         for key in config.directionHintKeys.keys { reserved.insert(key.uppercased()) }
         if let key = config.prevSpaceKey { reserved.insert(key.uppercased()) }
@@ -1043,9 +1097,27 @@ final class WindowHintsFeature {
             // 以後のフォーカス先はアプリ起動側で決まるため、選択アンカーを解除
             if jinrai {
                 jinraiVisuals.clearAnchor()
+                advanceJinraiModeComboIfStarted()
             }
             close(keepJinraiMode: jinrai)
             onOpenApplicationHints(jinrai)
+            return true
+        }
+        // Window Layouts ピッカーへ遷移(navigation.windowLayouts.jinraiMode で mode 開始)
+        if let name = keyName(of: event),
+            name == config.windowLayoutsKey,
+            let onOpenWindowLayouts
+        {
+            let jinrai = isJinraiMode || config.windowLayoutsJinraiMode
+            if jinrai && !isJinraiMode {
+                startJinraiMode()
+            }
+            if jinrai {
+                jinraiVisuals.clearAnchor()
+                advanceJinraiModeComboIfStarted()
+            }
+            close(keepJinraiMode: jinrai)
+            onOpenWindowLayouts(jinrai)
             return true
         }
         // 方向キー(8方向ナビゲーション)

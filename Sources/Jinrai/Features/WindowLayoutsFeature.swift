@@ -10,6 +10,9 @@ final class WindowLayoutsFeature {
     /// 適用完了後にカーソルをフォーカスウィンドウ中央へ移動するか(windowMover 設定を共有)
     private let cursorAfterMove: Bool
     private var hotkeys: [Hotkey] = []
+    var onJinraiModeApply: ((_ windowID: UInt32, _ pid: pid_t) -> Void)?
+    var onJinraiModeCancel: (() -> Void)?
+    var onJinraiModePickerDisplay: ((JinraiModeDisplayTarget) -> Void)?
 
     /// 1回の適用セッション。launch したアプリのウィンドウ出現待ちと、
     /// フルスクリーン解除を伴う非同期 apply の完了を追跡し、全解決後にフォーカスを確定する
@@ -21,31 +24,68 @@ final class WindowLayoutsFeature {
         var pendingApplies = 0
         var deadline = Date()
         var focusTarget: (entryIndex: Int, windowID: UInt32, pid: pid_t)?
+        var preferredFocusEntryIndex: Int?
+        var appliedTargets: [(entryIndex: Int, windowID: UInt32, pid: pid_t)] = []
+        let jinraiMode: Bool
 
-        init(layout: WindowLayoutsConfig.Layout, screens: [WindowLayoutPlanner.ScreenInput]) {
+        init(
+            layout: WindowLayoutsConfig.Layout, screens: [WindowLayoutPlanner.ScreenInput],
+            jinraiMode: Bool
+        ) {
             self.layout = layout
             self.screens = screens
+            self.jinraiMode = jinraiMode
         }
     }
     private var session: Session?
     private var waitTimer: Timer?
+    /// レイアウト選択モーダル(pickerHotkey または Window Hints 経由の導線がある時のみ生成)
+    private var picker: WindowLayoutPicker?
 
     init(config: WindowLayoutsConfig, cursorAfterMove: Bool) {
         self.config = config
         self.cursorAfterMove = cursorAfterMove
 
         for layout in config.layouts {
-            let hotkey = Hotkey(
-                modifiers: layout.hotkey.modifiers, key: layout.hotkey.key
-            ) { [weak self] in
+            guard let binding = layout.hotkey else { continue }
+            let hotkey = Hotkey(modifiers: binding.modifiers, key: binding.key) { [weak self] in
                 self?.apply(layout: layout)
             }
             if let hotkey {
                 hotkeys.append(hotkey)
             } else {
-                NSLog("[jinrai.windowLayouts] ホットキーの登録に失敗: %@", layout.hotkey.key)
+                NSLog("[jinrai.windowLayouts] ホットキーの登録に失敗: %@", binding.key)
             }
         }
+
+        if config.pickerHotkey != nil || config.windowHintsKey != nil {
+            let picker = WindowLayoutPicker(config: config)
+            picker.onSelect = { [weak self] layout, jinraiMode in
+                self?.apply(layout: layout, jinraiMode: jinraiMode)
+            }
+            picker.onCancelJinraiMode = { [weak self] in
+                self?.onJinraiModeCancel?()
+            }
+            picker.onShowJinraiModeDisplay = { [weak self] displayTarget in
+                self?.onJinraiModePickerDisplay?(displayTarget)
+            }
+            if let binding = config.pickerHotkey {
+                let hotkey = Hotkey(modifiers: binding.modifiers, key: binding.key) {
+                    [weak picker] in
+                    picker?.toggle()
+                }
+                if let hotkey {
+                    hotkeys.append(hotkey)
+                } else {
+                    NSLog("[jinrai.windowLayouts] ピッカーのホットキーの登録に失敗: %@", binding.key)
+                }
+            }
+            self.picker = picker
+        }
+    }
+
+    func showPicker(jinraiMode: Bool = false) {
+        picker?.show(jinraiMode: jinraiMode)
     }
 
     func teardown() {
@@ -53,6 +93,8 @@ final class WindowLayoutsFeature {
             hotkey.unregister()
         }
         hotkeys.removeAll()
+        picker?.teardown()
+        picker = nil
         cancelSession()
     }
 
@@ -64,7 +106,7 @@ final class WindowLayoutsFeature {
 
     // MARK: - 適用
 
-    private func apply(layout: WindowLayoutsConfig.Layout) {
+    private func apply(layout: WindowLayoutsConfig.Layout, jinraiMode: Bool = false) {
         // 適用中の再発火は前回セッションを破棄して上書きする
         cancelSession()
 
@@ -78,12 +120,16 @@ final class WindowLayoutsFeature {
         )
         guard !plan.placements.isEmpty || !plan.pendingLaunchIndices.isEmpty else {
             NSLog("[jinrai.windowLayouts] '%@' にマッチするウィンドウがありません", layout.name)
+            if jinraiMode {
+                onJinraiModeCancel?()
+            }
             return
         }
 
-        let session = Session(layout: layout, screens: screens)
+        let session = Session(layout: layout, screens: screens, jinraiMode: jinraiMode)
         session.claimedIDs = Set(plan.placements.map(\.windowID))
         session.deadline = Date().addingTimeInterval(config.windowWaitTimeout)
+        session.preferredFocusEntryIndex = plan.preferredFocusEntryIndex
         self.session = session
 
         // apply の completion は同期的に呼ばれることがあるため、
@@ -96,7 +142,9 @@ final class WindowLayoutsFeature {
             if placement.needsUnminimize {
                 ax.unminimize()
             }
-            applyFrame(placement.frame, to: ax, session: session)
+            applyFrame(
+                placement.frame, to: ax, entryIndex: placement.entryIndex,
+                windowID: placement.windowID, pid: placement.pid, session: session)
         }
         if let focusIndex = plan.focusEntryIndex,
             let placement = plan.placements.first(where: { $0.entryIndex == focusIndex })
@@ -111,11 +159,17 @@ final class WindowLayoutsFeature {
     }
 
     /// カーソル追従は個別移動ではなく最後のフォーカス確定時に1回だけ行う
-    private func applyFrame(_ frame: CGRect, to window: AXWindow, session: Session) {
+    private func applyFrame(
+        _ frame: CGRect, to window: AXWindow, entryIndex: Int, windowID: UInt32, pid: pid_t,
+        session: Session
+    ) {
         session.pendingApplies += 1
         WindowFrameApplier.apply(frame: frame, to: window, moveCursor: false) {
-            [weak self, weak session] _ in
+            [weak self, weak session] applied in
             guard let self, let session, self.session === session else { return }
+            if applied {
+                session.appliedTargets.append((entryIndex, windowID, pid))
+            }
             session.pendingApplies -= 1
             self.finishIfSettled(session)
         }
@@ -168,9 +222,14 @@ final class WindowLayoutsFeature {
                     else { continue }
                     session.claimedIDs.insert(matched.id)
                     session.pendingLaunchIndices.removeAll { $0 == index }
-                    self.applyFrame(frame, to: ax, session: session)
-                    // フォーカスは配列で最後のエントリを優先
-                    if index >= (session.focusTarget?.entryIndex ?? -1) {
+                    self.applyFrame(
+                        frame, to: ax, entryIndex: index, windowID: matched.id, pid: matched.pid,
+                        session: session)
+                    // focus=true 指定があればそれを優先し、未指定なら従来どおり最後のエントリを優先
+                    if index == session.preferredFocusEntryIndex
+                        || (session.preferredFocusEntryIndex == nil
+                            && index >= (session.focusTarget?.entryIndex ?? -1))
+                    {
                         session.focusTarget = (index, matched.id, matched.pid)
                     }
                 }
@@ -201,10 +260,37 @@ final class WindowLayoutsFeature {
         defer { cancelSession() }
         guard let target = session.focusTarget,
             let ax = AXWindow.resolve(windowID: target.windowID, pid: target.pid)
-        else { return }
+        else {
+            if session.jinraiMode {
+                onJinraiModeCancel?()
+            }
+            return
+        }
+        bringAppliedWindowsToFront(session, focusTarget: target)
         ax.focus()
         if cursorAfterMove, let frame = ax.frame {
             Mouse.moveToCenter(of: frame)
+        }
+        if session.jinraiMode {
+            onJinraiModeApply?(target.windowID, target.pid)
+        }
+    }
+
+    /// レイアウト対象全体を既存ウィンドウより前面へ出し、最後にフォーカス対象を最前面にする
+    private func bringAppliedWindowsToFront(
+        _ session: Session, focusTarget: (entryIndex: Int, windowID: UInt32, pid: pid_t)
+    ) {
+        var targets = session.appliedTargets
+            .sorted { $0.entryIndex < $1.entryIndex }
+            .reduce(into: [(entryIndex: Int, windowID: UInt32, pid: pid_t)]()) {
+                result, target in
+                guard !result.contains(where: { $0.windowID == target.windowID }) else { return }
+                result.append(target)
+            }
+        targets.removeAll { $0.windowID == focusTarget.windowID }
+        targets.append(focusTarget)
+        for target in targets {
+            AXWindow.resolve(windowID: target.windowID, pid: target.pid)?.focus()
         }
     }
 

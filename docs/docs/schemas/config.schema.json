@@ -1058,6 +1058,22 @@
           "$ref": "#/definitions/jinraiModeTrigger",
           "description": "Area Hints(エリア選択画面)へ移るキーです。"
         },
+        "windowLayouts": {
+          "type": "object",
+          "description": "Window Layoutsへの遷移の設定です。",
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "$ref": "#/definitions/nullableKeyName",
+              "description": "Window Layoutsへ移るキーです。"
+            },
+            "jinraiMode": {
+              "type": "boolean",
+              "description": "Window Layoutsへの移動時にJINRAI Modeを開始します。",
+              "default": false
+            }
+          }
+        },
         "applicationHints": {
           "type": "object",
           "description": "Application Hintsへの遷移の設定です。",
@@ -2193,6 +2209,11 @@
           "type": "boolean",
           "description": "trueにすると、未起動のアプリを起動してウィンドウの出現を待ってから配置します。falseの場合、未起動のアプリはスキップします。",
           "default": false
+        },
+        "focus": {
+          "type": "boolean",
+          "description": "trueにすると、レイアウト適用後にこのエントリのウィンドウへフォーカスします。1レイアウトに1件だけ指定できます。省略時や指定したウィンドウが見つからない場合は、最後にマッチしたウィンドウへフォーカスします。",
+          "default": false
         }
       }
     },
@@ -2202,6 +2223,10 @@
       "additionalProperties": false,
       "required": ["layouts"],
       "properties": {
+        "hotkey": {
+          "$ref": "#/definitions/hotkey",
+          "description": "レイアウト選択モーダル（ピッカー）を開くホットキーです。レイアウト名・説明のインクリメンタルサーチで選択して適用します。"
+        },
         "windowWaitTimeout": {
           "type": "number",
           "description": "launchで起動したアプリのウィンドウが現れるまで待つ最大時間（秒）です。",
@@ -2215,20 +2240,76 @@
           "additionalProperties": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["hotkey", "windows"],
+            "required": ["windows"],
             "properties": {
               "hotkey": {
                 "allOf": [{ "$ref": "#/definitions/hotkey" }],
-                "description": "レイアウトを適用するホットキーです。他のレイアウトと重複できません。"
+                "description": "レイアウトを直接適用するホットキーです。他のレイアウトやピッカーと重複できません。省略時はピッカー（windowLayouts.hotkey または windowHints.navigation.windowLayouts.key）からのみ呼び出せます。どの導線も未設定ならエラーです。"
+              },
+              "description": {
+                "type": "string",
+                "description": "レイアウトの説明です。ピッカーの一覧に表示され、検索対象になります。",
+                "minLength": 1
               },
               "windows": {
                 "type": "array",
-                "description": "配置対象のウィンドウ一覧です。1件以上必須です。適用後は配列の最後にマッチしたウィンドウへフォーカスします。",
+                "description": "配置対象のウィンドウ一覧です。1件以上必須です。focus=true のエントリがあればそのウィンドウへ、なければ配列の最後にマッチしたウィンドウへフォーカスします。",
                 "minItems": 1,
                 "items": {
                   "$ref": "#/definitions/windowLayoutsWindow"
                 }
               }
+            }
+          }
+        },
+        "appearance": {
+          "type": "object",
+          "description": "ピッカーの見た目の設定です。",
+          "additionalProperties": false,
+          "properties": {
+            "pickerWidth": {
+              "type": "number",
+              "description": "ピッカーの幅です。",
+              "exclusiveMinimum": 0,
+              "default": 480
+            },
+            "rowHeight": {
+              "type": "number",
+              "description": "レイアウト1行の高さです。",
+              "exclusiveMinimum": 0,
+              "default": 32
+            },
+            "maxVisibleRows": {
+              "type": "integer",
+              "description": "同時に表示する最大行数です。超えた分はスクロールします。",
+              "minimum": 1,
+              "default": 8
+            },
+            "cornerRadius": {
+              "type": "number",
+              "description": "ピッカー背景の角丸です。",
+              "minimum": 0,
+              "default": 12
+            },
+            "bgColor": {
+              "$ref": "#/definitions/color",
+              "description": "ピッカーの背景色です。"
+            },
+            "textColor": {
+              "$ref": "#/definitions/color",
+              "description": "レイアウト名とクエリの文字色です。"
+            },
+            "dimmedTextColor": {
+              "$ref": "#/definitions/color",
+              "description": "説明・プレースホルダ・件数表示の文字色です。"
+            },
+            "selectedBgColor": {
+              "$ref": "#/definitions/color",
+              "description": "選択行の背景色です。"
+            },
+            "selectedTextColor": {
+              "$ref": "#/definitions/color",
+              "description": "選択行の文字色です。"
             }
           }
         }

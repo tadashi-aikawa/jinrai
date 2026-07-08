@@ -13,6 +13,8 @@ public enum OverlayLevel: Int, Sendable {
 /// 全 Space に表示され、マウスイベントを透過する。
 @MainActor
 public final class OverlayWindow: NSWindow {
+    public override var canBecomeKey: Bool { true }
+
     /// frame は CG/AX 準拠の top-left 座標で渡す。
     /// level は OverlayLevel で明示し、orderFront のタイミングに依らず前後を固定する
     public init(frame: CGRect, level overlayLevel: OverlayLevel) {

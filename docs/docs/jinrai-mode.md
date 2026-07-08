@@ -16,6 +16,7 @@ JINRAI Modeは次の方法で開始できます。
 - [Window Hints](window-hints.md)の表示中に`triggers.windowHints.key`を押す
 - [Application Hints](application-hints.md)の表示中に`triggers.applicationHints.key`を押す
 - [Window Hints](window-hints.md)の`navigation.applicationHints.jinraiMode`を有効にしてApplication Hintsを開く
+- [Window Hints](window-hints.md)の`navigation.windowLayouts.jinraiMode`を有効にしてWindow Layoutsを開く
 - [Area Hints](area-hints.md)の表示中に`triggers.areaHints.key`を押す
 - [Area Hints](area-hints.md)の`jinraiMode.hotkey`を押す
 
@@ -39,7 +40,7 @@ JINRAI Modeは次の方法で開始できます。
 
 `triggers`には、各機能の表示中にJINRAI Modeを開始するキーを指定します。指定したキーだけが有効になります。
 
-このほかの開始方法である`navigation.applicationHints.jinraiMode`は[Application Hints](application-hints.md#from-window-hints)、`jinraiMode.hotkey`は[Area Hints](area-hints.md#jinrai-mode)を参照してください。
+このほかの開始方法である`navigation.applicationHints.jinraiMode`は[Application Hints](application-hints.md#from-window-hints)、`navigation.windowLayouts.jinraiMode`は[Window Layouts](window-layouts.md#window-hints)、`jinraiMode.hotkey`は[Area Hints](area-hints.md#jinrai-mode)を参照してください。
 
 ## 演出
 

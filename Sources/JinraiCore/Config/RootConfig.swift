@@ -114,7 +114,13 @@ public enum RootConfigBuilder {
         }
 
         if let section = root["windowLayouts"] as? [String: Any] {
-            config.windowLayouts = try WindowLayoutsConfigBuilder.build(section)
+            // Window Hints からの遷移キー(navigation.windowLayouts.key)を渡す
+            let windowHintsSection = root["windowHints"] as? [String: Any]
+            let windowLayoutsKey =
+                ((windowHintsSection?["navigation"] as? [String: Any])?["windowLayouts"]
+                    as? [String: Any])?["key"] as? String
+            config.windowLayouts = try WindowLayoutsConfigBuilder.build(
+                section, windowHintsKey: windowLayoutsKey)
         }
 
         if let section = root["jinraiMode"] as? [String: Any] {

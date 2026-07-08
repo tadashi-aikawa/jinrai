@@ -102,6 +102,10 @@ public struct WindowHintsConfig: Sendable {
     public var areaHintsKey: String?
     /// Application Hints へ遷移するキー
     public var applicationHintsKey: String?
+    /// Window Layouts ピッカーへ遷移するキー
+    public var windowLayoutsKey: String?
+    /// Window Layouts へ遷移するとき JinraiMode を開始するか
+    public var windowLayoutsJinraiMode: Bool
     /// Application Hints へ遷移するとき JinraiMode を開始するか
     public var applicationHintsJinraiMode: Bool
     /// Hints 表示中に JinraiMode を開始するキー(jinraiMode.triggers.windowHints.key)
@@ -351,6 +355,8 @@ public enum WindowHintsConfigBuilder {
             navigationFocusBackKey: merged.string("navigation.focusBack.key")?.lowercased(),
             areaHintsKey: merged.string("navigation.areaHints.key")?.lowercased(),
             applicationHintsKey: merged.string("navigation.applicationHints.key")?.lowercased(),
+            windowLayoutsKey: merged.string("navigation.windowLayouts.key")?.lowercased(),
+            windowLayoutsJinraiMode: merged.bool("navigation.windowLayouts.jinraiMode") ?? false,
             applicationHintsJinraiMode: merged.bool("navigation.applicationHints.jinraiMode")
                 ?? false,
             jinraiModeKey: nil,  // RootConfigBuilder が jinraiMode.triggers から注入
