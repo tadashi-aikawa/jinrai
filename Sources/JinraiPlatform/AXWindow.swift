@@ -118,6 +118,13 @@ public struct AXWindow {
         NSRunningApplication(processIdentifier: pid)?.activate()
     }
 
+    /// アプリのアクティブ化を伴わない raise。
+    /// 非アクティブなアプリのウィンドウより前面へ出せる
+    /// (現アクティブアプリのウィンドウには勝てない点に注意)
+    public func raise() {
+        AXUIElementPerformAction(element, kAXRaiseAction as CFString)
+    }
+
     public func minimize() {
         AXUIElementSetAttributeValue(element, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
     }

@@ -266,9 +266,14 @@ final class WindowLayoutsFeature {
             }
             return
         }
+        // 現アクティブアプリのウィンドウには AXRaise が勝てないため、
+        // 先にフォーカス対象をアクティブ化して前面権を奪ってから残りを raise する。
+        // WindowServerFocus は WindowServer 側で同期的に front process を切り替えるので、
+        // activate() の非同期完了を待たずに後続の raise が有効になる
+        WindowServerFocus.focus(windowID: target.windowID, pid: target.pid)
+        ax.focus()
         bringAppliedWindowsToFront(session, focusTarget: target)
         closeUnlistedWindowsIfNeeded(session)
-        ax.focus()
         if cursorAfterMove, let frame = ax.frame {
             Mouse.moveToCenter(of: frame)
         }
@@ -290,8 +295,13 @@ final class WindowLayoutsFeature {
             }
         targets.removeAll { $0.windowID == focusTarget.windowID }
         targets.append(focusTarget)
+        // ここでは AXRaise のみを使う(フォーカス対象のアクティブ化は呼び出し側で先に完了済み)。
+        // activate() や SkyLight の front process 化を連続発行すると、アプリ自身が
+        // 非同期で自分のウィンドウを raise し直し、後続の raise 結果を上書きしてしまう
+        // (Chrome 等の重いアプリで顕著)。AXRaise 単体で非アクティブアプリの
+        // ウィンドウより前面へ出せることは実機検証済み
         for target in targets {
-            AXWindow.resolve(windowID: target.windowID, pid: target.pid)?.focus()
+            AXWindow.resolve(windowID: target.windowID, pid: target.pid)?.raise()
         }
     }
 

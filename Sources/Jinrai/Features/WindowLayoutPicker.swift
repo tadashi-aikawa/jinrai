@@ -12,7 +12,7 @@ final class WindowLayoutPicker: NSObject, NSTextFieldDelegate {
     private let config: WindowLayoutsConfig
     private let eventTap = EventTap()
 
-    private var overlay: OverlayWindow?
+    private var overlay: OverlayPanel?
     private var logic: WindowLayoutPickerLogic?
     private var searchField: PickerTextField?
     private var panelFrame: CGRect?
@@ -176,7 +176,7 @@ final class WindowLayoutPicker: NSObject, NSTextFieldDelegate {
         let startY = clampStart(center.y, panelH, screenFrame.minY, screenFrame.height)
         panelFrame = CGRect(x: startX, y: startY, width: panelW, height: panelH)
 
-        let overlay = OverlayWindow(frame: panelFrame!, level: .hints)
+        let overlay = OverlayPanel(frame: panelFrame!, level: .hints)
         overlay.ignoresMouseEvents = false
         guard let root = overlay.rootLayer else { return }
 
@@ -262,7 +262,9 @@ final class WindowLayoutPicker: NSObject, NSTextFieldDelegate {
             rows.append(Row(container: container, nameLayer: name, descriptionLayer: description))
         }
 
-        NSApp.activate(ignoringOtherApps: true)
+        // nonactivating パネルなのでアプリをアクティブ化せずにキー入力を受けられる。
+        // NSApp.activate すると、閉じたときに macOS が直前のアクティブアプリへ
+        // アクティブ状態を返し、そのウィンドウがレイアウト適用後に raise されてしまう
         overlay.makeKeyAndOrderFront(nil)
         overlay.makeFirstResponder(search)
         self.overlay = overlay
