@@ -43,7 +43,7 @@ final class WindowLayoutsFeature {
     /// レイアウト選択モーダル(pickerHotkey または Window Hints 経由の導線がある時のみ生成)
     private var picker: WindowLayoutPicker?
 
-    init(config: WindowLayoutsConfig, cursorAfterMove: Bool) {
+    init(config: WindowLayoutsConfig, cursorAfterMove: Bool, eventTap: EventTap) {
         self.config = config
         self.cursorAfterMove = cursorAfterMove
 
@@ -60,7 +60,7 @@ final class WindowLayoutsFeature {
         }
 
         if config.pickerHotkey != nil || config.windowHintsKey != nil {
-            let picker = WindowLayoutPicker(config: config)
+            let picker = WindowLayoutPicker(config: config, eventTap: eventTap)
             picker.onSelect = { [weak self] layout, jinraiMode in
                 self?.apply(layout: layout, jinraiMode: jinraiMode)
             }

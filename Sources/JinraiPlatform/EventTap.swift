@@ -3,6 +3,13 @@ import Carbon.HIToolbox
 
 /// モーダル入力捕捉(元 hs.eventtap)。
 /// ヒント表示中のみ start し、キー入力を捕捉・消費する。
+///
+/// 1つのインスタンスをモーダル系機能(Window Hints / Area Hints 等)で共有する前提。
+/// stop() は tap を即時破棄せず次の run loop turn まで遅延し、その間のキーを握りつぶす。
+/// tap を破棄してから次の tap を作るまでの間は WindowServer がキーを前面アプリへ直接
+/// 配送するため、機能間の遷移(close → open が同期実行)中のキーリピートが
+/// 背面アプリへすり抜けてしまう。遷移先の start() が破棄予約を取り消すことで
+/// タップを途切れさせない。
 @MainActor
 public final class EventTap {
     public struct KeyEvent: Sendable {
@@ -19,6 +26,15 @@ public final class EventTap {
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
 
+    /// stop() 済みで破棄待ちの状態(この間の keyDown はすり抜け防止のため消費する)
+    private var isPendingStop = false
+    /// 遅延破棄の予約を識別する世代番号(start() が予約を無効化するために進める)
+    private var stopGeneration = 0
+
+    /// postKeyStroke が投稿するイベントの目印(eventSourceUserData)。
+    /// tap を止める前に投稿を待つ必要をなくすため、自前イベントは捕捉せず素通しする
+    private static let selfPostedMarker: Int64 = 0x4A4E_5241_49
+
     private final class ResultBox {
         var value: Unmanaged<CGEvent>?
     }
@@ -27,10 +43,15 @@ public final class EventTap {
 
     public var isRunning: Bool { tap != nil }
 
-    /// tap の作成に失敗したら false(権限不足・セキュア入力中)
+    /// tap の作成に失敗したら false(権限不足・セキュア入力中)。
+    /// stop() 直後(破棄待ち)の呼び出しは予約を取り消して既存の tap を継続利用する
     @discardableResult
     public func start() -> Bool {
-        guard tap == nil else { return true }
+        if tap != nil {
+            isPendingStop = false
+            stopGeneration += 1
+            return true
+        }
         let mask: CGEventMask =
             (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.leftMouseDown.rawValue)
         let refcon = Unmanaged.passUnretained(self).toOpaque()
@@ -63,7 +84,25 @@ public final class EventTap {
         return true
     }
 
+    /// ハンドラを外してキー消費モードへ移行し、tap 本体の破棄は次の run loop turn へ遅延する。
+    /// 機能間の遷移では遷移先の start() が同一 turn 内で予約を取り消すため tap が途切れない
     public func stop() {
+        guard tap != nil else { return }
+        onKeyDown = nil
+        onLeftMouseDown = nil
+        isPendingStop = true
+        stopGeneration += 1
+        let generation = stopGeneration
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.isPendingStop, self.stopGeneration == generation else {
+                return
+            }
+            self.teardown()
+        }
+    }
+
+    private func teardown() {
+        isPendingStop = false
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
         }
@@ -82,6 +121,15 @@ public final class EventTap {
             }
             return Unmanaged.passUnretained(event)
         case .keyDown:
+            // 自前投稿(Space 移動の Ctrl+数字等)は捕捉対象外。tap が生きたまま
+            // 投稿しても自分で消費しないようマーカーで素通しする
+            if event.getIntegerValueField(.eventSourceUserData) == Self.selfPostedMarker {
+                return Unmanaged.passUnretained(event)
+            }
+            // 破棄待ち(機能間の遷移中)のキーは背面アプリへのすり抜け防止のため消費
+            if isPendingStop {
+                return nil
+            }
             let keyCode = UInt32(event.getIntegerValueField(.keyboardEventKeycode))
             let keyEvent = KeyEvent(
                 keyCode: keyCode,
@@ -132,6 +180,8 @@ public final class EventTap {
         else { return nil }
         down.flags = flags
         up.flags = flags
+        down.setIntegerValueField(.eventSourceUserData, value: selfPostedMarker)
+        up.setIntegerValueField(.eventSourceUserData, value: selfPostedMarker)
         return (down, up)
     }
 }

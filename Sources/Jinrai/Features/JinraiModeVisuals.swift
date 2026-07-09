@@ -31,9 +31,11 @@ final class JinraiModeVisuals {
     private let characterAnimator = AnimationRunner()
     private let textAnimator = AnimationRunner()
 
-    private var logoImage: NSImage?
-    private var bundledComboImages: [Int: NSImage] = [:]
-    private var userComboImages: [Int: NSImage] = [:]
+    // ラスタライズ済みでキャッシュする(SVG 等の再ラスタライズは高価で、
+    // ヒント間の遷移を長引かせてキー捕捉の tap タイムアウトを誘発し得る)
+    private var logoImage: CGImage?
+    private var bundledComboImages: [Int: CGImage] = [:]
+    private var userComboImages: [Int: CGImage] = [:]
 
     /// 表示先の基準ウィンドウ。frontmostApplication は更新が非同期で遅れるため、
     /// ヒント選択直後などは選択したウィンドウを明示して追従させる
@@ -59,17 +61,17 @@ final class JinraiModeVisuals {
 
     // MARK: - 画像リソース
 
-    private func loadLogoImage() -> NSImage? {
+    private func loadLogoImage() -> CGImage? {
         if let logoImage { return logoImage }
         guard let url = Bundle.main.url(forResource: "jinrai", withExtension: "svg") else {
             NSLog("[jinrai.jinraiMode] jinrai.svg が見つかりません")
             return nil
         }
-        logoImage = NSImage(contentsOf: url)
+        logoImage = Self.rasterize(NSImage(contentsOf: url))
         return logoImage
     }
 
-    private func loadComboImage(index: Int) -> NSImage? {
+    private func loadComboImage(index: Int) -> CGImage? {
         if let image = bundledComboImages[index] { return image }
         guard
             let url = Bundle.main.url(forResource: "jinrai\(index)", withExtension: "webp")
@@ -77,12 +79,12 @@ final class JinraiModeVisuals {
             NSLog("[jinrai.jinraiMode] jinrai%d.webp が見つかりません", index)
             return nil
         }
-        let image = NSImage(contentsOf: url)
+        let image = Self.rasterize(NSImage(contentsOf: url))
         bundledComboImages[index] = image
         return image
     }
 
-    private func loadUserComboImage(count: Int) -> NSImage? {
+    private func loadUserComboImage(count: Int) -> CGImage? {
         guard let images = config.comboCharacter.images,
               let imageIndex = JinraiModeLogic.comboUserImageIndex(
                 count: count, imageCount: images.count)
@@ -91,7 +93,7 @@ final class JinraiModeVisuals {
 
         let path = images[imageIndex]
         let url = resolveImageURL(path)
-        guard let image = NSImage(contentsOf: url) else {
+        guard let image = Self.rasterize(NSImage(contentsOf: url)) else {
             NSLog(
                 "[jinrai.jinraiMode] combo.character.images[%d] を読み込めません: %@",
                 imageIndex, url.path)
@@ -99,6 +101,12 @@ final class JinraiModeVisuals {
         }
         userComboImages[imageIndex] = image
         return image
+    }
+
+    private static func rasterize(_ image: NSImage?) -> CGImage? {
+        guard let image else { return nil }
+        var rect = CGRect(origin: .zero, size: image.size)
+        return image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
     }
 
     private func resolveImageURL(_ path: String) -> URL {
@@ -181,8 +189,7 @@ final class JinraiModeVisuals {
         if logoLayer == nil {
             let layer = CALayer()
             layer.contentsGravity = .resizeAspect
-            var rect = CGRect(origin: .zero, size: image.size)
-            layer.contents = image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
+            layer.contents = image
             root.addSublayer(layer)
             logoLayer = layer
         }
@@ -273,8 +280,7 @@ final class JinraiModeVisuals {
         let layer = characterLayers[currentCharacterIndex]
         let previous = characterLayers[(currentCharacterIndex + 1) % 2]
 
-        var rect = CGRect(origin: .zero, size: image.size)
-        layer.contents = image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
+        layer.contents = image
 
         let animation = config.comboCharacter.animation
         let alpha = config.comboCharacter.alpha

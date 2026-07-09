@@ -10,7 +10,9 @@ import JinraiPlatform
 @MainActor
 final class WindowLayoutPicker: NSObject, NSTextFieldDelegate {
     private let config: WindowLayoutsConfig
-    private let eventTap = EventTap()
+    /// モーダル系機能で共有(遷移中にタップを途切れさせないため)。
+    /// ハンドラは他機能に上書きされるので表示のたびに bindEventTap() で張り直す
+    private let eventTap: EventTap
 
     private var overlay: OverlayPanel?
     private var logic: WindowLayoutPickerLogic?
@@ -47,8 +49,9 @@ final class WindowLayoutPicker: NSObject, NSTextFieldDelegate {
 
     private final class PickerTextField: NSTextField {}
 
-    init(config: WindowLayoutsConfig) {
+    init(config: WindowLayoutsConfig, eventTap: EventTap) {
         self.config = config
+        self.eventTap = eventTap
         if let binding = config.pickerHotkey {
             hotkeyKeyCode = KeyCodes.keyCode(for: binding.key)
             hotkeyFlags = KeyCodes.cgEventFlags(for: binding.modifiers)
@@ -58,7 +61,9 @@ final class WindowLayoutPicker: NSObject, NSTextFieldDelegate {
         }
 
         super.init()
+    }
 
+    private func bindEventTap() {
         eventTap.onLeftMouseDown = { [weak self] location in
             guard let self else { return false }
             if self.isPointInsidePanel(location) {
@@ -103,6 +108,7 @@ final class WindowLayoutPicker: NSObject, NSTextFieldDelegate {
             focusFrame.map { CGPoint(x: $0.midX, y: $0.midY) }
             ?? CGPoint(x: screenFrame.midX, y: screenFrame.midY)
 
+        bindEventTap()
         guard eventTap.start() else {
             NSLog("[jinrai.windowLayouts] クリック捕捉を開始できません")
             showJinraiMode = false

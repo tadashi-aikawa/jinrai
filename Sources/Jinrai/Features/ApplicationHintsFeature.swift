@@ -10,7 +10,9 @@ import UserNotifications
 final class ApplicationHintsFeature {
     private let config: ApplicationHintsConfig
     private var hotkey: Hotkey?
-    private let eventTap = EventTap()
+    /// モーダル系機能で共有(遷移中にタップを途切れさせないため)。
+    /// ハンドラは他機能に上書きされるので表示のたびに bindEventTap() で張り直す
+    private let eventTap: EventTap
 
     private var overlays: [OverlayWindow] = []
     private var currentInput = ""
@@ -44,15 +46,18 @@ final class ApplicationHintsFeature {
         let stateLayer: CATextLayer
     }
 
-    init(config: ApplicationHintsConfig) {
+    init(config: ApplicationHintsConfig, eventTap: EventTap) {
         self.config = config
+        self.eventTap = eventTap
 
         if let key = config.hotkeyKey {
             hotkey = Hotkey(modifiers: config.hotkeyModifiers, key: key) { [weak self] in
                 self?.toggle()
             }
         }
+    }
 
+    private func bindEventTap() {
         eventTap.onKeyDown = { [weak self] event in
             self?.handleKeyDown(event) ?? false
         }
@@ -93,6 +98,7 @@ final class ApplicationHintsFeature {
             focusFrame.map { CGPoint(x: $0.midX, y: $0.midY) }
             ?? CGPoint(x: screenFrame.midX, y: screenFrame.midY)
 
+        bindEventTap()
         guard eventTap.start() else {
             NSLog("[jinrai.applicationHints] キー捕捉を開始できません")
             return

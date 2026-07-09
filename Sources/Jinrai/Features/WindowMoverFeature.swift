@@ -12,7 +12,9 @@ final class WindowMoverFeature {
     private let areaHints: AreaHintsConfig
     private var hotkeys: [Hotkey] = []
     private var cycleState = CycleState()
-    private let eventTap = EventTap()
+    /// モーダル系機能で共有(遷移中にタップを途切れさせないため)。
+    /// ハンドラは他機能に上書きされるので表示のたびに bindEventTap() で張り直す
+    private let eventTap: EventTap
 
     // エリア選択画面の状態
     private var chooserOverlays: [OverlayWindow] = []
@@ -55,9 +57,10 @@ final class WindowMoverFeature {
     /// focusedWindow は frontmostApplication ベースで focus 直後は古いため明示する)
     private var chooserTarget: (windowID: UInt32, pid: pid_t)?
 
-    init(config: WindowMoverConfig, areaHints: AreaHintsConfig) {
+    init(config: WindowMoverConfig, areaHints: AreaHintsConfig, eventTap: EventTap) {
         self.config = config
         self.areaHints = areaHints
+        self.eventTap = eventTap
 
         for (command, binding) in config.commandHotkeys {
             let hotkey = Hotkey(modifiers: binding.modifiers, key: binding.key) {
@@ -84,6 +87,9 @@ final class WindowMoverFeature {
             }
         }
 
+    }
+
+    private func bindEventTap() {
         eventTap.onKeyDown = { [weak self] event in
             self?.handleChooserKey(event) ?? false
         }
@@ -285,6 +291,7 @@ final class WindowMoverFeature {
             chooserOverlays.append(overlay)
         }
 
+        bindEventTap()
         guard eventTap.start() else {
             NSLog("[jinrai.windowMover] キー捕捉を開始できません")
             closeChooser()

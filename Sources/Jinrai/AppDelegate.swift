@@ -13,6 +13,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var applicationHints: ApplicationHintsFeature?
     private var windowLayouts: WindowLayoutsFeature?
     private let updater = UpdaterFeature()
+    /// モーダル系機能(Hints / Area Hints / Application Hints / Layouts ピッカー)で
+    /// 共有するイベントタップ。機能間の遷移で tap を破棄→再作成すると、その隙間の
+    /// キーリピートが背面アプリへすり抜けるため、1本を受け渡して使う
+    private let modalEventTap = EventTap()
     private var accessibilityGranted = false
     private var lastDisplayUUIDs: Set<String> = []
     private var displayChangeDebounce: Task<Void, Never>?
@@ -104,7 +108,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let moverConfig = try config.windowMover ?? WindowMoverConfigBuilder.build()
                 let areaHintsConfig = try config.areaHints ?? AreaHintsConfigBuilder.build()
                 windowMover = WindowMoverFeature(
-                    config: moverConfig, areaHints: areaHintsConfig)
+                    config: moverConfig, areaHints: areaHintsConfig,
+                    eventTap: modalEventTap)
             } catch {
                 showConfigError(error)
             }
@@ -116,18 +121,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 focusHistory: focusHistory,
                 macosNativeTabs: config.macosNativeTabs,
                 jinraiMode: config.jinraiMode,
-                configDirectoryURL: ConfigLoader.configFileURL.deletingLastPathComponent())
+                configDirectoryURL: ConfigLoader.configFileURL.deletingLastPathComponent(),
+                eventTap: modalEventTap)
         }
 
         if let applicationHintsConfig = config.applicationHints {
-            applicationHints = ApplicationHintsFeature(config: applicationHintsConfig)
+            applicationHints = ApplicationHintsFeature(
+                config: applicationHintsConfig, eventTap: modalEventTap)
         }
 
         if let windowLayoutsConfig = config.windowLayouts {
             // カーソル追従は Window Mover の共通設定に従う(セクションが無ければデフォルト値)
             windowLayouts = WindowLayoutsFeature(
                 config: windowLayoutsConfig,
-                cursorAfterMove: config.windowMover?.cursorAfterMove ?? true)
+                cursorAfterMove: config.windowMover?.cursorAfterMove ?? true,
+                eventTap: modalEventTap)
         }
 
         // 相互遷移の結線(元 init.lua のコールバック配線)。

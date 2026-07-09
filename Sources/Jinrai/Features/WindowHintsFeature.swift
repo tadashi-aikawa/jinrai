@@ -12,7 +12,9 @@ final class WindowHintsFeature {
     private var hotkey: Hotkey?
     /// Hints 非表示時の直接方向移動ホットキー(navigation.direction.direct)
     private var directDirectionHotkeys: [Hotkey] = []
-    private let eventTap = EventTap()
+    /// モーダル系機能で共有(遷移中にタップを途切れさせないため)。
+    /// ハンドラは他機能に上書きされるので表示のたびに bindEventTap() で張り直す
+    private let eventTap: EventTap
 
     private var overlays: [OverlayWindow] = []
     /// spotlight(暗幕) + アクティブボーダー用のスクリーンごとのオーバーレイ。
@@ -123,10 +125,12 @@ final class WindowHintsFeature {
         focusHistory: FocusHistoryFeature?,
         macosNativeTabs: MacosNativeTabsConfig = .default,
         jinraiMode: JinraiModeConfig = .default,
-        configDirectoryURL: URL
+        configDirectoryURL: URL,
+        eventTap: EventTap
     ) {
         self.config = config
         self.focusHistory = focusHistory
+        self.eventTap = eventTap
         self.macosNativeTabsApps = Set(macosNativeTabs.apps)
         self.jinraiVisuals = JinraiModeVisuals(
             config: jinraiMode, configDirectoryURL: configDirectoryURL)
@@ -156,6 +160,9 @@ final class WindowHintsFeature {
             }
         }
 
+    }
+
+    private func bindEventTap() {
         eventTap.onKeyDown = { [weak self] event in
             self?.handleKeyDown(event) ?? false
         }
@@ -194,6 +201,7 @@ final class WindowHintsFeature {
         )
         guard !hints.isEmpty else { return }
 
+        bindEventTap()
         guard eventTap.start() else {
             NSLog("[jinrai.windowHints] キー捕捉を開始できません(権限またはセキュア入力)")
             return
