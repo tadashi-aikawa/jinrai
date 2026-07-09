@@ -301,6 +301,11 @@ final class WindowMoverFeature {
         if !hasAnyMapping {
             NSLog("[jinrai.areaHints] screens が未設定です(画面に UUID を表示中)")
         }
+        // 非同期の受け渡し(detach 後の開き直し等)中に保持されたキーを流し込む
+        for event in eventTap.drainHeldKeyEvents() {
+            guard isChooserVisible else { break }
+            _ = handleChooserKey(event)
+        }
     }
 
     /// エリア選択の対象ウィンドウ(target 指定時は AX で最新解決、なければ focusedWindow)
@@ -829,8 +834,11 @@ final class WindowMoverFeature {
         case "detachChromeTabToNewWindow":
             detachChromeTab(win)
             // JinraiMode 中は Hints に戻らず、分離されたウィンドウを続けて配置できるよう
-            // 選択画面を再表示する(元 reopenWindowActionChooserAfterDetach)
+            // 選択画面を再表示する(元 reopenWindowActionChooserAfterDetach)。
+            // 開き直すまでの非同期の間に押されたキーは、分離した新ウィンドウへ
+            // すり抜けないよう tap で保持し、開いた後の選択画面へ流し込む
             if jinraiMode {
+                eventTap.holdKeysForNextStart()
                 Task { @MainActor [weak self] in
                     try? await Task.sleep(for: .seconds(0.3))
                     self?.openAreaChooser(jinraiMode: true)

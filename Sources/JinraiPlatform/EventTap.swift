@@ -31,6 +31,13 @@ public final class EventTap {
     /// 遅延破棄の予約を識別する世代番号(start() が予約を無効化するために進める)
     private var stopGeneration = 0
 
+    /// 非同期の受け渡し(holdKeysForNextStart)中か。この間の keyDown は消費しつつ保持し、
+    /// 次の start() 後に呼び元が drainHeldKeyEvents() で取り出して新ハンドラへ流す
+    private var isHolding = false
+    private var heldKeyEvents: [KeyEvent] = []
+    /// 保持の上限(キーリピート連打で無際限に溜めない)
+    private static let heldKeyEventsLimit = 8
+
     /// postKeyStroke が投稿するイベントの目印(eventSourceUserData)。
     /// tap を止める前に投稿を待つ必要をなくすため、自前イベントは捕捉せず素通しする
     private static let selfPostedMarker: Int64 = 0x4A4E_5241_49
@@ -49,6 +56,7 @@ public final class EventTap {
     public func start() -> Bool {
         if tap != nil {
             isPendingStop = false
+            isHolding = false  // 保持イベントは drainHeldKeyEvents() で取り出すまで残す
             stopGeneration += 1
             return true
         }
@@ -91,6 +99,8 @@ public final class EventTap {
         onKeyDown = nil
         onLeftMouseDown = nil
         isPendingStop = true
+        isHolding = false
+        heldKeyEvents = []
         stopGeneration += 1
         let generation = stopGeneration
         DispatchQueue.main.async { [weak self] in
@@ -101,8 +111,40 @@ public final class EventTap {
         }
     }
 
+    /// 非同期の受け渡し(アクション実行後に選択画面を開き直す等)の間、tap を維持して
+    /// キーを持ち越す。stop() の遅延破棄は同一 run loop turn 内の同期遷移しか守れないため、
+    /// スリープやウィンドウ出現待ちを挟む遷移では stop() の後にこれを呼ぶ。
+    /// 次の start() まで keyDown を消費しつつ保持し、呼び元が drainHeldKeyEvents() で
+    /// 取り出して新しいハンドラへ流す。start() が来ないままだとキー入力が死ぬため、
+    /// timeout 経過で tap を破棄する
+    public func holdKeysForNextStart(timeout: TimeInterval = 2) {
+        guard tap != nil else { return }
+        onKeyDown = nil
+        onLeftMouseDown = nil
+        isPendingStop = false
+        isHolding = true
+        heldKeyEvents = []
+        stopGeneration += 1
+        let generation = stopGeneration
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
+            guard let self, self.isHolding, self.stopGeneration == generation else {
+                return
+            }
+            self.teardown()
+        }
+    }
+
+    /// holdKeysForNextStart 中に保持したキーを取り出す(取り出したら空になる)
+    public func drainHeldKeyEvents() -> [KeyEvent] {
+        let events = heldKeyEvents
+        heldKeyEvents = []
+        return events
+    }
+
     private func teardown() {
         isPendingStop = false
+        isHolding = false
+        heldKeyEvents = []
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
         }
@@ -136,6 +178,13 @@ public final class EventTap {
                 character: KeyCodes.character(for: keyCode),
                 flags: event.flags
             )
+            // 非同期の受け渡し中は消費しつつ保持し、次の画面が開いたら流し込まれる
+            if isHolding {
+                if heldKeyEvents.count < Self.heldKeyEventsLimit {
+                    heldKeyEvents.append(keyEvent)
+                }
+                return nil
+            }
             if onKeyDown?(keyEvent) == true {
                 return nil  // 消費
             }

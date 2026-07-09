@@ -10,6 +10,7 @@
 
 - CGEventTap を**破棄してから次の tap を作るまでの間はキーが前面アプリへ素通りする**(tap のルーティングは WindowServer 側で行われ、アプリのメインスレッドが同期実行中でも配送される)。モーダル系機能(Window Hints / Area Hints / Application Hints / Layouts ピッカー)は `EventTap` を1本共有し、遷移では stop→start ではなくハンドラの張り替えで受け渡す。`stop()` は破棄を次の run loop turn へ遅延し、その間のキーを握りつぶす(遷移先の `start()` が予約を取り消す)。
 - `postKeyStroke` の合成キー(Space 移動の Ctrl+数字等)は session tap を通過するため、tap が生きたまま投稿すると自分で消費してしまう。`eventSourceUserData` のマーカーで自前イベントを識別し、tap では無条件に素通しする。
+- `stop()` の遅延破棄が守れるのは**同一 run loop turn 内の同期遷移だけ**。スリープやウィンドウ出現待ちを挟んで画面を開き直す遷移(detach 後の Area Hints 再表示等)では、`stop()` の後に `holdKeysForNextStart()` で tap を維持してキーを保持し、開いた側が `drainHeldKeyEvents()` で流し込む(タイムアウト付き。start() が来ないままキーボードが死ぬのを防ぐ)。
 
 ## デバッグの進め方
 
