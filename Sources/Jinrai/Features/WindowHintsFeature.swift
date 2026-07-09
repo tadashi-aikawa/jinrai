@@ -224,6 +224,13 @@ final class WindowHintsFeature {
         {
             Mouse.moveToCenter(of: active.entry.window.frame)
         }
+
+        // 非同期の受け渡し(レイアウト適用の出現待ち等)中に保持されたキーを
+        // 先行入力として流し込む(Area Hints の chooser と同じ扱い)
+        for event in eventTap.drainHeldKeyEvents() {
+            guard isVisible else { break }
+            _ = handleKeyDown(event)
+        }
     }
 
     func close(keepJinraiMode: Bool = false) {

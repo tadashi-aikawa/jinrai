@@ -9,6 +9,8 @@ final class WindowLayoutsFeature {
     private let config: WindowLayoutsConfig
     /// 適用完了後にカーソルをフォーカスウィンドウ中央へ移動するか(windowMover 設定を共有)
     private let cursorAfterMove: Bool
+    /// モーダル系機能で共有する EventTap(ピッカーと、launch 出現待ち中のキー保持に使う)
+    private let eventTap: EventTap
     private var hotkeys: [Hotkey] = []
     /// activeWindow はフォーカス対象(unlistedWindows のみのレイアウトなど、フォーカス対象がなければ nil)
     var onJinraiModeApply: ((_ activeWindow: (windowID: UInt32, pid: pid_t)?) -> Void)?
@@ -28,6 +30,9 @@ final class WindowLayoutsFeature {
         var preferredFocusEntryIndex: Int?
         var appliedTargets: [(entryIndex: Int, windowID: UInt32, pid: pid_t)] = []
         let jinraiMode: Bool
+        /// 出現待ちの間 EventTap のキー保持(holdKeysForNextStart)を仕掛けたか。
+        /// 仕掛けた場合のみ、完了時に保持キーの受け渡しと tap の解放を行う
+        var didHoldKeys = false
 
         init(
             layout: WindowLayoutsConfig.Layout, screens: [WindowLayoutPlanner.ScreenInput],
@@ -46,6 +51,7 @@ final class WindowLayoutsFeature {
     init(config: WindowLayoutsConfig, cursorAfterMove: Bool, eventTap: EventTap) {
         self.config = config
         self.cursorAfterMove = cursorAfterMove
+        self.eventTap = eventTap
 
         for layout in config.layouts {
             guard let binding = layout.hotkey else { continue }
@@ -185,26 +191,56 @@ final class WindowLayoutsFeature {
         guard !indices.isEmpty else { return }
         var launchable: [Int] = []
         var launchedBundleIDs: Set<String> = []
+        var openedURLs: Set<String> = []
         for index in indices {
-            let bundleID = session.layout.windows[index].bundleID
-            if launchedBundleIDs.contains(bundleID) {
+            let entry = session.layout.windows[index]
+            switch entry.launch {
+            case .none:
+                continue
+            case .newWindowURL(let urlString):
+                if openedURLs.contains(urlString) {
+                    launchable.append(index)
+                    continue
+                }
+                guard let url = URL(string: urlString) else {
+                    NSLog("[jinrai.windowLayouts] URL が不正です: %@", urlString)
+                    continue
+                }
+                // アプリをアクティブ化せず URL イベントだけ送る
+                // (既存ウィンドウが一瞬前面に出るのを防ぐ。Application Hints と同じ)
+                let configuration = NSWorkspace.OpenConfiguration()
+                configuration.activates = false
+                NSWorkspace.shared.open(url, configuration: configuration)
+                openedURLs.insert(urlString)
                 launchable.append(index)
-                continue
+            case .app:
+                if launchedBundleIDs.contains(entry.bundleID) {
+                    launchable.append(index)
+                    continue
+                }
+                guard
+                    let appURL = NSWorkspace.shared.urlForApplication(
+                        withBundleIdentifier: entry.bundleID)
+                else {
+                    NSLog("[jinrai.windowLayouts] アプリが見つかりません: %@", entry.bundleID)
+                    continue
+                }
+                NSWorkspace.shared.openApplication(
+                    at: appURL, configuration: NSWorkspace.OpenConfiguration())
+                launchedBundleIDs.insert(entry.bundleID)
+                launchable.append(index)
             }
-            guard
-                let appURL = NSWorkspace.shared.urlForApplication(
-                    withBundleIdentifier: bundleID)
-            else {
-                NSLog("[jinrai.windowLayouts] アプリが見つかりません: %@", bundleID)
-                continue
-            }
-            NSWorkspace.shared.openApplication(
-                at: appURL, configuration: NSWorkspace.OpenConfiguration())
-            launchedBundleIDs.insert(bundleID)
-            launchable.append(index)
         }
         session.pendingLaunchIndices = launchable
         guard !launchable.isEmpty else { return }
+        // ピッカー経由では直前の close() で eventTap.stop() 済みだが、stop() の遅延破棄は
+        // 同一 run loop turn しか守れず、出現待ちの間に押されたキーの行き先が失われる。
+        // tap を維持してキーを保持し、フォーカス確定後に新しいウィンドウへ再送する
+        // (直接ホットキー起動では tap が無いため何もしない)
+        if eventTap.isRunning {
+            eventTap.holdKeysForNextStart(timeout: config.windowWaitTimeout + 1)
+            session.didHoldKeys = true
+        }
         startWaitTimer(session)
     }
 
@@ -226,16 +262,18 @@ final class WindowLayoutsFeature {
                     else { continue }
                     session.claimedIDs.insert(matched.id)
                     session.pendingLaunchIndices.removeAll { $0 == index }
-                    self.applyFrame(
-                        frame, to: ax, entryIndex: index, windowID: matched.id, pid: matched.pid,
-                        session: session)
-                    // focus=true 指定があればそれを優先し、未指定なら従来どおり最後のエントリを優先
+                    // focus=true 指定があればそれを優先し、未指定なら従来どおり最後のエントリを優先。
+                    // applyFrame の completion は同期的に呼ばれることがあり、最後の1件では
+                    // そのまま finishIfSettled まで到達するため、focusTarget は先に確定させる
                     if index == session.preferredFocusEntryIndex
                         || (session.preferredFocusEntryIndex == nil
                             && index >= (session.focusTarget?.entryIndex ?? -1))
                     {
                         session.focusTarget = (index, matched.id, matched.pid)
                     }
+                    self.applyFrame(
+                        frame, to: ax, entryIndex: index, windowID: matched.id, pid: matched.pid,
+                        session: session)
                 }
                 if session.pendingLaunchIndices.isEmpty {
                     self.waitTimer?.invalidate()
@@ -260,8 +298,13 @@ final class WindowLayoutsFeature {
 
     /// launch 待ちと非同期 apply がすべて解決したらフォーカスを確定してセッションを閉じる
     private func finishIfSettled(_ session: Session) {
+        // applyFrame の completion が同期的に finish まで到達した後、呼び元(出現待ちタイマー等)が
+        // 破棄済みセッションで再度呼ぶことがあるため、現行セッションのみ処理する
+        guard self.session === session else { return }
         guard session.pendingLaunchIndices.isEmpty, session.pendingApplies == 0 else { return }
         defer { cancelSession() }
+        // 出現待ちの間に保持したキー(didHoldKeys 時のみ)。フォーカス確定後に届け先を決める
+        let heldKeys = session.didHoldKeys ? eventTap.drainHeldKeyEvents() : []
         guard let target = session.focusTarget,
             let ax = AXWindow.resolve(windowID: target.windowID, pid: target.pid)
         else {
@@ -270,7 +313,12 @@ final class WindowLayoutsFeature {
             // レイアウト自体は適用済みなので JinraiMode のコンボも継続する
             handleUnlistedWindows(session)
             if session.jinraiMode {
+                // 保持キーは次画面(スポットライト)への先行入力として持ち越す
+                eventTap.stashKeyEvents(heldKeys)
                 onJinraiModeApply?(nil)
+            } else if session.didHoldKeys {
+                // 届け先が無いため保持キーは破棄し、tap を解放してキーボードを返す
+                eventTap.stop()
             }
             return
         }
@@ -286,7 +334,18 @@ final class WindowLayoutsFeature {
             Mouse.moveToCenter(of: frame)
         }
         if session.jinraiMode {
+            // 保持キーは次画面(スポットライト)への先行入力として持ち越す。
+            // tap は次画面の start() が引き継ぐため stop しない
+            eventTap.stashKeyEvents(heldKeys)
             onJinraiModeApply?((target.windowID, target.pid))
+        } else {
+            // 出現待ちの間に押されたキーはフォーカスしたウィンドウへ再送する
+            if !heldKeys.isEmpty {
+                EventTap.postKeyEvents(heldKeys, toPid: target.pid)
+            }
+            if session.didHoldKeys {
+                eventTap.stop()
+            }
         }
     }
 

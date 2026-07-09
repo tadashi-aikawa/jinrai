@@ -9,6 +9,17 @@ public struct WindowLayoutsConfig: Sendable {
         public var key: String
     }
 
+    /// マッチするウィンドウが無いときの出現方法(layouts[].windows[].launch)
+    public enum LaunchAction: Equatable, Sendable {
+        /// 起動しない(launch: false / 省略。マッチしなければスキップ)
+        case none
+        /// bundleID のウィンドウが1枚も無ければアプリを起動(reopen)して出現を待つ(launch: true)
+        case app
+        /// エントリにマッチするウィンドウが無ければ、アプリの起動有無に関わらず
+        /// URL スキームで新規ウィンドウを開いて出現を待つ(launch: { newWindow: { url } })
+        case newWindowURL(String)
+    }
+
     /// 配置対象ウィンドウ1件の定義(layouts[].windows[])
     public struct WindowEntry: Equatable, Sendable {
         /// 対象アプリの bundle ID(完全一致・必須)
@@ -19,8 +30,8 @@ public struct WindowLayoutsConfig: Sendable {
         public var screenUUID: String?
         /// 配置先エリア名(AreaSpec の名前。freeArea は不可)
         public var area: String
-        /// ウィンドウが1枚も存在しなければ起動(reopen)してウィンドウ出現を待つか(デフォルト false = スキップ)
-        public var launch: Bool
+        /// マッチするウィンドウが無いときの出現方法(デフォルト .none = スキップ)
+        public var launch: LaunchAction
         /// レイアウト適用後にこのエントリのウィンドウへフォーカスするか(デフォルト false)
         public var focus: Bool
     }
@@ -248,7 +259,7 @@ public enum WindowLayoutsConfigBuilder {
                     titleGlob: titleGlob,
                     screenUUID: rawWindow["screen"] as? String,
                     area: area,
-                    launch: rawWindow["launch"] as? Bool ?? false,
+                    launch: try buildLaunch(rawWindow["launch"], context: entryContext),
                     focus: focus
                 ))
         }
@@ -257,6 +268,35 @@ public enum WindowLayoutsConfigBuilder {
             name: name, description: description, hotkey: hotkey,
             unlistedWindows: unlistedWindows,
             windows: windows)
+    }
+
+    /// launch(true/false | { newWindow: { url } })のパース。未指定は .none(スキップ)
+    private static func buildLaunch(
+        _ rawValue: Any?, context: String
+    ) throws -> WindowLayoutsConfig.LaunchAction {
+        guard let rawValue else { return .none }
+        switch rawValue {
+        case let bool as Bool:
+            return bool ? .app : .none
+        case let dict as [String: Any]:
+            guard let newWindow = dict["newWindow"] as? [String: Any] else {
+                throw ConfigError(
+                    "[jinrai.windowLayouts] \(context).launch のオブジェクト指定には newWindow が必要です")
+            }
+            guard let url = newWindow["url"] as? String, !url.isEmpty else {
+                throw ConfigError(
+                    "[jinrai.windowLayouts] \(context).launch.newWindow.url は必須です")
+            }
+            guard URL(string: url) != nil else {
+                throw ConfigError(
+                    "[jinrai.windowLayouts] \(context).launch.newWindow.url が URL として解釈できません: \(url)")
+            }
+            return .newWindowURL(url)
+        default:
+            throw ConfigError(
+                "[jinrai.windowLayouts] \(context).launch は true/false または"
+                    + " { newWindow: { url } } のオブジェクトである必要があります")
+        }
     }
 
     /// unlistedWindows("close" | { screen?, area })のパース。未指定は nil(何もしない)

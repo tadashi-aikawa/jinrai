@@ -14,7 +14,8 @@ struct WindowLayoutPlannerTests {
 
     private func entry(
         bundleID: String = "com.google.Chrome", titleGlob: String? = nil,
-        screen: String? = nil, area: String = "halfLeft", launch: Bool = false,
+        screen: String? = nil, area: String = "halfLeft",
+        launch: WindowLayoutsConfig.LaunchAction = .none,
         focus: Bool = false
     ) -> WindowLayoutsConfig.WindowEntry {
         .init(bundleID: bundleID, titleGlob: titleGlob, screenUUID: screen, area: area,
@@ -215,9 +216,9 @@ struct WindowLayoutPlannerTests {
     func pendingLaunch() {
         let plan = WindowLayoutPlanner.makePlan(
             entries: [
-                entry(bundleID: "no.window.launch", launch: true),
+                entry(bundleID: "no.window.launch", launch: .app),
                 entry(bundleID: "no.window.no.launch"),
-                entry(bundleID: "has.window", titleGlob: "no-match", launch: true),
+                entry(bundleID: "has.window", titleGlob: "no-match", launch: .app),
             ],
             onScreenWindows: [
                 WindowInfo(id: 1, pid: 100, bundleID: "has.window", title: "A")
@@ -233,7 +234,7 @@ struct WindowLayoutPlannerTests {
     @Test("起動済みでもウィンドウが0枚なら launch=true で起動待ちに回る")
     func pendingLaunchForRunningAppWithoutWindows() {
         let plan = WindowLayoutPlanner.makePlan(
-            entries: [entry(bundleID: "running.no.window", launch: true)],
+            entries: [entry(bundleID: "running.no.window", launch: .app)],
             onScreenWindows: [
                 WindowInfo(id: 1, pid: 100, bundleID: "other.app", title: "A")
             ],
@@ -246,12 +247,50 @@ struct WindowLayoutPlannerTests {
     @Test("最小化ウィンドウしか無いアプリは launch 対象にならない")
     func minimizedWindowSuppressesLaunch() {
         let plan = WindowLayoutPlanner.makePlan(
-            entries: [entry(titleGlob: "no-match", launch: true)],
+            entries: [entry(titleGlob: "no-match", launch: .app)],
             onScreenWindows: [],
             minimizedWindows: [
                 WindowInfo(id: 5, pid: 100, bundleID: "com.google.Chrome", title: "Min")
             ],
             screens: [mainScreen])
+        #expect(plan.pendingLaunchIndices.isEmpty)
+    }
+
+    @Test("newWindowURL は同 bundleID の別ウィンドウが存在しても起動待ちに回る")
+    func pendingLaunchForNewWindowURLDespiteOtherWindows() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [
+                entry(
+                    bundleID: "md.obsidian", titleGlob: "*MyVault*",
+                    launch: .newWindowURL("obsidian://open?path=/path/to/MyVault")),
+                entry(
+                    bundleID: "not.running",
+                    launch: .newWindowURL("someapp://new")),
+            ],
+            onScreenWindows: [
+                // 別 Vault のウィンドウ(titleGlob 不一致)
+                WindowInfo(id: 1, pid: 100, bundleID: "md.obsidian", title: "OtherVault")
+            ],
+            minimizedWindows: [],
+            screens: [mainScreen])
+        #expect(plan.placements.isEmpty)
+        #expect(plan.pendingLaunchIndices == [0, 1])
+    }
+
+    @Test("newWindowURL でもマッチするウィンドウがあれば通常配置され、起動待ちには回らない")
+    func newWindowURLNotFiredWhenMatched() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [
+                entry(
+                    bundleID: "md.obsidian", titleGlob: "*MyVault*",
+                    launch: .newWindowURL("obsidian://open?path=/path/to/MyVault"))
+            ],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "md.obsidian", title: "Note - MyVault")
+            ],
+            minimizedWindows: [],
+            screens: [mainScreen])
+        #expect(plan.placements.map(\.windowID) == [1])
         #expect(plan.pendingLaunchIndices.isEmpty)
     }
 

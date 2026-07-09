@@ -37,7 +37,7 @@ public enum WindowLayoutPlanner {
     public struct Plan: Equatable, Sendable {
         /// 即時配置するウィンドウ
         public var placements: [Placement]
-        /// ウィンドウが1枚も存在せず launch=true で、起動(reopen)→出現待ちに回すエントリのインデックス
+        /// マッチするウィンドウが無く、起動(reopen / URL open)→出現待ちに回すエントリのインデックス
         public var pendingLaunchIndices: [Int]
         /// 明示フォーカス指定があればそのエントリ、なければ最後にマッチしたエントリのインデックス
         public var focusEntryIndex: Int?
@@ -72,7 +72,18 @@ public enum WindowLayoutPlanner {
                 ?? match(entry: entry, in: minimizedWindows, excluding: claimedIDs)
                 .map { (window: $0, needsUnminimize: true) }
             guard let matched else {
-                if entry.launch, !bundleIDsWithWindows.contains(entry.bundleID) {
+                switch entry.launch {
+                case .none:
+                    break
+                case .app:
+                    // reopen は既存ウィンドウがあると新規ウィンドウを作れないため、
+                    // bundleID のウィンドウが1枚も無いときだけ起動する
+                    if !bundleIDsWithWindows.contains(entry.bundleID) {
+                        pendingLaunchIndices.append(index)
+                    }
+                case .newWindowURL:
+                    // URL スキームは起動済みアプリにも目的のウィンドウを開かせられるため、
+                    // 同アプリの別ウィンドウがあっても発火する
                     pendingLaunchIndices.append(index)
                 }
                 continue

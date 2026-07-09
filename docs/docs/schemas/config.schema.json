@@ -2224,9 +2224,31 @@
           "description": "配置先のエリア名です（halfLeftなど。freeAreaは使用できません）。1200x900Centerのような固定サイズ中央配置も指定できます。"
         },
         "launch": {
-          "type": "boolean",
-          "description": "trueにすると、対象アプリのウィンドウが1枚も存在しないときにアプリを起動（起動済みなら再オープン）してウィンドウの出現を待ってから配置します。falseの場合、ウィンドウが存在しないアプリはスキップします。",
-          "default": false
+          "description": "マッチするウィンドウが無いときの出現方法です。trueにすると、対象アプリのウィンドウが1枚も存在しないときにアプリを起動（起動済みなら再オープン）してウィンドウの出現を待ってから配置します。{ \"newWindow\": { \"url\": ... } } を指定すると、エントリにマッチするウィンドウが無いときにURLスキームを開いて新規ウィンドウを作らせます（同アプリの別ウィンドウがあっても発火します）。falseの場合、ウィンドウが存在しないアプリはスキップします。",
+          "default": false,
+          "oneOf": [
+            { "type": "boolean" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["newWindow"],
+              "properties": {
+                "newWindow": {
+                  "type": "object",
+                  "description": "URLスキームで新規ウィンドウを開く指定です。",
+                  "additionalProperties": false,
+                  "required": ["url"],
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "開くURLです（obsidian://open?path=... など）。アプリをアクティブ化せずに送るため、既存ウィンドウは前面に出ません。",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          ]
         },
         "focus": {
           "type": "boolean",

@@ -44,11 +44,78 @@ struct WindowLayoutsConfigTests {
                 == .init(
                     bundleID: "com.google.Chrome", titleGlob: "*GitHub*",
                     screenUUID: "37D8832A-2D66-02CA-B9F7-8F30A301B230",
-                    area: "halfLeft", launch: false, focus: true))
-        #expect(layout.windows[1].launch == true)
+                    area: "halfLeft", launch: .none, focus: true))
+        #expect(layout.windows[1].launch == .app)
         #expect(layout.windows[1].focus == false)
         #expect(layout.windows[1].titleGlob == nil)
         #expect(layout.windows[1].screenUUID == nil)
+    }
+
+    @Test("launch: { newWindow: { url } } をパースできる")
+    func launchNewWindowURLParse() throws {
+        var layout = validLayout()
+        layout["windows"] = [
+            [
+                "bundleID": "md.obsidian", "titleGlob": "*MyVault*", "area": "halfRight",
+                "launch": ["newWindow": ["url": "obsidian://open?path=/path/to/MyVault"]],
+            ]
+        ]
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
+        #expect(
+            config.layouts[0].windows[0].launch
+                == .newWindowURL("obsidian://open?path=/path/to/MyVault"))
+    }
+
+    @Test("launch: false / 省略は .none")
+    func launchDefaultsToNone() throws {
+        var layout = validLayout()
+        layout["windows"] = [
+            ["bundleID": "a", "area": "full"],
+            ["bundleID": "b", "area": "full", "launch": false],
+        ]
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
+        #expect(config.layouts[0].windows[0].launch == .none)
+        #expect(config.layouts[0].windows[1].launch == .none)
+    }
+
+    @Test("launch の不正値はエラー")
+    func invalidLaunchThrows() {
+        // newWindow 欠落
+        var noNewWindow = validLayout()
+        noNewWindow["windows"] = [["bundleID": "a", "area": "full", "launch": [String: Any]()]]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [noNewWindow]])
+        }
+        // url 欠落
+        var noURL = validLayout()
+        noURL["windows"] = [
+            ["bundleID": "a", "area": "full", "launch": ["newWindow": [String: Any]()]]
+        ]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [noURL]])
+        }
+        // url が空
+        var emptyURL = validLayout()
+        emptyURL["windows"] = [
+            ["bundleID": "a", "area": "full", "launch": ["newWindow": ["url": ""]]]
+        ]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [emptyURL]])
+        }
+        // URL として解釈できない
+        var brokenURL = validLayout()
+        brokenURL["windows"] = [
+            ["bundleID": "a", "area": "full", "launch": ["newWindow": ["url": "ob sidian://x y"]]]
+        ]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [brokenURL]])
+        }
+        // 不正な型
+        var badType = validLayout()
+        badType["windows"] = [["bundleID": "a", "area": "full", "launch": "yes"]]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [badType]])
+        }
     }
 
     @Test("windowWaitTimeout のデフォルトは10秒")

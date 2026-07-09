@@ -141,6 +141,31 @@ Window Layouts専用のグローバルホットキーを増やさず、Window Hi
 !!! note
     ウィンドウが存在するのに`titleGlob`に一致するウィンドウが無い場合は、launchは行われずスキップされます。また、再オープンで新規ウィンドウを開かないアプリでは、出現待ちがタイムアウトすることがあります。
 
+### URLで新規ウィンドウを開く (launch.newWindow)
+
+`launch`に`{ "newWindow": { "url": ... } }`を指定すると、エントリにマッチするウィンドウが無いときにアプリの起動(reopen)ではなくURLスキームを開いて、目的のウィンドウを直接作らせます。Obsidianの特定Vaultなど、「アプリは起動済みだが目的のウィンドウが無い」状態でも発火するのが`true`との違いです。
+
+```json
+"windows": [
+  {
+    "bundleID": "md.obsidian",
+    "titleGlob": "*MyVault*",
+    "area": "halfRight",
+    "launch": { "newWindow": { "url": "obsidian://open?path=/path/to/MyVault" } }
+  }
+]
+```
+
+発火条件の比較(エントリにマッチするウィンドウが無い前提):
+
+| 状況 | `launch: false`(デフォルト) | `launch: true` | `launch: { newWindow: { url } }` |
+| --- | --- | --- | --- |
+| アプリ未起動 | スキップ | 起動 → 出現待ち | URLを開く → 出現待ち |
+| 起動済み・ウィンドウ0枚 | スキップ | 再オープン → 出現待ち | URLを開く → 出現待ち |
+| 同アプリの別ウィンドウあり(`titleGlob`不一致) | スキップ | スキップ | URLを開く → 出現待ち |
+
+出現したウィンドウは`titleGlob`で照合するため、URLで開くウィンドウのタイトルにマッチする`titleGlob`を指定してください(省略すると同アプリの新規ウィンドウ全般にマッチします)。URLはアプリをアクティブ化せずに送るため、既存ウィンドウが一瞬前面に出ることはありません。
+
 ## 定義外ウィンドウの扱い (unlistedWindows)
 
 `unlistedWindows`で、現在のSpaceで表示されている標準ウィンドウのうち、レイアウトで実際に選ばれたウィンドウ**以外**の扱いを指定できます。
