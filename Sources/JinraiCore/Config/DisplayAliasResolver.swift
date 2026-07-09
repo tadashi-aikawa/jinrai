@@ -80,12 +80,13 @@ enum DisplayAliasResolver {
         in root: inout [String: Any], aliases: [String: String]
     ) throws {
         guard var windowLayouts = root["windowLayouts"] as? [String: Any],
-            let rawLayouts = windowLayouts["layouts"] as? [String: Any]
+            let rawLayouts = windowLayouts["layouts"] as? [[String: Any]]
         else { return }
 
-        var layouts = rawLayouts
-        for (layoutName, rawLayout) in rawLayouts {
-            guard var layout = rawLayout as? [String: Any] else { continue }
+        var layouts: [[String: Any]] = []
+        for (layoutIndex, rawLayout) in rawLayouts.enumerated() {
+            var layout = rawLayout
+            let layoutName = layout["name"] as? String ?? "\(layoutIndex)"
 
             if let rawWindows = layout["windows"] as? [[String: Any]] {
                 var windows: [[String: Any]] = []
@@ -110,7 +111,7 @@ enum DisplayAliasResolver {
                 layout["unlistedWindows"] = unlisted
             }
 
-            layouts[layoutName] = layout
+            layouts.append(layout)
         }
         windowLayouts["layouts"] = layouts
         root["windowLayouts"] = windowLayouts

@@ -9,7 +9,7 @@ public struct WindowLayoutsConfig: Sendable {
         public var key: String
     }
 
-    /// 配置対象ウィンドウ1件の定義(layouts.<名前>.windows[])
+    /// 配置対象ウィンドウ1件の定義(layouts[].windows[])
     public struct WindowEntry: Equatable, Sendable {
         /// 対象アプリの bundle ID(完全一致・必須)
         public var bundleID: String
@@ -25,7 +25,7 @@ public struct WindowLayoutsConfig: Sendable {
         public var focus: Bool
     }
 
-    /// 配置対象に選ばれなかったオンスクリーン標準ウィンドウの扱い(layouts.<名前>.unlistedWindows)
+    /// 配置対象に選ばれなかったオンスクリーン標準ウィンドウの扱い(layouts[].unlistedWindows)
     public enum UnlistedWindowsAction: Equatable, Sendable {
         /// 閉じる("close")
         case close
@@ -33,9 +33,9 @@ public struct WindowLayoutsConfig: Sendable {
         case place(screenUUID: String?, area: String)
     }
 
-    /// 1つのレイアウト定義(layouts.<名前>)
+    /// 1つのレイアウト定義(layouts[])
     public struct Layout: Sendable {
-        /// レイアウト名(layouts のキー。ピッカー表示・検索・ログ用)
+        /// レイアウト名(name。必須・重複不可。ピッカー表示・検索・ログ用)
         public var name: String
         /// レイアウトの説明(ピッカーに表示され検索対象になる)
         public var description: String?
@@ -51,7 +51,7 @@ public struct WindowLayoutsConfig: Sendable {
     public var pickerHotkey: HotkeyBinding?
     /// Window Hints からピッカーへ遷移するキー(init 相当の結線で注入)
     public var windowHintsKey: String?
-    /// レイアウト一覧(名前昇順)
+    /// レイアウト一覧(設定記載順。ピッカーはこの順で表示する)
     public var layouts: [Layout]
     /// launch で起動したアプリのウィンドウ出現を待つ最大時間(秒。windowWaitTimeout)
     public var windowWaitTimeout: Double
@@ -100,15 +100,20 @@ public enum WindowLayoutsConfigBuilder {
         let merged = ConfigDict(
             DeepMerge.merge(defaults: defaults, overrides: options), context: "windowLayouts")
 
-        guard let rawLayouts = merged.dict("layouts"), !rawLayouts.isEmpty else {
-            throw ConfigError("[jinrai.windowLayouts] layouts は1件以上必要です")
+        guard let rawLayouts = merged.value("layouts") as? [[String: Any]], !rawLayouts.isEmpty
+        else {
+            throw ConfigError("[jinrai.windowLayouts] layouts は1件以上の配列が必要です")
         }
 
         var layouts: [WindowLayoutsConfig.Layout] = []
-        for name in rawLayouts.keys.sorted() {
-            guard let rawLayout = rawLayouts[name] as? [String: Any] else {
+        var seenNames: Set<String> = []
+        for (index, rawLayout) in rawLayouts.enumerated() {
+            guard let name = rawLayout["name"] as? String, !name.isEmpty else {
+                throw ConfigError("[jinrai.windowLayouts] layouts[\(index)].name は必須です")
+            }
+            guard seenNames.insert(name).inserted else {
                 throw ConfigError(
-                    "[jinrai.windowLayouts] layouts['\(name)'] はオブジェクトである必要があります")
+                    "[jinrai.windowLayouts] layouts の name '\(name)' が重複しています")
             }
             layouts.append(try buildLayout(name: name, rawLayout))
         }

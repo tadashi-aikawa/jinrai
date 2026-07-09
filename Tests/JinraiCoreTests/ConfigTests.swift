@@ -636,14 +636,15 @@ struct RootConfigTests {
                     }
                 },
                 "windowLayouts": {
-                    "layouts": {
-                        "dev": {
+                    "layouts": [
+                        {
+                            "name": "dev",
                             "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
                             "windows": [
                                 { "bundleID": "com.google.Chrome", "screen": "desk", "area": "halfLeft" }
                             ]
                         }
-                    }
+                    ]
                 }
             }
             """)
@@ -659,15 +660,16 @@ struct RootConfigTests {
                     "desk": "\(uuidB)"
                 },
                 "windowLayouts": {
-                    "layouts": {
-                        "dev": {
+                    "layouts": [
+                        {
+                            "name": "dev",
                             "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
                             "unlistedWindows": { "screen": "desk", "area": "full" },
                             "windows": [
                                 { "bundleID": "com.google.Chrome", "area": "halfLeft" }
                             ]
                         }
-                    }
+                    ]
                 }
             }
             """)
@@ -682,15 +684,16 @@ struct RootConfigTests {
             _ = try RootConfigBuilder.build(text: """
                 {
                     "windowLayouts": {
-                        "layouts": {
-                            "dev": {
+                        "layouts": [
+                            {
+                                "name": "dev",
                                 "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
                                 "unlistedWindows": { "screen": "unknown-alias", "area": "full" },
                                 "windows": [
                                     { "bundleID": "com.google.Chrome", "area": "halfLeft" }
                                 ]
                             }
-                        }
+                        ]
                     }
                 }
                 """)
@@ -715,14 +718,15 @@ struct RootConfigTests {
                                 }
                             },
                             "windowLayouts": {
-                                "layouts": {
-                                    "dev": {
+                                "layouts": [
+                                    {
+                                        "name": "dev",
                                         "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
                                         "windows": [
                                             { "bundleID": "com.google.Chrome", "screen": "desk", "area": "halfLeft" }
                                         ]
                                     }
-                                }
+                                ]
                             }
                         }
                     }]

@@ -2252,17 +2252,23 @@
           "default": 10
         },
         "layouts": {
-          "type": "object",
-          "description": "レイアウト名からレイアウト定義へのマップです。1件以上必須です。",
-          "minProperties": 1,
-          "additionalProperties": {
+          "type": "array",
+          "description": "レイアウト定義の一覧です。1件以上必須です。ピッカーには記載順に表示されます。",
+          "minItems": 1,
+          "items": {
             "type": "object",
             "additionalProperties": false,
+            "required": ["name"],
             "anyOf": [
               { "required": ["windows"] },
               { "required": ["unlistedWindows"] }
             ],
             "properties": {
+              "name": {
+                "type": "string",
+                "description": "レイアウト名です（重複不可）。ピッカーの一覧に表示され、検索対象になります。",
+                "minLength": 1
+              },
               "hotkey": {
                 "allOf": [{ "$ref": "#/definitions/hotkey" }],
                 "description": "レイアウトを直接適用するホットキーです。他のレイアウトやピッカーと重複できません。省略時はピッカー（windowLayouts.hotkey または windowHints.navigation.windowLayouts.key）からのみ呼び出せます。どの導線も未設定ならエラーです。"

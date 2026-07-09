@@ -5,8 +5,9 @@ import Testing
 @Suite("WindowLayoutsConfigBuilder")
 struct WindowLayoutsConfigTests {
     /// 正常系のレイアウト1件分
-    private func validLayout(key: String = "1") -> [String: Any] {
+    private func validLayout(name: String = "a", key: String = "1") -> [String: Any] {
         [
+            "name": name,
             "hotkey": ["modifiers": ["ctrl", "alt"], "key": key],
             "windows": [["bundleID": "com.google.Chrome", "area": "halfLeft"]],
         ]
@@ -17,7 +18,8 @@ struct WindowLayoutsConfigTests {
         let config = try WindowLayoutsConfigBuilder.build([
             "windowWaitTimeout": 5,
             "layouts": [
-                "dev": [
+                [
+                    "name": "dev",
                     "hotkey": ["modifiers": ["ctrl", "alt"], "key": "1"],
                     "windows": [
                         [
@@ -51,13 +53,13 @@ struct WindowLayoutsConfigTests {
 
     @Test("windowWaitTimeout のデフォルトは10秒")
     func windowWaitTimeoutDefault() throws {
-        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": validLayout()]])
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [validLayout()]])
         #expect(config.windowWaitTimeout == 10)
     }
 
     @Test("unlistedWindows 未指定は nil(何もしない)")
     func unlistedWindowsDefaultsToNil() throws {
-        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": validLayout()]])
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [validLayout()]])
         #expect(config.layouts[0].unlistedWindows == nil)
     }
 
@@ -65,7 +67,7 @@ struct WindowLayoutsConfigTests {
     func unlistedWindowsCloseParse() throws {
         var layout = validLayout()
         layout["unlistedWindows"] = "close"
-        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
         #expect(config.layouts[0].unlistedWindows == .close)
     }
 
@@ -75,14 +77,14 @@ struct WindowLayoutsConfigTests {
         layout["unlistedWindows"] = [
             "screen": "37D8832A-2D66-02CA-B9F7-8F30A301B230", "area": "full",
         ]
-        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
         #expect(
             config.layouts[0].unlistedWindows
                 == .place(screenUUID: "37D8832A-2D66-02CA-B9F7-8F30A301B230", area: "full"))
 
         var noScreen = validLayout()
         noScreen["unlistedWindows"] = ["area": "full"]
-        let config2 = try WindowLayoutsConfigBuilder.build(["layouts": ["a": noScreen]])
+        let config2 = try WindowLayoutsConfigBuilder.build(["layouts": [noScreen]])
         #expect(config2.layouts[0].unlistedWindows == .place(screenUUID: nil, area: "full"))
     }
 
@@ -92,31 +94,31 @@ struct WindowLayoutsConfigTests {
         var badString = validLayout()
         badString["unlistedWindows"] = "closeall"
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": badString]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [badString]])
         }
         // area 欠落
         var noArea = validLayout()
         noArea["unlistedWindows"] = ["screen": "37D8832A-2D66-02CA-B9F7-8F30A301B230"]
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": noArea]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [noArea]])
         }
         // 未知エリア
         var unknownArea = validLayout()
         unknownArea["unlistedWindows"] = ["area": "unknownArea"]
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": unknownArea]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [unknownArea]])
         }
         // freeArea 禁止
         var freeArea = validLayout()
         freeArea["unlistedWindows"] = ["area": "freeArea"]
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": freeArea]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [freeArea]])
         }
         // 不正な型
         var badType = validLayout()
         badType["unlistedWindows"] = true
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": badType]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [badType]])
         }
     }
 
@@ -126,28 +128,59 @@ struct WindowLayoutsConfigTests {
             var layout = validLayout()
             layout["closeUnlistedWindows"] = value
             #expect {
-                try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+                try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
             } throws: { error in
                 "\(error)".contains("unlistedWindows")
             }
         }
     }
 
-    @Test("layouts は名前昇順に整列される")
-    func layoutsSortedByName() throws {
+    @Test("layouts は設定記載順を保持する")
+    func layoutsPreserveDefinitionOrder() throws {
         let config = try WindowLayoutsConfigBuilder.build([
-            "layouts": ["meeting": validLayout(key: "2"), "dev": validLayout(key: "1")]
+            "layouts": [
+                validLayout(name: "zebra", key: "1"),
+                validLayout(name: "alpha", key: "2"),
+                validLayout(name: "meeting", key: "3"),
+            ]
         ])
-        #expect(config.layouts.map(\.name) == ["dev", "meeting"])
+        #expect(config.layouts.map(\.name) == ["zebra", "alpha", "meeting"])
     }
 
-    @Test("layouts が空・未指定ならエラー")
+    @Test("layouts が空・未指定・配列以外ならエラー")
     func emptyLayoutsThrows() {
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": [String: Any]()])
+            try WindowLayoutsConfigBuilder.build(["layouts": [[String: Any]]()])
         }
         #expect(throws: ConfigError.self) {
             try WindowLayoutsConfigBuilder.build([:])
+        }
+        // 旧形式(レイアウト名をキーにしたオブジェクト)はエラー
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": ["a": validLayout()]])
+        }
+    }
+
+    @Test("name が欠落・空ならエラー")
+    func missingNameThrows() {
+        var noName = validLayout()
+        noName["name"] = nil
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [noName]])
+        }
+        var emptyName = validLayout()
+        emptyName["name"] = ""
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [emptyName]])
+        }
+    }
+
+    @Test("name の重複はエラー")
+    func duplicateNameThrows() {
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build([
+                "layouts": [validLayout(name: "a", key: "1"), validLayout(name: "a", key: "2")]
+            ])
         }
     }
 
@@ -156,7 +189,7 @@ struct WindowLayoutsConfigTests {
         var layout = validLayout()
         layout["hotkey"] = nil
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
         }
     }
 
@@ -166,7 +199,7 @@ struct WindowLayoutsConfigTests {
         layout["hotkey"] = nil
         let config = try WindowLayoutsConfigBuilder.build([
             "hotkey": ["modifiers": ["ctrl", "alt"], "key": "l"],
-            "layouts": ["a": layout],
+            "layouts": [layout],
         ])
         #expect(config.pickerHotkey == .init(modifiers: ["ctrl", "alt"], key: "l"))
         #expect(config.layouts[0].hotkey == nil)
@@ -177,7 +210,7 @@ struct WindowLayoutsConfigTests {
         var layout = validLayout()
         layout["hotkey"] = nil
         let config = try WindowLayoutsConfigBuilder.build(
-            ["layouts": ["a": layout]], windowHintsKey: "l")
+            ["layouts": [layout]], windowHintsKey: "l")
         #expect(config.windowHintsKey == "L")
         #expect(config.pickerHotkey == nil)
         #expect(config.layouts[0].hotkey == nil)
@@ -187,12 +220,12 @@ struct WindowLayoutsConfigTests {
     func descriptionValidation() throws {
         var layout = validLayout()
         layout["description"] = "開発用の配置"
-        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
         #expect(config.layouts[0].description == "開発用の配置")
 
         layout["description"] = ""
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
         }
     }
 
@@ -201,21 +234,21 @@ struct WindowLayoutsConfigTests {
         #expect(throws: ConfigError.self) {
             try WindowLayoutsConfigBuilder.build([
                 "hotkey": ["modifiers": ["ctrl", "alt"], "key": "1"],
-                "layouts": ["a": validLayout(key: "1")],
+                "layouts": [validLayout(key: "1")],
             ])
         }
     }
 
     @Test("appearance のデフォルト値と上書き")
     func appearanceDefaultsAndOverride() throws {
-        let defaults = try WindowLayoutsConfigBuilder.build(["layouts": ["a": validLayout()]])
+        let defaults = try WindowLayoutsConfigBuilder.build(["layouts": [validLayout()]])
         #expect(defaults.pickerWidth == 480)
         #expect(defaults.rowHeight == 32)
         #expect(defaults.maxVisibleRows == 8)
         #expect(defaults.cornerRadius == 12)
 
         let overridden = try WindowLayoutsConfigBuilder.build([
-            "layouts": ["a": validLayout()],
+            "layouts": [validLayout()],
             "appearance": ["pickerWidth": 600, "maxVisibleRows": 5],
         ])
         #expect(overridden.pickerWidth == 600)
@@ -226,7 +259,7 @@ struct WindowLayoutsConfigTests {
     func nonPositivePickerWidthThrows() {
         #expect(throws: ConfigError.self) {
             try WindowLayoutsConfigBuilder.build([
-                "layouts": ["a": validLayout()],
+                "layouts": [validLayout()],
                 "appearance": ["pickerWidth": 0],
             ])
         }
@@ -234,11 +267,11 @@ struct WindowLayoutsConfigTests {
 
     @Test("レイアウト間のホットキー重複はエラー(modifiers の順序・大小文字は無視)")
     func duplicateHotkeyThrows() {
-        var other = validLayout()
+        var other = validLayout(name: "b")
         other["hotkey"] = ["modifiers": ["alt", "Ctrl"], "key": "1"]
         #expect(throws: ConfigError.self) {
             try WindowLayoutsConfigBuilder.build([
-                "layouts": ["a": validLayout(), "b": other]
+                "layouts": [validLayout(name: "a"), other]
             ])
         }
     }
@@ -249,13 +282,13 @@ struct WindowLayoutsConfigTests {
         var emptyWindows = validLayout()
         emptyWindows["windows"] = [[String: Any]]()
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": emptyWindows]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [emptyWindows]])
         }
         // windows 省略
         var noWindows = validLayout()
         noWindows["windows"] = nil
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": noWindows]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [noWindows]])
         }
     }
 
@@ -265,7 +298,7 @@ struct WindowLayoutsConfigTests {
         var closeLayout = validLayout()
         closeLayout["windows"] = nil
         closeLayout["unlistedWindows"] = "close"
-        let config = try WindowLayoutsConfigBuilder.build(["layouts": ["a": closeLayout]])
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [closeLayout]])
         #expect(config.layouts[0].windows.isEmpty)
         #expect(config.layouts[0].unlistedWindows == .close)
 
@@ -273,7 +306,7 @@ struct WindowLayoutsConfigTests {
         var placeLayout = validLayout()
         placeLayout["windows"] = [[String: Any]]()
         placeLayout["unlistedWindows"] = ["area": "full"]
-        let config2 = try WindowLayoutsConfigBuilder.build(["layouts": ["a": placeLayout]])
+        let config2 = try WindowLayoutsConfigBuilder.build(["layouts": [placeLayout]])
         #expect(config2.layouts[0].windows.isEmpty)
         #expect(config2.layouts[0].unlistedWindows == .place(screenUUID: nil, area: "full"))
     }
@@ -283,7 +316,7 @@ struct WindowLayoutsConfigTests {
         var layout = validLayout()
         layout["windows"] = [["area": "halfLeft"]]
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
         }
     }
 
@@ -292,12 +325,12 @@ struct WindowLayoutsConfigTests {
         var noArea = validLayout()
         noArea["windows"] = [["bundleID": "a.b"]]
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": noArea]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [noArea]])
         }
         var unknownArea = validLayout()
         unknownArea["windows"] = [["bundleID": "a.b", "area": "unknownArea"]]
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": unknownArea]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [unknownArea]])
         }
     }
 
@@ -306,7 +339,7 @@ struct WindowLayoutsConfigTests {
         var layout = validLayout()
         layout["windows"] = [["bundleID": "a.b", "area": "freeArea"]]
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
         }
     }
 
@@ -315,7 +348,7 @@ struct WindowLayoutsConfigTests {
         var layout = validLayout()
         layout["windows"] = [["bundleID": "a.b", "area": "halfLeft", "titleGlob": ""]]
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
         }
     }
 
@@ -327,7 +360,7 @@ struct WindowLayoutsConfigTests {
             ["bundleID": "c.d", "area": "halfRight", "focus": true],
         ]
         #expect(throws: ConfigError.self) {
-            try WindowLayoutsConfigBuilder.build(["layouts": ["a": layout]])
+            try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
         }
     }
 
@@ -335,7 +368,7 @@ struct WindowLayoutsConfigTests {
     func nonPositiveTimeoutThrows() {
         #expect(throws: ConfigError.self) {
             try WindowLayoutsConfigBuilder.build([
-                "layouts": ["a": validLayout()], "windowWaitTimeout": 0,
+                "layouts": [validLayout()], "windowWaitTimeout": 0,
             ])
         }
     }
@@ -345,12 +378,13 @@ struct WindowLayoutsConfigTests {
         let text = """
             {
                 "windowLayouts": {
-                    "layouts": {
-                        "dev": {
+                    "layouts": [
+                        {
+                            "name": "dev",
                             "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
                             "windows": [{ "bundleID": "a.b", "area": "halfLeft" }]
                         }
-                    }
+                    ]
                 }
             }
             """
@@ -364,11 +398,12 @@ struct WindowLayoutsConfigTests {
             {
                 "windowHints": { "navigation": { "windowLayouts": { "key": "l" } } },
                 "windowLayouts": {
-                    "layouts": {
-                        "dev": {
+                    "layouts": [
+                        {
+                            "name": "dev",
                             "windows": [{ "bundleID": "a.b", "area": "halfLeft" }]
                         }
-                    }
+                    ]
                 }
             }
             """
