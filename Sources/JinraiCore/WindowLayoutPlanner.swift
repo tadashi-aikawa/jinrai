@@ -33,10 +33,18 @@ public enum WindowLayoutPlanner {
         public var needsUnminimize: Bool
     }
 
+    /// closeWindows でマッチした、閉じる対象ウィンドウ
+    public struct CloseTarget: Equatable, Sendable {
+        public var windowID: UInt32
+        public var pid: pid_t
+    }
+
     /// 適用計画
     public struct Plan: Equatable, Sendable {
         /// 即時配置するウィンドウ
         public var placements: [Placement]
+        /// closeWindows で閉じるウィンドウ(前面順。配置・unlisted の対象外)
+        public var closeTargets: [CloseTarget]
         /// マッチするウィンドウが無く、起動(reopen / URL open)→出現待ちに回すエントリのインデックス
         public var pendingLaunchIndices: [Int]
         /// 明示フォーカス指定があればそのエントリ、なければ最後にマッチしたエントリのインデックス
@@ -52,6 +60,7 @@ public enum WindowLayoutPlanner {
     /// - minimizedWindows: AX から合成した最小化ウィンドウ(オンスクリーンに無い場合の候補)
     public static func makePlan(
         entries: [WindowLayoutsConfig.WindowEntry],
+        closeEntries: [WindowLayoutsConfig.CloseEntry] = [],
         onScreenWindows: [WindowInfo],
         minimizedWindows: [WindowInfo],
         screens: [ScreenInput]
@@ -64,6 +73,17 @@ public enum WindowLayoutPlanner {
         var preferredMatchedFocusEntryIndex: Int?
         var fallbackFocusEntryIndex: Int?
         var claimedIDs: Set<UInt32> = []
+
+        // Pass 0: closeWindows は「必ず閉じる」ため配置マッチより先に claim する。
+        // これで Pass 1 / Pass 2 / focus から構造的に除外される
+        var closeTargets: [CloseTarget] = []
+        for window in onScreenWindows + minimizedWindows {
+            guard !claimedIDs.contains(window.id),
+                closeEntries.contains(where: { matches(entry: $0, window: window) })
+            else { continue }
+            claimedIDs.insert(window.id)
+            closeTargets.append(.init(windowID: window.id, pid: window.pid))
+        }
 
         for (index, entry) in entries.enumerated() {
             let matched =
@@ -130,6 +150,7 @@ public enum WindowLayoutPlanner {
 
         return Plan(
             placements: placements,
+            closeTargets: closeTargets,
             pendingLaunchIndices: pendingLaunchIndices,
             focusEntryIndex: preferredMatchedFocusEntryIndex ?? fallbackFocusEntryIndex,
             preferredFocusEntryIndex: preferredFocusEntryIndex,
@@ -153,8 +174,19 @@ public enum WindowLayoutPlanner {
     public static func matches(
         entry: WindowLayoutsConfig.WindowEntry, window: WindowInfo
     ) -> Bool {
-        guard window.bundleID == entry.bundleID else { return false }
-        guard let glob = entry.titleGlob else { return true }
+        matches(bundleID: entry.bundleID, titleGlob: entry.titleGlob, window: window)
+    }
+
+    /// bundleID 完全一致 + titleGlob のマッチ判定(closeWindows 用)
+    public static func matches(
+        entry: WindowLayoutsConfig.CloseEntry, window: WindowInfo
+    ) -> Bool {
+        matches(bundleID: entry.bundleID, titleGlob: entry.titleGlob, window: window)
+    }
+
+    static func matches(bundleID: String, titleGlob: String?, window: WindowInfo) -> Bool {
+        guard window.bundleID == bundleID else { return false }
+        guard let glob = titleGlob else { return true }
         return HintKeyAssignment.globMatch(glob, window.title)
     }
 

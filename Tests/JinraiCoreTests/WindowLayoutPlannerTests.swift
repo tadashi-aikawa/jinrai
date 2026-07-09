@@ -22,6 +22,116 @@ struct WindowLayoutPlannerTests {
               launch: launch, focus: focus)
     }
 
+    private func closeEntry(
+        bundleID: String = "com.tinyspeck.slackmacgap", titleGlob: String? = nil
+    ) -> WindowLayoutsConfig.CloseEntry {
+        .init(bundleID: bundleID, titleGlob: titleGlob)
+    }
+
+    @Test("closeWindows にマッチした全ウィンドウが closeTargets に入る(最小化含む)")
+    func closeEntryMatchesAllWindows() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [],
+            closeEntries: [closeEntry()],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "com.tinyspeck.slackmacgap", title: "A"),
+                WindowInfo(id: 2, pid: 100, bundleID: "com.tinyspeck.slackmacgap", title: "B"),
+                WindowInfo(id: 3, pid: 101, bundleID: "md.obsidian", title: "C"),
+            ],
+            minimizedWindows: [
+                WindowInfo(id: 4, pid: 100, bundleID: "com.tinyspeck.slackmacgap", title: "Min")
+            ],
+            screens: [mainScreen])
+        #expect(plan.closeTargets.map(\.windowID) == [1, 2, 4])
+        #expect(plan.placements.isEmpty)
+    }
+
+    @Test("closeWindows は titleGlob で閉じる対象を絞り込める")
+    func closeEntryTitleGlobFilters() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [],
+            closeEntries: [closeEntry(bundleID: "com.google.Chrome", titleGlob: "*Meet*")],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "Meet - 会議"),
+                WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "Gmail"),
+            ],
+            minimizedWindows: [],
+            screens: [mainScreen])
+        #expect(plan.closeTargets.map(\.windowID) == [1])
+    }
+
+    @Test("closeWindows にマッチしたウィンドウは配置対象にならない(Pass 1 / 全取りとも close 優先)")
+    func closedWindowsExcludedFromPlacements() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [entry(bundleID: "com.google.Chrome")],
+            closeEntries: [closeEntry(bundleID: "com.google.Chrome", titleGlob: "*Meet*")],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "com.google.Chrome", title: "Meet - 会議"),
+                WindowInfo(id: 2, pid: 100, bundleID: "com.google.Chrome", title: "Gmail"),
+                WindowInfo(id: 3, pid: 100, bundleID: "com.google.Chrome", title: "Meet - 別会議"),
+            ],
+            minimizedWindows: [],
+            screens: [mainScreen])
+        // Pass 1 の先頭マッチも Pass 2 の全取りも close 済みウィンドウを掴まない
+        #expect(plan.closeTargets.map(\.windowID) == [1, 3])
+        #expect(plan.placements.map(\.windowID) == [2])
+    }
+
+    @Test("close 対象しかマッチしないエントリは focusEntryIndex に影響しない")
+    func closedWindowsDoNotAffectFocus() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [
+                entry(bundleID: "md.obsidian"),
+                entry(bundleID: "com.tinyspeck.slackmacgap", area: "halfRight"),
+            ],
+            closeEntries: [closeEntry()],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "md.obsidian", title: "A"),
+                WindowInfo(id: 2, pid: 101, bundleID: "com.tinyspeck.slackmacgap", title: "B"),
+            ],
+            minimizedWindows: [],
+            screens: [mainScreen])
+        // Slack は close 済みで entry1 にマッチしないため、フォーカスは entry0 に落ちる
+        #expect(plan.closeTargets.map(\.windowID) == [2])
+        #expect(plan.placements.map(\.windowID) == [1])
+        #expect(plan.focusEntryIndex == 0)
+    }
+
+    @Test("close 対象しかないアプリでも launch=true は起動待ちに回らない")
+    func closeDoesNotTriggerLaunch() {
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [
+                entry(
+                    bundleID: "com.tinyspeck.slackmacgap", titleGlob: "*Huddle*", launch: .app)
+            ],
+            closeEntries: [closeEntry(titleGlob: "*DM*")],
+            onScreenWindows: [
+                WindowInfo(id: 1, pid: 100, bundleID: "com.tinyspeck.slackmacgap", title: "DM")
+            ],
+            minimizedWindows: [],
+            screens: [mainScreen])
+        // 唯一のウィンドウを close しても reopen 判定には影響させない(レース回避)
+        #expect(plan.closeTargets.map(\.windowID) == [1])
+        #expect(plan.pendingLaunchIndices.isEmpty)
+    }
+
+    @Test("closeTargets の ID を keeping に含めれば unlistedWindows に残らない")
+    func closeTargetsExcludedFromUnlisted() {
+        let windows = [
+            WindowInfo(id: 1, pid: 100, bundleID: "com.tinyspeck.slackmacgap", title: "A"),
+            WindowInfo(id: 2, pid: 101, bundleID: "md.obsidian", title: "B"),
+        ]
+        let plan = WindowLayoutPlanner.makePlan(
+            entries: [],
+            closeEntries: [closeEntry()],
+            onScreenWindows: windows,
+            minimizedWindows: [],
+            screens: [mainScreen])
+        let kept = Set(plan.placements.map(\.windowID)).union(plan.closeTargets.map(\.windowID))
+        let unlisted = WindowLayoutPlanner.unlistedWindows(from: windows, keeping: kept)
+        #expect(unlisted.map(\.id) == [2])
+    }
+
     @Test("マッチしうるエントリが1つだけなら全ウィンドウを同じ位置へ配置する(全取り)")
     func uniqueEntryTakesAllMatches() {
         let plan = WindowLayoutPlanner.makePlan(

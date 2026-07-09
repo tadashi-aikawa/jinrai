@@ -36,6 +36,14 @@ public struct WindowLayoutsConfig: Sendable {
         public var focus: Bool
     }
 
+    /// 閉じる対象ウィンドウ1件の定義(layouts[].closeWindows[])
+    public struct CloseEntry: Equatable, Sendable {
+        /// 対象アプリの bundle ID(完全一致・必須)
+        public var bundleID: String
+        /// ウィンドウタイトルの glob(`*` と `?`。省略時はタイトルを問わない)
+        public var titleGlob: String?
+    }
+
     /// 配置対象に選ばれなかったオンスクリーン標準ウィンドウの扱い(layouts[].unlistedWindows)
     public enum UnlistedWindowsAction: Equatable, Sendable {
         /// 閉じる("close")
@@ -54,8 +62,10 @@ public struct WindowLayoutsConfig: Sendable {
         public var hotkey: HotkeyBinding?
         /// 配置対象に選ばれなかったオンスクリーン標準ウィンドウの扱い(nil = 何もしない)
         public var unlistedWindows: UnlistedWindowsAction?
-        /// 配置対象ウィンドウ(unlistedWindows 指定時は省略可。focus 指定がなければ配列の最後にマッチしたエントリへフォーカス)
+        /// 配置対象ウィンドウ(closeWindows / unlistedWindows 指定時は省略可。focus 指定がなければ配列の最後にマッチしたエントリへフォーカス)
         public var windows: [WindowEntry]
+        /// レイアウト適用時に必ず閉じるウィンドウ(マッチした全ウィンドウを閉じる。windows の配置より優先)
+        public var closeWindows: [CloseEntry]
     }
 
     /// レイアウト選択ピッカーを開くホットキー(hotkey。nil で無効)
@@ -222,12 +232,14 @@ public enum WindowLayoutsConfigBuilder {
         }
 
         let unlistedWindows = try buildUnlistedWindows(raw, context: context)
+        let closeWindows = try buildCloseWindows(raw, context: context)
 
-        // windows は unlistedWindows 指定時のみ省略可(両方ないレイアウトは何もしないため設定ミスとみなす)
+        // 何もしないレイアウトは設定ミスとみなす
         let rawWindows = raw["windows"] as? [[String: Any]] ?? []
-        if rawWindows.isEmpty, unlistedWindows == nil {
+        if rawWindows.isEmpty, closeWindows.isEmpty, unlistedWindows == nil {
             throw ConfigError(
-                "[jinrai.windowLayouts] \(context) には windows か unlistedWindows のいずれかが必要です")
+                "[jinrai.windowLayouts] \(context) には windows / closeWindows / unlistedWindows のいずれかが必要です"
+            )
         }
 
         var windows: [WindowLayoutsConfig.WindowEntry] = []
@@ -264,10 +276,44 @@ public enum WindowLayoutsConfigBuilder {
                 ))
         }
 
+        // titleGlob なし同士で bundleID が重複すると、配置対象が常に閉じられて矛盾する
+        let closeAllBundleIDs = Set(closeWindows.filter { $0.titleGlob == nil }.map(\.bundleID))
+        for entry in windows where entry.titleGlob == nil {
+            if closeAllBundleIDs.contains(entry.bundleID) {
+                throw ConfigError(
+                    "[jinrai.windowLayouts] \(context) の closeWindows と windows で bundleID"
+                        + " '\(entry.bundleID)' が titleGlob なしで重複しています"
+                        + "(両方にマッチするウィンドウは常に閉じられるため、少なくとも一方に titleGlob を指定してください)")
+            }
+        }
+
         return WindowLayoutsConfig.Layout(
             name: name, description: description, hotkey: hotkey,
             unlistedWindows: unlistedWindows,
-            windows: windows)
+            windows: windows,
+            closeWindows: closeWindows)
+    }
+
+    /// closeWindows(bundleID 必須 + titleGlob 任意)のパース。未指定は空配列
+    private static func buildCloseWindows(
+        _ raw: [String: Any], context: String
+    ) throws -> [WindowLayoutsConfig.CloseEntry] {
+        guard let rawEntries = raw["closeWindows"] as? [[String: Any]] else { return [] }
+        var entries: [WindowLayoutsConfig.CloseEntry] = []
+        for (index, rawEntry) in rawEntries.enumerated() {
+            let entryContext = "\(context).closeWindows[\(index)]"
+            guard let bundleID = rawEntry["bundleID"] as? String, !bundleID.isEmpty else {
+                throw ConfigError("[jinrai.windowLayouts] \(entryContext).bundleID は必須です")
+            }
+            let titleGlob = rawEntry["titleGlob"] as? String
+            if let titleGlob, titleGlob.isEmpty {
+                throw ConfigError(
+                    "[jinrai.windowLayouts] \(entryContext).titleGlob は空にできません(全ウィンドウ対象なら省略してください)"
+                )
+            }
+            entries.append(.init(bundleID: bundleID, titleGlob: titleGlob))
+        }
+        return entries
     }
 
     /// launch(true/false | { newWindow: { url } })のパース。未指定は .none(スキップ)

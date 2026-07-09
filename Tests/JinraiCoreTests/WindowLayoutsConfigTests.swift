@@ -189,6 +189,89 @@ struct WindowLayoutsConfigTests {
         }
     }
 
+    @Test("closeWindows をパースできる(bundleID のみ / titleGlob 付き)")
+    func closeWindowsParse() throws {
+        var layout = validLayout()
+        layout["closeWindows"] = [
+            ["bundleID": "com.tinyspeck.slackmacgap"],
+            ["bundleID": "md.obsidian", "titleGlob": "*Scratch*"],
+        ]
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
+        #expect(
+            config.layouts[0].closeWindows == [
+                .init(bundleID: "com.tinyspeck.slackmacgap", titleGlob: nil),
+                .init(bundleID: "md.obsidian", titleGlob: "*Scratch*"),
+            ])
+    }
+
+    @Test("closeWindows 未指定は空配列")
+    func closeWindowsDefaultsToEmpty() throws {
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [validLayout()]])
+        #expect(config.layouts[0].closeWindows.isEmpty)
+    }
+
+    @Test("closeWindows の bundleID は必須で、titleGlob の空文字はエラー")
+    func closeWindowsValidation() {
+        // bundleID 欠落
+        var noBundleID = validLayout()
+        noBundleID["closeWindows"] = [["titleGlob": "*"]]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [noBundleID]])
+        }
+        // bundleID 空文字
+        var emptyBundleID = validLayout()
+        emptyBundleID["closeWindows"] = [["bundleID": ""]]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [emptyBundleID]])
+        }
+        // titleGlob 空文字
+        var emptyGlob = validLayout()
+        emptyGlob["closeWindows"] = [["bundleID": "a.b", "titleGlob": ""]]
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [emptyGlob]])
+        }
+    }
+
+    @Test("closeWindows と windows の同一 bundleID が両方 titleGlob なしならエラー")
+    func closeWindowsConflictWithWindowsThrows() throws {
+        // 両方 titleGlob なし → 矛盾エラー
+        var conflict = validLayout()
+        conflict["closeWindows"] = [["bundleID": "com.google.Chrome"]]
+        #expect {
+            try WindowLayoutsConfigBuilder.build(["layouts": [conflict]])
+        } throws: { error in
+            "\(error)".contains("titleGlob")
+        }
+
+        // 片方に titleGlob があれば OK
+        var globOnClose = validLayout()
+        globOnClose["closeWindows"] = [["bundleID": "com.google.Chrome", "titleGlob": "*Meet*"]]
+        _ = try WindowLayoutsConfigBuilder.build(["layouts": [globOnClose]])
+
+        // 別 bundleID なら OK
+        var different = validLayout()
+        different["closeWindows"] = [["bundleID": "com.tinyspeck.slackmacgap"]]
+        _ = try WindowLayoutsConfigBuilder.build(["layouts": [different]])
+    }
+
+    @Test("closeWindows があれば windows は省略できる")
+    func windowsOptionalWithCloseWindows() throws {
+        var layout = validLayout()
+        layout["windows"] = nil
+        layout["closeWindows"] = [["bundleID": "com.tinyspeck.slackmacgap"]]
+        let config = try WindowLayoutsConfigBuilder.build(["layouts": [layout]])
+        #expect(config.layouts[0].windows.isEmpty)
+        #expect(config.layouts[0].closeWindows.count == 1)
+
+        // closeWindows が空配列なら「何もしないレイアウト」としてエラー
+        var emptyClose = validLayout()
+        emptyClose["windows"] = nil
+        emptyClose["closeWindows"] = [[String: Any]]()
+        #expect(throws: ConfigError.self) {
+            try WindowLayoutsConfigBuilder.build(["layouts": [emptyClose]])
+        }
+    }
+
     @Test("廃止された closeUnlistedWindows は移行先を示すエラー")
     func removedCloseUnlistedWindowsThrows() {
         for value in [true, false] {
@@ -343,7 +426,7 @@ struct WindowLayoutsConfigTests {
         }
     }
 
-    @Test("windows と unlistedWindows が両方ないレイアウトはエラー")
+    @Test("windows / closeWindows / unlistedWindows が全部ないレイアウトはエラー")
     func layoutWithoutWindowsAndUnlistedWindowsThrows() {
         // windows が空配列
         var emptyWindows = validLayout()

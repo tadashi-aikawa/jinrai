@@ -141,7 +141,7 @@ Window Layouts専用のグローバルホットキーを増やさず、Window Hi
 !!! note
     ウィンドウが存在するのに`titleGlob`に一致するウィンドウが無い場合は、launchは行われずスキップされます。また、再オープンで新規ウィンドウを開かないアプリでは、出現待ちがタイムアウトすることがあります。
 
-### URLで新規ウィンドウを開く (launch.newWindow)
+### URLで新規ウィンドウを開く (launch.newWindow) {#launch-new-window}
 
 `launch`に`{ "newWindow": { "url": ... } }`を指定すると、エントリにマッチするウィンドウが無いときにアプリの起動(reopen)ではなくURLスキームを開いて、目的のウィンドウを直接作らせます。Obsidianの特定Vaultなど、「アプリは起動済みだが目的のウィンドウが無い」状態でも発火するのが`true`との違いです。
 
@@ -166,6 +166,48 @@ Window Layouts専用のグローバルホットキーを増やさず、Window Hi
 
 出現したウィンドウは`titleGlob`で照合するため、URLで開くウィンドウのタイトルにマッチする`titleGlob`を指定してください(省略すると同アプリの新規ウィンドウ全般にマッチします)。URLはアプリをアクティブ化せずに送るため、既存ウィンドウが一瞬前面に出ることはありません。
 
+## 指定ウィンドウを必ず閉じる (closeWindows)
+
+`closeWindows`で、レイアウト適用時に必ず閉じるウィンドウを指定できます。「開発モードではSlackを閉じる」のように、特定アプリを狙い撃ちで閉じられます。
+
+```json
+"layouts": [
+  {
+    "name": "dev",
+    "hotkey": { "modifiers": ["ctrl", "alt"], "key": "1" },
+    "closeWindows": [
+      { "bundleID": "com.tinyspeck.slackmacgap" }
+    ],
+    "windows": [ /* ... */ ]
+  }
+]
+```
+
+- `bundleID`(必須): アプリのbundle IDと完全一致で照合します。
+- `titleGlob`(任意): ウィンドウタイトルをglobパターンで絞り込みます(`windows`と同じ規則)。
+
+マッチした**すべての**ウィンドウを閉じます(クローズボタン押下相当。アプリ自体は終了しません)。最小化されたウィンドウも対象です。閉じる処理は`windows`の配置より先に実行されます。
+
+`closeWindows`のマッチは`windows`の配置マッチより優先されます。閉じられたウィンドウは配置・フォーカス・`unlistedWindows`の対象になりません。同じ`bundleID`を`windows`と`closeWindows`の両方に`titleGlob`なしで指定すると、常に閉じられて配置できず矛盾するため設定エラーになります(少なくとも一方に`titleGlob`を指定してください)。
+
+`closeWindows`だけのレイアウトも定義できます。
+
+```json
+"layouts": [
+  {
+    "name": "no-chat",
+    "hotkey": { "modifiers": ["ctrl", "alt"], "key": "9" },
+    "closeWindows": [
+      { "bundleID": "com.tinyspeck.slackmacgap" },
+      { "bundleID": "com.hnc.Discord" }
+    ]
+  }
+]
+```
+
+!!! note
+    `closeWindows`で閉じても`launch: true`の再オープン判定には影響しません(閉じたのがそのアプリ唯一のウィンドウでも、同レイアウト内の`launch: true`は発火しません)。「一度閉じてから開き直す」用途には、既存ウィンドウの有無に関わらず発火する[`launch.newWindow`](#launch-new-window)を使ってください。
+
 ## 定義外ウィンドウの扱い (unlistedWindows)
 
 `unlistedWindows`で、現在のSpaceで表示されている標準ウィンドウのうち、レイアウトで実際に選ばれたウィンドウ**以外**の扱いを指定できます。
@@ -186,7 +228,7 @@ Window Layouts専用のグローバルホットキーを増やさず、Window Hi
 
 `unlistedWindows`はレイアウト対象のマッチ数に関わらず適用されます(1枚もマッチしなくても実行されます)。一律配置はレイアウト対象の背面に置かれます(前面には出しません)。
 
-`unlistedWindows`を指定していれば`windows`は省略できます。すべての標準ウィンドウが定義外扱いになるため、「全ウィンドウを閉じる」「全ウィンドウを一律配置する」といったレイアウトを定義できます(`windows`と`unlistedWindows`の両方を省略すると設定エラーです)。
+`unlistedWindows`を指定していれば`windows`は省略できます。すべての標準ウィンドウが定義外扱いになるため、「全ウィンドウを閉じる」「全ウィンドウを一律配置する」といったレイアウトを定義できます(`windows`・`closeWindows`・`unlistedWindows`をすべて省略すると設定エラーです)。
 
 ```json
 "layouts": [
@@ -200,6 +242,7 @@ Window Layouts専用のグローバルホットキーを増やさず、Window Hi
 
 ## 適用時の挙動
 
+- `closeWindows`で指定したウィンドウは、配置より先に閉じられます。
 - 最小化されたウィンドウは、解除してから配置します。
 - フルスクリーンのウィンドウは、フルスクリーンを自動で解除してから配置します。
 - 適用後は、`focus: true`を指定したエントリのウィンドウへフォーカスします。`focus: true`は1レイアウトに1件だけ指定できます。

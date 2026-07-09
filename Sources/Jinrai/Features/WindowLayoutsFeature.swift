@@ -120,6 +120,7 @@ final class WindowLayoutsFeature {
         let screens = snapshotScreens()
         let plan = WindowLayoutPlanner.makePlan(
             entries: layout.windows,
+            closeEntries: layout.closeWindows,
             onScreenWindows: WindowEnumerator.orderedWindows(),
             minimizedWindows: collectMinimizedWindows(for: layout),
             screens: screens
@@ -127,7 +128,7 @@ final class WindowLayoutsFeature {
         // unlistedWindows 指定時は配置対象が1件もなくても続行する(未記述ウィンドウ処理だけを行う)
         guard
             !plan.placements.isEmpty || !plan.pendingLaunchIndices.isEmpty
-                || layout.unlistedWindows != nil
+                || !plan.closeTargets.isEmpty || layout.unlistedWindows != nil
         else {
             NSLog("[jinrai.windowLayouts] '%@' にマッチするウィンドウがありません", layout.name)
             if jinraiMode {
@@ -137,7 +138,10 @@ final class WindowLayoutsFeature {
         }
 
         let session = Session(layout: layout, screens: screens, jinraiMode: jinraiMode)
-        session.claimedIDs = Set(plan.placements.map(\.windowID))
+        // AXClose は非同期のため、閉じかけウィンドウを launch 待ちの再マッチや
+        // unlistedWindows 処理が掴まないよう claim 済みにしておく
+        session.claimedIDs =
+            Set(plan.placements.map(\.windowID)).union(plan.closeTargets.map(\.windowID))
         session.deadline = Date().addingTimeInterval(config.windowWaitTimeout)
         session.preferredFocusEntryIndex = plan.preferredFocusEntryIndex
         self.session = session
@@ -145,6 +149,16 @@ final class WindowLayoutsFeature {
         // apply の completion は同期的に呼ばれることがあるため、
         // セットアップが終わるまで finish を保留するガードを立てる
         session.pendingApplies += 1
+
+        // closeWindows は「必ず閉じる」ため配置より先に実行する
+        if !plan.closeTargets.isEmpty {
+            for target in plan.closeTargets {
+                AXWindow.resolve(windowID: target.windowID, pid: target.pid)?.close()
+            }
+            NSLog(
+                "[jinrai.windowLayouts] closeWindows でウィンドウを閉じました: %d",
+                plan.closeTargets.count)
+        }
 
         for placement in plan.placements {
             guard let ax = AXWindow.resolve(windowID: placement.windowID, pid: placement.pid)
@@ -423,7 +437,7 @@ final class WindowLayoutsFeature {
         for layout: WindowLayoutsConfig.Layout
     ) -> [WindowInfo] {
         var result: [WindowInfo] = []
-        for bundleID in Set(layout.windows.map(\.bundleID)) {
+        for bundleID in Set(layout.windows.map(\.bundleID) + layout.closeWindows.map(\.bundleID)) {
             for app in NSRunningApplication.runningApplications(withBundleIdentifier: bundleID) {
                 for window in AXWindow.windows(pid: app.processIdentifier)
                 where window.isMinimized && window.isStandard {

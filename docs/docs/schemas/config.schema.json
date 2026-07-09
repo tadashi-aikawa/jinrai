@@ -2257,6 +2257,24 @@
         }
       }
     },
+    "windowLayoutsCloseWindow": {
+      "type": "object",
+      "description": "レイアウト適用時に閉じるウィンドウ1件の定義です。マッチしたすべてのウィンドウを閉じます（アプリは終了しません）。",
+      "additionalProperties": false,
+      "required": ["bundleID"],
+      "properties": {
+        "bundleID": {
+          "type": "string",
+          "description": "対象アプリの bundle ID です。完全一致で照合します。",
+          "minLength": 1
+        },
+        "titleGlob": {
+          "type": "string",
+          "description": "ウィンドウタイトルのglobパターンです（*は任意の文字列、?は任意の1文字）。省略するとタイトルを問いません。",
+          "minLength": 1
+        }
+      }
+    },
     "windowLayouts": {
       "type": "object",
       "description": "定義済みレイアウト（複数ウィンドウの配置）をホットキーで一括適用します。",
@@ -2283,6 +2301,7 @@
             "required": ["name"],
             "anyOf": [
               { "required": ["windows"] },
+              { "required": ["closeWindows"] },
               { "required": ["unlistedWindows"] }
             ],
             "properties": {
@@ -2325,9 +2344,16 @@
               },
               "windows": {
                 "type": "array",
-                "description": "配置対象のウィンドウ一覧です。unlistedWindows指定時は省略できます（windowsかunlistedWindowsのいずれかが必要です）。focus=true のエントリがあればそのウィンドウへ、なければ配列の最後にマッチしたウィンドウへフォーカスします。",
+                "description": "配置対象のウィンドウ一覧です。closeWindowsかunlistedWindowsの指定時は省略できます（windows / closeWindows / unlistedWindowsのいずれかが必要です）。focus=true のエントリがあればそのウィンドウへ、なければ配列の最後にマッチしたウィンドウへフォーカスします。",
                 "items": {
                   "$ref": "#/definitions/windowLayoutsWindow"
+                }
+              },
+              "closeWindows": {
+                "type": "array",
+                "description": "レイアウト適用時に必ず閉じるウィンドウの一覧です。マッチしたすべてのウィンドウを配置より先に閉じます（windowsの配置マッチより優先され、閉じたウィンドウは配置・unlistedWindowsの対象になりません）。同じbundleIDをwindowsとcloseWindowsの両方にtitleGlobなしで指定するとエラーです。",
+                "items": {
+                  "$ref": "#/definitions/windowLayoutsCloseWindow"
                 }
               }
             }
