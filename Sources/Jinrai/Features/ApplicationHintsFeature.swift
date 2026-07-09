@@ -23,6 +23,10 @@ final class ApplicationHintsFeature {
     private var waiting = false
     private var waitTimer: Timer?
     private var waitTimeoutTimer: Timer?
+    /// 出現待ちの間に押されたキー(捨てずに保持し、出現後に伝播する。
+    /// JinraiMode ならエリア選択への先行入力、通常なら新しいウィンドウへ再送)
+    private var waitKeyEvents: [EventTap.KeyEvent] = []
+    private static let waitKeyEventsLimit = 32
 
     /// Window Hints へ戻る遷移コールバック(jinraiMode フラグ付き)
     var onOpenWindowHints: ((Bool) -> Void)?
@@ -116,6 +120,7 @@ final class ApplicationHintsFeature {
         isVisible = false
         showJinraiMode = false
         stopWait()
+        waitKeyEvents = []
         eventTap.stop()
         for overlay in overlays {
             overlay.orderOut(nil)
@@ -245,9 +250,14 @@ final class ApplicationHintsFeature {
 
     private func handleKeyDown(_ event: EventTap.KeyEvent) -> Bool {
         guard isVisible else { return false }
-        // 待機中は Escape のみ
+        // 待機中は Escape でキャンセル。それ以外のキーは捨てずに保持し、
+        // 新規ウィンドウの出現後に伝播する
         if waiting {
-            if event.keyCode == UInt32(kVK_Escape) { closeAndCancelJinraiMode() }
+            if event.keyCode == UInt32(kVK_Escape) {
+                closeAndCancelJinraiMode()
+            } else if waitKeyEvents.count < Self.waitKeyEventsLimit {
+                waitKeyEvents.append(event)
+            }
             return true
         }
         if event.keyCode == UInt32(kVK_Escape) {
@@ -412,6 +422,7 @@ final class ApplicationHintsFeature {
         targetVisibleFrame: CGRect?
     ) {
         waiting = true
+        waitKeyEvents = []
         let deadline = Date().addingTimeInterval(config.windowWaitTimeout)
 
         waitTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) {
@@ -429,10 +440,16 @@ final class ApplicationHintsFeature {
                     ax.focus()
                     self.stopWait()
                     let wasJinrai = self.showJinraiMode
+                    let heldKeys = self.waitKeyEvents
                     self.close()
-                    // JinraiMode 中: 作成したウィンドウを続けて配置(→ エリア選択へ)
+                    // JinraiMode 中: 作成したウィンドウを続けて配置(→ エリア選択へ)。
+                    // 待機中に押されたキーはエリア選択への先行入力として持ち越す
                     if wasJinrai {
+                        self.eventTap.stashKeyEvents(heldKeys)
                         self.onSelectInJinraiMode?(newWindow.id, newWindow.pid)
+                    } else if !heldKeys.isEmpty {
+                        // 通常時: 待機中のキーを新しいウィンドウへ伝播する
+                        EventTap.postKeyEvents(heldKeys, toPid: newWindow.pid)
                     }
                     return
                 }

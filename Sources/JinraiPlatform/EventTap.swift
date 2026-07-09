@@ -134,6 +134,15 @@ public final class EventTap {
         }
     }
 
+    /// モーダル側が自前で溜めたキーを持ち越しバッファへ積む(次画面が drain で受け取る)。
+    /// Application Hints のウィンドウ出現待ちのように、tap を生かしたまま
+    /// ハンドラ側でキーを保持していたケースの受け渡しに使う
+    public func stashKeyEvents(_ events: [KeyEvent]) {
+        for event in events where heldKeyEvents.count < Self.heldKeyEventsLimit {
+            heldKeyEvents.append(event)
+        }
+    }
+
     /// holdKeysForNextStart 中に保持したキーを取り出す(取り出したら空になる)
     public func drainHeldKeyEvents() -> [KeyEvent] {
         let events = heldKeyEvents
@@ -213,6 +222,28 @@ public final class EventTap {
         guard let (down, up) = makeKeyEvents(modifiers: modifiers, key: key) else { return }
         down.postToPid(pid)
         up.postToPid(pid)
+    }
+
+    /// 捕捉済みイベントを特定アプリの pid へ再送する(モーダル中に保持したキーの伝播)。
+    /// postToPid は session tap を経由しないが、念のため自前マーカーを付ける
+    public static func postKeyEvents(_ events: [KeyEvent], toPid pid: pid_t) {
+        let source = CGEventSource(stateID: .hidSystemState)
+        for event in events {
+            guard
+                let down = CGEvent(
+                    keyboardEventSource: source, virtualKey: CGKeyCode(event.keyCode),
+                    keyDown: true),
+                let up = CGEvent(
+                    keyboardEventSource: source, virtualKey: CGKeyCode(event.keyCode),
+                    keyDown: false)
+            else { continue }
+            down.flags = event.flags
+            up.flags = event.flags
+            down.setIntegerValueField(.eventSourceUserData, value: selfPostedMarker)
+            up.setIntegerValueField(.eventSourceUserData, value: selfPostedMarker)
+            down.postToPid(pid)
+            up.postToPid(pid)
+        }
     }
 
     private static func makeKeyEvents(
