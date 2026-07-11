@@ -199,9 +199,15 @@ const features = [
     pointer-events: none;
   }
 
+  /* スマホでは画面全体の固定背景にする(Hero は不透明な背景を持つため2画面目以降で見える) */
   @media (max-width: 768px) {
     .bg-mascot {
-      display: none;
+      right: auto;
+      left: 50%;
+      bottom: 0;
+      height: 100vh;
+      height: 100svh;
+      transform: translateX(-50%);
     }
   }
 </style>
