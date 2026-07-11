@@ -1,0 +1,46 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Outer crest circle -->
+  <circle cx="512" cy="512" r="468" fill="#000000"></circle>
+  <circle cx="512" cy="512" r="440" fill="none" stroke="#FFD400" stroke-width="40"></circle>
+
+  <!-- Inner circle -->
+  <circle cx="512" cy="512" r="360" fill="none" stroke="#FFD400" stroke-width="16"></circle>
+
+  <!-- Central lightning -->
+  <polygon fill="#FFD400" points="
+      540,180
+      420,520
+      520,520
+      460,860
+      700,420
+      600,420
+    "></polygon>
+
+  <!-- Tomoe-style rotating lightning arms -->
+
+  <!-- Arm 1 -->
+  <path fill="#FFD400" d="
+    M512 240
+    C700 240 780 420 700 560
+    L640 520
+    C700 420 640 320 512 320
+    Z"></path>
+
+  <!-- Arm 2 -->
+  <path fill="#FFD400" d="
+    M784 512
+    C784 700 604 780 464 700
+    L504 640
+    C604 700 704 640 704 512
+    Z"></path>
+
+  <!-- Arm 3 -->
+  <path fill="#FFD400" d="
+    M512 784
+    C324 784 244 604 324 464
+    L384 504
+    C324 604 384 704 512 704
+    Z"></path>
+
+</svg>

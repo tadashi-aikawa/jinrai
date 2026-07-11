@@ -1,0 +1,208 @@
+---
+import "../styles/global.css";
+import Hero from "../components/Hero.astro";
+import FeatureCard from "../components/FeatureCard.astro";
+import Install from "../components/Install.astro";
+import Footer from "../components/Footer.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const siteUrl = "https://tadashi-aikawa.github.io/jinrai/";
+const title = "JINRAI(迅雷) - 思考の速度で素早くウィンドウ操作を行うmacOS用ツール";
+const description =
+  "JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択・移動するメニューバー常駐アプリです。";
+
+const features = [
+  {
+    id: "window-hints",
+    title: "Window Hints",
+    tagline: "キー一発でウィンドウ切り替え",
+    description:
+      "各ウィンドウの上にアプリアイコンとキーを表示し、キー入力やクリックで対象ウィンドウへ切り替えます。他のウィンドウに隠れたウィンドウや、別のSpaceにあるウィンドウも候補にできます。",
+    docPath: "window-hints",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>',
+  },
+  {
+    id: "application-hints",
+    title: "Application Hints",
+    tagline: "固定キーでアプリを起動",
+    description:
+      "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。今あるウィンドウではなく、起動可能なアプリを候補として表示します。",
+    docPath: "application-hints",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/></svg>',
+  },
+  {
+    id: "area-hints",
+    title: "Area Hints",
+    tagline: "エリアを選んでウィンドウを移動",
+    description:
+      "各ディスプレイ上に設定済みのエリアとキーを表示し、キー入力でアクティブウィンドウをそのエリアへ移動します。",
+    docPath: "area-hints",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>',
+  },
+  {
+    id: "window-mover",
+    title: "Window Mover",
+    tagline: "ホットキーで位置とサイズを変更",
+    description:
+      "ホットキーでアクティブウィンドウを別ディスプレイ、空き領域、指定した画面領域へ移動します。",
+    docPath: "window-mover",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M2 12h20"/><path d="m9 5 3-3 3 3"/><path d="m9 19 3 3 3-3"/><path d="m5 9-3 3 3 3"/><path d="m19 9 3 3-3 3"/></svg>',
+  },
+  {
+    id: "window-layouts",
+    title: "Window Layouts",
+    tagline: "いつもの配置をホットキー一発で",
+    description:
+      "あらかじめ定義したレイアウトへ、複数のウィンドウをホットキー一発で一括配置します。いつもの作業配置を一瞬で再現できます。",
+    docPath: "window-layouts",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>',
+  },
+  {
+    id: "jinrai-mode",
+    title: "JINRAI Mode",
+    tagline: "選択と移動を交互に連続実行",
+    description:
+      "Window Hintsによるウィンドウ選択と、Area Hintsによる移動先選択を交互に繰り返します。複数のウィンドウを続けて配置できます。",
+    docPath: "jinrai-mode",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
+  },
+  {
+    id: "focus-border",
+    title: "Focus Border",
+    tagline: "フォーカスを見失わない",
+    description:
+      "フォーカスが移動したウィンドウを枠線で一時的に強調します。別のSpaceへ移動した場合も、切り替え後のウィンドウを確認しやすくなります。",
+    docPath: "focus-border",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>',
+  },
+  {
+    id: "focus-back",
+    title: "Focus Back",
+    tagline: "直前のウィンドウへ即座に戻る",
+    description:
+      "ホットキーで直前にアクティブだったウィンドウへ戻ります。連続して押すと、2つのウィンドウを交互に切り替えられます。",
+    docPath: "focus-back",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
+  },
+];
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <link rel="canonical" href={siteUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={siteUrl} />
+    <meta property="og:image" content={`${siteUrl}ogp.jpg`} />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <img
+      class="bg-mascot"
+      src={`${base}/images/jinrai7.webp`}
+      alt=""
+      aria-hidden="true"
+      width="717"
+      height="1080"
+    />
+    <Hero />
+
+    <div class="bolt-divider" aria-hidden="true"></div>
+
+    <main>
+      <section class="features" id="features">
+        <div class="container">
+          <h2 class="section-title"><span class="en">Features</span>主な機能</h2>
+          <p class="section-lead">
+            ウィンドウの「切り替え」と「配置」を、マウスに手を伸ばさずキーボードだけで。
+          </p>
+          <div class="grid">
+            {features.map((feature) => <FeatureCard {...feature} />)}
+          </div>
+        </div>
+      </section>
+
+      <div class="bolt-divider" aria-hidden="true"></div>
+
+      <Install />
+    </main>
+
+    <div class="bolt-divider" aria-hidden="true"></div>
+
+    <Footer />
+  </body>
+</html>
+
+<script>
+  // スクロールに応じて要素をフェードイン(JS無効時は最初から表示されたまま)
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduced && "IntersectionObserver" in window) {
+    const targets = document.querySelectorAll(
+      ".features article, .section-title, .section-lead, .install .method",
+    );
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("shown");
+            observer.unobserve(entry.target);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px" },
+    );
+    // 同じ親を持つ要素群(機能カード等)は 70ms ずつ遅らせて順に出す
+    const byParent = new Map<Element, Element[]>();
+    for (const el of targets) {
+      el.classList.add("reveal");
+      observer.observe(el);
+      const parent = el.parentElement;
+      if (parent) {
+        byParent.set(parent, [...(byParent.get(parent) ?? []), el]);
+      }
+    }
+    for (const siblings of byParent.values()) {
+      siblings.forEach((el, i) => {
+        (el as HTMLElement).style.transitionDelay = `${i * 70}ms`;
+      });
+    }
+  }
+</script>
+
+<style>
+  .features {
+    padding: 5rem 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  /* ページ全体に薄く固定表示するマスコット(透かし) */
+  .bg-mascot {
+    position: fixed;
+    right: -4vw;
+    bottom: -6vh;
+    height: min(85vh, 900px);
+    width: auto;
+    opacity: 0.08;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    .bg-mascot {
+      display: none;
+    }
+  }
+</style>

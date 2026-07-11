@@ -5,3 +5,4 @@ dist/
 DerivedData/
 .DS_Store
 *.7z
+/.pnpm-store/v11

@@ -1,4 +1,4 @@
-name: Documentation
+name: Pages
 on:
   push:
     branches:
@@ -16,14 +16,38 @@ jobs:
     steps:
       - uses: actions/configure-pages@v6
       - uses: actions/checkout@v6
+
+      # ドキュメント (Zensical) をビルド
       - uses: actions/setup-python@v6
         with:
           python-version: 3.x
       - run: pip install zensical
       - run: zensical build --clean
         working-directory: docs
+
+      # プロモーションサイト (Astro) をビルド
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install --global pnpm@11.9.0
+      - run: pnpm ci
+        working-directory: site
+      - run: pnpm build
+        working-directory: site
+
+      # プロモをルート、ドキュメントを /docs/ に配置してマージ
+      # schemas はユーザーの config.jsonc がルート直下の URL を参照するため、
+      # 互換維持でルートにもコピーする
+      - name: Merge sites
+        run: |
+          mkdir _pages
+          cp -r site/dist/* _pages/
+          mkdir _pages/docs
+          cp -r docs/site/* _pages/docs/
+          cp -r _pages/docs/schemas _pages/schemas
+
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: docs/site
+          path: _pages
       - uses: actions/deploy-pages@v5
         id: deployment

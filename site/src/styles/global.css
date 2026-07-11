@@ -1,0 +1,188 @@
+:root {
+  --jinrai-yellow: #ffd400;
+  --jinrai-yellow-light: #ffe76a;
+  --jinrai-yellow-dark: #d6a900;
+  --jinrai-black: #050505;
+  --jinrai-black-soft: #111318;
+  --jinrai-blue: #66adfa;
+  --jinrai-orange: #ff7514;
+
+  --bg: #08090d;
+  --bg-subtle: #10131a;
+  --bg-raised: #171b24;
+  --border: rgba(255, 212, 0, 0.18);
+  --border-strong: rgba(255, 212, 0, 0.42);
+  --fg: rgba(246, 248, 252, 0.88);
+  --fg-muted: rgba(246, 248, 252, 0.66);
+  --fg-faint: rgba(246, 248, 252, 0.42);
+
+  --font-sans:
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+a {
+  color: var(--jinrai-yellow);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--jinrai-yellow-light);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+::selection {
+  background: rgba(255, 117, 20, 0.34);
+  color: #fff;
+}
+
+.container {
+  width: min(1080px, 100% - 3rem);
+  margin-inline: auto;
+}
+
+.section-title {
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.94);
+  text-align: center;
+}
+
+.section-title .en {
+  display: inline-block;
+  position: relative;
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.3em;
+  color: var(--jinrai-yellow);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  transform: skewX(-8deg);
+  padding-bottom: 0.35rem;
+}
+
+.section-title .en::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--jinrai-yellow) 30%,
+    var(--jinrai-yellow) 70%,
+    transparent
+  );
+}
+
+.section-title {
+  display: grid;
+  justify-items: center;
+}
+
+/* セクション間の稲妻形の区切り線 */
+.bolt-divider {
+  height: 14px;
+  filter: drop-shadow(0 0 8px rgba(255, 212, 0, 0.35));
+}
+
+.bolt-divider::before {
+  content: "";
+  display: block;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--jinrai-yellow-dark) 12%,
+    var(--jinrai-yellow) 50%,
+    var(--jinrai-yellow-dark) 88%,
+    transparent
+  );
+  clip-path: polygon(
+    0% 50%,
+    8% 30%,
+    18% 65%,
+    26% 20%,
+    38% 75%,
+    50% 35%,
+    60% 80%,
+    70% 25%,
+    82% 60%,
+    92% 40%,
+    100% 55%,
+    100% 69%,
+    92% 54%,
+    82% 74%,
+    70% 39%,
+    60% 94%,
+    50% 49%,
+    38% 89%,
+    26% 34%,
+    18% 79%,
+    8% 44%,
+    0% 64%
+  );
+}
+
+.section-lead {
+  margin: 1rem auto 0;
+  max-width: 40em;
+  text-align: center;
+  color: var(--fg-muted);
+}
+
+/* スクロールに応じたフェードイン(index.astro の IntersectionObserver が .shown を付与) */
+.reveal {
+  opacity: 0;
+  translate: 0 24px;
+  transition:
+    opacity 0.6s ease-out,
+    translate 0.6s ease-out;
+}
+
+.reveal.shown {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    translate: none;
+    transition: none;
+  }
+}

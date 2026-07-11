@@ -1,0 +1,3 @@
+# esbuild はバイナリ配置のため install script の実行を許可する
+allowBuilds:
+  esbuild: true

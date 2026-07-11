@@ -52,7 +52,8 @@ macOS 15 以降は「右クリック → 開く」のバイパスが廃止され
 
 ## ドキュメント
 
-- [JINRAI(迅雷)](https://tadashi-aikawa.github.io/jinrai/)
+- [プロモーションサイト](https://tadashi-aikawa.github.io/jinrai/)
+- [JINRAI(迅雷)](https://tadashi-aikawa.github.io/jinrai/docs/)
 - [Deep Wiki](https://deepwiki.com/tadashi-aikawa/jinrai)
 
 

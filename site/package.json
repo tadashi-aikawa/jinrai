@@ -1,0 +1,17 @@
+{
+  "name": "jinrai-site",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "7.0.7"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,101 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<section class="install" id="install">
+  <div class="container">
+    <h2 class="section-title"><span class="en">Install</span>インストール</h2>
+
+    <div class="methods">
+      <div class="method">
+        <h3>Homebrew</h3>
+        <p>インストール:</p>
+        <pre><code>brew install --cask tadashi-aikawa/tap/jinrai</code></pre>
+        <p>アップデート:</p>
+        <pre><code>brew upgrade --cask jinrai</code></pre>
+      </div>
+
+      <div class="method">
+        <h3>権限について</h3>
+        <p>
+          ウィンドウ操作には<strong>アクセシビリティ</strong>権限、
+          隠れたウィンドウのプレビュー表示には<strong>画面収録</strong>権限が必要です。
+          初回起動時の案内に従って許可してください。
+        </p>
+      </div>
+    </div>
+
+    <p class="setup-link">
+      手動インストールなど、詳しい手順は<a href={`${base}/docs/setup/`}>セットアップガイド</a>を参照してください。
+    </p>
+
+    <p class="requirements">
+      対応環境: macOS 15以降 / ライセンス:
+      <a href="https://github.com/tadashi-aikawa/jinrai/blob/main/LICENSE">MIT</a>
+      (オープンソース)
+    </p>
+  </div>
+</section>
+
+<style>
+  .install {
+    padding: 5rem 0;
+  }
+
+  .methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .method {
+    padding: 1.75rem;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.94);
+    margin-bottom: 1rem;
+  }
+
+  pre {
+    padding: 0.9rem 1.1rem;
+    background: #0f1219;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow-x: auto;
+    margin-block: 0.75rem;
+  }
+
+  pre code {
+    color: var(--jinrai-yellow-light);
+    font-size: 0.85rem;
+  }
+
+  p {
+    font-size: 0.95rem;
+    color: var(--fg-muted);
+  }
+
+  :not(pre) > code {
+    padding: 0.1em 0.4em;
+    background: rgba(102, 173, 250, 0.12);
+    border-radius: 6px;
+    color: var(--fg);
+  }
+
+  .setup-link {
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+
+  .requirements {
+    margin-top: 2.5rem;
+    text-align: center;
+    color: var(--fg-muted);
+  }
+</style>
