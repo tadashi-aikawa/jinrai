@@ -167,11 +167,13 @@ final class WindowMoverFeature {
             guard !ratios.isEmpty else { return }
             let screenFrame = ScreenUtil.visibleFrame(of: screen)
             let index = cycleState.nextIndex(
-                command: command, currentFrame: current, ratioCount: ratios.count)
+                command: command, currentFrame: current, ratios: ratios,
+                screenFrame: screenFrame)
             let target = CycleState.targetFrame(
                 command: command, ratio: ratios[index], screenFrame: screenFrame)
             self.apply(frame: target, to: win)
-            // setFrame 後の実 frame を記録(アプリ側の丸め・最小サイズ対応)
+            // setFrame 後の実 frame を記録(アプリの最小サイズ制約等でターゲットどおりに
+            // ならなかった場合も、次回のサイクル継続判定ができるようにする)
             cycleState.recordApplied(
                 command: command, index: index, actualFrame: win.frame ?? target)
         }

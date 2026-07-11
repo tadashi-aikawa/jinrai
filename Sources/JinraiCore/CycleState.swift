@@ -27,19 +27,32 @@ public struct CycleState {
     public init() {}
 
     /// 次に適用すべき比率のインデックスを決める。
-    /// 同一コマンドの連続実行で、現 frame が前回適用後の実 frame と近ければ次の比率へ、
-    /// そうでなければ(手動変更後など)先頭から再開する。
+    /// 同一コマンドの連続実行で、現 frame が前回適用後の実 frame と近ければ次の比率へ進む。
+    /// cycle 以外の手段(Area Hints 等)で配置された場合でも、現 frame がいずれかの比率の
+    /// ターゲットと一致すればその次の比率へ進む。どちらにも該当しなければ先頭から再開する。
     public func nextIndex(
-        command: CycleCommand, currentFrame: CGRect, ratioCount: Int
+        command: CycleCommand, currentFrame: CGRect,
+        ratios: [CGFloat], screenFrame: CGRect
     ) -> Int {
-        guard ratioCount > 0 else { return 0 }
-        guard
-            lastCommand == command,
-            let lastIndex,
-            let lastActualFrame,
+        guard !ratios.isEmpty else { return 0 }
+        // 記憶ベース判定: アプリの最小サイズ制約などでターゲットどおりに設定できず、
+        // 実 frame が理想ターゲットとズレていても、前回適用後の実 frame と一致すれば
+        // サイクル継続とみなす
+        if lastCommand == command, let lastIndex, let lastActualFrame,
             Geometry.frameNear(currentFrame, lastActualFrame, tolerance: Self.frameTolerance)
-        else { return 0 }
-        return (lastIndex + 1) % ratioCount
+        {
+            return (lastIndex + 1) % ratios.count
+        }
+        // 幾何フォールバック: 現 frame がいずれかの比率のターゲットと一致するなら次へ
+        if let matched = ratios.firstIndex(where: {
+            Geometry.frameNear(
+                currentFrame,
+                Self.targetFrame(command: command, ratio: $0, screenFrame: screenFrame),
+                tolerance: Self.frameTolerance)
+        }) {
+            return (matched + 1) % ratios.count
+        }
+        return 0
     }
 
     /// setFrame 適用後に、読み直した実 frame とともに状態を記録する

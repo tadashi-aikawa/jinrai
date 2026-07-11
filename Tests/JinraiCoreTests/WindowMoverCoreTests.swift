@@ -17,7 +17,7 @@ struct CycleStateTests {
 
         for _ in 0..<4 {
             let index = state.nextIndex(
-                command: .cycleLeft, currentFrame: frame, ratioCount: ratios.count)
+                command: .cycleLeft, currentFrame: frame, ratios: ratios, screenFrame: screen)
             let target = CycleState.targetFrame(
                 command: .cycleLeft, ratio: ratios[index], screenFrame: screen)
             applied.append(target)
@@ -38,7 +38,8 @@ struct CycleStateTests {
         state.recordApplied(command: .cycleLeft, index: 0, actualFrame: frame)
 
         let index = state.nextIndex(
-            command: .cycleHorizontalCenter, currentFrame: frame, ratioCount: ratios.count)
+            command: .cycleHorizontalCenter, currentFrame: frame, ratios: ratios,
+            screenFrame: screen)
         #expect(index == 0)
         let target = CycleState.targetFrame(
             command: .cycleHorizontalCenter, ratio: ratios[index], screenFrame: screen)
@@ -47,7 +48,8 @@ struct CycleStateTests {
         state.recordApplied(command: .cycleHorizontalCenter, index: index, actualFrame: frame)
 
         let next = state.nextIndex(
-            command: .cycleHorizontalCenter, currentFrame: frame, ratioCount: ratios.count)
+            command: .cycleHorizontalCenter, currentFrame: frame, ratios: ratios,
+            screenFrame: screen)
         let nextTarget = CycleState.targetFrame(
             command: .cycleHorizontalCenter, ratio: ratios[next], screenFrame: screen)
         #expect(nextTarget == CGRect(x: 400, y: 0, width: 400, height: 900))
@@ -61,7 +63,7 @@ struct CycleStateTests {
         state.recordApplied(command: .cycleLeft, index: 1, actualFrame: actual)
 
         let index = state.nextIndex(
-            command: .cycleLeft, currentFrame: actual, ratioCount: ratios.count)
+            command: .cycleLeft, currentFrame: actual, ratios: ratios, screenFrame: screen)
         #expect(index == 2)
     }
 
@@ -74,7 +76,43 @@ struct CycleStateTests {
 
         let manual = CGRect(x: 0, y: 0, width: 500, height: 900)
         let index = state.nextIndex(
-            command: .cycleLeft, currentFrame: manual, ratioCount: ratios.count)
+            command: .cycleLeft, currentFrame: manual, ratios: ratios, screenFrame: screen)
+        #expect(index == 0)
+    }
+
+    @Test("cycle 記憶なしでも現 frame が比率ターゲットと一致すれば次の比率へ進む")
+    func advancesFromExternallyPlacedFrame() {
+        let state = CycleState()
+        // Area Hints の halfRight / halfLeft / halfTop と同一のフレームから開始
+        let cases: [(CycleCommand, CGRect)] = [
+            (.cycleRight, CGRect(x: 600, y: 0, width: 600, height: 900)),
+            (.cycleLeft, CGRect(x: 0, y: 0, width: 600, height: 900)),
+            (.cycleTop, CGRect(x: 0, y: 0, width: 1200, height: 450)),
+        ]
+        for (command, frame) in cases {
+            let index = state.nextIndex(
+                command: command, currentFrame: frame, ratios: ratios, screenFrame: screen)
+            #expect(index == 1)
+        }
+    }
+
+    @Test("最後の比率のターゲットと一致していれば先頭へ戻る")
+    func wrapsFromLastRatioTarget() {
+        let state = CycleState()
+        // ratios 末尾 2/3 の cycleLeft ターゲット
+        let frame = CGRect(x: 0, y: 0, width: 800, height: 900)
+        let index = state.nextIndex(
+            command: .cycleLeft, currentFrame: frame, ratios: ratios, screenFrame: screen)
+        #expect(index == 0)
+    }
+
+    @Test("別コマンドのターゲット位置からは先頭の比率で始まる")
+    func otherCommandTargetDoesNotAdvance() {
+        let state = CycleState()
+        // cycleLeft の 1/2 位置(左寄せ)に対して cycleRight
+        let frame = CGRect(x: 0, y: 0, width: 600, height: 900)
+        let index = state.nextIndex(
+            command: .cycleRight, currentFrame: frame, ratios: ratios, screenFrame: screen)
         #expect(index == 0)
     }
 
