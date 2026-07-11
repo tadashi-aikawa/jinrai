@@ -180,11 +180,18 @@ const features = [
     padding: 5rem 0;
   }
 
+  /* デモ動画の見やすさを優先して2列固定(8枚なので2×4でちょうど埋まる) */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     margin-top: 3rem;
+  }
+
+  @media (max-width: 768px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   /* ページ全体に薄く固定表示するマスコット(透かし) */
