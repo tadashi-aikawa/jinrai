@@ -32,6 +32,10 @@ public final class OverlayWindow: NSWindow {
             rawValue: Int(CGWindowLevelForKey(.overlayWindow)) + overlayLevel.rawValue)
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         isReleasedWhenClosed = false
+        // orderFront のたびにシステムが出現アニメーション(スケールイン)をかけ、
+        // 描画済みの枠線等が内側からスライドして見えるため無効化する
+        // (Reduce Motion 有効時に発生しないのはこの演出がシステム側のものだから)
+        animationBehavior = .none
 
         let view = NSView(frame: NSRect(origin: .zero, size: frame.size))
         view.wantsLayer = true
