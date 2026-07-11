@@ -6,7 +6,7 @@ icon: lucide/zap
     <h1>JINRAI</h1>
     <img src="./attachments/jinrai.svg" width="256" />
     <h3>迅雷</h3>
-    <p>思考の速度で素早くウィンドウ操作を行うmacOS用ツール</p>
+    <p>『思考の速度でウィンドウ操作を』</p>
     <p>
         <a href="https://github.com/tadashi-aikawa/jinrai/releases/latest"><img src="https://img.shields.io/github/release/tadashi-aikawa/jinrai" alt="release" /></a>
         <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml"><img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
@@ -17,7 +17,7 @@ icon: lucide/zap
 
 ---
 
-JINRAIは、キーボードを中心にmacOSのウィンドウを素早く選択・移動するためのメニューバー常駐アプリです。
+JINRAIは、ウィンドウを素早く選択・移動できるmacOSの常駐アプリです。
 
 ## 主な機能
 

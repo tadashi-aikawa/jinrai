@@ -2,7 +2,7 @@
     <h1>JINRAI</h1>
     <img src="./jinrai.png" width="256" />
     <h3>迅雷</h3>
-    <p>思考の速度で素早くウィンドウ操作を行うmacOS用ツール</p>
+    <p>『思考の速度でウィンドウ操作を』</p>
     <p>
         <a href="https://github.com/tadashi-aikawa/jinrai/releases/latest"><img src="https://img.shields.io/github/release/tadashi-aikawa/jinrai" alt="release" /></a>
         <a href="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml"><img src="https://github.com/tadashi-aikawa/jinrai/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
