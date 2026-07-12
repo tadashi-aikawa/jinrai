@@ -1,5 +1,22 @@
 # CLAUDE.md
 
+## コードベースの全体像
+
+macOS 常駐(メニューバー)のウィンドウ操作ツール。Hammerspoon 製からの移行で、`元 xxx.lua` のコメントは旧実装との対応を示す。SwiftPM の4ターゲット構成で、依存方向は上から下のみ:
+
+- **`Sources/Jinrai`(executable)**: エントリポイント。`AppDelegate` が設定を読み、セクションが存在する機能だけ `Features/` から起動して束ねる。`Features/` は機能単位(Window Hints / Area Hints / Application Hints / Window Mover / Window Layouts / JINRAI Mode / Focus Border / Focus Back / Updater)で、Core のロジックと Platform の API を組み合わせる配線層
+- **`Sources/JinraiPlatform`**: macOS API 層(AppKit / AX / Carbon / ScreenCaptureKit / SkyLight)。要注意部品は `EventTap`(モーダル系機能で1本共有。下の鉄則参照)、`WindowRegistry`(AX 要素キャッシュ。別 Space フォーカスの要)、`WindowServerFocus`(SLPS 経由の front process 切替)、`OverlayPanel` / `OverlayWindow`
+- **`Sources/JinraiCore`**: 純粋ロジック層(値型のみ、AppKit 非依存)。ヒント配置・キー割当・レイアウト計画・方向スコアリング等。`Config/` に config.jsonc のスキーマ(JSONC パーサ・deepMerge・ディスプレイ構成別 profiles の解決を含む)
+- **`Sources/CGSPrivate`**: 非公開 CGS / AX API の extern 宣言のみの C ターゲット
+
+設定は `~/.config/jinrai/config.jsonc`($XDG_CONFIG_HOME 尊重)。機能はセクションの存在で有効化。`swift run JINRAI --check-config` で読込確認できる。
+
+テストは `Tests/JinraiCoreTests` のみ(= ユニットテストの主戦場は Core 層。Platform / Features はテスト対象外なので実機確認が必要)。`swift build` / `swift test` で回る。
+
+リリースは GitHub Actions の release.yml(workflow_dispatch、main のみ)→ semantic-release が conventional commits からバージョン算出(v1 までは breaking も minor。feat/build/style/perf → minor、fix/refactor → patch)→ 自己署名(jinrai-dev 固定。TCC 許可の維持のため)で .app を zip 化して Releases へ → `update_tap.sh` が homebrew-tap の cask を更新。アプリ内 Updater は Releases API を見て zip を差し替える。
+
+`docs/` はユーザードキュメント(zensical)、`site/` はプロモサイト(Astro)。docs.yml が両方をビルド・マージして GitHub Pages へ配備する。
+
 ## ウィンドウ z-order / フォーカス操作の鉄則(実機検証で確立)
 
 - `kAXRaiseAction` は非アクティブアプリのウィンドウより前面に出せるが、**現アクティブアプリのウィンドウには勝てない**。複数ウィンドウを前面化するときは、先にフォーカス対象を `WindowServerFocus.focus`(SLPS は WindowServer 側で同期的に front process を切り替える)+ AX focus でアクティブ化して前面権を奪い、その後に残りを AXRaise する。
