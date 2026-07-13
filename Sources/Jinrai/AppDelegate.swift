@@ -177,8 +177,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         windowMover?.onJinraiModeApply = { [weak self] activeWindow in
             guard let self else { return }
-            self.windowHints?.advanceJinraiModeCombo(activeWindow: activeWindow)
-            self.windowHints?.showJinraiMode(fadeIn: false, activeWindow: activeWindow)
+            guard let windowHints = self.windowHints else {
+                // windowHints 未設定では次のターンが無い。Area Hints 側が
+                // holdKeysForNextStart で保持した tap を解放してキーボードを返す
+                self.modalEventTap.stop()
+                return
+            }
+            windowHints.advanceJinraiModeCombo(activeWindow: activeWindow)
+            windowHints.showJinraiMode(fadeIn: false, activeWindow: activeWindow)
         }
         windowMover?.onJinraiModeCancel = { [weak self] in
             self?.windowHints?.stopJinraiMode()
@@ -233,6 +239,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         focusHistory = nil
         focusBorder?.teardown()
         focusBorder = nil
+        // 非同期の受け渡し(holdKeysForNextStart)中にリロードされた場合、
+        // どの機能も tap を閉じられないため、共有 tap をここで確実に解放する
+        modalEventTap.stop()
     }
 
     func reloadConfig() {

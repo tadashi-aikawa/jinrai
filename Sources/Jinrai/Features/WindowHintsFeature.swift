@@ -191,7 +191,10 @@ final class WindowHintsFeature {
         defer { activeWindowOverride = nil }
 
         let entries = collectEntries()
-        guard !entries.isEmpty else { return }
+        guard !entries.isEmpty else {
+            abortShow()
+            return
+        }
 
         hints = HintKeyAssignment.assign(
             entries: entries,
@@ -199,11 +202,15 @@ final class WindowHintsFeature {
             overrides: config.prefixOverrides,
             reservedChars: reservedChars()
         )
-        guard !hints.isEmpty else { return }
+        guard !hints.isEmpty else {
+            abortShow()
+            return
+        }
 
         bindEventTap()
         guard eventTap.start() else {
             NSLog("[jinrai.windowHints] キー捕捉を開始できません(権限またはセキュア入力)")
+            abortShow()
             return
         }
 
@@ -231,6 +238,18 @@ final class WindowHintsFeature {
             guard isVisible else { break }
             _ = handleKeyDown(event)
         }
+    }
+
+    /// 表示できないまま show() を抜けるときの後始末。JinraiMode 中の遷移では
+    /// mode 演出が出ており、呼び元が holdKeysForNextStart でキーを保持している
+    /// ため、演出を閉じて tap を解放する(残すとゾンビ化する)。
+    /// 非 JinraiMode ではこの show は tap を所有していない(ホットキー起動)ため
+    /// 触らない(他モーダル表示中に発火した場合にその tap を壊さない)
+    private func abortShow() {
+        guard isJinraiMode else { return }
+        NSLog("[jinrai.windowHints] Hints を表示できないため JinraiMode を終了します(候補なし・キー捕捉不可等)")
+        stopJinraiMode()
+        eventTap.stop()
     }
 
     func close(keepJinraiMode: Bool = false) {

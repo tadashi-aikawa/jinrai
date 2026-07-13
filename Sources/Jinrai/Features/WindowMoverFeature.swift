@@ -56,6 +56,10 @@ final class WindowMoverFeature {
     /// エリア選択の対象ウィンドウ(直前に選択されたウィンドウ。
     /// focusedWindow は frontmostApplication ベースで focus 直後は古いため明示する)
     private var chooserTarget: (windowID: UInt32, pid: pid_t)?
+    /// JinraiMode の非同期適用待ち(フルスクリーン解除→Space 遷移)の世代番号。
+    /// 待ちの間に新しい chooser や apply が始まったら旧世代の遷移を失効させる
+    /// (旧世代が onJinraiModeApply を呼ぶと新しいモーダルの tap を乗っ取るため)
+    private var jinraiApplyGeneration = 0
 
     init(config: WindowMoverConfig, areaHints: AreaHintsConfig, eventTap: EventTap) {
         self.config = config
@@ -149,6 +153,72 @@ final class WindowMoverFeature {
         WindowFrameApplier.apply(frame: frame, to: window, moveCursor: config.cursorAfterMove)
     }
 
+    /// frame を適用し、JinraiMode 中は適用完了を待ってから次のターンへ進む。
+    /// フルスクリーン中のウィンドウは解除待ち(Space 遷移)を挟むため completion が
+    /// 非同期になる。同期前提で即 Hints を開くと遷移中の Space 上に構築されて
+    /// ターンが成立せず、mode 演出だけが画面に残る
+    private func apply(
+        frame: CGRect, to window: AXWindow, thenAdvanceJinraiMode jinraiMode: Bool
+    ) {
+        guard jinraiMode else {
+            apply(frame: frame, to: window)
+            return
+        }
+        let active = (windowID: window.windowID, pid: window.pid)
+        let wasFullScreen = window.isFullScreen
+        jinraiApplyGeneration += 1
+        let generation = jinraiApplyGeneration
+        // 解除待ちの間のキーは tap で保持し、次の Window Hints へ先行入力として
+        // 持ち越す(closeChooser の stop() の遅延破棄は同一 turn しか守れない)。
+        // timeout は解除待ち(約2.4秒)+ Space 遷移の完了待ち(約2.2秒)の上限より
+        // 長くとる。同期適用となる非フルスクリーン時も、直後の show() の start() が
+        // 同一 turn で保持を解除するため無条件でよい(isFullScreen の二重判定の
+        // race を避ける)
+        eventTap.holdKeysForNextStart(timeout: 6)
+        WindowFrameApplier.apply(
+            frame: frame, to: window, moveCursor: config.cursorAfterMove
+        ) { [weak self] _ in
+            guard let self, self.jinraiApplyGeneration == generation else { return }
+            if wasFullScreen {
+                // AXFullScreen が false になり frame を適用できても、Space 遷移は
+                // まだ続いていて対象が CGWindowList に載っていないことがある。
+                // そのまま Hints を開くと候補ゼロで成立しないため、現 Space に
+                // 列挙されるまで待ってから次のターンへ進む
+                self.advanceJinraiModeAfterSpaceSettles(
+                    active, retries: 20, generation: generation)
+            } else {
+                // 解除を待ちきれなかった場合も mode は継続する(キー捕捉を Hints へ返す)
+                self.onJinraiModeApply?(active)
+            }
+        }
+    }
+
+    /// フルスクリーン解除の Space 遷移が終わり、対象ウィンドウが現 Space の
+    /// 画面上に列挙されるのを 100ms 間隔で待ってから次のターンへ進む。
+    /// 列挙された直後も遷移の残りがあるため一拍置く(リトライを使い切ったら
+    /// mode を止めないためにそのまま進む。show() 側の abortShow が後始末する)
+    private func advanceJinraiModeAfterSpaceSettles(
+        _ active: (windowID: UInt32, pid: pid_t), retries: Int, generation: Int
+    ) {
+        guard jinraiApplyGeneration == generation else { return }
+        let onScreen = WindowEnumerator.orderedWindows().contains { $0.id == active.windowID }
+        if onScreen {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                guard let self, self.jinraiApplyGeneration == generation else { return }
+                self.onJinraiModeApply?(active)
+            }
+            return
+        }
+        guard retries > 0 else {
+            onJinraiModeApply?(active)
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.advanceJinraiModeAfterSpaceSettles(
+                active, retries: retries - 1, generation: generation)
+        }
+    }
+
     private func moveToNextDisplay() {
         withFocusedWindow { win, screen in
             guard let next = ScreenUtil.nextScreen(after: screen), next != screen else {
@@ -222,6 +292,7 @@ final class WindowMoverFeature {
         fadeSpotlight: Bool = true
     ) {
         guard !isChooserVisible else { return }
+        jinraiApplyGeneration += 1
         chooserJinraiMode = jinraiMode
         chooserTarget = target
         chooserCandidates = []
@@ -686,10 +757,9 @@ final class WindowMoverFeature {
             let win = chooserTargetWindow()
             closeChooser()
             if let win {
-                apply(frame: frame, to: win)
-            }
-            if wasJinrai {
-                onJinraiModeApply?(win.map { (windowID: $0.windowID, pid: $0.pid) })
+                apply(frame: frame, to: win, thenAdvanceJinraiMode: wasJinrai)
+            } else if wasJinrai {
+                onJinraiModeApply?(nil)
             }
             return true
         }
@@ -835,7 +905,10 @@ final class WindowMoverFeature {
             activeWindow = successor.map { (windowID: $0.id, pid: $0.pid) }
         case "maximizeWindow":
             if let frame = win.frame, let screen = ScreenUtil.screenContaining(frame) {
-                apply(frame: ScreenUtil.visibleFrame(of: screen), to: win)
+                apply(
+                    frame: ScreenUtil.visibleFrame(of: screen), to: win,
+                    thenAdvanceJinraiMode: jinraiMode)
+                return
             }
         case "quitApplication":
             NSRunningApplication(processIdentifier: win.pid)?.terminate()
@@ -866,7 +939,8 @@ final class WindowMoverFeature {
                         screen: screen, screenFrame: screenFrame, excluding: win.windowID)
                     : AreaSpec.frame(for: name, screenFrame: screenFrame)
                 if let target {
-                    apply(frame: target, to: win)
+                    apply(frame: target, to: win, thenAdvanceJinraiMode: jinraiMode)
+                    return
                 }
             }
         }
