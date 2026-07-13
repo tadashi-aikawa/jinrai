@@ -135,6 +135,10 @@ public enum RootConfigBuilder {
         config.windowHints?.jinraiModeKey = config.jinraiMode.windowHintsTriggerKey
         config.areaHints?.jinraiModeKey = config.jinraiMode.areaHintsTriggerKey
         config.applicationHints?.jinraiModeKey = config.jinraiMode.applicationHintsTriggerKey
+        if let areaHints = config.areaHints {
+            try AreaHintsConfigBuilder.validateJinraiModeKey(
+                config.jinraiMode.areaHintsTriggerKey, in: areaHints)
+        }
         return config
     }
 }

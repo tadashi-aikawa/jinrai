@@ -249,6 +249,13 @@ final class WindowMoverFeature {
         if let windowHintsKey = areaHints.windowHintsKey {
             reservedKeys.insert(windowHintsKey)
         }
+        // jinraiMode 開始キーが数字だと、プレフィックス付きキーの1打目を消費してしまう。
+        // 特殊キー名(return 等)は文字列の接頭辞比較で誤衝突するため予約しない
+        if let jinraiModeKey = areaHints.jinraiModeKey,
+            !ConfigKeyDescriptor.keyName(jinraiModeKey).isNamedKey
+        {
+            reservedKeys.insert(jinraiModeKey)
+        }
         let effectiveMappings = DefaultScreenDisambiguator.disambiguate(
             mappings: screenInfos.map { ($0.mapping ?? [:], $0.isDefault) },
             reservedKeys: reservedKeys)

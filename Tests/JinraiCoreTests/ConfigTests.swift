@@ -493,6 +493,57 @@ struct AreaHintsConfigTests {
         #expect(config.actions["1920x1080Center"] == "4")
     }
 
+    @Test("screens 未設定でも actions 同士のキー衝突を検証する")
+    func validatesActionOnlyKeyConflicts() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "actions": ["halfLeft": "K", "halfRight": "KD"]
+            ])
+        }
+    }
+
+    @Test("windowHints 遷移キーとは大小文字を無視して衝突を検証する")
+    func rejectsCaseInsensitiveWindowHintsKeyConflict() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "actions": ["halfLeft": "u"],
+                "navigation": ["windowHints": ["key": "U"]],
+            ])
+        }
+        // 1打鍵判定は入力途中でも効くため、キー列に含まれるだけでも衝突
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["halfLeft": "kh"]],
+                "navigation": ["windowHints": ["key": "H"]],
+            ])
+        }
+    }
+
+    @Test("特殊キー名の windowHints 遷移キーもその文字列で始まるキーとは衝突する")
+    func rejectsNamedWindowHintsKeyLiteralConflict() {
+        // 入力列の完全一致判定(input == hintsKey)が先に効き "tab" キーは到達不能
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "actions": ["halfLeft": "tab"],
+                "navigation": ["windowHints": ["key": "tab"]],
+            ])
+        }
+        // 入力が名前("f1")に一致した時点で遷移が発動し "f1x" は到達不能
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "actions": ["halfLeft": "f1x"],
+                "navigation": ["windowHints": ["key": "f1"]],
+            ])
+        }
+        // 名前の途中まででしかないキーは通る(space の入力列にキーが到達し得ない)
+        #expect(throws: Never.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["halfLeft": "spa"]],
+                "navigation": ["windowHints": ["key": "space"]],
+            ])
+        }
+    }
+
     @Test("既知の接頭辞でも誤記のエリア名はエラー(actions / screens)")
     func rejectsMisspelledAreaName() {
         #expect(throws: ConfigError.self) {
@@ -837,4 +888,54 @@ struct RootConfigTests {
             """)
         #expect(config.areaHints?.jinraiModeKey == "return")
     }
+
+    @Test("jinraiMode.triggers.areaHints.key とエリア・アクションキーの衝突はエラー")
+    func rejectsJinraiModeTriggerKeyConflict() {
+        // エリアキーと衝突(大小文字無視)
+        #expect(throws: ConfigError.self) {
+            try RootConfigBuilder.build(text: """
+                {
+                    "areaHints": { "defaultScreen": { "halfLeft": "J" } },
+                    "jinraiMode": { "triggers": { "areaHints": { "key": "j" } } }
+                }
+                """)
+        }
+        // アクションキーと衝突
+        #expect(throws: ConfigError.self) {
+            try RootConfigBuilder.build(text: """
+                {
+                    "areaHints": { "actions": { "halfLeft": "j" } },
+                    "jinraiMode": { "triggers": { "areaHints": { "key": "j" } } }
+                }
+                """)
+        }
+        // windowHints 遷移キーと衝突(jinraiMode 開始が先に効いて到達不能)
+        #expect(throws: ConfigError.self) {
+            try RootConfigBuilder.build(text: """
+                {
+                    "areaHints": { "navigation": { "windowHints": { "key": "j" } } },
+                    "jinraiMode": { "triggers": { "areaHints": { "key": "J" } } }
+                }
+                """)
+        }
+        // 複数文字の windowHints 遷移キーの入力途中の1打鍵を消費するのも衝突
+        #expect(throws: ConfigError.self) {
+            try RootConfigBuilder.build(text: """
+                {
+                    "areaHints": { "navigation": { "windowHints": { "key": "kj" } } },
+                    "jinraiMode": { "triggers": { "areaHints": { "key": "j" } } }
+                }
+                """)
+        }
+        // 衝突しなければ通る(return は特殊キー)
+        #expect(throws: Never.self) {
+            try RootConfigBuilder.build(text: """
+                {
+                    "areaHints": { "defaultScreen": { "halfLeft": "J" } },
+                    "jinraiMode": { "triggers": { "areaHints": { "key": "return" } } }
+                }
+                """)
+        }
+    }
+
 }

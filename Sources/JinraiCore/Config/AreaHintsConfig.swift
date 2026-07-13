@@ -121,7 +121,11 @@ public enum AreaHintsConfigBuilder {
 
         let windowHintsKey = merged.string("navigation.windowHints.key")
 
-        // キー衝突の検証(エリアキー + アクションキー + windowHints キー)。変種ごとに行う
+        // キー衝突の検証。アクションキー同士 + windowHints キーは screens の有無に
+        // よらず検証し、エリアキーは変種ごとにアクションキーと合わせて検証する
+        try validateChooserKeys(
+            areaKeys: [], actionKeys: Array(actions.values),
+            windowHintsKey: windowHintsKey, context: "actions")
         func validateVariantConflicts(
             _ variants: AreaHintsConfig.AreaMappingVariants, context: String
         ) throws {
@@ -132,12 +136,9 @@ public enum AreaHintsConfigBuilder {
                 mappings.append((label, fallback))
             }
             for (variantContext, mapping) in mappings {
-                var allKeys = Array(mapping.values.map { ConfigKeyDescriptor.caseSensitiveSequence($0) })
-                allKeys.append(contentsOf: actions.values.map { ConfigKeyDescriptor.caseSensitiveSequence($0) })
-                if let windowHintsKey {
-                    allKeys.append(ConfigKeyDescriptor.keyName(windowHintsKey))
-                }
-                try validateKeyConflicts(allKeys, context: variantContext)
+                try validateChooserKeys(
+                    areaKeys: Array(mapping.values), actionKeys: Array(actions.values),
+                    windowHintsKey: windowHintsKey, context: variantContext)
             }
         }
         for (uuid, variants) in screens {
@@ -259,6 +260,92 @@ public enum AreaHintsConfigBuilder {
             result[areaName] = key
         }
         return result
+    }
+
+    /// エリアキー・アクションキーの相互衝突と、windowHints 遷移キーとの衝突を検証する
+    static func validateChooserKeys(
+        areaKeys: [String], actionKeys: [String], windowHintsKey: String?, context: String
+    ) throws {
+        let sequenceKeys = areaKeys + actionKeys
+        try validateKeyConflicts(
+            sequenceKeys.map { ConfigKeyDescriptor.caseSensitiveSequence($0) },
+            context: context)
+        guard let windowHintsKey else { return }
+        for key in sequenceKeys
+        where windowHintsKeyConflicts(windowHintsKey, withSequenceKey: key) {
+            throw ConfigError(
+                "[jinrai.areaHints] key '\(key)' conflicts with navigation.windowHints.key '\(windowHintsKey)' in \(context)"
+            )
+        }
+    }
+
+    /// windowHints 遷移キーと入力列キーの衝突判定。
+    /// 通常文字1文字なら1打鍵ごと・入力途中でも・大小文字を無視して判定されるため、
+    /// その文字を含むキーをすべて到達不能にする。特殊キー名でも入力列の完全一致判定
+    /// (input == hintsKey)は生き残るため、その文字列で始まるキー("tab"、"f1x" 等)は
+    /// 入力が名前に一致した時点で遷移が先に発動し到達不能。
+    /// 複数文字の通常キーは入力列として比較する(完全一致・接頭辞包含)
+    static func windowHintsKeyConflicts(
+        _ triggerKey: String, withSequenceKey key: String
+    ) -> Bool {
+        let descriptor = ConfigKeyDescriptor.keyName(triggerKey)
+        if descriptor.isNamedKey {
+            return key.hasPrefix(triggerKey)
+        }
+        if triggerKey.count == 1 {
+            return key.uppercased().contains(descriptor.normalized)
+        }
+        return ConfigKeyDescriptor.caseSensitiveSequence(triggerKey)
+            .conflicts(with: ConfigKeyDescriptor.caseSensitiveSequence(key))
+    }
+
+    /// jinraiMode トリガキーと入力列キーの衝突判定。トリガは1打鍵ごと・入力途中でも・
+    /// 大小文字を無視して判定される(入力列判定は持たない)。通常文字は1文字のみ
+    /// (JinraiModeConfigBuilder が検証済み)なので、その文字を含むキーと衝突する
+    static func jinraiModeKeyConflicts(
+        _ triggerKey: String, withSequenceKey key: String
+    ) -> Bool {
+        let descriptor = ConfigKeyDescriptor.keyName(triggerKey)
+        guard !descriptor.isNamedKey else { return false }
+        return key.uppercased().contains(descriptor.normalized)
+    }
+
+    /// jinraiMode.triggers.areaHints.key は RootConfigBuilder が build 後に注入するため、
+    /// 注入時にエリア・アクション・windowHints の全キーとの衝突をここで検証する
+    public static func validateJinraiModeKey(
+        _ triggerKey: String?, in config: AreaHintsConfig
+    ) throws {
+        guard let triggerKey else { return }
+        var sequenceKeys = Array(config.actions.values)
+        let allVariants =
+            Array(config.screens.values) + (config.defaultScreen.map { [$0] } ?? [])
+        for variants in allVariants {
+            for mapping in variants.byDisplayCount.values {
+                sequenceKeys += mapping.values
+            }
+            if let fallback = variants.fallback {
+                sequenceKeys += fallback.values
+            }
+        }
+        for key in sequenceKeys where jinraiModeKeyConflicts(triggerKey, withSequenceKey: key) {
+            throw ConfigError(
+                "[jinrai.areaHints] key '\(key)' conflicts with jinraiMode.triggers.areaHints.key '\(triggerKey)'"
+            )
+        }
+        // jinraiMode 開始判定が windowHints 遷移判定より先に効くため、
+        // windowHints キー(またはその入力途中の1打鍵)を jinraiMode が消費すると到達不能になる
+        if let windowHintsKey = config.windowHintsKey {
+            let conflicts =
+                ConfigKeyDescriptor.keyName(windowHintsKey).isNamedKey
+                ? ConfigKeyDescriptor.keyName(windowHintsKey)
+                    == ConfigKeyDescriptor.keyName(triggerKey)
+                : jinraiModeKeyConflicts(triggerKey, withSequenceKey: windowHintsKey)
+            if conflicts {
+                throw ConfigError(
+                    "[jinrai.areaHints] navigation.windowHints.key '\(windowHintsKey)' conflicts with jinraiMode.triggers.areaHints.key '\(triggerKey)'"
+                )
+            }
+        }
     }
 
     /// 重複と接頭辞包含("K" と "KD" の共存)を禁止
