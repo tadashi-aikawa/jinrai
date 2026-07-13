@@ -53,6 +53,7 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
   "jinraiMode": {
     // ロゴなどの中心位置です。
     "position": "activeWindow",
+    // 各機能の表示中にJINRAI Modeを開始するキーです。1文字または特殊キー名(space / return / tab)で指定します。
     "triggers": {
       // Window Hints表示中にJINRAI Modeを開始するキーです。
       "windowHints": { "key": null },

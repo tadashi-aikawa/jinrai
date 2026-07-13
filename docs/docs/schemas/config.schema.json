@@ -432,7 +432,7 @@
         },
         "triggers": {
           "type": "object",
-          "description": "各機能の表示中にJINRAI Modeを開始するキーです。",
+          "description": "各機能の表示中にJINRAI Modeを開始するキーです。1文字または特殊キー名(space / return / tab)で指定します。",
           "additionalProperties": false,
           "properties": {
             "windowHints": {

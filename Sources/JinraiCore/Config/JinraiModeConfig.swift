@@ -95,12 +95,32 @@ public enum JinraiModeConfigBuilder {
             }
             config.position = position
         }
-        config.windowHintsTriggerKey =
-            merged.string("triggers.windowHints.key")?.lowercased()
-        config.applicationHintsTriggerKey =
-            merged.string("triggers.applicationHints.key")?.lowercased()
-        config.areaHintsTriggerKey =
-            merged.string("triggers.areaHints.key")?.lowercased()
+        // トリガは1打鍵ごとのキー名比較で判定されるため、複数文字の通常キーは
+        // 実行時に決して発動しない。特殊キー名も、各機能のキー名解決が扱うのは
+        // space / return / tab のみ(escape / delete は閉じる・訂正に先に消費される)。
+        // どちらも設定時に明示的に拒否し、別名(enter)は実行時の生文字列比較に
+        // 合わせて正規化して保持する
+        func triggerKey(_ path: String) throws -> String? {
+            guard let key = merged.string("\(path).key")?.lowercased() else { return nil }
+            let descriptor = ConfigKeyDescriptor.keyName(key)
+            if descriptor.isNamedKey {
+                guard ["space", "return", "tab"].contains(descriptor.normalized) else {
+                    throw ConfigError(
+                        "[jinrai.jinraiMode] \(path).key '\(key)' はトリガとして認識されません(特殊キーは space / return / tab のみ)"
+                    )
+                }
+                return descriptor.normalized
+            }
+            guard key.count == 1 else {
+                throw ConfigError(
+                    "[jinrai.jinraiMode] \(path).key '\(key)' は1文字または特殊キー名(return 等)で指定してください"
+                )
+            }
+            return key
+        }
+        config.windowHintsTriggerKey = try triggerKey("triggers.windowHints")
+        config.applicationHintsTriggerKey = try triggerKey("triggers.applicationHints")
+        config.areaHintsTriggerKey = try triggerKey("triggers.areaHints")
 
         func animation(_ path: String, base: JinraiModeConfig.Animation)
             -> JinraiModeConfig.Animation

@@ -938,4 +938,41 @@ struct RootConfigTests {
         }
     }
 
+    @Test("jinraiMode トリガキーの複数文字の通常キーはエラー(実行時に発動しない)")
+    func rejectsMultiCharJinraiModeTriggerKey() {
+        #expect(throws: ConfigError.self) {
+            try JinraiModeConfigBuilder.build([
+                "triggers": ["areaHints": ["key": "jk"]]
+            ])
+        }
+        // 特殊キー名と1文字は通る
+        #expect(throws: Never.self) {
+            try JinraiModeConfigBuilder.build([
+                "triggers": [
+                    "areaHints": ["key": "return"],
+                    "windowHints": ["key": "j"],
+                ]
+            ])
+        }
+    }
+
+    @Test("jinraiMode トリガキーは実行時に認識される特殊キー名のみ許可し、別名は正規化する")
+    func validatesJinraiModeTriggerNamedKeys() throws {
+        // 実行時のキー名解決は space / return / tab のみ
+        #expect(throws: ConfigError.self) {
+            try JinraiModeConfigBuilder.build([
+                "triggers": ["areaHints": ["key": "left"]]
+            ])
+        }
+        #expect(throws: ConfigError.self) {
+            try JinraiModeConfigBuilder.build([
+                "triggers": ["windowHints": ["key": "escape"]]
+            ])
+        }
+        // enter は実行時の生文字列比較に合わせて return へ正規化される
+        let config = try JinraiModeConfigBuilder.build([
+            "triggers": ["windowHints": ["key": "enter"]]
+        ])
+        #expect(config.windowHintsTriggerKey == "return")
+    }
 }
