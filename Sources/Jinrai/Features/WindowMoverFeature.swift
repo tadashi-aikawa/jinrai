@@ -848,7 +848,20 @@ final class WindowMoverFeature {
             }
             return
         default:
-            break
+            // エリア名のアクション: 対象ウィンドウが乗っているディスプレイ内で移動・リサイズ
+            if AreaSpec.kind(of: name) != nil,
+                let frame = win.frame, let screen = ScreenUtil.screenContaining(frame)
+            {
+                let screenFrame = ScreenUtil.visibleFrame(of: screen)
+                let target: CGRect? =
+                    AreaSpec.kind(of: name) == .freeArea
+                    ? computeFreeArea(
+                        screen: screen, screenFrame: screenFrame, excluding: win.windowID)
+                    : AreaSpec.frame(for: name, screenFrame: screenFrame)
+                if let target {
+                    apply(frame: target, to: win)
+                }
+            }
         }
         if jinraiMode {
             onJinraiModeApply?(activeWindow)

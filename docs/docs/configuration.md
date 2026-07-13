@@ -496,6 +496,8 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
       "quitApplication": null,
       // 選択中にGoogle Chromeの現在のタブを新しいChromeウィンドウとして分離するキーです。
       "detachChromeTabToNewWindow": null
+      // このほか、エリア名(halfLeft等)をキーにすると、選択中にアクティブウィンドウを
+      // アクティブディスプレイ内の該当エリアへ移動できます。
     },
     "navigation": {
       "windowHints": {

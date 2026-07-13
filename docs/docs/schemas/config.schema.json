@@ -1873,8 +1873,14 @@
         },
         "actions": {
           "type": "object",
-          "description": "エリア選択中に実行できるウィンドウ操作のキーです。",
+          "description": "エリア選択中に実行できるウィンドウ操作のキーです。エリア名(halfLeft等)を指定すると、選択中にアクティブウィンドウをアクティブディスプレイ内の該当エリアへ移動できます。",
           "additionalProperties": false,
+          "patternProperties": {
+            "^[1-9][0-9]*(?:\\.[0-9]+)?x[1-9][0-9]*(?:\\.[0-9]+)?Center$": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイ中央に固定サイズで配置するキーです。"
+            }
+          },
           "properties": {
             "closeWindow": {
               "$ref": "#/definitions/nullableAreaKey",
@@ -1895,6 +1901,198 @@
             "detachChromeTabToNewWindow": {
               "$ref": "#/definitions/nullableAreaKey",
               "description": "選択中にGoogle Chromeの現在のタブを新しいChromeウィンドウとして分離するキーです。"
+            },
+            "full": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイ全体へ移動するキーです。"
+            },
+            "freeArea": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの最大空き領域へ移動するキーです。"
+            },
+            "halfLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左半分へ移動するキーです。"
+            },
+            "halfHorizontalCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの横方向中央の半分へ移動するキーです。"
+            },
+            "halfRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右半分へ移動するキーです。"
+            },
+            "halfTop": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの上半分へ移動するキーです。"
+            },
+            "halfVerticalCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの縦方向中央の半分へ移動するキーです。"
+            },
+            "halfBottom": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの下半分へ移動するキーです。"
+            },
+            "thirdLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左3分の1へ移動するキーです。"
+            },
+            "thirdHorizontalCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの横方向中央の3分の1へ移動するキーです。"
+            },
+            "thirdRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右3分の1へ移動するキーです。"
+            },
+            "thirdTop": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの上3分の1へ移動するキーです。"
+            },
+            "thirdVerticalCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの縦方向中央の3分の1へ移動するキーです。"
+            },
+            "thirdBottom": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの下3分の1へ移動するキーです。"
+            },
+            "quarterLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左4分の1へ移動するキーです。"
+            },
+            "quarterHorizontalLeftCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの横方向左中央の4分の1へ移動するキーです。"
+            },
+            "quarterHorizontalRightCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの横方向右中央の4分の1へ移動するキーです。"
+            },
+            "quarterRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右4分の1へ移動するキーです。"
+            },
+            "quarterTop": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの上4分の1へ移動するキーです。"
+            },
+            "quarterVerticalTopCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの縦方向上中央の4分の1へ移動するキーです。"
+            },
+            "quarterVerticalBottomCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの縦方向下中央の4分の1へ移動するキーです。"
+            },
+            "quarterBottom": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの下4分の1へ移動するキーです。"
+            },
+            "quarterTopLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左上4分の1へ移動するキーです。"
+            },
+            "quarterTopRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右上4分の1へ移動するキーです。"
+            },
+            "quarterBottomLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左下4分の1へ移動するキーです。"
+            },
+            "quarterBottomRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右下4分の1へ移動するキーです。"
+            },
+            "sixthLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左端6分の1へ移動するキーです。"
+            },
+            "sixthRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右端6分の1へ移動するキーです。"
+            },
+            "sixthTopLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左上6分の1へ移動するキーです。"
+            },
+            "sixthTopCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの中央上6分の1へ移動するキーです。"
+            },
+            "sixthTopRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右上6分の1へ移動するキーです。"
+            },
+            "sixthBottomLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左下6分の1へ移動するキーです。"
+            },
+            "sixthBottomCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの中央下6分の1へ移動するキーです。"
+            },
+            "sixthBottomRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右下6分の1へ移動するキーです。"
+            },
+            "twoThirdsLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左側3分の2へ移動するキーです。"
+            },
+            "twoThirdsHorizontalCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの横方向中央の3分の2へ移動するキーです。"
+            },
+            "twoThirdsRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右側3分の2へ移動するキーです。"
+            },
+            "twoThirdsTop": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの上側3分の2へ移動するキーです。"
+            },
+            "twoThirdsVerticalCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの縦方向中央の3分の2へ移動するキーです。"
+            },
+            "twoThirdsBottom": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの下側3分の2へ移動するキーです。"
+            },
+            "twoThirdsCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの中央の3分の2へ移動するキーです。"
+            },
+            "threeQuartersLeft": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの左側4分の3へ移動するキーです。"
+            },
+            "threeQuartersHorizontalCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの横方向中央の4分の3へ移動するキーです。"
+            },
+            "threeQuartersRight": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの右側4分の3へ移動するキーです。"
+            },
+            "threeQuartersTop": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの上側4分の3へ移動するキーです。"
+            },
+            "threeQuartersVerticalCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの縦方向中央の4分の3へ移動するキーです。"
+            },
+            "threeQuartersBottom": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの下側4分の3へ移動するキーです。"
+            },
+            "threeQuartersCenter": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中にアクティブウィンドウをアクティブディスプレイの中央の4分の3へ移動するキーです。"
             }
           }
         },

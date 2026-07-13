@@ -477,6 +477,55 @@ struct AreaHintsConfigTests {
         }
     }
 
+    @Test("actions にエリア名を指定できる")
+    func acceptsAreaNameActions() throws {
+        let config = try AreaHintsConfigBuilder.build([
+            "actions": [
+                "halfLeft": "1",
+                "quarterTopRight": "2",
+                "freeArea": "3",
+                "1920x1080Center": "4",
+            ]
+        ])
+        #expect(config.actions["halfLeft"] == "1")
+        #expect(config.actions["quarterTopRight"] == "2")
+        #expect(config.actions["freeArea"] == "3")
+        #expect(config.actions["1920x1080Center"] == "4")
+    }
+
+    @Test("既知の接頭辞でも誤記のエリア名はエラー(actions / screens)")
+    func rejectsMisspelledAreaName() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "actions": ["halfLeftt": "U"]
+            ])
+        }
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["halfLeftt": "U"]]
+            ])
+        }
+    }
+
+    @Test("actions のキーは1〜3文字")
+    func rejectsTooLongActionKey() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "actions": ["halfLeft": "ABCD"]
+            ])
+        }
+    }
+
+    @Test("エリア名アクションのキーもエリアキーとの衝突を検証する")
+    func rejectsAreaNameActionKeyConflict() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["halfLeft": "C"]],
+                "actions": ["halfRight": "C"],
+            ])
+        }
+    }
+
     @Test("エリアキーとアクションキーの重複はエラー")
     func rejectsDuplicateKeys() {
         #expect(throws: ConfigError.self) {

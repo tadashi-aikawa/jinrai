@@ -104,10 +104,16 @@ public enum AreaHintsConfigBuilder {
         var actions: [String: String] = [:]
         if let rawActions = merged.dict("actions") {
             for (name, value) in rawActions {
-                guard actionNames.contains(name) else {
+                // 固定アクションに加え、エリア名(halfLeft 等)も
+                // 「アクティブディスプレイ内で移動」するアクションとして指定できる
+                guard actionNames.contains(name) || AreaSpec.isValidName(name) else {
                     throw ConfigError("[jinrai.areaHints] unknown action '\(name)'")
                 }
                 if let key = value as? String, !key.isEmpty {
+                    guard (1...3).contains(key.count) else {
+                        throw ConfigError(
+                            "[jinrai.areaHints] key for '\(name)' must be 1-3 chars in actions")
+                    }
                     actions[name] = key
                 }
             }
@@ -243,7 +249,7 @@ public enum AreaHintsConfigBuilder {
     ) throws -> [String: String] {
         var result: [String: String] = [:]
         for (areaName, key) in mapping {
-            guard AreaSpec.kind(of: areaName) != nil else {
+            guard AreaSpec.isValidName(areaName) else {
                 throw ConfigError("[jinrai.areaHints] unknown area '\(areaName)' in \(context)")
             }
             guard (1...3).contains(key.count) else {

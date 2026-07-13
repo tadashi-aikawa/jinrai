@@ -377,10 +377,10 @@ public enum WindowLayoutsConfigBuilder {
         guard let area = rawArea as? String, !area.isEmpty else {
             throw ConfigError("[jinrai.windowLayouts] \(context).area は必須です")
         }
-        guard let kind = AreaSpec.kind(of: area) else {
+        guard AreaSpec.isValidName(area) else {
             throw ConfigError("[jinrai.windowLayouts] \(context).area '\(area)' は不明なエリア名です")
         }
-        guard kind != .freeArea else {
+        guard AreaSpec.kind(of: area) != .freeArea else {
             throw ConfigError(
                 "[jinrai.windowLayouts] \(context).area に freeArea は使用できません")
         }

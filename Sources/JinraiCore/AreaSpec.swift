@@ -23,6 +23,14 @@ public enum AreaSpec {
         return nil
     }
 
+    /// 設定で指定できる有効なエリア名か。kind(of:) は色分け用の接頭辞判定なので
+    /// "halfLeftt" のような誤記も通してしまう。検証には frame が解決できることまで見るこちらを使う
+    public static func isValidName(_ name: String) -> Bool {
+        name == "freeArea"
+            || frame(for: name, screenFrame: CGRect(x: 0, y: 0, width: 1920, height: 1080))
+                != nil
+    }
+
     /// "1920x1080Center" → (width, height)
     public static func parseFixedSizeCenter(_ name: String) -> (
         width: CGFloat, height: CGFloat
