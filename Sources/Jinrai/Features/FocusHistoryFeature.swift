@@ -16,7 +16,10 @@ final class FocusHistoryFeature {
             syncTargetApps: syncTargets,
             windowID: { $0.windowID },
             appKey: { Self.appKey(of: $0) },
-            isVisible: { Self.isVisible($0) }
+            isVisible: { Self.isVisible($0) },
+            isListedInApp: { window in
+                AXWindow.windows(pid: window.pid).contains { $0.windowID == window.windowID }
+            }
         )
 
         observer.onFocusChanged = { [weak self] window in

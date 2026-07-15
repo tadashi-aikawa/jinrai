@@ -12,13 +12,15 @@ struct FocusHistoryLogicTests {
 
     func makeLogic(
         syncTargets: Set<String> = [],
-        visibility: @escaping (FakeWindow) -> Bool = { $0.visible }
+        visibility: @escaping (FakeWindow) -> Bool = { $0.visible },
+        listed: @escaping (FakeWindow) -> Bool = { _ in true }
     ) -> FocusHistoryLogic<FakeWindow> {
         FocusHistoryLogic(
             syncTargetApps: syncTargets,
             windowID: { $0.id },
             appKey: { $0.appKey },
-            isVisible: visibility
+            isVisible: visibility,
+            isListedInApp: listed
         )
     }
 
@@ -76,15 +78,33 @@ struct FocusHistoryLogicTests {
 
     @Test("ネイティブタブアプリの同一アプリ内タブ切替は履歴に積まない")
     func nativeTabsSwitchNotPromoted() {
-        let logic = makeLogic(syncTargets: ["com.mitchellh.ghostty"])
+        // 非選択タブのウィンドウはアプリのウィンドウ一覧から消える(実機挙動)
+        var listedIDs: Set<UInt32> = [1, 10, 11]
+        let logic = makeLogic(
+            syncTargets: ["com.mitchellh.ghostty"], listed: { listedIDs.contains($0.id) })
         let other = FakeWindow(id: 1, appKey: "app.other")
         let tab1 = FakeWindow(id: 10, appKey: "com.mitchellh.ghostty")
         let tab2 = FakeWindow(id: 11, appKey: "com.mitchellh.ghostty")
         logic.updateWindowState(other)
         logic.updateWindowState(tab1)
+        listedIDs.remove(10)  // タブ切替で tab1 が列挙から消える
         logic.updateWindowState(tab2)  // タブ切替 → tab1 は履歴に積まれない
 
         #expect(logic.focusBack(focused: tab2)?.id == 1)
+    }
+
+    @Test("ネイティブタブアプリでも別ウィンドウへの切替は履歴に積む")
+    func nativeTabsSeparateWindowPromoted() {
+        // 別ウィンドウは切替後もウィンドウ一覧に残る → タブ切替ではない
+        let logic = makeLogic(syncTargets: ["com.mitchellh.ghostty"], listed: { _ in true })
+        let other = FakeWindow(id: 1, appKey: "app.other")
+        let win1 = FakeWindow(id: 10, appKey: "com.mitchellh.ghostty")
+        let win2 = FakeWindow(id: 11, appKey: "com.mitchellh.ghostty")
+        logic.updateWindowState(other)
+        logic.updateWindowState(win1)
+        logic.updateWindowState(win2)
+
+        #expect(logic.focusBack(focused: win2)?.id == 10)
     }
 
     @Test("ネイティブタブ対象外アプリの同一アプリ内切替は通常どおり履歴に積む")

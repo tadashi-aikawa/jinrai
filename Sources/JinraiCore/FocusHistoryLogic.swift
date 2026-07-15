@@ -14,6 +14,10 @@ public final class FocusHistoryLogic<Window> {
     /// bundleID ?? appName(元 appKeyOfWindow)
     private let appKey: (Window) -> String?
     private let isVisible: (Window) -> Bool
+    /// アプリの AX ウィンドウ一覧に列挙されているか。
+    /// 非選択のネイティブタブのウィンドウは列挙から消える(実機検証)ため、
+    /// タブ切替と別ウィンドウへの切替の判別に使う
+    private let isListedInApp: (Window) -> Bool
     /// macOS ネイティブタブ利用アプリの bundleID / アプリ名(空なら補正なし)
     private let syncTargetApps: Set<String>
 
@@ -21,12 +25,14 @@ public final class FocusHistoryLogic<Window> {
         syncTargetApps: Set<String> = [],
         windowID: @escaping (Window) -> UInt32,
         appKey: @escaping (Window) -> String?,
-        isVisible: @escaping (Window) -> Bool
+        isVisible: @escaping (Window) -> Bool,
+        isListedInApp: @escaping (Window) -> Bool
     ) {
         self.syncTargetApps = syncTargetApps
         self.windowID = windowID
         self.appKey = appKey
         self.isVisible = isVisible
+        self.isListedInApp = isListedInApp
     }
 
     public var hasSyncTargets: Bool { !syncTargetApps.isEmpty }
@@ -36,14 +42,16 @@ public final class FocusHistoryLogic<Window> {
         return syncTargetApps.contains(key)
     }
 
-    /// 同一アプリ内のネイティブタブ切替は履歴に積まない(元 shouldPromotePrevious)
+    /// 同一アプリ内のネイティブタブ切替は履歴に積まない(元 shouldPromotePrevious)。
+    /// 遷移元がウィンドウ一覧に残っていれば別ウィンドウへの切替なので通常どおり積む
     func shouldPromotePrevious(from: Window?, to: Window?) -> Bool {
         guard !syncTargetApps.isEmpty else { return true }
         guard let from, let to,
             let fromKey = appKey(from), let toKey = appKey(to)
         else { return true }
         if fromKey != toKey { return true }
-        return !syncTargetApps.contains(toKey)
+        if !syncTargetApps.contains(toKey) { return true }
+        return isListedInApp(from)
     }
 
     /// フォーカス変化を記録(元 updateWindowState)
