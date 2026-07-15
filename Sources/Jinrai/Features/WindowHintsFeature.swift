@@ -40,7 +40,6 @@ final class WindowHintsFeature {
     private var offSpaceWindowIDs: Set<UInt32> = []
     private var windowZOrder: [UInt32: Int] = [:]  // 前面=小(ヒント配置の優先度)
     private var coveringFramesByID: [UInt32: [CGRect]] = [:]  // 自分より前面のフレーム群
-    private let macosNativeTabsApps: Set<String>
     private var didRequestScreenCapture = false
     /// focus() 直後の非同期遅延を避けるため、次回表示だけ明示的にアクティブ扱いする対象
     private var activeWindowOverride: (windowID: UInt32, pid: pid_t)?
@@ -123,7 +122,6 @@ final class WindowHintsFeature {
     init(
         config: WindowHintsConfig,
         focusHistory: FocusHistoryFeature?,
-        macosNativeTabs: MacosNativeTabsConfig = .default,
         jinraiMode: JinraiModeConfig = .default,
         configDirectoryURL: URL,
         eventTap: EventTap
@@ -131,7 +129,6 @@ final class WindowHintsFeature {
         self.config = config
         self.focusHistory = focusHistory
         self.eventTap = eventTap
-        self.macosNativeTabsApps = Set(macosNativeTabs.apps)
         self.jinraiVisuals = JinraiModeVisuals(
             config: jinraiMode, configDirectoryURL: configDirectoryURL)
 
@@ -375,11 +372,10 @@ final class WindowHintsFeature {
             for win in WindowEnumerator.offSpaceStandardWindows(
                 from: offSpace, alwaysInclude: fullscreenWindowIDs)
             {
-                // ネイティブタブアプリで Space 不明な候補は幽霊タブの可能性があるため除外
+                // Space 番号が引けない非フルスクリーン候補は、非選択のネイティブタブ
+                // (幽霊タブ)や消滅したウィンドウの可能性が高いため除外
                 let appKey = win.bundleID ?? win.appName
-                if macosNativeTabsApps.contains(appKey), win.spaceNumber == nil,
-                    !win.isFullscreenSpace
-                {
+                if win.spaceNumber == nil, !win.isFullscreenSpace {
                     continue
                 }
                 offSpaceWindowIDs.insert(win.id)

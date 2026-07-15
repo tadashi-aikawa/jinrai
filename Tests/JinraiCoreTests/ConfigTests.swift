@@ -667,22 +667,15 @@ struct RootConfigTests {
         #expect(config.windowHints == nil)
     }
 
-    @Test("macosNativeTabs はデフォルトにユーザー指定を追記する")
-    func macosNativeTabsMerge() throws {
+    @Test("廃止済みの macosNativeTabs セクションが残っていても読み込める")
+    func obsoleteMacosNativeTabsIgnored() throws {
         let config = try RootConfigBuilder.build(text: """
-            { "macosNativeTabs": { "apps": ["com.example.app"], "stateSyncInterval": 1.0 } }
+            {
+              "macosNativeTabs": { "apps": ["com.example.app"], "stateSyncInterval": 1.0 },
+              "focusBack": {}
+            }
             """)
-        #expect(
-            config.macosNativeTabs.apps == [
-                "com.mitchellh.ghostty", "com.apple.finder", "com.example.app",
-            ])
-        #expect(config.macosNativeTabs.stateSyncInterval == 1.0)
-    }
-
-    @Test("セクションなしでもデフォルトの macosNativeTabs を持つ")
-    func defaultsWithoutSection() throws {
-        let config = try RootConfigBuilder.build(text: "{}")
-        #expect(config.macosNativeTabs == .default)
+        #expect(config.focusBack != nil)
     }
 
     @Test("areaHints セクションで Area Hints が有効になる")

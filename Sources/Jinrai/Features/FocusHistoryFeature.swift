@@ -8,17 +8,16 @@ import JinraiPlatform
 final class FocusHistoryFeature {
     let logic: FocusHistoryLogic<AXWindow>
     private let observer = FocusObserver()
-    private var nativeTabsTimer: Timer?
 
-    init(macosNativeTabs: MacosNativeTabsConfig) {
-        let syncTargets = Set(macosNativeTabs.apps)
+    init() {
         logic = FocusHistoryLogic(
-            syncTargetApps: syncTargets,
             windowID: { $0.windowID },
             appKey: { Self.appKey(of: $0) },
             isVisible: { Self.isVisible($0) },
-            isListedInApp: { window in
-                AXWindow.windows(pid: window.pid).contains { $0.windowID == window.windowID }
+            // 非選択のネイティブタブと閉じられたウィンドウは Space 所属を失う。
+            // logic の呼び出しは全てメインスレッド(FocusObserver / 各機能)から行われる
+            isOnAnySpace: { window in
+                MainActor.assumeIsolated { Spaces.spaceID(of: window.windowID) != nil }
             }
         )
 
@@ -26,21 +25,6 @@ final class FocusHistoryFeature {
             self?.logic.updateWindowState(window)
         }
         observer.start()
-
-        // ネイティブタブアプリはタブ切替で AX 通知が飛ばないことがあるため定期補正
-        if !syncTargets.isEmpty {
-            let interval = max(macosNativeTabs.stateSyncInterval, 0.1)
-            nativeTabsTimer = Timer.scheduledTimer(
-                withTimeInterval: interval, repeats: true
-            ) { [weak self] _ in
-                Task { @MainActor in
-                    guard let self, let focused = WindowEnumerator.focusedWindow() else { return }
-                    if self.logic.isSyncTargetWindow(focused) {
-                        self.logic.updateWindowState(focused)
-                    }
-                }
-            }
-        }
     }
 
     /// 直前のウィンドウへフォーカスを戻す。対象がなければ nil
@@ -62,8 +46,6 @@ final class FocusHistoryFeature {
     }
 
     func teardown() {
-        nativeTabsTimer?.invalidate()
-        nativeTabsTimer = nil
         observer.stop()
         logic.teardown()
     }

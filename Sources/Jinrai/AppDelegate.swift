@@ -96,7 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // focus_back が有効なときだけ履歴を生成し、後で window_hints と共有する
         if let focusBackConfig = config.focusBack {
-            let history = FocusHistoryFeature(macosNativeTabs: config.macosNativeTabs)
+            let history = FocusHistoryFeature()
             focusHistory = history
             focusBack = FocusBackFeature(config: focusBackConfig, focusHistory: history)
         }
@@ -119,7 +119,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             windowHints = WindowHintsFeature(
                 config: windowHintsConfig,
                 focusHistory: focusHistory,
-                macosNativeTabs: config.macosNativeTabs,
                 jinraiMode: config.jinraiMode,
                 configDirectoryURL: ConfigLoader.configFileURL.deletingLastPathComponent(),
                 eventTap: modalEventTap)

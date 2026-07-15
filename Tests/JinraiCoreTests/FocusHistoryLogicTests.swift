@@ -11,16 +11,14 @@ struct FocusHistoryLogicTests {
     }
 
     func makeLogic(
-        syncTargets: Set<String> = [],
         visibility: @escaping (FakeWindow) -> Bool = { $0.visible },
-        listed: @escaping (FakeWindow) -> Bool = { _ in true }
+        onAnySpace: @escaping (FakeWindow) -> Bool = { _ in true }
     ) -> FocusHistoryLogic<FakeWindow> {
         FocusHistoryLogic(
-            syncTargetApps: syncTargets,
             windowID: { $0.id },
             appKey: { $0.appKey },
             isVisible: visibility,
-            isListedInApp: listed
+            isOnAnySpace: onAnySpace
         )
     }
 
@@ -76,30 +74,29 @@ struct FocusHistoryLogicTests {
         #expect(logic.focusBack(focused: b)?.id == 1)
     }
 
-    @Test("ネイティブタブアプリの同一アプリ内タブ切替は履歴に積まない")
+    @Test("同一アプリ内のネイティブタブ切替は履歴に積まない")
     func nativeTabsSwitchNotPromoted() {
-        // 非選択タブのウィンドウはアプリのウィンドウ一覧から消える(実機挙動)
-        var listedIDs: Set<UInt32> = [1, 10, 11]
-        let logic = makeLogic(
-            syncTargets: ["com.mitchellh.ghostty"], listed: { listedIDs.contains($0.id) })
+        // 非選択タブのウィンドウは Space 所属を失う(実機挙動)
+        var onSpaceIDs: Set<UInt32> = [1, 10, 11]
+        let logic = makeLogic(onAnySpace: { onSpaceIDs.contains($0.id) })
         let other = FakeWindow(id: 1, appKey: "app.other")
-        let tab1 = FakeWindow(id: 10, appKey: "com.mitchellh.ghostty")
-        let tab2 = FakeWindow(id: 11, appKey: "com.mitchellh.ghostty")
+        let tab1 = FakeWindow(id: 10, appKey: "app.terminal")
+        let tab2 = FakeWindow(id: 11, appKey: "app.terminal")
         logic.updateWindowState(other)
         logic.updateWindowState(tab1)
-        listedIDs.remove(10)  // タブ切替で tab1 が列挙から消える
+        onSpaceIDs.remove(10)  // タブ切替で tab1 が Space 所属を失う
         logic.updateWindowState(tab2)  // タブ切替 → tab1 は履歴に積まれない
 
         #expect(logic.focusBack(focused: tab2)?.id == 1)
     }
 
-    @Test("ネイティブタブアプリでも別ウィンドウへの切替は履歴に積む")
-    func nativeTabsSeparateWindowPromoted() {
-        // 別ウィンドウは切替後もウィンドウ一覧に残る → タブ切替ではない
-        let logic = makeLogic(syncTargets: ["com.mitchellh.ghostty"], listed: { _ in true })
+    @Test("同一アプリ内でも別ウィンドウへの切替は履歴に積む")
+    func sameAppSeparateWindowPromoted() {
+        // 別ウィンドウは切替後も Space 所属を保つ → タブ切替ではない
+        let logic = makeLogic(onAnySpace: { _ in true })
         let other = FakeWindow(id: 1, appKey: "app.other")
-        let win1 = FakeWindow(id: 10, appKey: "com.mitchellh.ghostty")
-        let win2 = FakeWindow(id: 11, appKey: "com.mitchellh.ghostty")
+        let win1 = FakeWindow(id: 10, appKey: "app.terminal")
+        let win2 = FakeWindow(id: 11, appKey: "app.terminal")
         logic.updateWindowState(other)
         logic.updateWindowState(win1)
         logic.updateWindowState(win2)
@@ -107,14 +104,34 @@ struct FocusHistoryLogicTests {
         #expect(logic.focusBack(focused: win2)?.id == 10)
     }
 
-    @Test("ネイティブタブ対象外アプリの同一アプリ内切替は通常どおり履歴に積む")
-    func nonSyncTargetSameAppPromoted() {
-        let logic = makeLogic(syncTargets: ["com.mitchellh.ghostty"])
-        let w1 = FakeWindow(id: 1, appKey: "app.other")
-        let w2 = FakeWindow(id: 2, appKey: "app.other")
+    @Test("記録時に積まれてしまった隠れタブも focusBack 時に除外される")
+    func staleHiddenTabSkippedOnFocusBack() {
+        // Space 所属の反映が AX 通知より遅れると、タブ切替でも遷移元が積まれてしまう。
+        // その場合でも focusBack 時点の判定(反映済み)で候補から除外される
+        var onSpaceIDs: Set<UInt32> = [1, 10, 11]
+        let logic = makeLogic(onAnySpace: { onSpaceIDs.contains($0.id) })
+        let other = FakeWindow(id: 1, appKey: "app.other")
+        let tab1 = FakeWindow(id: 10, appKey: "app.terminal")
+        let tab2 = FakeWindow(id: 11, appKey: "app.terminal")
+        logic.updateWindowState(other)
+        logic.updateWindowState(tab1)
+        logic.updateWindowState(tab2)  // CGS 未反映で tab1 が積まれてしまう
+        onSpaceIDs.remove(10)  // focusBack 時点では tab1 は Space 所属を失っている
+
+        #expect(logic.focusBack(focused: tab2)?.id == 1)
+    }
+
+    @Test("別アプリへの切替は遷移元の Space 所属に関わらず履歴に積む")
+    func crossAppAlwaysPromoted() {
+        // 記録時: Space 所属が取れなくても別アプリへの切替なら積む
+        var onSpace = false
+        let logic = makeLogic(onAnySpace: { _ in onSpace })
+        let w1 = FakeWindow(id: 1, appKey: "app.a")
+        let w2 = FakeWindow(id: 2, appKey: "app.b")
         logic.updateWindowState(w1)
         logic.updateWindowState(w2)
 
+        onSpace = true  // 取り出し時は Space 所属あり
         #expect(logic.focusBack(focused: w2)?.id == 1)
     }
 

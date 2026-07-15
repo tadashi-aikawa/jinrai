@@ -1,22 +1,7 @@
 import Foundation
 
-/// macOS ネイティブタブ利用アプリの設定(元 init.lua の macosNativeTabs 正規化)
-public struct MacosNativeTabsConfig: Equatable, Sendable {
-    /// 補正対象アプリの bundle ID またはアプリ名(組み込み対象+ユーザー指定)
-    public var apps: [String]
-    /// タブ状態を同期する間隔(秒。stateSyncInterval)
-    public var stateSyncInterval: Double
-
-    public static let `default` = MacosNativeTabsConfig(
-        apps: ["com.mitchellh.ghostty", "com.apple.finder"],
-        stateSyncInterval: 0.5
-    )
-}
-
 /// config.jsonc 全体。各機能はセクションが存在するときだけ有効(元 setup(config) と同じ)。
 public struct RootConfig {
-    /// macOS ネイティブタブを使うアプリのウィンドウ追跡の補正(常時有効)
-    public var macosNativeTabs: MacosNativeTabsConfig
     /// 直前にアクティブだったウィンドウへ戻る(セクション記述で有効)
     public var focusBack: FocusBackConfig?
     /// フォーカスしたウィンドウを枠線で強調(セクション記述で有効)
@@ -35,7 +20,6 @@ public struct RootConfig {
     public var jinraiMode: JinraiModeConfig = .default
 
     public init(
-        macosNativeTabs: MacosNativeTabsConfig = .default,
         focusBack: FocusBackConfig? = nil,
         focusBorder: FocusBorderConfig? = nil,
         windowHints: WindowHintsConfig? = nil,
@@ -44,7 +28,6 @@ public struct RootConfig {
         applicationHints: ApplicationHintsConfig? = nil,
         windowLayouts: WindowLayoutsConfig? = nil
     ) {
-        self.macosNativeTabs = macosNativeTabs
         self.focusBack = focusBack
         self.focusBorder = focusBorder
         self.windowHints = windowHints
@@ -79,19 +62,8 @@ public enum RootConfigBuilder {
             in: appliedRoot, aliases: displayAliases)
         var config = RootConfig()
 
-        if let tabs = root["macosNativeTabs"] as? [String: Any] {
-            var normalized = MacosNativeTabsConfig.default
-            if let apps = tabs["apps"] as? [String] {
-                // デフォルトのアプリ一覧にユーザー指定を追記(元 mergeAppList)
-                for app in apps where !normalized.apps.contains(app) {
-                    normalized.apps.append(app)
-                }
-            }
-            if let interval = (tabs["stateSyncInterval"] as? NSNumber)?.doubleValue {
-                normalized.stateSyncInterval = interval
-            }
-            config.macosNativeTabs = normalized
-        }
+        // macosNativeTabs セクションは廃止(タブ切替は Space 所属の有無で自動判別)。
+        // 旧設定が残っていても読み込みは失敗させず無視する
 
         if let section = root["focusBack"] as? [String: Any] {
             config.focusBack = try FocusBackConfigBuilder.build(section)

@@ -62,7 +62,6 @@ nav = [
     { "ディスプレイ別名" = "display-aliases.md" },
     { "プロファイル" = "profiles.md" },
     { "利用可能なエリア" = "window-mover-areas.md" },
-    { "macOS Native Tabs" = "macos-native-tabs.md" },
   ] },
 ]
 

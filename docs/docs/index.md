@@ -45,7 +45,6 @@ JINRAIは、ウィンドウを素早く選択・移動できるmacOSの常駐ア
 | [ディスプレイ別名](display-aliases.md) | ディスプレイUUIDへ付ける任意の別名です。 |
 | [プロファイル](profiles.md) | 接続ディスプレイによる設定の切り替えです。 |
 | [利用可能なエリア](window-mover-areas.md) | ウィンドウの移動先に指定できるエリアの一覧です。 |
-| [macOS Native Tabs](macos-native-tabs.md) | macOSネイティブタブを使うアプリのウィンドウ追跡の補正です。 |
 
 ## 関連リンク
 

@@ -14,44 +14,34 @@ public final class FocusHistoryLogic<Window> {
     /// bundleID ?? appName(元 appKeyOfWindow)
     private let appKey: (Window) -> String?
     private let isVisible: (Window) -> Bool
-    /// アプリの AX ウィンドウ一覧に列挙されているか。
-    /// 非選択のネイティブタブのウィンドウは列挙から消える(実機検証)ため、
-    /// タブ切替と別ウィンドウへの切替の判別に使う
-    private let isListedInApp: (Window) -> Bool
-    /// macOS ネイティブタブ利用アプリの bundleID / アプリ名(空なら補正なし)
-    private let syncTargetApps: Set<String>
+    /// ウィンドウがいずれかの Space に属しているか。
+    /// 非選択のネイティブタブと閉じられたウィンドウは Space 所属を失う(実機検証)ため、
+    /// 同一アプリ内のタブ切替と別ウィンドウへの切替の判別に使う。
+    /// ただし Space 所属の反映は AX 通知の発火時点では間に合わないことがあるため、
+    /// 記録時(shouldPromotePrevious)の判定はベストエフォートとし、
+    /// 取り出し時(focusBack / previousWindow)にも同じ判定で候補を除外する
+    private let isOnAnySpace: (Window) -> Bool
 
     public init(
-        syncTargetApps: Set<String> = [],
         windowID: @escaping (Window) -> UInt32,
         appKey: @escaping (Window) -> String?,
         isVisible: @escaping (Window) -> Bool,
-        isListedInApp: @escaping (Window) -> Bool
+        isOnAnySpace: @escaping (Window) -> Bool
     ) {
-        self.syncTargetApps = syncTargetApps
         self.windowID = windowID
         self.appKey = appKey
         self.isVisible = isVisible
-        self.isListedInApp = isListedInApp
-    }
-
-    public var hasSyncTargets: Bool { !syncTargetApps.isEmpty }
-
-    public func isSyncTargetWindow(_ window: Window?) -> Bool {
-        guard let window, !syncTargetApps.isEmpty, let key = appKey(window) else { return false }
-        return syncTargetApps.contains(key)
+        self.isOnAnySpace = isOnAnySpace
     }
 
     /// 同一アプリ内のネイティブタブ切替は履歴に積まない(元 shouldPromotePrevious)。
-    /// 遷移元がウィンドウ一覧に残っていれば別ウィンドウへの切替なので通常どおり積む
+    /// 遷移元が Space 所属を保っていれば別ウィンドウへの切替なので通常どおり積む
     func shouldPromotePrevious(from: Window?, to: Window?) -> Bool {
-        guard !syncTargetApps.isEmpty else { return true }
         guard let from, let to,
             let fromKey = appKey(from), let toKey = appKey(to)
         else { return true }
         if fromKey != toKey { return true }
-        if !syncTargetApps.contains(toKey) { return true }
-        return isListedInApp(from)
+        return isOnAnySpace(from)
     }
 
     /// フォーカス変化を記録(元 updateWindowState)
@@ -72,13 +62,17 @@ public final class FocusHistoryLogic<Window> {
     /// 直前のウィンドウへ戻る対象を決定し、履歴を更新する(元 focusBack)。
     /// 返されたウィンドウのフォーカス操作は呼び出し側(プラットフォーム層)が行う。
     public func focusBack(focused: Window?) -> Window? {
-        if hasSyncTargets, isSyncTargetWindow(focused) {
+        // フォーカスイベントの取り漏れに備え、現在のフォーカスで履歴を補正する
+        // (nil は AX 取得の一時失敗の可能性があるため補正しない)
+        if let focused {
             updateWindowState(focused)
         }
 
         var target: Window?
         while let candidate = history.popLast() {
-            if isVisible(candidate), windowID(candidate) != current.map(windowID) {
+            if isVisible(candidate), isOnAnySpace(candidate),
+                windowID(candidate) != current.map(windowID)
+            {
                 target = candidate
                 break
             }
@@ -98,7 +92,9 @@ public final class FocusHistoryLogic<Window> {
     /// 履歴を変更せず直前ウィンドウを返す(元 getPreviousWindow)
     public func previousWindow() -> Window? {
         for window in history.reversed() {
-            if isVisible(window), windowID(window) != current.map(windowID) {
+            if isVisible(window), isOnAnySpace(window),
+                windowID(window) != current.map(windowID)
+            {
                 return window
             }
         }

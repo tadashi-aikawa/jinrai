@@ -38,17 +38,6 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
   // ディスプレイUUIDへ任意の別名を付けるマップです。
   "displayAliases": {},
 
-  // macOSネイティブタブを使うアプリのウィンドウ追跡を補正します。
-  "macosNativeTabs": {
-    // 組み込み対象へ追加するbundle IDまたはアプリ名です。
-    "apps": [
-      "com.mitchellh.ghostty",
-      "com.apple.finder"
-    ],
-    // タブ状態を同期する間隔（秒）です。
-    "stateSyncInterval": 0.5
-  },
-
   // Window HintsとArea Hintsを連続して操作するモードです。
   "jinraiMode": {
     // ロゴなどの中心位置です。
@@ -795,7 +784,3 @@ Area Hints経由の移動は、`windowMover.behavior`(カーソル追従・freeA
 ```
 
 同じ選択画面で使うキーの重複禁止ルールは[Area Hints](area-hints.md#key-constraints)の「キーの制約」を参照してください。
-
-### macOS Native Tabs
-
-`macosNativeTabs.apps`は組み込みの対象（GhosttyとFinder）へ追加されます。

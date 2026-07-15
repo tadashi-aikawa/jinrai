@@ -16,10 +16,6 @@
       "$ref": "#/definitions/displayAliases",
       "description": "ディスプレイUUIDへ任意の別名を付けます。profiles[].displays、areaHints.screens、windowLayouts の screen でUUIDの代わりに使用できます。"
     },
-    "macosNativeTabs": {
-      "$ref": "#/definitions/macosNativeTabs",
-      "description": "macOSネイティブタブを使うアプリのウィンドウ追跡を補正します。"
-    },
     "jinraiMode": {
       "$ref": "#/definitions/jinraiMode",
       "description": "Window HintsとArea Hintsを連続して操作するモードです。"
@@ -94,10 +90,6 @@
       "description": "profilesで上書きできる設定です。ルートのプロパティ($schema、profiles、displayAliasesを除く)と同期させてください。",
       "additionalProperties": false,
       "properties": {
-        "macosNativeTabs": {
-          "$ref": "#/definitions/macosNativeTabs",
-          "description": "macOSネイティブタブを使うアプリのウィンドウ追跡を補正します。"
-        },
         "jinraiMode": {
           "$ref": "#/definitions/jinraiMode",
           "description": "Window HintsとArea Hintsを連続して操作するモードです。"
@@ -305,27 +297,6 @@
           "description": "アニメーションの補間方式です。",
           "enum": ["linear", "easeOut", "easeInOut"],
           "default": "linear"
-        }
-      }
-    },
-    "macosNativeTabs": {
-      "type": "object",
-      "description": "macOSネイティブタブを使うアプリのウィンドウ追跡を補正します。",
-      "additionalProperties": false,
-      "properties": {
-        "apps": {
-          "type": "array",
-          "description": "組み込み対象(GhosttyとFinder)へ追加する bundle ID またはアプリ名です。",
-          "items": {
-            "type": "string"
-          },
-          "default": ["com.mitchellh.ghostty", "com.apple.finder"]
-        },
-        "stateSyncInterval": {
-          "type": "number",
-          "description": "タブ状態を同期する間隔（秒）です。",
-          "minimum": 0,
-          "default": 0.5
         }
       }
     },
