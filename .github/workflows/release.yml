@@ -59,7 +59,7 @@ jobs:
           pnpm dlx \
             --package semantic-release@25.0.2 \
             --package conventional-changelog-conventionalcommits@9.3.1 \
-            --package @semantic-release/exec \
+            --package @semantic-release/exec@7.1.0 \
             semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
