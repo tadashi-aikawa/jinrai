@@ -108,14 +108,19 @@ public struct AXWindow {
         AXUIElementSetAttributeValue(element, kAXSizeAttribute as CFString, axValue)
     }
 
-    /// ウィンドウをフォーカス(元 hs.window:focus())
+    /// ウィンドウをフォーカス(元 hs.window:focus())。
+    /// アプリのアクティブ化は activate() ではなく WindowServerFocus(指定ウィンドウ
+    /// のみ raise される)で行う。activate() は「現 Space にあるそのアプリの最前
+    /// ウィンドウ」を raise するため、別 Space の対象への focus では Space 切替
+    /// (非同期)の完了前に元 Space 側の同アプリウィンドウが表示だけ前面化して
+    /// しまう(Chrome を2つの Space に分けた実機ハーネスで z-order 変化を確認)
     public func focus() {
+        WindowServerFocus.focus(windowID: windowID, pid: pid)
         let app = AXUIElementCreateApplication(pid)
         AXUIElementSetMessagingTimeout(app, Self.messagingTimeout)
         AXUIElementSetAttributeValue(app, kAXFocusedWindowAttribute as CFString, element)
         AXUIElementSetAttributeValue(element, kAXMainAttribute as CFString, kCFBooleanTrue)
         AXUIElementPerformAction(element, kAXRaiseAction as CFString)
-        NSRunningApplication(processIdentifier: pid)?.activate()
     }
 
     /// アプリのアクティブ化を伴わない raise。
