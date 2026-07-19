@@ -32,3 +32,8 @@ macOS 常駐(メニューバー)のウィンドウ操作ツール。Hammerspoon 
 ## デバッグの進め方
 
 - z-order 系の不具合は推測で直さない。単発では動く API が連続実行や特定のアクティブアプリ状態で壊れることがあるため、`CGWindowListCopyWindowInfo` の Z順ダンプで before/after を取り、失敗ケースを再現する小さなハーネスで実機検証してから修正する(ステータスメニューにも Z順ダンプ機能あり)。
+
+## コミット
+
+- Conventional Commits 形式で日本語で書く(release.yml のバージョン算出に使われる)
+- AI Agent (owlery) がコミットする場合は `--author="<名前> <slug@owlery.local>"` で author を自分の Agent 名にする(committer はデフォルトのまま)
