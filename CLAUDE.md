@@ -33,6 +33,13 @@ macOS 常駐(メニューバー)のウィンドウ操作ツール。Hammerspoon 
 
 - z-order 系の不具合は推測で直さない。単発では動く API が連続実行や特定のアクティブアプリ状態で壊れることがあるため、`CGWindowListCopyWindowInfo` の Z順ダンプで before/after を取り、失敗ケースを再現する小さなハーネスで実機検証してから修正する(ステータスメニューにも Z順ダンプ機能あり)。
 
+## デモ動画
+
+- 撮影・編集の汎用手順は owlery Vault の「macOSプロダクトのデモ動画撮影・編集手順」が単一情報源(skill `/record-demo-video` から辿れる)。以下は JINRAI 固有の事実のみ
+- 動画の置き場所はプロモサイトの `site/public/demos/<機能名>.mp4`。機能カードへの埋め込みは `site/src/pages/index.astro` の features 配列に `demo: "demos/<機能名>.mp4"` を足すだけ(`FeatureCard.astro` が `<video autoplay loop muted playsinline>` で表示。`demo` 省略時は「デモ準備中」プレースホルダ)
+- 撮影時の機能発動キーはユーザー環境の `~/.config/jinrai/config.jsonc` から読む(例: Window Hints は ⌥F20 = `key code 90 using {option down}`)
+- Window Hints のヒント表示中はキー入力を JINRAI が自前の EventTap で消費するため、KeyCastr 等のキー可視化ツールには映らない(デモにキー演出を入れたい場合は JINRAI 側の機能として実装する必要がある)
+
 ## コミット
 
 - Conventional Commits 形式で日本語で書く(release.yml のバージョン算出に使われる)
