@@ -131,28 +131,28 @@
       "properties": {
         "red": {
           "type": "number",
-          "description": "赤成分(0〜1)です。",
+          "description": "赤成分(0〜1)です。(デフォルト: 0)",
           "minimum": 0,
           "maximum": 1,
           "default": 0
         },
         "green": {
           "type": "number",
-          "description": "緑成分(0〜1)です。",
+          "description": "緑成分(0〜1)です。(デフォルト: 0)",
           "minimum": 0,
           "maximum": 1,
           "default": 0
         },
         "blue": {
           "type": "number",
-          "description": "青成分(0〜1)です。",
+          "description": "青成分(0〜1)です。(デフォルト: 0)",
           "minimum": 0,
           "maximum": 1,
           "default": 0
         },
         "alpha": {
           "type": "number",
-          "description": "不透明度(0〜1)です。",
+          "description": "不透明度(0〜1)です。(デフォルト: 1)",
           "minimum": 0,
           "maximum": 1,
           "default": 1
@@ -171,7 +171,7 @@
     },
     "carbonModifiers": {
       "type": ["array", "null"],
-      "description": "修飾キーの配列です。cmd/alt/ctrl/shift(とその別名)を指定できます。",
+      "description": "修飾キーの配列です。cmd/alt/ctrl/shift(とその別名)を指定できます。(デフォルト: [])",
       "items": {
         "$ref": "#/definitions/carbonModifierName"
       },
@@ -180,7 +180,7 @@
     },
     "eventModifiers": {
       "type": ["array", "null"],
-      "description": "修飾キーの配列です。cmd/alt/ctrl/shift/fn(とその別名)を指定できます。",
+      "description": "修飾キーの配列です。cmd/alt/ctrl/shift/fn(とその別名)を指定できます。(デフォルト: [])",
       "items": {
         "$ref": "#/definitions/eventModifierName"
       },
@@ -278,23 +278,23 @@
       "properties": {
         "fade": {
           "type": "boolean",
-          "description": "表示切り替え時にフェードします。",
+          "description": "表示切り替え時にフェードします。(デフォルト: true)",
           "default": true
         },
         "scale": {
           "type": "number",
-          "description": "アニメーション開始時の倍率です。1.0へ変化します。0より大きい値を指定します。",
+          "description": "アニメーション開始時の倍率です。1.0へ変化します。0より大きい値を指定します。(デフォルト: 1)",
           "default": 1
         },
         "duration": {
           "type": "number",
-          "description": "アニメーション時間（秒）です。0で即時に最終状態を表示します。",
+          "description": "アニメーション時間（秒）です。0で即時に最終状態を表示します。(デフォルト: 0.16)",
           "minimum": 0,
           "default": 0.16
         },
         "easing": {
           "type": "string",
-          "description": "アニメーションの補間方式です。",
+          "description": "アニメーションの補間方式です。(デフォルト: \"linear\")",
           "enum": ["linear", "easeOut", "easeInOut"],
           "default": "linear"
         }
@@ -317,13 +317,15 @@
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "この表示を有効にします。"
+          "description": "この表示を有効にします。(デフォルト: true)",
+          "default": true
         },
         "alpha": {
           "type": "number",
-          "description": "表示の透明度です。",
+          "description": "表示の透明度です。(デフォルト: 0.7)",
           "minimum": 0,
-          "maximum": 1
+          "maximum": 1,
+          "default": 0.7
         },
         "animation": {
           "$ref": "#/definitions/animation",
@@ -338,7 +340,8 @@
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "キャラクター画像を表示します。"
+          "description": "キャラクター画像を表示します。(デフォルト: true)",
+          "default": true
         },
         "images": {
           "type": "array",
@@ -351,9 +354,10 @@
         },
         "alpha": {
           "type": "number",
-          "description": "表示の透明度です。",
+          "description": "表示の透明度です。(デフォルト: 0.7)",
           "minimum": 0,
-          "maximum": 1
+          "maximum": 1,
+          "default": 0.7
         },
         "animation": {
           "$ref": "#/definitions/animation",
@@ -368,18 +372,18 @@
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "JINRAI Mode中にJINRAIロゴを表示します。",
+          "description": "JINRAI Mode中にJINRAIロゴを表示します。(デフォルト: true)",
           "default": true
         },
         "size": {
           "type": "number",
-          "description": "ロゴの大きさです。",
+          "description": "ロゴの大きさです。(デフォルト: 480)",
           "minimum": 0,
           "default": 480
         },
         "alpha": {
           "type": "number",
-          "description": "ロゴの透明度です。",
+          "description": "ロゴの透明度です。(デフォルト: 0.25)",
           "minimum": 0,
           "maximum": 1,
           "default": 0.25
@@ -397,7 +401,7 @@
       "properties": {
         "position": {
           "type": "string",
-          "description": "ロゴなどの中心位置です。activeWindow はアクティブウィンドウ中央、activeDisplay はアクティブディスプレイ中央に表示します。",
+          "description": "ロゴなどの中心位置です。activeWindow はアクティブウィンドウ中央、activeDisplay はアクティブディスプレイ中央に表示します。(デフォルト: \"activeWindow\")",
           "enum": ["activeWindow", "activeDisplay"],
           "default": "activeWindow"
         },
@@ -473,7 +477,7 @@
               "properties": {
                 "onSelect": {
                   "type": "boolean",
-                  "description": "切り替え後にカーソルをウィンドウ中央へ移動します。",
+                  "description": "切り替え後にカーソルをウィンドウ中央へ移動します。(デフォルト: true)",
                   "default": true
                 }
               }
@@ -511,13 +515,13 @@
                 },
                 "size": {
                   "type": "number",
-                  "description": "ロゴの大きさです。",
+                  "description": "ロゴの大きさです。(デフォルト: 480)",
                   "minimum": 0,
                   "default": 480
                 },
                 "alpha": {
                   "type": "number",
-                  "description": "ロゴの透明度です。",
+                  "description": "ロゴの透明度です。(デフォルト: 0.95)",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.95
@@ -533,19 +537,19 @@
           "properties": {
             "duration": {
               "type": "number",
-              "description": "枠線が消えるまでの時間（秒）です。",
+              "description": "枠線が消えるまでの時間（秒）です。(デフォルト: 0.5)",
               "minimum": 0,
               "default": 0.5
             },
             "fadeSteps": {
               "type": "integer",
-              "description": "フェードアニメーションの分割数です。",
+              "description": "フェードアニメーションの分割数です。(デフォルト: 18)",
               "minimum": 0,
               "default": 18
             },
             "spaceSwitchDelay": {
               "type": "number",
-              "description": "Space切り替え後に表示を待つ時間（秒）です。",
+              "description": "Space切り替え後に表示を待つ時間（秒）です。(デフォルト: 0.3)",
               "minimum": 0,
               "default": 0.3
             }
@@ -558,7 +562,7 @@
           "properties": {
             "minSize": {
               "type": "number",
-              "description": "枠線を表示する最小ウィンドウサイズです。",
+              "description": "枠線を表示する最小ウィンドウサイズです。(デフォルト: 480)",
               "minimum": 0,
               "default": 480
             }
@@ -745,7 +749,7 @@
           "properties": {
             "chars": {
               "type": "array",
-              "description": "ヒントキーに使用する文字です。",
+              "description": "ヒントキーに使用する文字です。(デフォルト: [\"A\", \"S\", \"D\", \"F\", \"G\", \"H\", \"J\", \"K\", \"L\", \"Q\", \"W\", \"E\", \"R\", \"T\", \"Y\", \"U\", \"I\", \"O\", \"P\", \"Z\", \"X\", \"C\", \"V\", \"B\", \"N\", \"M\"])",
               "items": {
                 "type": "string",
                 "minLength": 1
@@ -754,7 +758,7 @@
             },
             "prefixOverrides": {
               "type": "array",
-              "description": "アプリやタイトルごとのヒント先頭文字ルールです。",
+              "description": "アプリやタイトルごとのヒント先頭文字ルールです。(デフォルト: [])",
               "items": {
                 "$ref": "#/definitions/prefixOverride"
               },
@@ -762,19 +766,19 @@
             },
             "padding": {
               "type": "number",
-              "description": "ヒント内側の余白です。",
+              "description": "ヒント内側の余白です。(デフォルト: 12)",
               "minimum": 0,
               "default": 12
             },
             "cornerRadius": {
               "type": "number",
-              "description": "ヒント背景の角丸です。",
+              "description": "ヒント背景の角丸です。(デフォルト: 12)",
               "minimum": 0,
               "default": 12
             },
             "occludedScale": {
               "type": "number",
-              "description": "隠れたウィンドウのヒント倍率です。",
+              "description": "隠れたウィンドウのヒント倍率です。(デフォルト: 0.85)",
               "minimum": 0,
               "default": 0.85
             },
@@ -785,7 +789,7 @@
               "properties": {
                 "borderWidth": {
                   "type": "number",
-                  "description": "ヒントが指すウィンドウ上の枠線の太さです。",
+                  "description": "ヒントが指すウィンドウ上の枠線の太さです。(デフォルト: 6)",
                   "minimum": 0,
                   "default": 6
                 }
@@ -802,7 +806,7 @@
               "properties": {
                 "size": {
                   "type": "number",
-                  "description": "アプリアイコンの大きさです。",
+                  "description": "アプリアイコンの大きさです。(デフォルト: 72)",
                   "minimum": 0,
                   "default": 72
                 },
@@ -819,13 +823,13 @@
               "properties": {
                 "minWidth": {
                   "type": "number",
-                  "description": "キー表示部分の最小幅です。",
+                  "description": "キー表示部分の最小幅です。(デフォルト: 72)",
                   "minimum": 0,
                   "default": 72
                 },
                 "fontSize": {
                   "type": "number",
-                  "description": "キー表示の文字サイズです。",
+                  "description": "キー表示の文字サイズです。(デフォルト: 48)",
                   "minimum": 0,
                   "default": 48
                 },
@@ -846,18 +850,18 @@
               "properties": {
                 "show": {
                   "type": "boolean",
-                  "description": "ウィンドウタイトルを表示します。",
+                  "description": "ウィンドウタイトルを表示します。(デフォルト: true)",
                   "default": true
                 },
                 "fontSize": {
                   "type": "number",
-                  "description": "タイトルの文字サイズです。",
+                  "description": "タイトルの文字サイズです。(デフォルト: 16)",
                   "minimum": 0,
                   "default": 16
                 },
                 "maxSize": {
                   "type": "integer",
-                  "description": "表示するタイトルの最大文字数です。",
+                  "description": "表示するタイトルの最大文字数です。(デフォルト: 72)",
                   "minimum": 0,
                   "default": 72
                 },
@@ -880,7 +884,7 @@
           "properties": {
             "alpha": {
               "type": "number",
-              "description": "暗幕の透明度です。",
+              "description": "暗幕の透明度です。(デフォルト: 0.5)",
               "minimum": 0,
               "maximum": 1,
               "default": 0.5
@@ -903,37 +907,37 @@
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "description": "完全に隠れたウィンドウのプレビューを表示します。",
+                  "description": "完全に隠れたウィンドウのプレビューを表示します。(デフォルト: true)",
                   "default": true
                 },
                 "mode": {
                   "type": "string",
-                  "description": "プレビューの表示方式です。background はヒント全体の背景、below はタイトル下に表示します。",
+                  "description": "プレビューの表示方式です。background はヒント全体の背景、below はタイトル下に表示します。(デフォルト: \"background\")",
                   "enum": ["background", "below"],
                   "default": "background"
                 },
                 "width": {
                   "type": "number",
-                  "description": "プレビューの幅です。",
+                  "description": "プレビューの幅です。(デフォルト: 140)",
                   "minimum": 0,
                   "default": 140
                 },
                 "padding": {
                   "type": "number",
-                  "description": "ヒントとプレビューの間隔です。",
+                  "description": "ヒントとプレビューの間隔です。(デフォルト: 6)",
                   "minimum": 0,
                   "default": 6
                 },
                 "alpha": {
                   "type": "number",
-                  "description": "プレビューの透明度です。",
+                  "description": "プレビューの透明度です。(デフォルト: 0.64)",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.64
                 },
                 "maxFillRatio": {
                   "type": "number",
-                  "description": "background モードのプレビュー箱の合計面積が画面面積に占めてよい最大割合です。超過するとすべての箱を一律に縮小し、候補が多いときの重なりを防ぎます。",
+                  "description": "background モードのプレビュー箱の合計面積が画面面積に占めてよい最大割合です。超過するとすべての箱を一律に縮小し、候補が多いときの重なりを防ぎます。(デフォルト: 0.5)",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.5
@@ -949,12 +953,12 @@
           "properties": {
             "bottomMargin": {
               "type": "number",
-              "description": "画面下部に並べる候補の下余白です。",
+              "description": "画面下部に並べる候補の下余白です。(デフォルト: 96)",
               "default": 96
             },
             "itemGap": {
               "type": "number",
-              "description": "画面下部に並べる候補の間隔です。",
+              "description": "画面下部に並べる候補の間隔です。(デフォルト: 12)",
               "default": 12
             },
             "windowBlend": {
@@ -964,12 +968,12 @@
               "properties": {
                 "x": {
                   "type": "number",
-                  "description": "候補の横位置へ元ウィンドウ位置を反映する割合です。",
+                  "description": "候補の横位置へ元ウィンドウ位置を反映する割合です。(デフォルト: 0.65)",
                   "default": 0.65
                 },
                 "y": {
                   "type": "number",
-                  "description": "候補の縦位置へ元ウィンドウ位置を反映する割合です。",
+                  "description": "候補の縦位置へ元ウィンドウ位置を反映する割合です。(デフォルト: 1)",
                   "default": 1
                 }
               }
@@ -993,42 +997,42 @@
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "サンプリングによる判定を有効にします。",
+          "description": "サンプリングによる判定を有効にします。(デフォルト: true)",
           "default": true
         },
         "baseWidth": {
           "type": "number",
-          "description": "サンプリング密度の基準画面幅です。",
+          "description": "サンプリング密度の基準画面幅です。(デフォルト: 1920)",
           "minimum": 1,
           "default": 1920
         },
         "baseHeight": {
           "type": "number",
-          "description": "サンプリング密度の基準画面高さです。",
+          "description": "サンプリング密度の基準画面高さです。(デフォルト: 1080)",
           "minimum": 1,
           "default": 1080
         },
         "minCols": {
           "type": "integer",
-          "description": "横方向の最小サンプル数です。",
+          "description": "横方向の最小サンプル数です。(デフォルト: 4)",
           "minimum": 1,
           "default": 4
         },
         "minRows": {
           "type": "integer",
-          "description": "縦方向の最小サンプル数です。",
+          "description": "縦方向の最小サンプル数です。(デフォルト: 4)",
           "minimum": 1,
           "default": 4
         },
         "maxCols": {
           "type": "integer",
-          "description": "横方向の最大サンプル数です。",
+          "description": "横方向の最大サンプル数です。(デフォルト: 8)",
           "minimum": 1,
           "default": 8
         },
         "maxRows": {
           "type": "integer",
-          "description": "縦方向の最大サンプル数です。",
+          "description": "縦方向の最大サンプル数です。(デフォルト: 8)",
           "minimum": 1,
           "default": 8
         }
@@ -1058,7 +1062,7 @@
             },
             "jinraiMode": {
               "type": "boolean",
-              "description": "Window Layoutsへの移動時にJINRAI Modeを開始します。",
+              "description": "Window Layoutsへの移動時にJINRAI Modeを開始します。(デフォルト: false)",
               "default": false
             }
           }
@@ -1074,7 +1078,7 @@
             },
             "jinraiMode": {
               "type": "boolean",
-              "description": "Application Hintsへの移動時にJINRAI Modeを開始します。",
+              "description": "Application Hintsへの移動時にJINRAI Modeを開始します。(デフォルト: false)",
               "default": false
             }
           }
@@ -1117,27 +1121,27 @@
               "properties": {
                 "cardinalOverlapTieThresholdPx": {
                   "type": "number",
-                  "description": "上下左右の候補評価で重なりを同等とみなす差（ピクセル）です。",
+                  "description": "上下左右の候補評価で重なりを同等とみなす差（ピクセル）です。(デフォルト: 720)",
                   "minimum": 0,
                   "default": 720
                 },
                 "maxPrimaryOverlapRatioForDetached": {
                   "type": "number",
-                  "description": "離れた候補とみなす主軸方向の最大重なり率です。",
+                  "description": "離れた候補とみなす主軸方向の最大重なり率です。(デフォルト: 0.2)",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.2
                 },
                 "minOrthogonalOverlapRatio": {
                   "type": "number",
-                  "description": "候補として優先する直交方向の最小重なり率です。",
+                  "description": "候補として優先する直交方向の最小重なり率です。(デフォルト: 0.5)",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.5
                 },
                 "preferredVisibleRatio": {
                   "type": "number",
-                  "description": "可視領域を優先評価する基準割合です。",
+                  "description": "可視領域を優先評価する基準割合です。(デフォルト: 0.4)",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.4
@@ -1153,7 +1157,7 @@
           "properties": {
             "numbers": {
               "type": "boolean",
-              "description": "数字キーで対応するSpaceへ移動します。",
+              "description": "数字キーで対応するSpaceへ移動します。(デフォルト: true)",
               "default": true
             },
             "prev": {
@@ -1180,12 +1184,12 @@
           "properties": {
             "onSelect": {
               "type": "boolean",
-              "description": "選択後にカーソルを対象ウィンドウ中央へ移動します。",
+              "description": "選択後にカーソルを対象ウィンドウ中央へ移動します。(デフォルト: true)",
               "default": true
             },
             "onStart": {
               "type": "boolean",
-              "description": "起動時にカーソルを現在のウィンドウ中央へ移動します。",
+              "description": "起動時にカーソルを現在のウィンドウ中央へ移動します。(デフォルト: true)",
               "default": true
             }
           }
@@ -1197,12 +1201,12 @@
           "properties": {
             "includeOtherSpaces": {
               "type": "boolean",
-              "description": "別のSpaceにあるウィンドウを候補に含めます。",
+              "description": "別のSpaceにあるウィンドウを候補に含めます。(デフォルト: true)",
               "default": true
             },
             "includeActiveWindow": {
               "type": "boolean",
-              "description": "現在のウィンドウを候補に含めます。",
+              "description": "現在のウィンドウを候補に含めます。(デフォルト: true)",
               "default": true
             }
           }
@@ -1232,13 +1236,13 @@
           "properties": {
             "hints": {
               "type": "number",
-              "description": "ヒントのフェードイン時間（秒）です。0で即時表示します。",
+              "description": "ヒントのフェードイン時間（秒）です。0で即時表示します。(デフォルト: 0.05)",
               "minimum": 0,
               "default": 0.05
             },
             "spotlight": {
               "type": "number",
-              "description": "暗幕と枠線のフェードイン時間（秒）です。0で即時表示します。",
+              "description": "暗幕と枠線のフェードイン時間（秒）です。0で即時表示します。(デフォルト: 0.4)",
               "minimum": 0,
               "default": 0.4
             }
@@ -1267,7 +1271,7 @@
               "properties": {
                 "afterMove": {
                   "type": "boolean",
-                  "description": "移動後にカーソルをウィンドウ中央へ移動します。",
+                  "description": "移動後にカーソルをウィンドウ中央へ移動します。(デフォルト: true)",
                   "default": true
                 }
               }
@@ -1294,12 +1298,12 @@
               "properties": {
                 "excludeHiddenWindows": {
                   "type": "boolean",
-                  "description": "前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するかを指定します。falseにすると、完全に隠れているウィンドウも障害物として扱います。",
+                  "description": "前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するかを指定します。falseにすると、完全に隠れているウィンドウも障害物として扱います。(デフォルト: true)",
                   "default": true
                 },
                 "hiddenWindowThreshold": {
                   "type": "number",
-                  "description": "前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するしきい値です。excludeHiddenWindowsがtrueのとき、隠れた割合がこの値以上なら除外します。0で少しでも重なった背面ウィンドウを除外します。",
+                  "description": "前面ウィンドウに隠れた背面ウィンドウをfreeArea計算から除外するしきい値です。excludeHiddenWindowsがtrueのとき、隠れた割合がこの値以上なら除外します。0で少しでも重なった背面ウィンドウを除外します。(デフォルト: 0.5)",
                   "minimum": 0,
                   "maximum": 1,
                   "default": 0.5
@@ -1312,7 +1316,7 @@
     },
     "ratioArray": {
       "type": "array",
-      "description": "サイズ比率の配列です。指定した順に切り替えます。",
+      "description": "サイズ比率の配列です。指定した順に切り替えます。(デフォルト: [0.5, 0.3333333333333333, 0.6666666666666666])",
       "items": {
         "type": "number",
         "minimum": 0,
@@ -2085,7 +2089,7 @@
           "properties": {
             "show": {
               "type": "boolean",
-              "description": "エリアと選択キーのラベルを画面上に表示します。false でもキー入力は有効です。",
+              "description": "エリアと選択キーのラベルを画面上に表示します。false でもキー入力は有効です。(デフォルト: true)",
               "default": true
             }
           }
@@ -2097,7 +2101,7 @@
           "properties": {
             "alpha": {
               "type": "number",
-              "description": "暗幕の透明度です。",
+              "description": "暗幕の透明度です。(デフォルト: 0.5)",
               "minimum": 0,
               "maximum": 1,
               "default": 0.5
@@ -2115,13 +2119,13 @@
             },
             "borderWidth": {
               "type": "number",
-              "description": "アクティブウィンドウを示す枠線の太さです。",
+              "description": "アクティブウィンドウを示す枠線の太さです。(デフォルト: 13)",
               "minimum": 0,
               "default": 13
             },
             "cornerRadius": {
               "type": "number",
-              "description": "アクティブウィンドウを示す枠線の角丸です。",
+              "description": "アクティブウィンドウを示す枠線の角丸です。(デフォルト: 12)",
               "minimum": 0,
               "default": 12
             }
@@ -2227,7 +2231,7 @@
         },
         "windowWaitTimeout": {
           "type": "number",
-          "description": "新規ウィンドウが現れるまで待つ最大時間（秒）です。",
+          "description": "新規ウィンドウが現れるまで待つ最大時間（秒）です。(デフォルト: 10)",
           "exclusiveMinimum": 0,
           "default": 10
         },
@@ -2246,36 +2250,36 @@
           "properties": {
             "itemWidth": {
               "type": "number",
-              "description": "アプリ項目の幅です。",
+              "description": "アプリ項目の幅です。(デフォルト: 220)",
               "exclusiveMinimum": 0,
               "default": 220
             },
             "itemHeight": {
               "type": "number",
-              "description": "アプリ項目の高さです。",
+              "description": "アプリ項目の高さです。(デフォルト: 112)",
               "exclusiveMinimum": 0,
               "default": 112
             },
             "gap": {
               "type": "number",
-              "description": "アプリ項目同士の間隔です。",
+              "description": "アプリ項目同士の間隔です。(デフォルト: 12)",
               "default": 12
             },
             "columns": {
               "type": "integer",
-              "description": "1行に表示するアプリ数です。",
+              "description": "1行に表示するアプリ数です。(デフォルト: 3)",
               "minimum": 1,
               "default": 3
             },
             "iconSize": {
               "type": "number",
-              "description": "アプリアイコンの大きさです。",
+              "description": "アプリアイコンの大きさです。(デフォルト: 64)",
               "exclusiveMinimum": 0,
               "default": 64
             },
             "cornerRadius": {
               "type": "number",
-              "description": "アプリ項目背景の角丸です。",
+              "description": "アプリ項目背景の角丸です。(デフォルト: 12)",
               "minimum": 0,
               "default": 12
             },
@@ -2393,7 +2397,7 @@
           "description": "配置先のエリア名です（halfLeftなど。freeAreaは使用できません）。1200x900Centerのような固定サイズ中央配置も指定できます。"
         },
         "launch": {
-          "description": "マッチするウィンドウが無いときの出現方法です。trueにすると、対象アプリのウィンドウが1枚も存在しないときにアプリを起動（起動済みなら再オープン）してウィンドウの出現を待ってから配置します。{ \"newWindow\": { \"url\": ... } } を指定すると、エントリにマッチするウィンドウが無いときにURLスキームを開いて新規ウィンドウを作らせます（同アプリの別ウィンドウがあっても発火します）。falseの場合、ウィンドウが存在しないアプリはスキップします。",
+          "description": "マッチするウィンドウが無いときの出現方法です。trueにすると、対象アプリのウィンドウが1枚も存在しないときにアプリを起動（起動済みなら再オープン）してウィンドウの出現を待ってから配置します。{ \"newWindow\": { \"url\": ... } } を指定すると、エントリにマッチするウィンドウが無いときにURLスキームを開いて新規ウィンドウを作らせます（同アプリの別ウィンドウがあっても発火します）。falseの場合、ウィンドウが存在しないアプリはスキップします。(デフォルト: false)",
           "default": false,
           "oneOf": [
             { "type": "boolean" },
@@ -2421,7 +2425,7 @@
         },
         "focus": {
           "type": "boolean",
-          "description": "trueにすると、レイアウト適用後にこのエントリのウィンドウへフォーカスします。1レイアウトに1件だけ指定できます。省略時や指定したウィンドウが見つからない場合は、最後にマッチしたウィンドウへフォーカスします。",
+          "description": "trueにすると、レイアウト適用後にこのエントリのウィンドウへフォーカスします。1レイアウトに1件だけ指定できます。省略時や指定したウィンドウが見つからない場合は、最後にマッチしたウィンドウへフォーカスします。(デフォルト: false)",
           "default": false
         }
       }
@@ -2456,7 +2460,7 @@
         },
         "windowWaitTimeout": {
           "type": "number",
-          "description": "launchで起動したアプリのウィンドウが現れるまで待つ最大時間（秒）です。",
+          "description": "launchで起動したアプリのウィンドウが現れるまで待つ最大時間（秒）です。(デフォルト: 10)",
           "exclusiveMinimum": 0,
           "default": 10
         },
@@ -2535,25 +2539,25 @@
           "properties": {
             "pickerWidth": {
               "type": "number",
-              "description": "ピッカーの幅です。",
+              "description": "ピッカーの幅です。(デフォルト: 480)",
               "exclusiveMinimum": 0,
               "default": 480
             },
             "rowHeight": {
               "type": "number",
-              "description": "レイアウト1行の高さです。",
+              "description": "レイアウト1行の高さです。(デフォルト: 32)",
               "exclusiveMinimum": 0,
               "default": 32
             },
             "maxVisibleRows": {
               "type": "integer",
-              "description": "同時に表示する最大行数です。超えた分はスクロールします。",
+              "description": "同時に表示する最大行数です。超えた分はスクロールします。(デフォルト: 8)",
               "minimum": 1,
               "default": 8
             },
             "cornerRadius": {
               "type": "number",
-              "description": "ピッカー背景の角丸です。",
+              "description": "ピッカー背景の角丸です。(デフォルト: 12)",
               "minimum": 0,
               "default": 12
             },
