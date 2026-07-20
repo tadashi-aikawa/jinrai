@@ -6,9 +6,10 @@ interface Props {
   description: string;
   icon: string;
   docPath: string;
+  demo?: string;
 }
 
-const { id, title, tagline, description, icon, docPath } = Astro.props;
+const { id, title, tagline, description, icon, docPath, demo } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
@@ -23,11 +24,23 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
   <p class="description">{description}</p>
 
-  {/* TODO: デモ動画/GIF が用意できたら .demo-placeholder を <video> や <img> に差し替える */}
-  <figure class="demo-placeholder" data-feature={id}>
-    <span class="badge">DEMO</span>
-    <span>デモ準備中</span>
-  </figure>
+  {
+    demo ? (
+      <video
+        class="demo"
+        src={`${base}/${demo}`}
+        autoplay
+        loop
+        muted
+        playsinline
+      />
+    ) : (
+      <figure class="demo-placeholder" data-feature={id}>
+        <span class="badge">DEMO</span>
+        <span>デモ準備中</span>
+      </figure>
+    )
+  }
 
   <a class="doc-link" href={`${base}/docs/${docPath}/`}>詳しく見る →</a>
 </article>
@@ -81,6 +94,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     font-size: 0.95rem;
     color: var(--fg-muted);
     flex-grow: 1;
+  }
+
+  .demo {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.25);
   }
 
   .demo-placeholder {
