@@ -72,7 +72,7 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
     "combo": {
       "character": {
         // 操作回数に応じたキャラクター画像を表示します。
-        "enabled": false,
+        "enabled": true,
         // キャラクター画像のパス配列です。未指定なら同梱画像を使用します。
         // 1枚だけならすべてのcomboで同じ画像、2枚以上なら0枚目を開始用、
         // 1枚目以降をcombo用として巡回します。
@@ -92,7 +92,7 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
       },
       "text": {
         // 継続回数をCOMBOテキストで表示します。
-        "enabled": false,
+        "enabled": true,
         // COMBOテキストの透明度です。
         "alpha": 0.7,
         "animation": {

@@ -88,10 +88,10 @@ struct JinraiModeConfigTests {
         #expect(config.logo.size == 480)
         #expect(config.logo.alpha == 0.25)
         #expect(config.logo.animation.duration == 0.16)
-        #expect(!config.comboCharacter.enabled)
+        #expect(config.comboCharacter.enabled)
         #expect(config.comboCharacter.animation.scale == 1.18)
         #expect(config.comboCharacter.images == nil)
-        #expect(!config.comboText.enabled)
+        #expect(config.comboText.enabled)
     }
 
     @Test("ユーザー設定(triggers=return, combo enabled)を読める")

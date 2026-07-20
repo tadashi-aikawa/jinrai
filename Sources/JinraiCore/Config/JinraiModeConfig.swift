@@ -76,10 +76,10 @@ public struct JinraiModeConfig: Sendable {
         areaHintsTriggerKey: nil,
         logo: Logo(enabled: true, size: 480, alpha: 0.25, animation: .default),
         comboCharacter: ComboCharacter(
-            enabled: false, alpha: 0.7,
+            enabled: true, alpha: 0.7,
             animation: Animation(fade: true, scale: 1.18, duration: 0.16, easing: .linear),
             images: nil),
-        comboText: ComboElement(enabled: false, alpha: 0.7, animation: .default)
+        comboText: ComboElement(enabled: true, alpha: 0.7, animation: .default)
     )
 }
 

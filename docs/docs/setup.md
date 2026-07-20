@@ -131,8 +131,8 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
     //         "overrides": {
     //             "jinraiMode": {
     //                 "combo": {
-    //                     "character": { "enabled": true },
-    //                     "text": { "enabled": true }
+    //                     "character": { "enabled": false },
+    //                     "text": { "enabled": false }
     //                 }
     //             }
     //         }

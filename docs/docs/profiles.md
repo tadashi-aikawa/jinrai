@@ -5,28 +5,22 @@ icon: lucide/monitor-cog
 # プロファイル
 
 トップレベルの`profiles`に、特定のディスプレイが接続されているときだけ設定を上書きするプロファイルを指定できます。
-たとえば「自席のモニタに接続しているときだけCOMBO演出を表示し、会議室のモニタに投影するときは表示しない」といった切り替えができます。
+たとえば「会議室のモニタに投影するときだけCOMBO演出を非表示にする」といった切り替えができます。
 
 ```json
 {
   "displayAliases": {
-    "desk": "37D8832A-2D66-02CA-B9F7-8F30A301B230"
-  },
-  "jinraiMode": {
-    "combo": {
-      "character": { "enabled": false },
-      "text": { "enabled": false }
-    }
+    "meeting": "A1B2C3D4-5E6F-7890-ABCD-EF1234567890"
   },
   "profiles": [
     {
-      // 自席モニタが接続されているときだけCOMBO演出を有効にします。
-      "displays": ["desk"],
+      // 会議室モニタが接続されているときはCOMBO演出を無効にします。
+      "displays": ["meeting"],
       "overrides": {
         "jinraiMode": {
           "combo": {
-            "character": { "enabled": true },
-            "text": { "enabled": true }
+            "character": { "enabled": false },
+            "text": { "enabled": false }
           }
         }
       }

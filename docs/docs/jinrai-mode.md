@@ -41,7 +41,7 @@ JINRAI Modeは次の方法で開始できます。
 
 ## 演出
 
-JINRAI Mode中は、**ロゴ**、**キャラクター画像**、**COMBOテキスト**の3つの演出を表示できます。デフォルトで有効なのはロゴだけです。
+JINRAI Mode中は、**ロゴ**、**キャラクター画像**、**COMBOテキスト**の3つの演出を表示できます。いずれもデフォルトで有効です。
 
 ### ロゴ
 
@@ -59,7 +59,7 @@ JINRAI Mode中、JINRAIロゴを表示し続けます。
 
 ### キャラクター画像
 
-JINRAI Mode中に選択操作をするたびにcombo数が1ずつ増えます。`combo.character`を有効にすると、combo数に応じたキャラクター画像を表示します。combo数はJINRAI Modeを終了するとリセットされます。
+JINRAI Mode中に選択操作をするたびにcombo数が1ずつ増えます。`combo.character`が有効な場合、combo数に応じたキャラクター画像を表示します。combo数はJINRAI Modeを終了するとリセットされます。
 
 ```json
 "jinraiMode": {
@@ -94,7 +94,7 @@ JINRAI Mode中に選択操作をするたびにcombo数が1ずつ増えます。
 
 ### COMBOテキスト
 
-`combo.text`を有効にすると、combo数を`N COMBO!`のテキストで表示します。開始直後(combo数0)は表示されません。
+`combo.text`が有効な場合、combo数を`N COMBO!`のテキストで表示します。開始直後(combo数0)は表示されません。
 
 ```json
 "jinraiMode": {
