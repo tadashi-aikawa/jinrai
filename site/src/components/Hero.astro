@@ -19,7 +19,9 @@ const brewCommand = "brew install --cask tadashi-aikawa/tap/jinrai";
 
       <p class="catch">『思考の速度でウィンドウ操作を』</p>
       <p class="sub">
-        ウィンドウを素早く選択・移動できるmacOSの常駐アプリです。
+        ウィンドウを素早く選択・移動できる<span class="mobile-line"
+          >macOSの常駐アプリです。</span
+        >
       </p>
 
       <div class="install-command">
@@ -285,6 +287,10 @@ const brewCommand = "brew install --cask tadashi-aikawa/tap/jinrai";
 
     .copy {
       width: 100%;
+    }
+
+    .mobile-line {
+      display: block;
     }
 
     .install-command code {
