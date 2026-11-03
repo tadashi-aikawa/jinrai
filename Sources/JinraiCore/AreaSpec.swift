@@ -147,4 +147,27 @@ public enum AreaSpec {
             return nil
         }
     }
+
+    /// サイズを保ったまま area の中央へ置く frame(Area Hints の keepSize)。
+    /// 縮めず、screenFrame からはみ出す分だけずらす。screenFrame より大きい辺は
+    /// minX / minY(top-left 座標で左端・上端)へ揃え、タイトルバーを画面内に残す
+    public static func keepingSizeFrame(
+        size: CGSize, centeredIn area: CGRect, screenFrame: CGRect
+    ) -> CGRect {
+        func place(length: CGFloat, center: CGFloat, min lower: CGFloat, max upper: CGFloat)
+            -> CGFloat
+        {
+            let origin = center - length / 2
+            if length >= upper - lower { return lower }
+            return Swift.min(Swift.max(origin, lower), upper - length)
+        }
+        return CGRect(
+            x: place(
+                length: size.width, center: area.midX,
+                min: screenFrame.minX, max: screenFrame.maxX),
+            y: place(
+                length: size.height, center: area.midY,
+                min: screenFrame.minY, max: screenFrame.maxY),
+            width: size.width, height: size.height)
+    }
 }

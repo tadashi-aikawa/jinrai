@@ -44,6 +44,8 @@ public struct AreaHintsConfig: Sendable {
     public var actions: [String: String]
     /// Window Hints へ遷移するキー(navigation.windowHints.key)
     public var windowHintsKey: String?
+    /// 次に選ぶエリアへサイズを保ったまま移動する待機に入るキー(keepSize.key)
+    public var keepSizeKey: String?
     /// エリアと選択キーのラベルを画面上に表示するか(false でもキー入力は有効)
     public var showLabels: Bool
 
@@ -121,10 +123,20 @@ public enum AreaHintsConfigBuilder {
 
         let windowHintsKey = merged.string("navigation.windowHints.key")
 
+        let keepSizeKey = merged.string("keepSize.key").flatMap { $0.isEmpty ? nil : $0 }
+        if let keepSizeKey {
+            guard (1...3).contains(keepSizeKey.count) else {
+                throw ConfigError("[jinrai.areaHints] keepSize.key must be 1-3 chars")
+            }
+        }
+        // keepSize キーはアクションキーと同じく入力列として判定されるため、
+        // アクションキーに含めて衝突を検証する
+        let sequenceActionKeys = Array(actions.values) + (keepSizeKey.map { [$0] } ?? [])
+
         // キー衝突の検証。アクションキー同士 + windowHints キーは screens の有無に
         // よらず検証し、エリアキーは変種ごとにアクションキーと合わせて検証する
         try validateChooserKeys(
-            areaKeys: [], actionKeys: Array(actions.values),
+            areaKeys: [], actionKeys: sequenceActionKeys,
             windowHintsKey: windowHintsKey, context: "actions")
         func validateVariantConflicts(
             _ variants: AreaHintsConfig.AreaMappingVariants, context: String
@@ -137,7 +149,7 @@ public enum AreaHintsConfigBuilder {
             }
             for (variantContext, mapping) in mappings {
                 try validateChooserKeys(
-                    areaKeys: Array(mapping.values), actionKeys: Array(actions.values),
+                    areaKeys: Array(mapping.values), actionKeys: sequenceActionKeys,
                     windowHintsKey: windowHintsKey, context: variantContext)
             }
         }
@@ -178,6 +190,7 @@ public enum AreaHintsConfigBuilder {
             defaultScreen: defaultScreen,
             actions: actions,
             windowHintsKey: windowHintsKey,
+            keepSizeKey: keepSizeKey,
             showLabels: merged.bool("labels.show") ?? true,
             activeWindowSpotlightAlpha: merged.double("activeWindowSpotlight.alpha") ?? 0.5,
             activeWindowHighlightColor: merged.color("activeWindowHighlight.borderColor")
@@ -317,6 +330,9 @@ public enum AreaHintsConfigBuilder {
     ) throws {
         guard let triggerKey else { return }
         var sequenceKeys = Array(config.actions.values)
+        if let keepSizeKey = config.keepSizeKey {
+            sequenceKeys.append(keepSizeKey)
+        }
         let allVariants =
             Array(config.screens.values) + (config.defaultScreen.map { [$0] } ?? [])
         for variants in allVariants {

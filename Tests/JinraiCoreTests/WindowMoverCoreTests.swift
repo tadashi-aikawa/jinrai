@@ -187,6 +187,46 @@ struct AreaSpecTests {
                 == CGRect(x: 0, y: 0, width: 1200, height: 900))
     }
 
+    @Test("keepingSizeFrame: サイズを保ったままエリア中央へ置く")
+    func keepingSizeCentered() {
+        let area = AreaSpec.frame(for: "halfLeft", screenFrame: screen)!
+        #expect(
+            AreaSpec.keepingSizeFrame(
+                size: CGSize(width: 400, height: 300), centeredIn: area, screenFrame: screen)
+                == CGRect(x: 100, y: 300, width: 400, height: 300))
+        let corner = AreaSpec.frame(for: "quarterTopRight", screenFrame: screen)!
+        #expect(
+            AreaSpec.keepingSizeFrame(
+                size: CGSize(width: 200, height: 100), centeredIn: corner, screenFrame: screen)
+                == CGRect(x: 800, y: 175, width: 200, height: 100))
+    }
+
+    @Test("keepingSizeFrame: エリアより大きくても縮めず、画面からはみ出す分だけずらす")
+    func keepingSizeLargerThanArea() {
+        // quarterTopLeft(600x450)に 800x500。中央だと x=-100, y=-25 で画面外へ出る
+        let area = AreaSpec.frame(for: "quarterTopLeft", screenFrame: screen)!
+        #expect(
+            AreaSpec.keepingSizeFrame(
+                size: CGSize(width: 800, height: 500), centeredIn: area, screenFrame: screen)
+                == CGRect(x: 0, y: 0, width: 800, height: 500))
+        // halfRight(x=600..1200)に 700 幅。中央だと右端 1250 で画面外へ出る
+        let right = AreaSpec.frame(for: "halfRight", screenFrame: screen)!
+        #expect(
+            AreaSpec.keepingSizeFrame(
+                size: CGSize(width: 700, height: 300), centeredIn: right, screenFrame: screen)
+                == CGRect(x: 500, y: 300, width: 700, height: 300))
+    }
+
+    @Test("keepingSizeFrame: 画面より大きい辺は左端・上端へ揃える")
+    func keepingSizeLargerThanScreen() {
+        let offset = CGRect(x: 1200, y: 25, width: 1200, height: 900)
+        let area = AreaSpec.frame(for: "halfRight", screenFrame: offset)!
+        #expect(
+            AreaSpec.keepingSizeFrame(
+                size: CGSize(width: 1500, height: 1000), centeredIn: area, screenFrame: offset)
+                == CGRect(x: 1200, y: 25, width: 1500, height: 1000))
+    }
+
     @Test("未知のエリア名は nil")
     func unknownArea() {
         #expect(AreaSpec.frame(for: "unknown", screenFrame: screen) == nil)

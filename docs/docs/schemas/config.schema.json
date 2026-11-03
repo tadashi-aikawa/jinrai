@@ -2082,6 +2082,17 @@
             }
           }
         },
+        "keepSize": {
+          "type": "object",
+          "description": "サイズを保ったまま移動する設定です。",
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "$ref": "#/definitions/nullableAreaKey",
+              "description": "選択中に押すと、次に選ぶエリアへサイズを保ったまま移動します。ウィンドウはエリアの中央に置かれます。もう一度押すと解除します。"
+            }
+          }
+        },
         "labels": {
           "type": "object",
           "description": "エリアと選択キーのラベル表示の設定です。",

@@ -19,7 +19,10 @@ final class WindowMoverFeature {
     // エリア選択画面の状態
     private var chooserOverlays: [OverlayWindow] = []
     private var chooserInput = ""
-    private var chooserCandidates: [(key: String, areaName: String, frame: CGRect)] = []
+    private var chooserCandidates:
+        [(key: String, areaName: String, frame: CGRect, screenFrame: CGRect)] = []
+    /// keepSize.key で入る待機。次に選ぶエリアへサイズを保ったまま移動する(1回の選択で終わる)
+    private var chooserKeepSize = false
     private(set) var isChooserVisible = false
 
     private struct UUIDCopyTarget {
@@ -39,6 +42,9 @@ final class WindowMoverFeature {
         let keyLayer: CATextLayer
         let iconFills: [CALayer]
         let iconOutline: CAShapeLayer
+        /// keepSize 待機中だけ出す、塗りの輪郭と中央の小さい四角
+        let keepSizeOutlines: [CAShapeLayer]
+        let keepSizeMarkers: [CALayer]
         let detailLayer: CATextLayer?
     }
     private var areaLabels: [AreaLabelRefs] = []
@@ -299,6 +305,7 @@ final class WindowMoverFeature {
         areaLabels = []
         uuidCopyTargets = []
         chooserInput = ""
+        chooserKeepSize = false
 
         let focusedWindowFrame = chooserTargetWindow()?.frame
         var hasAnyMapping = false
@@ -319,6 +326,9 @@ final class WindowMoverFeature {
         var reservedKeys = Set(areaHints.actions.values)
         if let windowHintsKey = areaHints.windowHintsKey {
             reservedKeys.insert(windowHintsKey)
+        }
+        if let keepSizeKey = areaHints.keepSizeKey {
+            reservedKeys.insert(keepSizeKey)
         }
         // jinraiMode 開始キーが数字だと、プレフィックス付きキーの1打目を消費してしまう。
         // 特殊キー名(return 等)は文字列の接頭辞比較で誤衝突するため予約しない
@@ -413,6 +423,7 @@ final class WindowMoverFeature {
         areaLabels = []
         uuidCopyTargets = []
         chooserInput = ""
+        chooserKeepSize = false
     }
 
     /// エリア選択画面の描画。元実装同様、エリア矩形は描かず
@@ -434,7 +445,8 @@ final class WindowMoverFeature {
                 areaFrame = AreaSpec.frame(for: areaName, screenFrame: screenFrame)
             }
             guard let areaFrame else { continue }
-            chooserCandidates.append((key: key, areaName: areaName, frame: areaFrame))
+            chooserCandidates.append(
+                (key: key, areaName: areaName, frame: areaFrame, screenFrame: screenFrame))
 
             guard areaHints.showLabels else { continue }
             let detail = AreaLabelLayout.detailLabel(for: areaName)
@@ -534,16 +546,49 @@ final class WindowMoverFeature {
         iconOutline.lineWidth = 2
         container.addSublayer(iconOutline)
 
+        let iconSpec = AreaLabelLayout.iconSpec(for: candidate.areaName)
+        let fillRects = iconFillRects(spec: iconSpec, outline: outlineRect)
         var iconFills: [CALayer] = []
-        for fillRect in iconFillRects(
-            spec: AreaLabelLayout.iconSpec(for: candidate.areaName),
-            outline: outlineRect)
-        {
+        for fillRect in fillRects {
             let fill = CALayer()
             fill.frame = flip(fillRect)
             fill.cornerRadius = 1
             container.addSublayer(fill)
             iconFills.append(fill)
+        }
+
+        // keepSize 待機中のアイコン: 塗りの代わりに、エリアの輪郭と中央の小さい四角
+        // (サイズを保ったままエリア中央へ置くことを示す)。ドット表示のエリアは内側全体を
+        // エリアとみなす
+        let keepSizeAreas: [CGRect]
+        switch iconSpec {
+        case .slot, .grid, .centeredRatio: keepSizeAreas = fillRects
+        case .free, .fixedSizeCenter, nil: keepSizeAreas = [outlineRect.insetBy(dx: 5, dy: 5)]
+        }
+        var keepSizeOutlines: [CAShapeLayer] = []
+        var keepSizeMarkers: [CALayer] = []
+        for areaRect in keepSizeAreas {
+            let outline = CAShapeLayer()
+            outline.path = CGPath(
+                roundedRect: flip(areaRect).insetBy(dx: 0.5, dy: 0.5),
+                cornerWidth: 1, cornerHeight: 1, transform: nil)
+            outline.fillColor = nil
+            outline.lineWidth = 1
+            outline.isHidden = true
+            container.addSublayer(outline)
+            keepSizeOutlines.append(outline)
+
+            let markerWidth = min(7, areaRect.width * 0.6)
+            let markerHeight = min(6, areaRect.height * 0.6)
+            let marker = CALayer()
+            marker.frame = flip(
+                CGRect(
+                    x: areaRect.midX - markerWidth / 2, y: areaRect.midY - markerHeight / 2,
+                    width: markerWidth, height: markerHeight))
+            marker.cornerRadius = 1
+            marker.isHidden = true
+            container.addSublayer(marker)
+            keepSizeMarkers.append(marker)
         }
 
         // detail テキスト(size 13、下部中央)
@@ -571,6 +616,8 @@ final class WindowMoverFeature {
             keyLayer: keyLayer,
             iconFills: iconFills,
             iconOutline: iconOutline,
+            keepSizeOutlines: keepSizeOutlines,
+            keepSizeMarkers: keepSizeMarkers,
             detailLayer: detailLayer
         )
     }
@@ -700,6 +747,10 @@ final class WindowMoverFeature {
             return true
         }
         if event.keyCode == UInt32(kVK_Delete) {
+            // 入力が空なら keepSize 待機を解く
+            if chooserInput.isEmpty {
+                chooserKeepSize = false
+            }
             chooserInput = String(chooserInput.dropLast())
             updateChooserHighlight()
             return true
@@ -742,21 +793,32 @@ final class WindowMoverFeature {
             transitionToWindowHints()
             return true
         }
+        // keepSize 待機の切替(もう一度押すと解く)
+        if let keepSizeKey = areaHints.keepSizeKey, input == keepSizeKey {
+            chooserKeepSize.toggle()
+            chooserInput = ""
+            updateChooserHighlight()
+            return true
+        }
         // アクション(対象は closeChooser でクリアされる前に解決しておく)
         if let action = areaHints.actions.first(where: { $0.value == input }) {
             let wasJinrai = chooserJinraiMode
+            let keepSize = chooserKeepSize
             let win = chooserTargetWindow()
             closeChooser()
-            runAction(action.key, window: win, jinraiMode: wasJinrai)
+            runAction(action.key, window: win, jinraiMode: wasJinrai, keepSize: keepSize)
             return true
         }
         // エリア
         if let candidate = chooserCandidates.first(where: { $0.key == input }) {
-            let frame = candidate.frame
             let wasJinrai = chooserJinraiMode
+            let keepSize = chooserKeepSize
             let win = chooserTargetWindow()
             closeChooser()
             if let win {
+                let frame = targetFrame(
+                    area: candidate.frame, screenFrame: candidate.screenFrame,
+                    window: win, keepSize: keepSize)
                 apply(frame: frame, to: win, thenAdvanceJinraiMode: wasJinrai)
             } else if wasJinrai {
                 onJinraiModeApply?(nil)
@@ -766,6 +828,7 @@ final class WindowMoverFeature {
         // 接頭辞一致があれば入力継続
         let allKeys =
             chooserCandidates.map(\.key) + areaHints.actions.values
+            + (areaHints.keepSizeKey.map { [$0] } ?? [])
             + (areaHints.windowHintsKey.flatMap { key in
                 ConfigKeyDescriptor.keyName(key).isNamedKey ? nil : key
             }
@@ -845,6 +908,17 @@ final class WindowMoverFeature {
             refs.iconOutline.strokeColor = cgColor(styleColor)
             for fill in refs.iconFills {
                 fill.backgroundColor = cgColor(styleColor)
+                fill.isHidden = chooserKeepSize
+            }
+            var outlineColor = styleColor
+            outlineColor.alpha *= 0.6
+            for outline in refs.keepSizeOutlines {
+                outline.strokeColor = cgColor(outlineColor)
+                outline.isHidden = !chooserKeepSize
+            }
+            for marker in refs.keepSizeMarkers {
+                marker.backgroundColor = cgColor(styleColor)
+                marker.isHidden = !chooserKeepSize
             }
 
             // 入力済みプレフィックスを薄く、残りを通常色で描き分け
@@ -883,8 +957,21 @@ final class WindowMoverFeature {
             red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
     }
 
+    /// エリア選択の適用先 frame。keepSize ならサイズを保ったままエリア中央へ置く。
+    /// フルスクリーン中は解除後のサイズが分からないため、keepSize でもエリアへリサイズする
+    private func targetFrame(
+        area: CGRect, screenFrame: CGRect, window: AXWindow, keepSize: Bool
+    ) -> CGRect {
+        guard keepSize, !window.isFullScreen, let size = window.frame?.size else {
+            return area
+        }
+        return AreaSpec.keepingSizeFrame(
+            size: size, centeredIn: area, screenFrame: screenFrame)
+    }
+
     private func runAction(
-        _ name: String, window: AXWindow? = nil, jinraiMode: Bool = false
+        _ name: String, window: AXWindow? = nil, jinraiMode: Bool = false,
+        keepSize: Bool = false
     ) {
         guard let win = window ?? WindowEnumerator.focusedWindow() else {
             if jinraiMode { onJinraiModeCancel?() }
@@ -939,7 +1026,9 @@ final class WindowMoverFeature {
                         screen: screen, screenFrame: screenFrame, excluding: win.windowID)
                     : AreaSpec.frame(for: name, screenFrame: screenFrame)
                 if let target {
-                    apply(frame: target, to: win, thenAdvanceJinraiMode: jinraiMode)
+                    let frame = targetFrame(
+                        area: target, screenFrame: screenFrame, window: win, keepSize: keepSize)
+                    apply(frame: frame, to: win, thenAdvanceJinraiMode: jinraiMode)
                     return
                 }
             }

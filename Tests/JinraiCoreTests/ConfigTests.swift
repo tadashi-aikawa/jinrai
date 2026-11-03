@@ -652,6 +652,60 @@ struct AreaHintsConfigTests {
         #expect(config.windowHintsKey == "h")
         #expect(config.showLabels == false)
     }
+
+    @Test("keepSize.key をパースする。未指定・空文字は無効")
+    func parsesKeepSizeKey() throws {
+        #expect(try AreaHintsConfigBuilder.build(["keepSize": ["key": "g"]]).keepSizeKey == "g")
+        #expect(try AreaHintsConfigBuilder.build([:]).keepSizeKey == nil)
+        #expect(try AreaHintsConfigBuilder.build(["keepSize": ["key": ""]]).keepSizeKey == nil)
+    }
+
+    @Test("keepSize.key は1〜3文字")
+    func rejectsTooLongKeepSizeKey() {
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build(["keepSize": ["key": "gggg"]])
+        }
+    }
+
+    @Test("keepSize.key とエリア・アクション・windowHints 遷移キーの衝突はエラー")
+    func rejectsKeepSizeKeyConflicts() {
+        // エリアキーの先頭と重なる
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["halfLeft": "gw"]],
+                "keepSize": ["key": "g"],
+            ])
+        }
+        // defaultScreen のエリアキーと重複
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "defaultScreen": ["halfLeft": "g"],
+                "keepSize": ["key": "g"],
+            ])
+        }
+        // アクションキーと重複
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "actions": ["closeWindow": "g"],
+                "keepSize": ["key": "g"],
+            ])
+        }
+        // windowHints 遷移キー(1文字は大小無視で含むだけで衝突)
+        #expect(throws: ConfigError.self) {
+            try AreaHintsConfigBuilder.build([
+                "navigation": ["windowHints": ["key": "G"]],
+                "keepSize": ["key": "g"],
+            ])
+        }
+        // 2文字目以降に含むだけなら通る(入力列は先頭から比較する)
+        #expect(throws: Never.self) {
+            try AreaHintsConfigBuilder.build([
+                "screens": ["UUID-A": ["halfLeft": "kg", "halfRight": "Gk"]],
+                "actions": ["closeWindow": "x"],
+                "keepSize": ["key": "g"],
+            ])
+        }
+    }
 }
 
 @Suite("RootConfigBuilder")
@@ -917,6 +971,15 @@ struct RootConfigTests {
                 {
                     "areaHints": { "navigation": { "windowHints": { "key": "kj" } } },
                     "jinraiMode": { "triggers": { "areaHints": { "key": "j" } } }
+                }
+                """)
+        }
+        // keepSize キーと衝突
+        #expect(throws: ConfigError.self) {
+            try RootConfigBuilder.build(text: """
+                {
+                    "areaHints": { "keepSize": { "key": "j" } },
+                    "jinraiMode": { "triggers": { "areaHints": { "key": "J" } } }
                 }
                 """)
         }
