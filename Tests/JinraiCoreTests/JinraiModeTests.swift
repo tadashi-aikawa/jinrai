@@ -5,15 +5,15 @@ import Testing
 
 @Suite("JinraiModeLogic")
 struct JinraiModeLogicTests {
-    @Test("コンボ画像 index: 0 は開始、1〜9 を巡回")
+    @Test("コンボ画像 index: 0 は開始、1〜11 を巡回")
     func comboImageIndex() {
         #expect(JinraiModeLogic.comboImageIndex(count: 0) == 0)
         #expect(JinraiModeLogic.comboImageIndex(count: -1) == 0)
         #expect(JinraiModeLogic.comboImageIndex(count: 1) == 1)
-        #expect(JinraiModeLogic.comboImageIndex(count: 9) == 9)
-        #expect(JinraiModeLogic.comboImageIndex(count: 10) == 1)
-        #expect(JinraiModeLogic.comboImageIndex(count: 18) == 9)
-        #expect(JinraiModeLogic.comboImageIndex(count: 19) == 1)
+        #expect(JinraiModeLogic.comboImageIndex(count: 11) == 11)
+        #expect(JinraiModeLogic.comboImageIndex(count: 12) == 1)
+        #expect(JinraiModeLogic.comboImageIndex(count: 22) == 11)
+        #expect(JinraiModeLogic.comboImageIndex(count: 23) == 1)
     }
 
     @Test("ユーザー指定コンボ画像 index: 0 は開始、1... を巡回")
