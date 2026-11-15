@@ -6,3 +6,4 @@ DerivedData/
 .DS_Store
 *.7z
 /.pnpm-store/v11
+/.github/release/node_modules/

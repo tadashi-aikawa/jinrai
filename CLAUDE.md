@@ -15,6 +15,11 @@ macOS 常駐(メニューバー)のウィンドウ操作ツール。Hammerspoon 
 
 リリースは GitHub Actions の release.yml(workflow_dispatch、main のみ)→ semantic-release が conventional commits からバージョン算出(v1 までは breaking も minor。feat/build/style/perf → minor、fix/refactor → patch)→ 自己署名(jinrai-dev 固定。TCC 許可の維持のため)で .app を zip 化して Releases へ → `update_tap.sh` が homebrew-tap の cask を更新。アプリ内 Updater は Releases API を見て zip を差し替える。
 
+- semantic-release とプラグインは `.github/release/` の `package.json` と `pnpm-lock.yaml` で、推移的な依存まで固定する。release.yml は `pnpm install --frozen-lockfile` で入れる
+  - 理由: 署名の証明書と `TAP_GITHUB_TOKEN` と同じジョブで動くため、実行のたびに新しいバージョンを取ってこない
+  - 上げるとき: `package.json` のバージョンを変え、`pnpm install --dir .github/release` で lockfile を作り直してコミットする
+- pnpm のバージョンは workflow の `npm install --global pnpm@x.y.z` と、各 `package.json` の `packageManager` で指定する。上げるときは release.yml・docs.yml・`site/package.json`・`.github/release/package.json` の4か所をそろえ、lockfile を作り直す
+
 `docs/` はユーザードキュメント(zensical)、`site/` はプロモサイト(Astro)。docs.yml が両方をビルド・マージして GitHub Pages へ配備する。
 
 ## ウィンドウ z-order / フォーカス操作の鉄則(実機検証で確立)

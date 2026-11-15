@@ -1,0 +1,10 @@
+{
+  "name": "jinrai-release",
+  "private": true,
+  "packageManager": "pnpm@12.18.0",
+  "dependencies": {
+    "@semantic-release/exec": "7.1.0",
+    "conventional-changelog-conventionalcommits": "9.3.1",
+    "semantic-release": "25.0.2"
+  }
+}
