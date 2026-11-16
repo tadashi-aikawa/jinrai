@@ -16,6 +16,8 @@ public struct RootConfig {
     public var applicationHints: ApplicationHintsConfig?
     /// 定義済みレイアウトをホットキーで一括適用(セクション記述で有効。layouts 必須)
     public var windowLayouts: WindowLayoutsConfig?
+    /// ミラーリングと拡張表示をホットキーで切り替え(セクション記述で有効)
+    public var displayMirroring: DisplayMirroringConfig?
     /// セクションなしでもデフォルト値を持つ(元 init.lua の normalizeJinraiMode)
     public var jinraiMode: JinraiModeConfig = .default
 
@@ -98,6 +100,10 @@ public enum RootConfigBuilder {
                     as? [String: Any])?["key"] as? String
             config.windowLayouts = try WindowLayoutsConfigBuilder.build(
                 section, windowHintsKey: windowLayoutsKey)
+        }
+
+        if let section = root["displayMirroring"] as? [String: Any] {
+            config.displayMirroring = try DisplayMirroringConfigBuilder.build(section)
         }
 
         if let section = root["jinraiMode"] as? [String: Any] {

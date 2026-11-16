@@ -12,6 +12,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowMover: WindowMoverFeature?
     private var applicationHints: ApplicationHintsFeature?
     private var windowLayouts: WindowLayoutsFeature?
+    private var displayMirroring: DisplayMirroringFeature?
+    /// 切替でディスプレイ構成が変わると表示中に設定が再読込されるため、表示が途切れないよう Feature の外で持つ
+    private let displayModeIndicator = DisplayModeIndicator()
     private let updater = UpdaterFeature()
     /// モーダル系機能(Hints / Area Hints / Application Hints / Layouts ピッカー)で
     /// 共有するイベントタップ。機能間の遷移で tap を破棄→再作成すると、その隙間の
@@ -137,6 +140,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 eventTap: modalEventTap)
         }
 
+        if let displayMirroringConfig = config.displayMirroring {
+            let feature = DisplayMirroringFeature(
+                config: displayMirroringConfig, indicator: displayModeIndicator)
+            displayMirroring = feature
+            statusItem?.onToggleDisplayMirroring = { [weak feature] in
+                feature?.toggle()
+            }
+        }
+
         // 相互遷移の結線(元 init.lua のコールバック配線)。
         // Hints ↔ Area Hints の受け渡しでは spotlight をフェードさせず瞬間切替にして
         // 暗幕の連続性を保つ(クロスフェードだと画面全体がフラッシュして見える)
@@ -224,6 +236,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func teardownFeatures() {
+        statusItem?.onToggleDisplayMirroring = nil
+        displayMirroring?.teardown()
+        displayMirroring = nil
         windowLayouts?.teardown()
         windowLayouts = nil
         applicationHints?.teardown()
@@ -261,6 +276,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let focusBack, focusBack.urlEventName == name {
             focusBack.run()
         }
+        if let displayMirroring, displayMirroring.urlEventName == name {
+            displayMirroring.toggle()
+        }
     }
 
     private func showConfigError(_ error: Error) {
@@ -273,5 +291,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         teardownFeatures()
+        displayModeIndicator.teardown()
     }
 }

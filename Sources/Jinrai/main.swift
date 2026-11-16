@@ -12,6 +12,7 @@ if CommandLine.arguments.contains("--check-config") {
         if config.areaHints != nil { enabled.append("areaHints") }
         if config.applicationHints != nil { enabled.append("applicationHints") }
         if config.windowLayouts != nil { enabled.append("windowLayouts") }
+        if config.displayMirroring != nil { enabled.append("displayMirroring") }
         print("OK: \(ConfigLoader.configFileURL.path)")
         print("enabled: \(enabled.joined(separator: ", "))")
         if let mover = config.windowMover {

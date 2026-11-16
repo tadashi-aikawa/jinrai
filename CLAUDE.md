@@ -4,7 +4,7 @@
 
 macOS 常駐(メニューバー)のウィンドウ操作ツール。Hammerspoon 製からの移行で、`元 xxx.lua` のコメントは旧実装との対応を示す。SwiftPM の4ターゲット構成で、依存方向は上から下のみ:
 
-- **`Sources/Jinrai`(executable)**: エントリポイント。`AppDelegate` が設定を読み、セクションが存在する機能だけ `Features/` から起動して束ねる。`Features/` は機能単位(Window Hints / Area Hints / Application Hints / Window Mover / Window Layouts / JINRAI Mode / Focus Border / Focus Back / Updater)で、Core のロジックと Platform の API を組み合わせる配線層
+- **`Sources/Jinrai`(executable)**: エントリポイント。`AppDelegate` が設定を読み、セクションが存在する機能だけ `Features/` から起動して束ねる。`Features/` は機能単位(Window Hints / Area Hints / Application Hints / Window Mover / Window Layouts / JINRAI Mode / Focus Border / Focus Back / Display Mirroring / Updater)で、Core のロジックと Platform の API を組み合わせる配線層
 - **`Sources/JinraiPlatform`**: macOS API 層(AppKit / AX / Carbon / ScreenCaptureKit / SkyLight)。要注意部品は `EventTap`(モーダル系機能で1本共有。下の鉄則参照)、`WindowRegistry`(AX 要素キャッシュ。別 Space フォーカスの要)、`WindowServerFocus`(SLPS 経由の front process 切替)、`OverlayPanel` / `OverlayWindow`
 - **`Sources/JinraiCore`**: 純粋ロジック層(値型のみ、AppKit 非依存)。ヒント配置・キー割当・レイアウト計画・方向スコアリング等。`Config/` に config.jsonc のスキーマ(JSONC パーサ・deepMerge・ディスプレイ構成別 profiles の解決を含む)
 - **`Sources/CGSPrivate`**: 非公開 CGS / AX API の extern 宣言のみの C ターゲット

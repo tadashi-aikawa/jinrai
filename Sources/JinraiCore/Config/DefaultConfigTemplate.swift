@@ -74,6 +74,11 @@ public enum DefaultConfigTemplate {
                 }
             },
 
+            // ctrl+alt+p でミラーリングと拡張表示を切り替え
+            "displayMirroring": {
+                "hotkey": { "modifiers": ["ctrl", "alt"], "key": "p" }
+            },
+
             // ディスプレイUUIDに別名を付けると、profiles / areaHints.screens / windowLayouts の screen で使えます
             // 例:
             // "displayAliases": {

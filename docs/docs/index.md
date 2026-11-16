@@ -31,6 +31,7 @@ JINRAIは、ウィンドウを素早く選択・移動できるmacOSの常駐ア
 | [JINRAI Mode](jinrai-mode.md) | Window HintsとArea Hintsを交互に連続実行します。 |
 | [Focus Border](focus-border.md) | フォーカスしたウィンドウを一時的な枠線で強調します。 |
 | [Focus Back](focus-back.md) | 直前に使用していたウィンドウへ戻ります。 |
+| [Display Mirroring](display-mirroring.md) | ホットキーでディスプレイのミラーリングと拡張表示を切り替えます。 |
 
 ## はじめる
 

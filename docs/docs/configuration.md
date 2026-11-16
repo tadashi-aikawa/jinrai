@@ -22,7 +22,7 @@ JSON Schema対応エディタでは、設定ファイルの先頭付近に`$sche
 JSON Schemaでは設定キー、型、一部の選択肢をチェックします。キー重複やプレフィックス衝突など、実行時の状態に依存する検証はJINRAI起動時に行います。
 
 !!! note
-    `focusBorder`、`windowHints`、`focusBack`、`windowMover`、`areaHints`、`applicationHints`、`windowLayouts`は、
+    `focusBorder`、`windowHints`、`focusBack`、`displayMirroring`、`windowMover`、`areaHints`、`applicationHints`、`windowLayouts`は、
     設定ファイルにセクションを記述した機能だけが有効になります。
 
     `applicationHints.apps`と`windowLayouts.layouts`はデフォルト値が空であり、有効化時に1件以上の指定が必要です。
@@ -408,6 +408,20 @@ JSON Schemaでは設定キー、型、一部の選択肢をチェックします
     }
   },
 
+  // ミラーリングと拡張表示を切り替えます。
+  "displayMirroring": {
+    "hotkey": {
+      // ミラーリングと拡張表示を切り替える修飾キーです。
+      "modifiers": null,
+      // ミラーリングと拡張表示を切り替えるキーです。未指定ならホットキーは登録されません。
+      "key": null
+    },
+    "urlEvent": {
+      // jinrai://<名前> のURLから切り替える場合の名前です。
+      "name": null
+    }
+  },
+
   // アクティブウィンドウを移動・リサイズします。
   "windowMover": {
     "commands": {
@@ -699,7 +713,7 @@ Window Layoutsは`layouts`が1件以上必要なため、実行可能なデフ�
 
 ### 機能の有効・無効
 
-`focusBorder`、`windowHints`、`focusBack`、`windowMover`、`areaHints`は、設定ファイルにセクション（`{}`でも可）を記述すると有効になります。
+`focusBorder`、`windowHints`、`focusBack`、`displayMirroring`、`windowMover`、`areaHints`は、設定ファイルにセクション（`{}`でも可）を記述すると有効になります。
 セクションを記述しない場合は無効です。
 
 `applicationHints`と`windowLayouts`も同様ですが、有効化する場合はそれぞれ`apps`と`layouts`へ1件以上の指定が必要です。

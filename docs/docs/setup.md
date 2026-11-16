@@ -117,6 +117,11 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
         }
     },
 
+    // ctrl+alt+p でミラーリングと拡張表示を切り替え
+    "displayMirroring": {
+        "hotkey": { "modifiers": ["ctrl", "alt"], "key": "p" }
+    },
+
     // ディスプレイUUIDに別名を付けると、profiles / areaHints.screens / windowLayouts の screen で使えます
     // 例:
     // "displayAliases": {
@@ -153,6 +158,7 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
 | `ctrl+alt+return` | ウィンドウを最大化 |
 | `ctrl+alt+m` | ウィンドウを次のディスプレイへ移動 |
 | `alt+w` | 直前のウィンドウへ戻る([Focus Back](focus-back.md)) |
+| `ctrl+alt+p` | ミラーリングと拡張表示を切り替え([Display Mirroring](display-mirroring.md)) |
 
 ヒント表示中のキー:
 
@@ -164,7 +170,7 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
 
 設定を変更したら、メニューバーのJINRAIアイコンから`設定を再読込`を実行してください。
 
-`focusBorder`、`windowHints`、`focusBack`、`windowMover`、`areaHints`、`applicationHints`は、それぞれ設定を記述した機能だけが有効になります。
+`focusBorder`、`windowHints`、`focusBack`、`windowMover`、`areaHints`、`applicationHints`、`displayMirroring`は、それぞれ設定を記述した機能だけが有効になります。
 
 すべての設定項目、デフォルト値、各項目の概要は[全設定](configuration.md)を参照してください。
 値の選択肢や機能固有の制約は各機能ページに記載しています。

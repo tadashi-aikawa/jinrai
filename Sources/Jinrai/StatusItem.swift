@@ -6,8 +6,18 @@ import JinraiPlatform
 final class StatusItem {
     private let item: NSStatusItem
     private let permissionMenuItem: NSMenuItem
+    private let displayMirroringMenuItem: NSMenuItem
+    private let displayMirroringSeparator = NSMenuItem.separator()
     var onReloadConfig: (() -> Void)?
     var onCheckForUpdates: (() -> Void)?
+    /// ミラーリングと拡張表示の切替。nil の間はメニュー項目を隠す
+    var onToggleDisplayMirroring: (() -> Void)? {
+        didSet {
+            let hidden = onToggleDisplayMirroring == nil
+            displayMirroringMenuItem.isHidden = hidden
+            displayMirroringSeparator.isHidden = hidden
+        }
+    }
 
     init() {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -20,6 +30,11 @@ final class StatusItem {
         permissionMenuItem = NSMenuItem(
             title: "アクセシビリティ権限: 未許可",
             action: #selector(openAccessibilitySettings),
+            keyEquivalent: ""
+        )
+        displayMirroringMenuItem = NSMenuItem(
+            title: "ミラーリング ⇔ 拡張表示",
+            action: #selector(toggleDisplayMirroring),
             keyEquivalent: ""
         )
 
@@ -39,6 +54,11 @@ final class StatusItem {
         )
         updateItem.target = self
         menu.addItem(updateItem)
+        menu.addItem(displayMirroringSeparator)
+        displayMirroringMenuItem.target = self
+        menu.addItem(displayMirroringMenuItem)
+        displayMirroringSeparator.isHidden = true
+        displayMirroringMenuItem.isHidden = true
         menu.addItem(.separator())
         permissionMenuItem.target = self
         menu.addItem(permissionMenuItem)
@@ -77,6 +97,10 @@ final class StatusItem {
 
     @objc private func checkForUpdates() {
         onCheckForUpdates?()
+    }
+
+    @objc private func toggleDisplayMirroring() {
+        onToggleDisplayMirroring?()
     }
 
     @objc private func dumpWindows() {
