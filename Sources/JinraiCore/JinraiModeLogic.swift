@@ -6,11 +6,11 @@ public enum JinraiModeLogic {
     /// アニメーションの1ステップ間隔(元 0.02s の doEvery)
     public static var animationInterval: Double { 0.02 }
 
-    /// 同梱のコンボ画像のうち、巡回するコマ数(jinrai1〜11.webp)
-    public static let bundledComboFrameCount = 11
+    /// 同梱のコンボ画像のうち、巡回するコマ数(jinrai1〜12.webp)
+    public static let bundledComboFrameCount = 12
 
-    /// コンボ数 → キャラクター画像 index(jinrai0〜11.webp)。
-    /// 0 は開始直後、1〜11 をコンボ数で巡回
+    /// コンボ数 → キャラクター画像 index(jinrai0〜12.webp)。
+    /// 0 は開始直後、1〜12 をコンボ数で巡回
     public static func comboImageIndex(count: Int) -> Int {
         count <= 0 ? 0 : ((count - 1) % bundledComboFrameCount) + 1
     }
