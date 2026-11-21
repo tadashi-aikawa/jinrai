@@ -168,7 +168,8 @@ JSONC形式のため、コメントと末尾カンマを使用できます。
 | `tab` | Window Hints から[Application Hints](application-hints.md)を開く |
 | `return` | [JINRAI Mode](jinrai-mode.md)を開始 |
 
-設定を変更したら、メニューバーのJINRAIアイコンから`設定を再読込`を実行してください。
+設定ファイルは、メニューバーのJINRAIアイコンの`設定ファイルを開く`から開けます。
+設定を変更したら、同じメニューの`設定を再読込`を実行してください。
 
 `focusBorder`、`windowHints`、`focusBack`、`windowMover`、`areaHints`、`applicationHints`、`displayMirroring`は、それぞれ設定を記述した機能だけが有効になります。
 

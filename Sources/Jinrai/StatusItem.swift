@@ -70,6 +70,14 @@ final class StatusItem {
         )
         dumpItem.target = self
         menu.addItem(dumpItem)
+        menu.addItem(.separator())
+        let openConfigItem = NSMenuItem(
+            title: "設定ファイルを開く",
+            action: #selector(openConfigFile),
+            keyEquivalent: ""
+        )
+        openConfigItem.target = self
+        menu.addItem(openConfigItem)
         let reloadItem = NSMenuItem(
             title: "設定を再読込",
             action: #selector(reloadConfig),
@@ -97,6 +105,10 @@ final class StatusItem {
 
     @objc private func checkForUpdates() {
         onCheckForUpdates?()
+    }
+
+    @objc private func openConfigFile() {
+        ConfigLoader.openInEditor()
     }
 
     @objc private func toggleDisplayMirroring() {
