@@ -83,13 +83,23 @@ public enum ApplicationHintsConfigBuilder {
         ConfigKeyDescriptor.sequence(a).conflicts(with: ConfigKeyDescriptor.sequence(b))
     }
 
+    /// requireApps: false は enabled: false のセクションの検査用。apps が空・省略でも通す
     public static func build(
-        _ options: [String: Any], windowHintsKey: String? = nil
+        _ options: [String: Any], windowHintsKey: String? = nil, requireApps: Bool = true
     ) throws -> ApplicationHintsConfig {
         let merged = ConfigDict(
             DeepMerge.merge(defaults: defaults, overrides: options), context: "applicationHints")
 
-        guard let rawApps = merged.value("apps") as? [[String: Any]], !rawApps.isEmpty else {
+        // 省略は無効時だけ許す。書かれていれば型は有効・無効によらず検査する
+        // ConfigDict.value は null を省略と同じ nil にするので、書かれた値は options から見る
+        var rawApps: [[String: Any]] = []
+        if let value = options["apps"] ?? merged.value("apps") {
+            guard let list = value as? [[String: Any]] else {
+                throw ConfigError("[jinrai.applicationHints] apps はオブジェクトの配列で指定します")
+            }
+            rawApps = list
+        }
+        if requireApps && rawApps.isEmpty {
             throw ConfigError("[jinrai.applicationHints] apps は1件以上必要です")
         }
 

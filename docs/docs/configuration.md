@@ -718,6 +718,22 @@ Window Layoutsは`layouts`が1件以上必要なため、実行可能なデフ�
 
 `applicationHints`と`windowLayouts`も同様ですが、有効化する場合はそれぞれ`apps`と`layouts`へ1件以上の指定が必要です。
 
+セクションに`"enabled": false`を書くと、設定を残したまま機能を止められます。
+
+- 止めた機能へは、ほかの機能からの遷移キー(`windowHints.navigation.*`など)でも移れません
+    - `areaHints`を止めると、Area Hintsを挟んで続く[JINRAI Mode](jinrai-mode.md)の入口も閉じます
+    - `areaHints`のセクションを書かないだけなら、従来どおり`windowMover`があれば既定の設定でArea Hintsへ移れます
+- 止めている間も中身は検査します。`apps`と`layouts`は空でも構いません
+- [プロファイル](profiles.md)の`overrides`にも書けます
+    - ベースで止めておき、`overrides`に`"enabled": true`だけを書けば、ベースの`apps`や`layouts`のまま特定のディスプレイ構成で有効にできます
+
+```jsonc
+"displayMirroring": {
+  "enabled": false,
+  "hotkey": { "modifiers": ["shift", "option"], "key": "p" },
+},
+```
+
 Area Hints経由の移動は、`windowMover.behavior`(カーソル追従・freeAreaのしきい値)の設定に従います。
 `windowMover`セクションがない場合はデフォルト値が使われます。
 

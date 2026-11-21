@@ -115,14 +115,25 @@ public enum WindowLayoutsConfigBuilder {
         ]
     }
 
+    /// requireReachable: false は enabled: false のセクションの検査用。
+    /// layouts が空・省略でも通し、呼び出せないレイアウトも咎めない
     public static func build(
-        _ options: [String: Any] = [:], windowHintsKey: String? = nil
+        _ options: [String: Any] = [:], windowHintsKey: String? = nil,
+        requireReachable: Bool = true
     ) throws -> WindowLayoutsConfig {
         let merged = ConfigDict(
             DeepMerge.merge(defaults: defaults, overrides: options), context: "windowLayouts")
 
-        guard let rawLayouts = merged.value("layouts") as? [[String: Any]], !rawLayouts.isEmpty
-        else {
+        // 省略は無効時だけ許す。書かれていれば型は有効・無効によらず検査する
+        // ConfigDict.value は null を省略と同じ nil にするので、書かれた値は options から見る
+        var rawLayouts: [[String: Any]] = []
+        if let value = options["layouts"] ?? merged.value("layouts") {
+            guard let list = value as? [[String: Any]] else {
+                throw ConfigError("[jinrai.windowLayouts] layouts はオブジェクトの配列で指定します")
+            }
+            rawLayouts = list
+        }
+        if requireReachable && rawLayouts.isEmpty {
             throw ConfigError("[jinrai.windowLayouts] layouts は1件以上の配列が必要です")
         }
 
@@ -147,7 +158,7 @@ public enum WindowLayoutsConfigBuilder {
         }
 
         // ピッカーへの導線が無い場合、ホットキーの無いレイアウトは呼び出せない
-        if pickerHotkey == nil && windowHintsKey == nil {
+        if requireReachable && pickerHotkey == nil && windowHintsKey == nil {
             for layout in layouts where layout.hotkey == nil {
                 throw ConfigError(
                     "[jinrai.windowLayouts] layouts['\(layout.name)'] は hotkey がなく、"

@@ -41,12 +41,40 @@
       "description": "エリアとキーを表示してウィンドウの移動先を選択します。セクションを記述すると有効になります。"
     },
     "applicationHints": {
-      "$ref": "#/definitions/applicationHints",
-      "description": "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。有効化にはappsへ1件以上の指定が必要です。"
+      "description": "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。有効化にはappsへ1件以上の指定が必要です。",
+      "allOf": [
+        { "$ref": "#/definitions/applicationHints" },
+        {
+          "if": {
+            "not": {
+              "required": ["enabled"],
+              "properties": { "enabled": { "const": false } }
+            }
+          },
+          "then": {
+            "required": ["apps"],
+            "properties": { "apps": { "minItems": 1 } }
+          }
+        }
+      ]
     },
     "windowLayouts": {
-      "$ref": "#/definitions/windowLayouts",
-      "description": "定義済みレイアウト（複数ウィンドウの配置）をホットキーで一括適用します。有効化にはlayoutsへ1件以上の指定が必要です。"
+      "description": "定義済みレイアウト（複数ウィンドウの配置）をホットキーで一括適用します。有効化にはlayoutsへ1件以上の指定が必要です。",
+      "allOf": [
+        { "$ref": "#/definitions/windowLayouts" },
+        {
+          "if": {
+            "not": {
+              "required": ["enabled"],
+              "properties": { "enabled": { "const": false } }
+            }
+          },
+          "then": {
+            "required": ["layouts"],
+            "properties": { "layouts": { "minItems": 1 } }
+          }
+        }
+      ]
     },
     "displayMirroring": {
       "$ref": "#/definitions/displayMirroring",
@@ -458,6 +486,11 @@
       "description": "直前にアクティブだったウィンドウへ戻ります。連続して押すと2つのウィンドウを交互に切り替えます。",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "false にすると、設定を残したまま機能を止めます。(デフォルト: true)",
+          "default": true
+        },
         "hotkey": {
           "$ref": "#/definitions/hotkey",
           "description": "Focus Backを実行するホットキーです。未指定なら登録されません。"
@@ -499,6 +532,11 @@
       "description": "ディスプレイのミラーリングと拡張表示を切り替えます。拡張表示なら内蔵ディスプレイ(無ければメイン)を残りの全ディスプレイへ映し、ミラーリング中なら解除します。",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "false にすると、設定を残したまま機能を止めます。(デフォルト: true)",
+          "default": true
+        },
         "hotkey": {
           "$ref": "#/definitions/hotkey",
           "description": "ミラーリングと拡張表示を切り替えるホットキーです。未指定なら登録されません。"
@@ -521,6 +559,11 @@
       "description": "フォーカスしたウィンドウを枠線で一時的に強調します。",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "false にすると、設定を残したまま機能を止めます。(デフォルト: true)",
+          "default": true
+        },
         "visual": {
           "type": "object",
           "description": "枠線とロゴの見た目の設定です。",
@@ -768,6 +811,11 @@
       "description": "各ウィンドウの上にアプリアイコンとキーを表示し、キー入力やクリックで対象ウィンドウへ切り替えます。",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "false にすると、設定を残したまま機能を止めます。ほかの機能から Window Hints への遷移キーも閉じます。(デフォルト: true)",
+          "default": true
+        },
         "hotkey": {
           "$ref": "#/definitions/hotkey",
           "description": "Window Hintsを開くホットキーです。未指定なら登録されません。"
@@ -1285,6 +1333,11 @@
       "description": "アクティブウィンドウの位置や大きさをホットキーで変更します。",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "false にすると、設定を残したまま機能を止めます。(デフォルト: true)",
+          "default": true
+        },
         "commands": {
           "$ref": "#/definitions/windowMoverCommands",
           "description": "コマンドごとのホットキーです。ホットキーを指定したコマンドだけが有効になります。"
@@ -1843,6 +1896,11 @@
       "description": "各ディスプレイ上にエリアとキーを表示し、キー入力でアクティブウィンドウをそのエリアへ移動します。",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "false にすると、設定を残したまま機能を止めます。Window Hints からの遷移キーも閉じます。セクションが無いときは、Window Mover があれば既定の設定で開けます。(デフォルト: true)",
+          "default": true
+        },
         "hotkey": {
           "$ref": "#/definitions/hotkey",
           "description": "Area Hintsを開くホットキーです。"
@@ -2264,8 +2322,12 @@
       "type": "object",
       "description": "登録したアプリを固定キーから起動し、新しいウィンドウを作成します。",
       "additionalProperties": false,
-      "required": ["apps"],
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "false にすると、設定を残したまま機能を止めます。false の間は apps が空でも構いません。(デフォルト: true)",
+          "default": true
+        },
         "hotkey": {
           "$ref": "#/definitions/hotkey",
           "description": "Application Hintsを直接開くホットキーです。"
@@ -2278,8 +2340,7 @@
         },
         "apps": {
           "type": "array",
-          "description": "対象アプリの一覧です。1件以上必須です。",
-          "minItems": 1,
+          "description": "対象アプリの一覧です。有効な間は1件以上必須です。",
           "items": {
             "$ref": "#/definitions/applicationHintsApp"
           }
@@ -2493,8 +2554,12 @@
       "type": "object",
       "description": "定義済みレイアウト（複数ウィンドウの配置）をホットキーで一括適用します。",
       "additionalProperties": false,
-      "required": ["layouts"],
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "false にすると、設定を残したまま機能を止めます。false の間は layouts が空でも構いません。(デフォルト: true)",
+          "default": true
+        },
         "hotkey": {
           "$ref": "#/definitions/hotkey",
           "description": "レイアウト選択モーダル（ピッカー）を開くホットキーです。レイアウト名・説明のインクリメンタルサーチで選択して適用します。"
@@ -2507,8 +2572,7 @@
         },
         "layouts": {
           "type": "array",
-          "description": "レイアウト定義の一覧です。1件以上必須です。ピッカーには記載順に表示されます。",
-          "minItems": 1,
+          "description": "レイアウト定義の一覧です。有効な間は1件以上必須です。ピッカーには記載順に表示されます。",
           "items": {
             "type": "object",
             "additionalProperties": false,

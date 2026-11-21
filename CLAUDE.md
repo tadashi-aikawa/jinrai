@@ -9,7 +9,7 @@ macOS 常駐(メニューバー)のウィンドウ操作ツール。Hammerspoon 
 - **`Sources/JinraiCore`**: 純粋ロジック層(値型のみ、AppKit 非依存)。ヒント配置・キー割当・レイアウト計画・方向スコアリング等。`Config/` に config.jsonc のスキーマ(JSONC パーサ・deepMerge・ディスプレイ構成別 profiles の解決を含む)
 - **`Sources/CGSPrivate`**: 非公開 CGS / AX API の extern 宣言のみの C ターゲット
 
-設定は `~/.config/jinrai/config.jsonc`($XDG_CONFIG_HOME 尊重)。機能はセクションの存在で有効化。`swift run JINRAI --check-config` で読込確認できる。
+設定は `~/.config/jinrai/config.jsonc`($XDG_CONFIG_HOME 尊重)。機能はセクションの存在で有効化し、`"enabled": false` で設定を残したまま止める(プロファイル適用後の値で判定。止めた機能への遷移キーも `RootConfigBuilder` で閉じる)。`swift run JINRAI --check-config` で読込確認できる。
 
 テストは `Tests/JinraiCoreTests` のみ(= ユニットテストの主戦場は Core 層。Platform / Features はテスト対象外なので実機確認が必要)。`swift build` / `swift test` で回る。
 
