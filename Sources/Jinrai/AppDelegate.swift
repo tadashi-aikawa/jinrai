@@ -44,7 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.accessibilityGranted = true
             self.statusItem?.setAccessibilityGranted(true)
-            self.startFeatures()
+            self.reloadConfig()
             // 別 Space フォーカス用の AX 要素キャッシュを起動時と Space 切替のたびに温める
             // (AX は現在 Space のウィンドウしか列挙できないため、訪問時に蓄積しておく)
             WindowRegistry.shared.warmUpCurrentSpace()
@@ -83,8 +83,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// 設定を読み込んで各機能を結線する(元 Jinrai の init.lua setup 相当)
-    private func startFeatures() {
+    /// 設定を読み込んで機能を入れ替える。
+    /// 読み込みに失敗したら今の機能を止めずに残す(止めてから組むと、壊れた設定で全機能が止まる)
+    func reloadConfig() {
+        guard accessibilityGranted else { return }
         let config: RootConfig
         do {
             config = try ConfigLoader.load()
@@ -92,7 +94,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             showConfigError(error)
             return
         }
+        teardownFeatures()
+        startFeatures(with: config)
+    }
 
+    /// 設定から各機能を結線する(元 Jinrai の init.lua setup 相当)
+    private func startFeatures(with config: RootConfig) {
         if let focusBorderConfig = config.focusBorder {
             focusBorder = FocusBorderFeature(config: focusBorderConfig)
         }
@@ -256,12 +263,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 非同期の受け渡し(holdKeysForNextStart)中にリロードされた場合、
         // どの機能も tap を閉じられないため、共有 tap をここで確実に解放する
         modalEventTap.stop()
-    }
-
-    func reloadConfig() {
-        guard accessibilityGranted else { return }
-        teardownFeatures()
-        startFeatures()
     }
 
     @objc private func handleURLEvent(
