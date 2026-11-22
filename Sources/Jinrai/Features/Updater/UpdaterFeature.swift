@@ -1,7 +1,8 @@
 import AppKit
 import JinraiCore
 
-/// メニューの「アップデートを確認…」から起動する更新フロー(NSAlert ベース)
+/// メニューの「アップデートを確認…」から起動する確認フロー(NSAlert ベース)。
+/// 更新そのものは行わず、Homebrew なら brew のコマンドを、それ以外はリリースページを案内する
 @MainActor
 final class UpdaterFeature {
     private var checking = false
@@ -14,100 +15,48 @@ final class UpdaterFeature {
             ?? "0.0.0-development"
 
         Task { @MainActor in
+            // 開発ビルドを含むどのアラートも、閉じるまでは再入させない
             defer { checking = false }
+            let content: UpdateAlertContent
             do {
                 let result = try await UpdateChecker.check(currentVersion: currentVersion)
-                handle(result)
+                content = .forResult(
+                    result, target: UpdateChecker.target,
+                    isInstalledViaHomebrew: UpdateChecker.isInstalledViaHomebrew)
             } catch {
-                showError(error)
+                content = .forFailure(
+                    errorDescription: error.localizedDescription, target: UpdateChecker.target)
             }
+            present(content)
         }
     }
 
-    private func handle(_ result: UpdateChecker.CheckResult) {
-        switch result {
-        case .developmentBuild:
-            let alert = NSAlert()
-            alert.messageText = "開発ビルドです"
-            alert.informativeText = "開発ビルド(\(versionString()))ではアップデート確認をスキップします。"
-            alert.runModal()
-
-        case .upToDate(let version):
-            let alert = NSAlert()
-            alert.messageText = "最新版です"
-            alert.informativeText = "JINRAI v\(version.description) は最新です。"
-            alert.runModal()
-
-        case .updateAvailable(let release):
-            if UpdateInstaller.isInstalledViaHomebrew {
-                promptBrewUpgrade(release)
-            } else {
-                promptInstall(release)
-            }
-        }
+    private func present(_ content: UpdateAlertContent) {
+        // クリップボードへ書けなかったときは終了せず、同じアラートを出し直す
+        while !presentOnce(content) {}
     }
 
-    private func promptInstall(_ release: UpdateChecker.LatestRelease) {
+    /// 出し直しが要らなければ true
+    private func presentOnce(_ content: UpdateAlertContent) -> Bool {
         let alert = NSAlert()
-        alert.messageText = "v\(release.version.description) が利用可能です"
-        alert.informativeText = "現在のバージョン: \(versionString())\n更新すると JINRAI は自動で再起動します。"
-        alert.addButton(withTitle: "更新")
-        alert.addButton(withTitle: "リリースノートを見る")
-        alert.addButton(withTitle: "キャンセル")
-        switch alert.runModal() {
-        case .alertFirstButtonReturn:
-            install(release)
-        case .alertSecondButtonReturn:
-            NSWorkspace.shared.open(release.releasePageURL)
-        default:
-            break
+        alert.messageText = content.title
+        alert.informativeText = content.message
+        alert.alertStyle = content.style == .warning ? .warning : .informational
+        if let primary = content.primaryButton {
+            alert.addButton(withTitle: primary.title)
+            alert.addButton(withTitle: UpdateAlertContent.closeButtonTitle)
         }
-    }
+        let response = alert.runModal()
+        guard let primary = content.primaryButton, response == .alertFirstButtonReturn else { return true }
 
-    /// brew 管理下では自前更新すると cask の version/sha256 と乖離するため案内のみ。
-    /// 起動中のプロセスは brew が .app を置き換えても古いまま動き続けるため、
-    /// コピー時に自分から終了し、コマンド末尾の open -a で新バージョンを起動させる
-    private func promptBrewUpgrade(_ release: UpdateChecker.LatestRelease) {
-        let command = "brew update && brew upgrade --cask jinrai && open -a JINRAI"
-        let alert = NSAlert()
-        alert.messageText = "v\(release.version.description) が利用可能です"
-        alert.informativeText =
-            "Homebrew でインストールされているため、以下のコマンドで更新してください。\n\n\(command)\n\nコピーすると JINRAI は終了します(更新完了後に自動で起動します)。"
-        alert.addButton(withTitle: "コマンドをコピーして終了")
-        alert.addButton(withTitle: "閉じる")
-        if alert.runModal() == .alertFirstButtonReturn {
+        switch primary.action {
+        case .copyCommandAndQuit(let command):
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(command, forType: .string)
+            guard NSPasteboard.general.setString(command, forType: .string) else { return false }
             NSApp.terminate(nil)
+        case .openURL(let url):
+            NSWorkspace.shared.open(url)
         }
-    }
-
-    private func install(_ release: UpdateChecker.LatestRelease) {
-        Task { @MainActor in
-            do {
-                try await UpdateInstaller.downloadAndInstall(zipURL: release.zipURL)
-                UpdateInstaller.relaunch()
-            } catch {
-                showError(error)
-            }
-        }
-    }
-
-    private func showError(_ error: Error) {
-        let alert = NSAlert()
-        alert.messageText = "アップデートに失敗しました"
-        alert.informativeText = "\(error.localizedDescription)\n\nリリースページから手動で更新できます。"
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "リリースページを開く")
-        alert.addButton(withTitle: "閉じる")
-        if alert.runModal() == .alertFirstButtonReturn {
-            NSWorkspace.shared.open(
-                URL(string: "https://github.com/\(UpdateChecker.repo)/releases")!)
-        }
-    }
-
-    private func versionString() -> String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-            ?? "0.0.0-development"
+        return true
     }
 }

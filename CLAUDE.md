@@ -13,7 +13,7 @@ macOS 常駐(メニューバー)のウィンドウ操作ツール。Hammerspoon 
 
 テストは `Tests/JinraiCoreTests` のみ(= ユニットテストの主戦場は Core 層。Platform / Features はテスト対象外なので実機確認が必要)。`swift build` / `swift test` で回る。
 
-リリースは GitHub Actions の release.yml(workflow_dispatch、main のみ)→ semantic-release が conventional commits からバージョン算出(v1 までは breaking も minor。feat/build/style/perf → minor、fix/refactor → patch)→ 自己署名(jinrai-dev 固定。TCC 許可の維持のため)で .app を zip 化して Releases へ → `update_tap.sh` が homebrew-tap の cask を更新。アプリ内 Updater は Releases API を見て zip を差し替える。
+リリースは GitHub Actions の release.yml(workflow_dispatch、main のみ)→ semantic-release が conventional commits からバージョン算出(v1 までは breaking も minor。feat/build/style/perf → minor、fix/refactor → patch)→ 自己署名(jinrai-dev 固定。TCC 許可の維持のため)で .app を zip 化して Releases へ → `update_tap.sh` が homebrew-tap の cask を更新。アプリ内 Updater は Releases API で新しいバージョンの有無を確かめ、Homebrew なら `brew upgrade` のコマンドを、それ以外はリリースページを案内するだけで、zip の差し替えはしない(判定と文言は `JinraiCore/UpdateCheck.swift`)。
 
 - semantic-release とプラグインは `.github/release/` の `package.json` と `pnpm-lock.yaml` で、推移的な依存まで固定する。release.yml は `pnpm install --frozen-lockfile` で入れる
   - 理由: 署名の証明書と `TAP_GITHUB_TOKEN` と同じジョブで動くため、実行のたびに新しいバージョンを取ってこない
