@@ -28,13 +28,22 @@ enum ConfigLoader {
     /// ファイルが無ければテンプレートを生成する。リンク切れのときは作らずにエラーにする
     static func ensureConfigFileExists() throws {
         let url = configFileURL
+        let brokenSymlinkError = ConfigError("設定ファイルのシンボリックリンクのリンク先がありません: \(url.path)")
         if isBrokenSymlink(url) {
-            throw ConfigError("設定ファイルのシンボリックリンクのリンク先がありません: \(url.path)")
+            throw brokenSymlinkError
         }
         guard !FileManager.default.fileExists(atPath: url.path) else { return }
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try DefaultConfigTemplate.text.write(to: url, atomically: true, encoding: .utf8)
+        // 確かめてから書くまでに別のプロセスがファイルやリンクを作っても、上書きしない。
+        // 書き切ってから配置するので、途中までのファイルも残らない
+        do {
+            try ExclusiveFileWriter.write(Data(DefaultConfigTemplate.text.utf8), to: url)
+        } catch CocoaError.fileWriteFileExists {
+            if isBrokenSymlink(url) {
+                throw brokenSymlinkError
+            }
+        }
     }
 
     /// 設定を読み込む。ファイルがなければテンプレートを生成して読み込む
