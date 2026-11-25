@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowLayouts: WindowLayoutsFeature?
     private var displayMirroring: DisplayMirroringFeature?
     /// 切替でディスプレイ構成が変わると表示中に設定が再読込されるため、表示が途切れないよう Feature の外で持つ
-    private let displayModeIndicator = DisplayModeIndicator()
+    private let centerHUD = CenterHUD()
     private let updater = UpdaterFeature()
     /// モーダル系機能(Hints / Area Hints / Application Hints / Layouts ピッカー)で
     /// 共有するイベントタップ。機能間の遷移で tap を破棄→再作成すると、その隙間の
@@ -31,6 +31,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         statusItem?.onCheckForUpdates = { [weak self] in
             self?.updater.checkForUpdates()
+        }
+        modalEventTap.onSecureInputBlocked = { [weak self] in
+            self?.showSecureInputNotice()
         }
 
         NSAppleEventManager.shared().setEventHandler(
@@ -149,7 +152,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let displayMirroringConfig = config.displayMirroring {
             let feature = DisplayMirroringFeature(
-                config: displayMirroringConfig, indicator: displayModeIndicator)
+                config: displayMirroringConfig, indicator: centerHUD)
             displayMirroring = feature
             statusItem?.onToggleDisplayMirroring = { [weak feature] in
                 feature?.toggle()
@@ -292,6 +295,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         teardownFeatures()
-        displayModeIndicator.teardown()
+        centerHUD.teardown()
+    }
+
+    /// セキュア入力中はキーを捕捉できず、モーダル機能を開くとキーが前面アプリへ素通りする。
+    /// 開かなかった理由を、フォーカス中のウィンドウがある画面の中央へ出す
+    private func showSecureInputNotice() {
+        let focusFrame = WindowEnumerator.focusedWindow()?.frame
+        let screen = focusFrame.flatMap { ScreenUtil.screenContaining($0) } ?? NSScreen.main
+        let displayID =
+            screen?.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")]
+            as? CGDirectDisplayID
+        centerHUD.show("パスワード入力中は使えません", on: displayID ?? CGMainDisplayID())
     }
 }

@@ -171,7 +171,8 @@ final class WindowHintsFeature {
     func toggle() {
         if isVisible {
             close()
-        } else {
+        } else if !eventTap.refuseIfSecureInput() {
+            // 直接起動はここで断る(show() 内の判定は受け渡し用で、JinraiMode を終えるため)
             show()
         }
     }
@@ -186,6 +187,13 @@ final class WindowHintsFeature {
             return
         }
         defer { activeWindowOverride = nil }
+
+        // 受け渡し(Area Hints・Application Hints からの遷移や JinraiMode の次のターン)を、
+        // 候補の収集・描画・ハンドラの差し替えより前に断る(候補ゼロでも通知を出すため)
+        if eventTap.refuseIfSecureInput() {
+            abortShow()
+            return
+        }
 
         let entries = collectEntries()
         guard !entries.isEmpty else {

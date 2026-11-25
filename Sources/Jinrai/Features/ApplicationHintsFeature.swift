@@ -72,7 +72,12 @@ final class ApplicationHintsFeature {
     }
 
     func toggle() {
-        if isVisible { closeAndCancelJinraiMode() } else { show() }
+        if isVisible {
+            closeAndCancelJinraiMode()
+        } else if !eventTap.refuseIfSecureInput() {
+            // 直接起動はここで断る(show() 内の判定は受け渡し用で、JinraiMode を終えるため)
+            show()
+        }
     }
 
     /// 閉じる + JinraiMode 中ならキャンセル通知(Escape・外クリック用)
@@ -88,6 +93,13 @@ final class ApplicationHintsFeature {
 
     func show(jinraiMode: Bool = false) {
         guard !isVisible, !config.apps.isEmpty else { return }
+        // 受け渡し(Window Hints からの遷移)を描画・ハンドラの差し替えより前に断る
+        if eventTap.refuseIfSecureInput() {
+            if jinraiMode {
+                onCancelJinraiMode?()
+            }
+            return
+        }
         showJinraiMode = jinraiMode
 
         // 配置基準: フォーカス中ウィンドウの中央(なければスクリーン中央)
@@ -105,6 +117,11 @@ final class ApplicationHintsFeature {
         bindEventTap()
         guard eventTap.start() else {
             NSLog("[jinrai.applicationHints] キー捕捉を開始できません")
+            // 開けなかった画面の先に次のターンは無い。JinraiMode の演出を残さず終える
+            showJinraiMode = false
+            if jinraiMode {
+                onCancelJinraiMode?()
+            }
             return
         }
 

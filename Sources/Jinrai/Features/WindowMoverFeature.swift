@@ -87,13 +87,16 @@ final class WindowMoverFeature {
         // Area Hints のホットキー(通常起動 / JinraiMode 起動)
         if let binding = areaHints.hotkey {
             registerAreaHintsHotkey(binding) { [weak self] in
-                self?.openAreaChooser()
+                guard let self, !self.eventTap.refuseIfSecureInput() else { return }
+                self.openAreaChooser()
             }
         }
         if let binding = areaHints.jinraiModeHotkey {
             registerAreaHintsHotkey(binding) { [weak self] in
-                self?.onJinraiModeStart?()
-                self?.openAreaChooser(jinraiMode: true)
+                // JinraiMode を始める前に断る(進行中の別モーダルの JinraiMode を巻き込まない)
+                guard let self, !self.eventTap.refuseIfSecureInput() else { return }
+                self.onJinraiModeStart?()
+                self.openAreaChooser(jinraiMode: true)
             }
         }
 
@@ -298,6 +301,14 @@ final class WindowMoverFeature {
         fadeSpotlight: Bool = true
     ) {
         guard !isChooserVisible else { return }
+        // 受け渡し(Window Hints・Application Hints からの遷移)を描画・ハンドラの差し替えより前に断る。
+        // 直接起動はホットキー側で先に断るので、ここで JinraiMode を終えてよいのは受け渡しだけ
+        if eventTap.refuseIfSecureInput() {
+            if jinraiMode {
+                onJinraiModeCancel?()
+            }
+            return
+        }
         jinraiApplyGeneration += 1
         chooserJinraiMode = jinraiMode
         chooserTarget = target
@@ -384,7 +395,12 @@ final class WindowMoverFeature {
         bindEventTap()
         guard eventTap.start() else {
             NSLog("[jinrai.windowMover] キー捕捉を開始できません")
+            // 開けなかった画面の先に次のターンは無い。JinraiMode の演出を残さず終える
+            let wasJinrai = chooserJinraiMode
             closeChooser()
+            if wasJinrai {
+                onJinraiModeCancel?()
+            }
             return
         }
         isChooserVisible = true
@@ -1007,10 +1023,20 @@ final class WindowMoverFeature {
             // 開き直すまでの非同期の間に押されたキーは、分離した新ウィンドウへ
             // すり抜けないよう tap で保持し、開いた後の選択画面へ流し込む
             if jinraiMode {
-                eventTap.holdKeysForNextStart()
+                let hold = eventTap.holdKeysForNextStart()
                 Task { @MainActor [weak self] in
                     try? await Task.sleep(for: .seconds(0.3))
-                    self?.openAreaChooser(jinraiMode: true)
+                    guard let self else { return }
+                    // 開き直しを断るなら、そのために確保した保持だけを解いてキーボードを返す
+                    // (タイムアウトまで待つと、セキュア入力の解除後もキーを握りつぶす)
+                    if self.eventTap.refuseIfSecureInput() {
+                        if let hold {
+                            self.eventTap.releaseHeldKeys(hold)
+                        }
+                        self.onJinraiModeCancel?()
+                        return
+                    }
+                    self.openAreaChooser(jinraiMode: true)
                 }
             }
             return

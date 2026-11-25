@@ -22,6 +22,8 @@ public final class EventTap {
     public var onKeyDown: ((KeyEvent) -> Bool)?
     /// クリック位置(top-left 座標)。true を返すと消費
     public var onLeftMouseDown: ((CGPoint) -> Bool)?
+    /// セキュア入力中で start() を断ったときに呼ぶ(利用者へ起動できない理由を知らせる)
+    public var onSecureInputBlocked: (() -> Void)?
 
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -50,10 +52,30 @@ public final class EventTap {
 
     public var isRunning: Bool { tap != nil }
 
-    /// tap の作成に失敗したら false(権限不足・セキュア入力中)。
-    /// stop() 直後(破棄待ち)の呼び出しは予約を取り消して既存の tap を継続利用する
+
+    /// セキュア入力中なら onSecureInputBlocked で利用者へ知らせて true を返す。
+    ///
+    /// セキュア入力(パスワード欄の入力中など)は、どのプロセスが有効にしていても
+    /// すべての event tap へのキー配送を止める。tap の作成自体は成功してしまい、
+    /// 画面だけ開いてキーが前面アプリへ素通りする。モーダルを開く側は、候補の収集・
+    /// 画面の描画・ハンドラの差し替えより前にこれで断る。
+    /// 既存の tap と保持中のキーには触れない(表示中の別モーダルや受け渡し中の操作を壊さないため)
+    public func refuseIfSecureInput() -> Bool {
+        guard IsSecureEventInputEnabled() else { return false }
+        NSLog("[jinrai.eventTap] セキュア入力中のためモーダルを開きません")
+        onSecureInputBlocked?()
+        return true
+    }
+
+    /// キーを捕捉できなければ false(権限不足・セキュア入力中)。
+    /// stop() 直後(破棄待ち)の呼び出しは予約を取り消して既存の tap を継続利用する。
+    /// セキュア入力は呼び元が refuseIfSecureInput() で先に断る。ここでの判定は、
+    /// その後に有効になった場合の取りこぼし防止
     @discardableResult
     public func start() -> Bool {
+        if refuseIfSecureInput() {
+            return false
+        }
         if tap != nil {
             isPendingStop = false
             isHolding = false  // 保持イベントは drainHeldKeyEvents() で取り出すまで残す
@@ -116,9 +138,11 @@ public final class EventTap {
     /// スリープやウィンドウ出現待ちを挟む遷移では stop() の後にこれを呼ぶ。
     /// 次の start() まで keyDown を消費しつつ保持し、呼び元が drainHeldKeyEvents() で
     /// 取り出して新しいハンドラへ流す。start() が来ないままだとキー入力が死ぬため、
-    /// timeout 経過で tap を破棄する
-    public func holdKeysForNextStart(timeout: TimeInterval = 2) {
-        guard tap != nil else { return }
+    /// timeout 経過で tap を破棄する。
+    /// 戻り値はこの保持の識別子。受け渡しを取りやめるときは releaseHeldKeys(_:) へ渡す
+    @discardableResult
+    public func holdKeysForNextStart(timeout: TimeInterval = 2) -> Int? {
+        guard tap != nil else { return nil }
         onKeyDown = nil
         onLeftMouseDown = nil
         isPendingStop = false
@@ -132,6 +156,14 @@ public final class EventTap {
             }
             self.teardown()
         }
+        return generation
+    }
+
+    /// holdKeysForNextStart() が返した保持がまだ続いていれば解き、キーボードを返す。
+    /// 後から別の処理が保持や start() で tap を引き継いでいれば何もしない
+    public func releaseHeldKeys(_ generation: Int) {
+        guard isHolding, stopGeneration == generation else { return }
+        stop()
     }
 
     /// モーダル側が自前で溜めたキーを持ち越しバッファへ積む(次画面が drain で受け取る)。

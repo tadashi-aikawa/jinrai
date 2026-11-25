@@ -6,10 +6,10 @@ import JinraiPlatform
 @MainActor
 final class DisplayMirroringFeature {
     private let config: DisplayMirroringConfig
-    private let indicator: DisplayModeIndicator
+    private let indicator: CenterHUD
     private var hotkey: Hotkey?
 
-    init(config: DisplayMirroringConfig, indicator: DisplayModeIndicator) {
+    init(config: DisplayMirroringConfig, indicator: CenterHUD) {
         self.config = config
         self.indicator = indicator
 
